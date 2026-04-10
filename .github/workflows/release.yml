@@ -15,10 +15,8 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
-          # Important for Changesets to see the history
           fetch-depth: 0
 
       - name: Setup pnpm
@@ -27,34 +25,31 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version-file: '.nvmrc'
-          cache: 'pnpm'
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install
 
-      - name: Create Release PR or Publish
+      - name: Create Release PR or Tag
         id: changesets
         uses: changesets/action@v1
         with:
-          # This runs 'pnpm release' from your package.json
-          publish: pnpm release
+          # This creates the git tags locally and pushes them to GitHub
+          publish: npx changeset tag && git push --tags
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Get Version from package.json
-        if: steps.changesets.outputs.hasChangesets == 'false'
-        id: package_version
-        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
-
-      - name: Create GitHub Release and Upload Assets
-        # This runs if the bot merged the Version PR (no more changesets left)
-        if: steps.changesets.outputs.hasChangesets == 'false'
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ steps.package_version.outputs.version }}
-          files: dist/power-flow-card-plus.js
-          # Use the changelog from the latest tag
-          generate_release_notes: true
+      - name: Create GitHub Release
+        # Only run if tags were pushed in the previous step
+        if: steps.changesets.outputs.published == 'true'
+        run: |
+          # Use the JSON output from changesets to see what was "published"
+          echo '${{ steps.changesets.outputs.publishedPackages }}' | jq -c '.[]' | while read -r pkg; do
+            tag=$(echo $pkg | jq -r '"\(.name)@\(.version)"')
+            
+            echo "Creating GitHub Release for $tag"
+            gh release create "$tag" --generate-notes
+          done
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
