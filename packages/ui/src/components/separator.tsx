@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@energy-cards/cn";
+import { cn } from "@flixlix-cards/cn";
 import * as SeparatorPrimitive from "@radix-ui/react-separator";
 import * as React from "react";
 

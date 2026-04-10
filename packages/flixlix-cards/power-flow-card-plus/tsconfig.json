@@ -1,5 +1,5 @@
 {
-  "extends": "@energy-cards/typescript-config/base.json",
+  "extends": "@flixlix-cards/typescript-config/base.json",
   "compilerOptions": {
     "module": "ESNext",
     "moduleResolution": "Bundler",

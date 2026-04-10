@@ -1,4 +1,4 @@
-import { cn } from "@energy-cards/cn";
+import { cn } from "@flixlix-cards/cn";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Slot } from "radix-ui";
 import * as React from "react";

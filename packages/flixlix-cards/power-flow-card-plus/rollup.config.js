@@ -1,4 +1,4 @@
-import { createCardConfig } from "@energy-cards/bundler";
+import { createCardConfig } from "@flixlix-cards/bundler";
 
 export default createCardConfig({
   input: "src/power-flow-card-plus.ts",

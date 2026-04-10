@@ -1,4 +1,4 @@
-import litConfig from "@energy-cards/prettier-config/lit";
+import litConfig from "@flixlix-cards/prettier-config/lit";
 
 /**
  * @type {import("prettier").Config}

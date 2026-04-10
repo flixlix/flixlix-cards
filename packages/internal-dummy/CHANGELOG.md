@@ -1,4 +1,4 @@
-# @energy-cards/internal-dummy
+# @flixlix-cards/internal-dummy
 
 ## 0.0.1
 

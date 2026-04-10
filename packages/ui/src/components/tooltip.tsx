@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@energy-cards/cn";
+import { cn } from "@flixlix-cards/cn";
 import { Tooltip as TooltipPrimitive } from "radix-ui";
 import * as React from "react";
 

@@ -1,7 +1,7 @@
 "use client";
 
-import { cn } from "@energy-cards/cn";
-import { AnimateIcon } from "@energy-cards/ui/components/animate-ui/icons/icon";
+import { cn } from "@flixlix-cards/cn";
+import { AnimateIcon } from "@flixlix-cards/ui/components/animate-ui/icons/icon";
 import {
   AnimatePresence,
   motion,

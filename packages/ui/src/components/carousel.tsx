@@ -1,7 +1,7 @@
 "use client";
 
-import { cn } from "@energy-cards/cn";
-import { Button } from "@energy-cards/ui/components/button";
+import { cn } from "@flixlix-cards/cn";
+import { Button } from "@flixlix-cards/ui/components/button";
 import useEmblaCarousel, { type UseEmblaCarouselType } from "embla-carousel-react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import * as React from "react";

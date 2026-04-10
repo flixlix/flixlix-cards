@@ -1,5 +1,5 @@
 {
-  "name": "web",
+  "name": "@flixlix-cards/web",
   "private": true,
   "type": "module",
   "version": "0.0.1",

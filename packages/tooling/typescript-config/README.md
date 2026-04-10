@@ -1,3 +1,3 @@
-# `@energy-cards/typescript-config`
+# `@flixlix-cards/typescript-config`
 
 Shared typescript configuration for the workspace.

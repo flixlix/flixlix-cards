@@ -1,5 +1,5 @@
 {
-  "name": "@energy-cards/ui",
+  "name": "@flixlix-cards/ui",
   "version": "0.0.0",
   "type": "module",
   "private": true,
@@ -10,7 +10,7 @@
     "format:check": "prettier --check ."
   },
   "dependencies": {
-    "@energy-cards/cn": "workspace:*",
+    "@flixlix-cards/cn": "workspace:*",
     "@radix-ui/react-dropdown-menu": "^2.1.14",
     "@radix-ui/react-hover-card": "^1.1.15",
     "@radix-ui/react-separator": "^1.1.6",
@@ -29,9 +29,9 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@energy-cards/eslint-config": "workspace:*",
-    "@energy-cards/prettier-config": "workspace:*",
-    "@energy-cards/typescript-config": "workspace:*",
+    "@flixlix-cards/eslint-config": "workspace:*",
+    "@flixlix-cards/prettier-config": "workspace:*",
+    "@flixlix-cards/typescript-config": "workspace:*",
     "@tailwindcss/postcss": "^4.0.8",
     "@turbo/gen": "^2.4.2",
     "@types/node": "^20",

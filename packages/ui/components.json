@@ -11,10 +11,10 @@
   },
   "iconLibrary": "lucide",
   "aliases": {
-    "components": "@energy-cards/ui/components",
-    "utils": "@energy-cards/ui/lib/utils",
-    "ui": "@energy-cards/ui/components",
-    "lib": "@energy-cards/ui/lib",
-    "hooks": "@energy-cards/ui/hooks"
+    "components": "@flixlix-cards/ui/components",
+    "utils": "@flixlix-cards/ui/lib/utils",
+    "ui": "@flixlix-cards/ui/components",
+    "lib": "@flixlix-cards/ui/lib",
+    "hooks": "@flixlix-cards/ui/hooks"
   }
 }

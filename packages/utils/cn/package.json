@@ -1,5 +1,5 @@
 {
-  "name": "@energy-cards/cn",
+  "name": "@flixlix-cards/cn",
   "version": "0.0.0",
   "private": true,
   "main": "./dist/index.js",
@@ -19,9 +19,9 @@
     "tailwind-merge": "^3.0.2"
   },
   "devDependencies": {
-    "@energy-cards/eslint-config": "workspace:*",
-    "@energy-cards/prettier-config": "workspace:*",
-    "@energy-cards/typescript-config": "workspace:*",
+    "@flixlix-cards/eslint-config": "workspace:*",
+    "@flixlix-cards/prettier-config": "workspace:*",
+    "@flixlix-cards/typescript-config": "workspace:*",
     "eslint": "^9.21.0",
     "tsup": "^8.4.0",
     "typescript": "^5.8.2"

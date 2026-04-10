@@ -1,4 +1,4 @@
-import flixlixReactPrettierConfig from "@energy-cards/prettier-config/react";
+import flixlixReactPrettierConfig from "@flixlix-cards/prettier-config/react";
 
 /**
  * @type {import("prettier").Config}

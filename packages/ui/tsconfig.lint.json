@@ -1,5 +1,5 @@
 {
-  "extends": "@energy-cards/typescript-config/react-library.json",
+  "extends": "@flixlix-cards/typescript-config/react-library.json",
   "compilerOptions": {
     "outDir": "dist"
   },

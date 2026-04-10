@@ -1,4 +1,4 @@
-import { cn } from "@energy-cards/cn";
+import { cn } from "@flixlix-cards/cn";
 import {
   MorphingDialog,
   MorphingDialogClose,
@@ -6,7 +6,7 @@ import {
   MorphingDialogContent,
   MorphingDialogImage,
   MorphingDialogTrigger,
-} from "@energy-cards/ui/components/morphing-dialog";
+} from "@flixlix-cards/ui/components/morphing-dialog";
 import { XIcon } from "lucide-react";
 
 export default function ImageLightbox({

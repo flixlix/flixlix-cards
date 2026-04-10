@@ -1,5 +1,5 @@
 {
-  "projectName": "web",
+  "projectName": "@flixlix-cards/web",
   "mode": "file-router",
   "typescript": true,
   "packageManager": "npm",

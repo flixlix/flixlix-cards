@@ -1,4 +1,4 @@
-# @energy-cards/eslint-config
+# @flixlix-cards/eslint-config
 
 ## 0.0.1
 

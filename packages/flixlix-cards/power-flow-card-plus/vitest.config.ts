@@ -1,4 +1,4 @@
-import baseConfig from "@energy-cards/testing";
+import baseConfig from "@flixlix-cards/testing";
 import { mergeConfig } from "vitest/config";
 
 export default mergeConfig(baseConfig, {

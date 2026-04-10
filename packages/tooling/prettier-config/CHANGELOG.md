@@ -1,4 +1,4 @@
-# @energy-cards/prettier-config
+# @flixlix-cards/prettier-config
 
 ## 0.0.1
 

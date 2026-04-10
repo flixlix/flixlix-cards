@@ -2,6 +2,6 @@ packages:
   - "apps/*"
   - "packages/*"
   - "packages/tooling/*"
-  - "packages/energy-cards/*"
+  - "packages/flixlix-cards/*"
   - "packages/utils/*"
 allowBuilds:

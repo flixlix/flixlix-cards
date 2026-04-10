@@ -1,5 +1,5 @@
 {
-  "name": "@energy-cards/eslint-config",
+  "name": "@flixlix-cards/eslint-config",
   "version": "0.0.1",
   "private": true,
   "type": "module",

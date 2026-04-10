@@ -1,5 +1,5 @@
 {
-  "name": "energy-cards",
+  "name": "flixlix-cards",
   "private": true,
   "scripts": {
     "build": "turbo run build",
@@ -16,8 +16,8 @@
     "test": "npx turbo test --filter=!web"
   },
   "devDependencies": {
-    "@energy-cards/eslint-config": "workspace:*",
-    "@energy-cards/prettier-config": "workspace:*",
+    "@flixlix-cards/eslint-config": "workspace:*",
+    "@flixlix-cards/prettier-config": "workspace:*",
     "@changesets/cli": "^2.27.1",
     "eslint": "^10.2.0",
     "prettier": "^3.2.5",

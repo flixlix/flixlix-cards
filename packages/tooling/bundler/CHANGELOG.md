@@ -1,4 +1,4 @@
-# @energy-cards/bundler
+# @flixlix-cards/bundler
 
 ## 0.0.1
 

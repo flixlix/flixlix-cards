@@ -1,4 +1,4 @@
-import indexConfig from "@energy-cards/prettier-config";
+import indexConfig from "@flixlix-cards/prettier-config";
 
 /**
  * @type {import("prettier").Config}
