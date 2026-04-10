@@ -3,7 +3,7 @@ import { mergeConfig } from "vitest/config";
 
 export default mergeConfig(baseConfig, {
   test: {
-    name: "power-flow-card-plus",
+    name: "energy-flow-card-plus",
     // Package-specific overrides here if needed
   },
 });

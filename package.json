@@ -13,7 +13,7 @@
     "release": "turbo run build && changeset publish",
     "release:tag": "changeset tag && git push --tags",
     "start:hass": "docker run --rm -p8123:8123 -v ./.hass_dev:/config homeassistant/home-assistant:beta",
-    "test": "npx turbo test --filter=!@flixlix-cards/web"
+    "test": "npx turbo test --filter=!@flixlix-cards/web --filter=!old-energy-flow-card-plus"
   },
   "devDependencies": {
     "@flixlix-cards/eslint-config": "workspace:*",
