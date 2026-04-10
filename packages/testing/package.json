@@ -1,0 +1,16 @@
+{
+  "name": "@energy-cards/testing",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./vitest-base.js"
+  },
+  "dependencies": {
+    "vitest": "^1.4.0",
+    "jsdom": "^24.0.0",
+    "@vitest/ui": "^1.4.0",
+    "@testing-library/dom": "^9.3.4",
+    "happy-dom": "^14.3.0"
+  }
+}
