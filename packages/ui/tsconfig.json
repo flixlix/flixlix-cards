@@ -1,0 +1,15 @@
+{
+  "extends": "@energy-cards/typescript-config/react-library.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@energy-cards/ui/*": ["./src/*"],
+      "react": ["./node_modules/@types/react"]
+    },
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler"
+  },
+  "include": ["."],
+  "exclude": ["node_modules", "dist"]
+}

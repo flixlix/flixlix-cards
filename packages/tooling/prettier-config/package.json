@@ -1,0 +1,22 @@
+{
+  "name": "@energy-cards/prettier-config",
+  "version": "0.0.0",
+  "scripts": {
+    "clean": "rimraf node_modules"
+  },
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./index.js",
+    "./lit": "./lit.js",
+    "./react": "./react.js"
+  },
+  "dependencies": {
+    "prettier-plugin-organize-imports": ">=4.1.0",
+    "prettier-plugin-tailwindcss": ">=0.6.11",
+    "prettier-plugin-embed": "^0.5.1"
+  },
+  "devDependencies": {
+    "prettier": "^3.5.3"
+  }
+}
