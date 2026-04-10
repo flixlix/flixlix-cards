@@ -1,0 +1,15 @@
+{
+  "name": "@energy-cards/internal-dummy",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "scripts": {
+    "lint": "echo \"No lint configured\"",
+    "test": "echo \"No tests configured\"",
+    "clean": "rm -rf dist node_modules"
+  }
+}
