@@ -11,8 +11,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "lint": "eslint",
-    "format": "prettier --check .",
-    "check": "prettier --write . && eslint --fix"
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.18",

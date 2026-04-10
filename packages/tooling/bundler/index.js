@@ -43,6 +43,8 @@ export function createCardConfig(options) {
       ...(minifyHtmlPlugin ? [minifyHtmlPlugin()] : []),
       typescript({
         declaration: false,
+        declarationMap: false,
+        ignoreDeprecations: "6.0",
       }),
       nodeResolve(),
       json({ compact: true }),

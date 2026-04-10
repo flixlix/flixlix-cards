@@ -5,7 +5,8 @@ import { default as indexConfig } from "./index.js";
  */
 const config = {
   ...indexConfig,
-  plugins: [...indexConfig.plugins, "prettier-plugin-tailwindcss"],
+  tailwindFunctions: ["cn", "cva"],
+  plugins: ["prettier-plugin-tailwindcss", ...indexConfig.plugins],
 };
 
 export default config;

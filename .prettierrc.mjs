@@ -1,8 +1,8 @@
-import defaultConfig from "@energy-cards/prettier-config";
+import indexConfig from "@energy-cards/prettier-config";
 
 /**
  * @type {import("prettier").Config}
  */
-const prettierConfig = defaultConfig;
+const prettierConfig = indexConfig;
 
 export default prettierConfig;

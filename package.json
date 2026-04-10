@@ -6,7 +6,8 @@
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "clean": "turbo run clean && rm -rf node_modules",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "format": "turbo run format",
+    "format:check": "turbo run format:check",
     "changeset": "changeset",
     "version-packages": "changeset version",
     "release": "turbo run build && changeset publish",
@@ -26,6 +27,10 @@
     "node": ">=18"
   },
   "pnpm": {
+    "publicHoistPattern": [
+      "prettier-plugin-tailwindcss",
+      "prettier-plugin-organize-imports"
+    ],
     "onlyBuiltDependencies": [
       "esbuild",
       "lightningcss"
