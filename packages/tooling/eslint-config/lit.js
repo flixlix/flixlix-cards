@@ -16,6 +16,7 @@ export default defineConfig([
     },
     rules: {
       // Classes (Lit components)
+      "@typescript-eslint/no-explicit-any": "off",
       "class-methods-use-this": "off",
       "lines-between-class-members": "off",
 
@@ -25,7 +26,7 @@ export default defineConfig([
   },
   litConfigs["flat/recommended"],
   {
-    files: ["**/packages/*/src/logging.ts"],
+    files: ["src/logging.ts"],
     rules: {
       "no-console": "off",
     },

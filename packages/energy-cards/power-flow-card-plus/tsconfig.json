@@ -1,14 +1,19 @@
 {
   "extends": "@energy-cards/typescript-config/base.json",
   "compilerOptions": {
-    "module": "NodeNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "declaration": true,
     "outDir": "dist",
     "rootDir": "src",
     "experimentalDecorators": true,
     "useDefineForClassFields": false,
     "emitDecoratorMetadata": true,
-    "types": ["vitest/globals"]
+    "types": ["vitest/globals"],
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["src/*"]
+    }
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist"]

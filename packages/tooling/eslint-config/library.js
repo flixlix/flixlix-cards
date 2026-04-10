@@ -11,7 +11,7 @@ export default defineConfig([
        * In utility libraries, we want to ensure exports are intentional
        * and types are strictly handled.
        */
-      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/explicit-function-return-type": [
         "warn",
         {

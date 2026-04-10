@@ -5,10 +5,7 @@ import { default as indexConfig } from "./index.js";
  */
 const config = {
   ...indexConfig,
-  plugins: [
-    ...indexConfig.plugins,
-    "prettier-plugin-embed",
-  ],
+  plugins: ["prettier-plugin-embed", ...indexConfig.plugins],
   embeddedLanguageFormatting: "auto",
   embeddedHtmlTags: ["svg"],
 };

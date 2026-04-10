@@ -8,7 +8,6 @@ const config = {
   tabWidth: 2,
   trailingComma: "es5",
   arrowParens: "always",
-  tailwindFunctions: ["cn", "cva"],
   plugins: ["prettier-plugin-organize-imports"],
 };
 

@@ -1,5 +1,5 @@
-import { mergeConfig } from "vitest/config";
 import baseConfig from "@energy-cards/testing";
+import { mergeConfig } from "vitest/config";
 
 export default mergeConfig(baseConfig, {
   test: {
