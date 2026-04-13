@@ -1,4 +1,4 @@
-import { type PowerFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
+import { type EnergyFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
 
 const newFlowRateMapRange = (
   value: number,
@@ -11,7 +11,7 @@ const newFlowRateMapRange = (
   return ((value - minIn) * (maxOut - minOut)) / (maxIn - minIn) + minOut;
 };
 
-const newFlowRate = (config: PowerFlowCardPlusConfig, value: number): number => {
+const newFlowRate = (config: EnergyFlowCardPlusConfig, value: number): number => {
   const maxPower = config.max_expected_power;
   const minPower = config.min_expected_power;
   const maxRate = config.max_flow_rate;
@@ -19,14 +19,14 @@ const newFlowRate = (config: PowerFlowCardPlusConfig, value: number): number => 
   return newFlowRateMapRange(value, maxRate, minRate, minPower, maxPower);
 };
 
-const oldFlowRate = (config: PowerFlowCardPlusConfig, value: number, total: number): number => {
+const oldFlowRate = (config: EnergyFlowCardPlusConfig, value: number, total: number): number => {
   const min = config.min_flow_rate;
   const max = config.max_flow_rate;
   return max - (value / (total > 0 ? total : value)) * (max - min);
 };
 
 export const computeFlowRate = (
-  config: PowerFlowCardPlusConfig,
+  config: EnergyFlowCardPlusConfig,
   value: number,
   total: number
 ): number => {

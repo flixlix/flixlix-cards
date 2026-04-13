@@ -1,4 +1,4 @@
-import { type PowerFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
+import { type EnergyFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
 import { type IndividualObject } from "@/states/raw/individual/get-individual-object";
 import { type NewDur } from "@/type";
 import { html } from "lit";
@@ -18,7 +18,7 @@ export interface Flows {
 }
 
 export const flowElement = (
-  config: PowerFlowCardPlusConfig,
+  config: EnergyFlowCardPlusConfig,
   { battery, grid, individual, solar, newDur }: Flows
 ) => {
   return html`

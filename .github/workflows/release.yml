@@ -17,7 +17,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          # Use PAT to ensure the push triggers follow-up actions if needed
           token: ${{ secrets.DIST_REPO_TOKEN }}
 
       - name: Setup pnpm
@@ -36,44 +35,58 @@ jobs:
         id: changesets
         uses: changesets/action@v1
         with:
-          # We only want to tag, not publish to NPM
           publish: pnpm run release:tag
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Sync Distribution Repositories
+      - name: Sync & Create Releases
         if: steps.changesets.outputs.hasChangesets == 'false'
         env:
           DIST_REPO_TOKEN: ${{ secrets.DIST_REPO_TOKEN }}
           GH_TOKEN: ${{ secrets.DIST_REPO_TOKEN }}
         run: |
-          # 1. Manually ensure tags are pushed to monorepo
+          # 1. Ensure Monorepo tags are pushed
           git push origin --tags
 
-          # 2. Iterate through all packages in your specific structure
+          # 2. Iterate through packages
           for PKG_JSON in packages/flixlix-cards/*/package.json; do
             PKG_DIR=$(dirname "$PKG_JSON")
             NAME=$(jq -r '.name' "$PKG_JSON")
             VERSION=$(jq -r '.version' "$PKG_JSON")
             CLEAN_NAME=$(echo $NAME | sed 's|^@.*/||')
+            MONO_TAG="${NAME}@${VERSION}"
 
-            echo "🔍 Checking $CLEAN_NAME (v$VERSION)..."
+            echo "🔍 Processing $CLEAN_NAME (v$VERSION)..."
 
-            # 3. Check if this version already exists as a tag in the destination repo
-            # This is the most reliable "Is there a new version?" check
+            # 3. Check if we need to release (Is the tag for this version in the Dist repo?)
             TAG_EXISTS=$(git ls-remote --tags "https://github.com/flixlix/${CLEAN_NAME}.git" "refs/tags/v${VERSION}")
-
             if [ -n "$TAG_EXISTS" ]; then
-              echo "✅ $CLEAN_NAME is already up to date at v$VERSION. Skipping."
+              echo "✅ $CLEAN_NAME is up to date."
               continue
             fi
 
-            echo "🛠 New version detected! Syncing $CLEAN_NAME v$VERSION..."
+            # 4. Extract specific release notes from CHANGELOG.md
+            # This logic grabs everything between the current version header and the next header
+            CHANGELOG_PATH="${PKG_DIR}/CHANGELOG.md"
+            NOTES="New release."
+            if [ -f "$CHANGELOG_PATH" ]; then
+              # Get content from the first ## [version] down to the next ##
+              NOTES=$(sed -n "/## ${VERSION}/,/## /p" "$CHANGELOG_PATH" | sed '$d')
+              # If extraction fails or is too short, fallback to title
+              if [ ${#NOTES} -lt 10 ]; then NOTES="Release v${VERSION}"; fi
+            fi
 
-            # 4. Build
+            # 5. Build
             pnpm --filter "$NAME" build
 
-            # 5. Sync to Distribution Repo
+            # 6. Create Monorepo Release
+            # This makes the monorepo look professional
+            gh release create "$MONO_TAG" \
+              --title "$MONO_TAG" \
+              --notes "$NOTES" || true
+
+            # 7. Sync to Distribution Repo
+            echo "📦 Syncing to flixlix/${CLEAN_NAME}..."
             rm -rf dist-repo
             git clone "https://x-access-token:${DIST_REPO_TOKEN}@github.com/flixlix/${CLEAN_NAME}.git" dist-repo
             
@@ -87,17 +100,16 @@ jobs:
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git add .
             
-            # Commit and Tag
             if ! git diff-index --quiet HEAD; then
               git commit -m "Release v${VERSION}"
               git tag -a "v${VERSION}" -m "Release v${VERSION}"
               git push origin main --tags --force
               
-              # Create Release
+              # 8. Create Dist Repo Release with Notes & Asset
               gh release create "v${VERSION}" "${CLEAN_NAME}.js" \
                 --repo "flixlix/${CLEAN_NAME}" \
                 --title "v${VERSION}" \
-                --notes "Automated release from monorepo. See [flixlix-cards](https://github.com/flixlix/flixlix-cards) for source."
+                --notes "$NOTES"
               echo "🚀 Successfully synced $CLEAN_NAME v$VERSION"
             fi
             

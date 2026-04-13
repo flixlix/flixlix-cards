@@ -1,4 +1,4 @@
-import { type PowerFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
+import { type EnergyFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
 import { fireEvent, type HomeAssistant, type LovelaceCardEditor } from "custom-card-helpers";
 import { LitElement, css, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
@@ -62,11 +62,11 @@ const CONFIG_PAGES: {
 @customElement("energy-flow-card-plus-editor")
 export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardEditor {
   @property({ attribute: false }) public hass!: HomeAssistant;
-  @state() private _config?: PowerFlowCardPlusConfig;
+  @state() private _config?: EnergyFlowCardPlusConfig;
   @state() private _configEntities?: LovelaceRowConfig[] = [];
   @state() private _currentConfigPage: ConfigPage = null;
 
-  public async setConfig(config: PowerFlowCardPlusConfig): Promise<void> {
+  public async setConfig(config: EnergyFlowCardPlusConfig): Promise<void> {
     assert(config, cardConfigStruct);
     this._config = config;
   }

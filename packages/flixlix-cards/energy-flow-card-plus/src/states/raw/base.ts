@@ -1,4 +1,4 @@
-import { type PowerFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
+import { type EnergyFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
 import { getEntityStateWatts } from "@/states/utils/get-entity-state-watts";
 import { isEntityInverted } from "@/states/utils/is-entity-inverted";
 import { getFirstEntityName } from "@/states/utils/mutli-entity";
@@ -6,11 +6,11 @@ import { onlyNegative, onlyPositive } from "@/states/utils/negative-positive";
 import { isNumberValue } from "@/utils/utils";
 import { type HomeAssistant } from "custom-card-helpers";
 
-type BaseEntityField = Exclude<keyof PowerFlowCardPlusConfig["entities"], "individual">;
+type BaseEntityField = Exclude<keyof EnergyFlowCardPlusConfig["entities"], "individual">;
 
 export const getSecondaryState = (
   hass: HomeAssistant,
-  config: PowerFlowCardPlusConfig,
+  config: EnergyFlowCardPlusConfig,
   field: BaseEntityField
 ) => {
   const entity = config.entities?.[field]?.secondary_info?.entity;
@@ -28,7 +28,7 @@ export const getSecondaryState = (
 
 export const getFieldInState = (
   hass: HomeAssistant,
-  config: PowerFlowCardPlusConfig,
+  config: EnergyFlowCardPlusConfig,
   field: BaseEntityField
 ) => {
   const entity = config.entities[field]?.entity;
@@ -47,7 +47,7 @@ export const getFieldInState = (
 
 export const getFieldOutState = (
   hass: HomeAssistant,
-  config: PowerFlowCardPlusConfig,
+  config: EnergyFlowCardPlusConfig,
   field: BaseEntityField
 ) => {
   const entity = config.entities[field]?.entity;

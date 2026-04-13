@@ -1,4 +1,3 @@
-import localize from "@/localize/localize";
 import { type PowerFlowCardPlusConfig } from "@/power-flow-card-plus-config";
 import { individualSchema } from "@/ui-editor/schema/individual";
 import {
@@ -10,6 +9,7 @@ import { fireEvent } from "@/ui-editor/utils/fire-event";
 import { loadHaForm } from "@/ui-editor/utils/load-ha-form";
 import { sortableStyles } from "@/ui-editor/utils/sortable-styles";
 import { loadSortable, type SortableInstance } from "@/ui-editor/utils/sortable.ondemand";
+import localize from "@flixlix-cards/i18n";
 import { mdiClose, mdiDrag, mdiPencil } from "@mdi/js";
 import { type HomeAssistant } from "custom-card-helpers";
 import { css, type CSSResultGroup, html, LitElement } from "lit";

@@ -1,4 +1,4 @@
-import { type PowerFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
+import { type EnergyFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
 import { checkShouldShowDots } from "@/utils/check-should-show-dots";
 import {
   checkHasBottomIndividual,
@@ -11,7 +11,7 @@ import { classMap } from "lit/directives/class-map.js";
 import { type Flows } from "./index";
 
 const solarToBatteryDot = (
-  config: PowerFlowCardPlusConfig,
+  config: EnergyFlowCardPlusConfig,
   solar: Flows["solar"],
   newDur: Flows["newDur"]
 ) => {
@@ -27,7 +27,7 @@ const solarToBatteryDot = (
 type FlowSolarToBatteryFlows = Pick<Flows, Exclude<keyof Flows, "grid">>;
 
 export const flowSolarToBattery = (
-  config: PowerFlowCardPlusConfig,
+  config: EnergyFlowCardPlusConfig,
   { battery, individual, solar, newDur }: FlowSolarToBatteryFlows
 ) => {
   const shouldShow = battery.has && solar.has && showLine(config, solar.state.toBattery || 0);

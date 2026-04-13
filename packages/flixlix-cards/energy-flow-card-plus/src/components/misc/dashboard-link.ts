@@ -1,8 +1,8 @@
-import { type PowerFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
+import { type EnergyFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
 import { type HomeAssistant } from "custom-card-helpers";
 import { html, nothing } from "lit";
 
-export const dashboardLinkElement = (config: PowerFlowCardPlusConfig, hass: HomeAssistant) => {
+export const dashboardLinkElement = (config: EnergyFlowCardPlusConfig, hass: HomeAssistant) => {
   if (!config.dashboard_link && !config.second_dashboard_link) return nothing;
 
   return html`

@@ -1,8 +1,8 @@
-import { type PowerFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
+import { type EnergyFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
 
-type InvertibleEntityType = Exclude<keyof PowerFlowCardPlusConfig["entities"], "individual">;
+type InvertibleEntityType = Exclude<keyof EnergyFlowCardPlusConfig["entities"], "individual">;
 
 export const isEntityInverted = (
-  config: PowerFlowCardPlusConfig,
+  config: EnergyFlowCardPlusConfig,
   entityType: InvertibleEntityType
 ) => !!config.entities[entityType]?.invert_state;

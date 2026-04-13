@@ -1,4 +1,4 @@
-import localize from "@/localize/localize";
+import localize from "@flixlix-cards/i18n";
 import { actionSchema, getBaseMainConfigSchema, secondaryInfoSchema } from "./_schema-base";
 
 const mainSchema = {

@@ -1,5 +1,5 @@
 import { type PowerFlowCardPlus } from "@/energy-flow-card-plus";
-import { type ConfigEntities, type PowerFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
+import { type ConfigEntities, type EnergyFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
 import { type IndividualObject } from "@/states/raw/individual/get-individual-object";
 import { type NewDur, type TemplatesObj } from "@/type";
 import { html, nothing, svg } from "lit";
@@ -22,7 +22,7 @@ interface Home {
 
 export const homeElement = (
   main: PowerFlowCardPlus,
-  config: PowerFlowCardPlusConfig,
+  config: EnergyFlowCardPlusConfig,
   {
     home,
     entities,

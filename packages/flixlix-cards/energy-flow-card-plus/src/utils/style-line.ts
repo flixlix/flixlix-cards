@@ -1,6 +1,6 @@
-import { type PowerFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
+import { type EnergyFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
 
-export const styleLine = (power: number, config: PowerFlowCardPlusConfig): string => {
+export const styleLine = (power: number, config: EnergyFlowCardPlusConfig): string => {
   if (power > 0) return "";
   const displayZeroMode = config?.display_zero_lines?.mode;
   if (displayZeroMode === "show" || displayZeroMode === undefined) return "";

@@ -1,4 +1,4 @@
-import { type PowerFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
+import { type EnergyFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
 import { type HomeAssistant, formatNumber } from "custom-card-helpers";
 import { isNumberValue, round } from "./utils";
 
@@ -12,7 +12,7 @@ import { isNumberValue, round } from "./utils";
  */
 export const displayValue = (
   hass: HomeAssistant,
-  config: PowerFlowCardPlusConfig,
+  config: EnergyFlowCardPlusConfig,
   value: number | string | null,
   {
     unit,

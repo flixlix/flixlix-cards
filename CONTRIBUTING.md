@@ -1,63 +1,91 @@
 # Contributing
 
-Thanks for contributing to `flixlix-cards`.
+Thanks for your interest in contributing to the `flixlix-cards` monorepo! This repository contains multiple Home Assistant cards.
 
 ## Requirements
 
-- Node.js (LTS recommended): [https://nodejs.org/en/download](https://nodejs.org/en/download)
-- `pnpm`: [https://pnpm.io/installation](https://pnpm.io/installation)
-- Docker (only for local Home Assistant dev via `pnpm start:hass`; not required if you use your own Home Assistant instance): [https://www.docker.com/get-started/](https://www.docker.com/get-started/)
+- **Node.js** (LTS recommended): [Download](https://nodejs.org/en/download)
+- **pnpm**: [Install Instructions](https://pnpm.io/installation)
+- **Docker** (only required for local Home Assistant development via `pnpm start:hass`): [Get Started](https://www.docker.com/get-started/)
+
+## Monorepo Structure
+
+Each card is located in its own folder inside [`packages/flixlix-cards`](packages/flixlix-cards/):
+
+- `power-flow-card-plus`
+- `energy-flow-card-plus`
+- _(more to come!)_
+
+Each package contains its source code, changelogs, and relevant scripts.
 
 ## Local Development
 
-1. Install dependencies:
+1. **Install all dependencies** at the root of the monorepo:
 
    ```bash
    pnpm install
    ```
 
-2. Start Home Assistant in development mode (this step can be skipped if you want to test on your own Home Assistant instance):
+2. **Select a card to work on.** Change to the desired package directory, e.g.:
+
+   ```bash
+   cd packages/flixlix-cards/power-flow-card-plus
+   ```
+
+3. **(Optional) Start Home Assistant locally** for testing (from the repo root):
 
    ```bash
    pnpm start:hass
    ```
 
-3. In a separate terminal, build and serve the compiled card file:
+   You only need Docker for this step. Alternatively, use your own Home Assistant instance instead.
+
+4. **Build and serve the card you’re working on:**  
+   Most cards support a `watch` script for live rebuilding. Run it from the card's package folder:
 
    ```bash
-   pnpm watch
+   pnpm dev
    ```
 
-4. In Home Assistant, add this dashboard resource:
+5. **Add the built card to Home Assistant’s dashboard resources:**  
+   (Change the filename to match the card you’re developing.)
+
+   ```text
+   http://<your-ip>:5001/<card-filename>.js
+   ```
+
+   Example for Power Flow Card Plus:
 
    ```text
    http://<your-ip>:5001/power-flow-card-plus.js
    ```
 
-5. Open Home Assistant:
+6. **Open Home Assistant:**
 
    ```text
    http://localhost:8123
    ```
 
-6. Complete onboarding (if needed), add the card to a dashboard, and test your changes.
+   Complete onboarding if needed, add the card to a dashboard, and test your changes.
 
-7. Make your code changes.
+7. **Make your code changes.** Commit them following the repository’s style and conventions.
 
 ## Changesets
 
-This project uses Changesets to keep version bumps and release notes accurate and consistent across contributions.
+This monorepo uses [Changesets](https://github.com/changesets/changesets) to manage version bumps and release notes across all packages.
 
-If your changes should be included in a new version, add a changeset and describe what changed:
+- **If your changes affect a released card**, run:
 
-```bash
-pnpm changeset
-```
+  ```bash
+  pnpm changeset
+  ```
 
-Write a clear summary of the change in the generated changeset file.
+  Follow the prompts to create a changeset. Write a clear summary of what changed in the generated markdown file.
 
-For more info: https://github.com/changesets/changesets
+- **Release notes and versioning** will be handled automatically during the release process.
 
-## Questions
+## Questions & Help
 
-If you have any questions on contributions or are stuck setting things up, feel free to contact me through opening an issue.
+If you have questions, get stuck, or need clarification:
+- Check the card’s own README for usage details or quirks.
+- Feel free to create an issue on GitHub describing your problem or question.

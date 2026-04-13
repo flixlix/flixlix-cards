@@ -3,5 +3,6 @@ packages:
   - "packages/*"
   - "packages/tooling/*"
   - "packages/flixlix-cards/*"
+  - "packages/flixlix-cards/shared/*"
   - "packages/utils/*"
 allowBuilds:

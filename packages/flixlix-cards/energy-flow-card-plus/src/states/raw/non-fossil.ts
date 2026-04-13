@@ -1,10 +1,10 @@
-import { type PowerFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
+import { type EnergyFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
 import { getEntityState } from "@/states/utils/get-entity-state";
 import { type HomeAssistant } from "custom-card-helpers";
 import { getSecondaryState } from "./base";
 import { getGridConsumptionState } from "./grid";
 
-export const getNonFossilHas = (hass: HomeAssistant, config: PowerFlowCardPlusConfig) => {
+export const getNonFossilHas = (hass: HomeAssistant, config: EnergyFlowCardPlusConfig) => {
   const nonFossil = config.entities.fossil_fuel_percentage;
   const fossilPercentageEntity = nonFossil?.entity;
   const fossilPercentageDisplayZero = nonFossil?.display_zero;
@@ -19,7 +19,10 @@ export const getNonFossilHas = (hass: HomeAssistant, config: PowerFlowCardPlusCo
   return gridFromGrid * 1 - (getEntityState(hass, fossilPercentageEntity) ?? 0) / 100 > 0;
 };
 
-export const getNonFossilHasPercentage = (hass: HomeAssistant, config: PowerFlowCardPlusConfig) => {
+export const getNonFossilHasPercentage = (
+  hass: HomeAssistant,
+  config: EnergyFlowCardPlusConfig
+) => {
   const nonFossil = config.entities.fossil_fuel_percentage;
   const fossilPercentageEntity = nonFossil?.entity;
   const fossilPercentageDisplayZero = nonFossil?.display_zero;
@@ -36,10 +39,10 @@ export const getNonFossilHasPercentage = (hass: HomeAssistant, config: PowerFlow
   return gridFromGrid * 1 - (getEntityState(hass, fossilPercentageEntity) ?? 0) / 100 > 0;
 };
 
-export const getNonFossilSecondaryState = (hass: HomeAssistant, config: PowerFlowCardPlusConfig) =>
+export const getNonFossilSecondaryState = (hass: HomeAssistant, config: EnergyFlowCardPlusConfig) =>
   getSecondaryState(hass, config, "fossil_fuel_percentage");
 
-export const getNonFossilState = (hass: HomeAssistant, config: PowerFlowCardPlusConfig) => {
+export const getNonFossilState = (hass: HomeAssistant, config: EnergyFlowCardPlusConfig) => {
   const nonFossil = config.entities.fossil_fuel_percentage;
   const fossilPercentageEntity = nonFossil?.entity;
   const gridFromGrid = getGridConsumptionState(hass, config);

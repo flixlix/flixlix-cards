@@ -1,5 +1,5 @@
 import { type PowerFlowCardPlus } from "@/energy-flow-card-plus";
-import { type PowerFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
+import { type EnergyFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
 import { type IndividualObject } from "@/states/raw/individual/get-individual-object";
 import { type NewDur, type TemplatesObj } from "@/type";
 import { checkShouldShowDots } from "@/utils/check-should-show-dots";
@@ -18,7 +18,7 @@ interface IndividualBottom {
 
 export const individualLeftBottomElement = (
   main: PowerFlowCardPlus,
-  config: PowerFlowCardPlusConfig,
+  config: EnergyFlowCardPlusConfig,
   { individualObj, templatesObj, displayState, newDur }: IndividualBottom
 ) => {
   if (!individualObj) return html`<div class="spacer"></div>`;

@@ -1,4 +1,4 @@
-import { type PowerFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
+import { type EnergyFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
 import { isEntityAvailable } from "@/states/utils/existence-entity";
 import { getEntityState } from "@/states/utils/get-entity-state";
 import { getEntityStateWatts } from "@/states/utils/get-entity-state-watts";
@@ -8,7 +8,7 @@ import { type HomeAssistant } from "custom-card-helpers";
 
 export const displayNonFossilState = (
   hass: HomeAssistant,
-  config: PowerFlowCardPlusConfig,
+  config: EnergyFlowCardPlusConfig,
   entityFossil: string,
   totalFromGrid: number
 ): string | number => {

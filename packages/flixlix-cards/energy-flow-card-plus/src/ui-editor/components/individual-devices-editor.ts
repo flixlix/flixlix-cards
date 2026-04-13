@@ -1,4 +1,4 @@
-import { type PowerFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
+import { type EnergyFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
 import localize from "@/localize/localize";
 import { type IndividualDeviceType } from "@/type";
 import {
@@ -45,7 +45,7 @@ export function processEditorEntities(
 @customElement("individual-devices-editor")
 export class IndividualDevicesEditor extends LitElement {
   public hass!: HomeAssistant;
-  @property({ attribute: false }) public config!: PowerFlowCardPlusConfig;
+  @property({ attribute: false }) public config!: EnergyFlowCardPlusConfig;
 
   @state() private _subElementEditorConfig?: SubElementEditorConfig;
 

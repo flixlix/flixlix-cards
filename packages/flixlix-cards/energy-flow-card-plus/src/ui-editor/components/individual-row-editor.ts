@@ -1,4 +1,4 @@
-import { type PowerFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
+import { type EnergyFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
 import localize from "@/localize/localize";
 import { individualSchema } from "@/ui-editor/schema/individual";
 import {
@@ -34,7 +34,7 @@ declare global {
 export class IndividualRowEditor extends LitElement {
   @property({ attribute: false }) protected hass?: HomeAssistant;
 
-  @property({ attribute: false }) protected config?: PowerFlowCardPlusConfig;
+  @property({ attribute: false }) protected config?: EnergyFlowCardPlusConfig;
 
   @property({ attribute: false }) protected entities?: LovelaceRowConfig[];
 

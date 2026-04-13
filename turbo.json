@@ -16,6 +16,11 @@
         "$TURBO_ROOT$/packages/testing/vitest-base.js"
       ]
     },
+    "precommit": {
+      "cache": false,
+      "dependsOn": ["^test", "^lint", "^format:check"],
+      "inputs": ["$TURBO_DEFAULT$"]
+    },
     "lint": {},
     "dev": {
       "cache": false,

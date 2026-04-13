@@ -1,5 +1,5 @@
 import { type PowerFlowCardPlus } from "@/energy-flow-card-plus";
-import { type ConfigEntities, type PowerFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
+import { type ConfigEntities, type EnergyFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
 import { getEntityStateWatts } from "@/states/utils/get-entity-state-watts";
 import { type TemplatesObj } from "@/type";
 import { displayValue } from "@/utils/display-value";
@@ -9,7 +9,7 @@ import { generalSecondarySpan } from "./spans/general-secondary-span";
 
 export const solarElement = (
   main: PowerFlowCardPlus,
-  config: PowerFlowCardPlusConfig,
+  config: EnergyFlowCardPlusConfig,
   {
     entities,
     solar,

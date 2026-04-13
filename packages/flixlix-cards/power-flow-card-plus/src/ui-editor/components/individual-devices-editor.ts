@@ -1,6 +1,6 @@
-import localize from "@/localize/localize";
 import { type PowerFlowCardPlusConfig } from "@/power-flow-card-plus-config";
 import { type IndividualDeviceType } from "@/type";
+import localize from "@flixlix-cards/i18n";
 import {
   type ActionConfig,
   fireEvent,

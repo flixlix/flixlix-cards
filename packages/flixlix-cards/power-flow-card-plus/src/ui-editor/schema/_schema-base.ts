@@ -1,4 +1,4 @@
-import localize from "@/localize/localize";
+import localize from "@flixlix-cards/i18n";
 
 export function getEntityCombinedSelectionSchema() {
   return {

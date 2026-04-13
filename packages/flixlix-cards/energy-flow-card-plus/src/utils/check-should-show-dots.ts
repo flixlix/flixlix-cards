@@ -1,6 +1,6 @@
-import { type PowerFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
+import { type EnergyFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
 
-export const checkShouldShowDots = (config: PowerFlowCardPlusConfig) => {
+export const checkShouldShowDots = (config: EnergyFlowCardPlusConfig) => {
   if (config.disable_dots === true) {
     return false;
   }

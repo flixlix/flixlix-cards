@@ -1,4 +1,4 @@
-import { type PowerFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
+import { type EnergyFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
 import { checkShouldShowDots } from "@/utils/check-should-show-dots";
 import {
   checkHasBottomIndividual,
@@ -11,7 +11,7 @@ import { classMap } from "lit/directives/class-map.js";
 import { type Flows } from "./index";
 
 const solarToHomeDot = (
-  config: PowerFlowCardPlusConfig,
+  config: EnergyFlowCardPlusConfig,
   solar: Flows["solar"],
   newDur: Flows["newDur"]
 ) => {
@@ -25,7 +25,7 @@ const solarToHomeDot = (
 };
 
 export const flowSolarToHome = (
-  config: PowerFlowCardPlusConfig,
+  config: EnergyFlowCardPlusConfig,
   { battery, grid, individual, solar, newDur }: Flows
 ) => {
   const shouldShow =

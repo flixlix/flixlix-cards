@@ -1,6 +1,6 @@
-import { type PowerFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
+import { type EnergyFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
 import { type HomeAssistant } from "custom-card-helpers";
 import { getSecondaryState } from "./base";
 
-export const getHomeSecondaryState = (hass: HomeAssistant, config: PowerFlowCardPlusConfig) =>
+export const getHomeSecondaryState = (hass: HomeAssistant, config: EnergyFlowCardPlusConfig) =>
   getSecondaryState(hass, config, "home");

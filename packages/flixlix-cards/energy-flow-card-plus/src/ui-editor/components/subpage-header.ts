@@ -1,4 +1,4 @@
-import { type PowerFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
+import { type EnergyFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
 import localize from "@/localize/localize";
 import { mdiArrowLeft } from "@mdi/js";
 import { fireEvent, type HomeAssistant } from "custom-card-helpers";
@@ -15,7 +15,7 @@ declare global {
 @customElement("subpage-header")
 export class SubpageHeader extends LitElement {
   public hass!: HomeAssistant;
-  @property({ attribute: false }) public config!: PowerFlowCardPlusConfig;
+  @property({ attribute: false }) public config!: EnergyFlowCardPlusConfig;
   @property() protected page?: ConfigPage;
 
   protected render(): TemplateResult {

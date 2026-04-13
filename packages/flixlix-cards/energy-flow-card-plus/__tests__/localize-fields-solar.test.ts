@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test } from "vitest";
 
+import type { EnergyFlowCardPlusConfig } from "../src/energy-flow-card-plus-config";
 import setupCustomlocalize from "../src/localize/localize";
-import type { PowerFlowCardPlusConfig } from "../src/power-flow-card-plus-config";
 import { getSolarState } from "../src/states/raw/solar";
 import { computeFieldIcon, computeFieldName } from "../src/utils/compute-field-attributes";
 
@@ -98,7 +98,7 @@ describe("localize + field helpers + solar sign", () => {
       entities: {
         solar: { entity: "sensor.solar_watts", invert_state: false },
       },
-    } as unknown as PowerFlowCardPlusConfig;
+    } as unknown as EnergyFlowCardPlusConfig;
 
     expect(getSolarState(hass, config)).toBe(0);
   });
@@ -119,7 +119,7 @@ describe("localize + field helpers + solar sign", () => {
       entities: {
         solar: { entity: "sensor.solar_watts", invert_state: true },
       },
-    } as unknown as PowerFlowCardPlusConfig;
+    } as unknown as EnergyFlowCardPlusConfig;
 
     expect(getSolarState(hass, config)).toBe(500);
   });

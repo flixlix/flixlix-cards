@@ -1,5 +1,5 @@
 import { type PowerFlowCardPlus } from "@/energy-flow-card-plus";
-import { type ConfigEntities, type PowerFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
+import { type ConfigEntities, type EnergyFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
 import { type NewDur, type TemplatesObj } from "@/type";
 import { checkShouldShowDots } from "@/utils/check-should-show-dots";
 import { computeIndividualFlowRate } from "@/utils/compute-flow-rate";
@@ -19,7 +19,7 @@ interface NonFossil {
 
 export const nonFossilElement = (
   main: PowerFlowCardPlus,
-  config: PowerFlowCardPlusConfig,
+  config: EnergyFlowCardPlusConfig,
   { nonFossil, entities, templatesObj, grid, newDur }: NonFossil
 ) => {
   const disableEntityClick = config.clickable_entities === false;

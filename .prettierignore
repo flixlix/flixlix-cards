@@ -1,0 +1,14 @@
+# Build artifacts
+dist
+**/dist
+
+# Dependencies
+node_modules
+**/node_modules
+
+# pnpm specific
+.pnpm-store
+
+# Other artifacts
+.turbo
+*.log

@@ -1,5 +1,5 @@
 import { type PowerFlowCardPlus } from "@/energy-flow-card-plus";
-import { type ConfigEntities, type PowerFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
+import { type ConfigEntities, type EnergyFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
 import { type TemplatesObj } from "@/type";
 import { displayValue } from "@/utils/display-value";
 import { html, nothing } from "lit";
@@ -7,7 +7,7 @@ import { generalSecondarySpan } from "./spans/general-secondary-span";
 
 export const gridElement = (
   main: PowerFlowCardPlus,
-  config: PowerFlowCardPlusConfig,
+  config: EnergyFlowCardPlusConfig,
   {
     entities,
     grid,
