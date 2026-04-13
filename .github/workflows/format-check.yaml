@@ -5,6 +5,9 @@ on:
     branches:
       - "*"
 
+permissions:
+  contents: read
+
 jobs:
   format-check:
     runs-on: ubuntu-latest
