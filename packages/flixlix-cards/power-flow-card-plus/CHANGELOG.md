@@ -4,6 +4,12 @@
 
 ### Patch Changes
 
+- 919c4ef: monorepo test setup
+
+## 0.3.2
+
+### Patch Changes
+
 - f627e36: monorepo setup
 
 ## 0.3.2
