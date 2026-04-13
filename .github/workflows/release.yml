@@ -47,71 +47,60 @@ jobs:
           DIST_REPO_TOKEN: ${{ secrets.DIST_REPO_TOKEN }}
           GH_TOKEN: ${{ secrets.DIST_REPO_TOKEN }}
         run: |
-          # 1. Push the tags created by 'changeset tag' back to the monorepo
-          # This ensures the local runner and GitHub server are in sync
+          # 1. Manually ensure tags are pushed to monorepo
           git push origin --tags
 
-          # 2. Get the list of all tags pointing to the current commit
-          # We'll try two methods to be extra safe
-          NEW_TAGS=$(git tag --points-at HEAD)
-          
-          if [ -z "$NEW_TAGS" ]; then
-            echo "ℹ️ No new package tags detected in this commit. Checking for recently created tags..."
-            # Fallback: look at tags created in the last 2 minutes as a safety net
-            NEW_TAGS=$(git for-each-ref --format='%(refname:short)' --sort=-taggerdate refs/tags | head -n 5)
-          fi
+          # 2. Iterate through all packages in your specific structure
+          for PKG_JSON in packages/flixlix-cards/*/package.json; do
+            PKG_DIR=$(dirname "$PKG_JSON")
+            NAME=$(jq -r '.name' "$PKG_JSON")
+            VERSION=$(jq -r '.version' "$PKG_JSON")
+            CLEAN_NAME=$(echo $NAME | sed 's|^@.*/||')
 
-          echo "✅ Processing tags: $NEW_TAGS"
+            echo "🔍 Checking $CLEAN_NAME (v$VERSION)..."
 
-          for TAG in $NEW_TAGS; do
-            # Ensure the tag actually belongs to a package (format: name@version)
-            if [[ "$TAG" != *"@"* ]]; then continue; fi
-            
-            # Extract Name and Version (Robust regex)
-            VERSION=$(echo $TAG | grep -oE '[0-9]+\.[0-9]+\.[0-9]+.*$')
-            FULL_NAME=${TAG%@$VERSION}
-            # Remove scope (e.g. @flixlix/card -> card)
-            CLEAN_NAME=$(echo $FULL_NAME | sed 's|^@.*/||')
-            
-            PKG_PATH="packages/flixlix-cards/${CLEAN_NAME}"
-            
-            if [ ! -d "$PKG_PATH" ]; then
-              echo "⏭️ Skipping $TAG (Path $PKG_PATH not found)"
+            # 3. Check if this version already exists as a tag in the destination repo
+            # This is the most reliable "Is there a new version?" check
+            TAG_EXISTS=$(git ls-remote --tags "https://github.com/flixlix/${CLEAN_NAME}.git" "refs/tags/v${VERSION}")
+
+            if [ -n "$TAG_EXISTS" ]; then
+              echo "✅ $CLEAN_NAME is already up to date at v$VERSION. Skipping."
               continue
             fi
 
-            echo "🛠 Building $CLEAN_NAME v$VERSION..."
-            pnpm --filter "$FULL_NAME" build
+            echo "🛠 New version detected! Syncing $CLEAN_NAME v$VERSION..."
 
-            echo "📦 Syncing to flixlix/${CLEAN_NAME}..."
+            # 4. Build
+            pnpm --filter "$NAME" build
+
+            # 5. Sync to Distribution Repo
             rm -rf dist-repo
             git clone "https://x-access-token:${DIST_REPO_TOKEN}@github.com/flixlix/${CLEAN_NAME}.git" dist-repo
             
-            # Use -f to force overwrite
-            cp -f "${PKG_PATH}/dist/${CLEAN_NAME}.js" dist-repo/
-            cp -f "${PKG_PATH}/hacs.json" dist-repo/
-            cp -f "${PKG_PATH}/README.md" dist-repo/
-            cp -f "${PKG_PATH}/CHANGELOG.md" dist-repo/ || true
+            cp -f "${PKG_DIR}/dist/${CLEAN_NAME}.js" dist-repo/
+            cp -f "${PKG_DIR}/hacs.json" dist-repo/
+            cp -f "${PKG_DIR}/README.md" dist-repo/
+            cp -f "${PKG_DIR}/CHANGELOG.md" dist-repo/ || true
 
             cd dist-repo
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git add .
             
+            # Commit and Tag
             if ! git diff-index --quiet HEAD; then
               git commit -m "Release v${VERSION}"
               git tag -a "v${VERSION}" -m "Release v${VERSION}"
               git push origin main --tags --force
               
+              # Create Release
               gh release create "v${VERSION}" "${CLEAN_NAME}.js" \
                 --repo "flixlix/${CLEAN_NAME}" \
                 --title "v${VERSION}" \
-                --notes "Automated release. See [flixlix-cards](https://github.com/flixlix/flixlix-cards) for full source."
-              echo "🚀 Successfully released $CLEAN_NAME v$VERSION"
-            else
-              echo "✅ No changes needed for $CLEAN_NAME. Repo is already at v$VERSION."
+                --notes "Automated release from monorepo. See [flixlix-cards](https://github.com/flixlix/flixlix-cards) for source."
+              echo "🚀 Successfully synced $CLEAN_NAME v$VERSION"
             fi
             
-            cd ..
+            cd ../..
             rm -rf dist-repo
           done
