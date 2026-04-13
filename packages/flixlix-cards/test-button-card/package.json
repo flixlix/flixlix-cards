@@ -2,6 +2,7 @@
   "name": "test-button-card",
   "version": "1.0.0",
   "type": "module",
+  "private": true,
   "scripts": {
     "build": "rollup -c"
   },

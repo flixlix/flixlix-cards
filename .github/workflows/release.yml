@@ -35,23 +35,61 @@ jobs:
         id: changesets
         uses: changesets/action@v1
         with:
-          # Calls the script we will define in package.json
           publish: pnpm run release:tag
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create Individual GitHub Releases
+      - name: Sync to Distribution Repos
         if: steps.changesets.outputs.published == 'true'
-        run: |
-          echo '${{ steps.changesets.outputs.publishedPackages }}' | jq -c '.[]' | while read -r pkg; do
-            name=$(echo $pkg | jq -r '.name')
-            version=$(echo $pkg | jq -r '.version')
-            tag="$name@$version"
-            
-            echo "Creating release for $tag"
-            
-            # Create the release for this specific package tag
-            gh release create "$tag" --generate-notes --title "$tag"
-          done
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DIST_REPO_TOKEN: ${{ secrets.DIST_REPO_TOKEN }}
+          GH_TOKEN: ${{ secrets.DIST_REPO_TOKEN }}
+        run: |
+          # Loop through each package that was just tagged by changesets
+          echo '${{ steps.changesets.outputs.publishedPackages }}' | jq -c '.[]' | while read -r pkg; do
+            NAME=$(echo $pkg | jq -r '.name')
+            VERSION=$(echo $pkg | jq -r '.version')
+            
+            # Remove scope if exists (e.g. @flixlix/power-flow-card-plus -> power-flow-card-plus)
+            CLEAN_NAME=$(echo $NAME | sed 's|^@.*/||')
+            
+            echo "🚀 Syncing $CLEAN_NAME v$VERSION to its own repository..."
+
+            # 1. Build the package
+            pnpm --filter "$NAME" build
+
+            # 2. Clone the destination repo
+            # We clone into a temporary folder 'dist-repo'
+            git clone "https://x-access-token:${DIST_REPO_TOKEN}@github.com/flixlix/${CLEAN_NAME}.git" dist-repo
+            
+            # 3. Copy files (assuming your build output is in packages/[name]/dist/)
+            # We copy the JS file, the hacs.json, and the package-specific README
+            cp "packages/${CLEAN_NAME}/dist/${CLEAN_NAME}.js" dist-repo/
+            cp "packages/${CLEAN_NAME}/hacs.json" dist-repo/
+            cp "packages/${CLEAN_NAME}/README.md" dist-repo/
+
+            # 4. Push to the card's dedicated repo
+            cd dist-repo
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add .
+            
+            # Only commit/tag if there are actually changes
+            if ! git diff-index --quiet HEAD; then
+              git commit -m "Release v${VERSION}"
+              git tag -a "v${VERSION}" -m "Release v${VERSION}"
+              git push origin main --tags
+              
+              # 5. Create a GitHub Release in the dedicated repo
+              # This attaches the .js file to the release for HACS users
+              gh release create "v${VERSION}" "${CLEAN_NAME}.js" \
+                --repo "flixlix/${CLEAN_NAME}" \
+                --title "v${VERSION}" \
+                --notes "For a full changelog, please see the [Monorepo](https://github.com/flixlix/flow-cards)."
+            else
+              echo "No changes detected for $CLEAN_NAME. Skipping push."
+            fi
+            
+            cd ..
+            rm -rf dist-repo
+          done
