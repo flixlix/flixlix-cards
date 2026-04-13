@@ -4,6 +4,12 @@
 
 ### Patch Changes
 
+- 71a99e5: fix release workflow
+
+## 0.3.2
+
+### Patch Changes
+
 - 8b74b8e: retest monorepo initial setup
 
 ## 0.3.2
