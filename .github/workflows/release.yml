@@ -64,9 +64,9 @@ jobs:
             
             # 3. Copy files (assuming your build output is in packages/[name]/dist/)
             # We copy the JS file, the hacs.json, and the package-specific README
-            cp "packages/${CLEAN_NAME}/dist/${CLEAN_NAME}.js" dist-repo/
-            cp "packages/${CLEAN_NAME}/hacs.json" dist-repo/
-            cp "packages/${CLEAN_NAME}/README.md" dist-repo/
+            cp "packages/flixlix-cards/${CLEAN_NAME}/dist/${CLEAN_NAME}.js" dist-repo/
+            cp "packages/flixlix-cards/${CLEAN_NAME}/hacs.json" dist-repo/
+            cp "packages/flixlix-cards/${CLEAN_NAME}/README.md" dist-repo/
 
             # 4. Push to the card's dedicated repo
             cd dist-repo
