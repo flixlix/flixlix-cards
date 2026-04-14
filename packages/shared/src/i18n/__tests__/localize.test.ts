@@ -20,7 +20,7 @@ function getAllKeys(obj: { [key: string]: any }): string[] {
 }
 
 describe("Language files", () => {
-  const languagesDir = path.resolve(__dirname, "../src/languages");
+  const languagesDir = path.resolve(__dirname, "../languages");
   const languageFiles = fs
     .readdirSync(languagesDir)
     .filter((file) => file.endsWith(".json"))

@@ -13,8 +13,6 @@
   },
   "scripts": {
     "clean": "rimraf dist node_modules .turbo",
-    "build": "tsup src/index.ts --format cjs,esm --dts",
-    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write . --ignore-path ../../../../.prettierignore",
@@ -28,6 +26,7 @@
     "@flixlix-cards/prettier-config": "workspace:*",
     "@flixlix-cards/testing": "workspace:*",
     "@flixlix-cards/typescript-config": "workspace:*",
+    "@types/node": "^22.10.2",
     "eslint": "^9.21.0",
     "tsup": "^8.4.0",
     "typescript": "^5.8.2",
