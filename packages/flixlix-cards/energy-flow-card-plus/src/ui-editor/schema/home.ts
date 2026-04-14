@@ -1,4 +1,4 @@
-import localize from "@/localize/localize";
+import localize from "@flixlix-cards/shared/i18n";
 import { actionSchema, getBaseMainConfigSchema, secondaryInfoSchema } from "./_schema-base";
 
 const mainSchema = {
@@ -17,7 +17,7 @@ const mainSchema = {
             { value: "grid", label: "Grid" },
             { value: "battery", label: "Battery" },
           ],
-          custom_value: true,
+          mode: "dropdown",
         },
       },
     },
@@ -33,7 +33,7 @@ const mainSchema = {
             { value: "grid", label: "Grid" },
             { value: "battery", label: "Battery" },
           ],
-          custom_value: true,
+          mode: "dropdown",
         },
       },
     },

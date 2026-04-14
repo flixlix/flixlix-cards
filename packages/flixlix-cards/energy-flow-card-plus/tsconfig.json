@@ -5,13 +5,13 @@
     "moduleResolution": "Bundler",
     "declaration": true,
     "outDir": "dist",
-    "rootDir": "src",
+    "rootDir": "../..",
     "experimentalDecorators": true,
     "useDefineForClassFields": false,
     "emitDecoratorMetadata": true,
     "types": ["vitest/globals"],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*", "../../shared/src/*"]
     }
   },
   "include": ["src"],

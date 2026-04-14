@@ -1,35 +1,16 @@
-import { type EnergyFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
-import localize from "@/localize/localize";
-import { type IndividualDeviceType } from "@/type";
+import localize from "@flixlix-cards/shared/i18n";
 import {
-  type ActionConfig,
-  fireEvent,
-  type HASSDomEvent,
-  type HomeAssistant,
-} from "custom-card-helpers";
+  type EditSubElementEvent,
+  type IndividualDeviceType,
+  type LovelaceRowConfig,
+  type PowerFlowCardPlusConfig,
+  type SubElementEditorConfig,
+} from "@flixlix-cards/shared/types";
+import { fireEvent, type HASSDomEvent, type HomeAssistant } from "custom-card-helpers";
 import { css, type CSSResultGroup, html, LitElement, type TemplateResult } from "lit";
 import { customElement, property, state } from "lit-element";
 import { individualDevicesSchema } from "../schema/_schema-all";
-import {
-  type EditSubElementEvent,
-  type LovelaceRowConfig,
-  type SubElementEditorConfig,
-} from "../types/entity-rows";
-import "./individual-row-editor";
-
-export interface GUIModeChangedEvent {
-  guiMode: boolean;
-  guiModeAvailable: boolean;
-}
-
-export interface EditorTarget extends EventTarget {
-  value?: string;
-  index?: number;
-  checked?: boolean;
-  configValue?: string;
-  type?: HTMLInputElement["type"];
-  config: ActionConfig;
-}
+import "./efcp-individual-row-editor";
 
 export function processEditorEntities(
   entities: Array<string | IndividualDeviceType>
@@ -42,10 +23,10 @@ export function processEditorEntities(
   });
 }
 
-@customElement("individual-devices-editor")
+@customElement("efcp-individual-devices-editor")
 export class IndividualDevicesEditor extends LitElement {
   public hass!: HomeAssistant;
-  @property({ attribute: false }) public config!: EnergyFlowCardPlusConfig;
+  @property({ attribute: false }) public config!: PowerFlowCardPlusConfig;
 
   @state() private _subElementEditorConfig?: SubElementEditorConfig;
 
@@ -71,14 +52,14 @@ export class IndividualDevicesEditor extends LitElement {
     }
 
     return html`
-      <individual-row-editor
+      <efcp-individual-row-editor
         .hass=${this.hass}
         .config=${this.config}
         .entities=${this._configEntities || []}
         @open-sub-element-editor=${this._editDetailElement}
         @entities-changed=${this._entitiesChanged}
         style="width: 100%;"
-      ></individual-row-editor>
+      ></efcp-individual-row-editor>
     `;
   }
 
@@ -122,6 +103,6 @@ export class IndividualDevicesEditor extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "individual-devices-editor": IndividualDevicesEditor;
+    "efcp-individual-devices-editor": IndividualDevicesEditor;
   }
 }

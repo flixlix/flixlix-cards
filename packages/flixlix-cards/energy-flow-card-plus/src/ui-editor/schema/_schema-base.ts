@@ -1,4 +1,4 @@
-import localize from "@/localize/localize";
+import localize from "@flixlix-cards/shared/i18n";
 
 export function getEntityCombinedSelectionSchema() {
   return {
@@ -175,7 +175,7 @@ const batteryOrGridMainConfigSchema = [
           { value: "one_way_no_zero", label: "One Way" },
           { value: "one_way", label: "One Way (Show Zero)" },
         ],
-        custom_value: true,
+        mode: "dropdown",
       },
     },
   },

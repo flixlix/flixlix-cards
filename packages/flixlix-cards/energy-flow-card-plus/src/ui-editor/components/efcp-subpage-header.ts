@@ -1,10 +1,9 @@
-import { type EnergyFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
-import localize from "@/localize/localize";
+import localize from "@flixlix-cards/shared/i18n";
+import { type ConfigPage, type PowerFlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { mdiArrowLeft } from "@mdi/js";
 import { fireEvent, type HomeAssistant } from "custom-card-helpers";
 import { css, type CSSResultGroup, html, LitElement, type TemplateResult } from "lit";
 import { customElement, property } from "lit-element";
-import { type ConfigPage } from "../types/config-page";
 
 declare global {
   interface HASSDomEvents {
@@ -12,10 +11,10 @@ declare global {
   }
 }
 
-@customElement("subpage-header")
+@customElement("efcp-subpage-header")
 export class SubpageHeader extends LitElement {
   public hass!: HomeAssistant;
-  @property({ attribute: false }) public config!: EnergyFlowCardPlusConfig;
+  @property({ attribute: false }) public config!: PowerFlowCardPlusConfig;
   @property() protected page?: ConfigPage;
 
   protected render(): TemplateResult {
@@ -56,6 +55,6 @@ export class SubpageHeader extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "subpage-header": SubpageHeader;
+    "efcp-subpage-header": SubpageHeader;
   }
 }

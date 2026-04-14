@@ -1,4 +1,4 @@
-import localize from "@/localize/localize";
+import localize from "@flixlix-cards/shared/i18n";
 import {
   actionSchema,
   customColorsSchema,
@@ -26,6 +26,7 @@ const mainSchema = {
       name: "color_value",
       label: "Color of Value",
       selector: { boolean: {} },
+      default: true,
     },
   ],
 };

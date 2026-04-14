@@ -1,4 +1,4 @@
-import localize from "@/localize/localize";
+import localize from "@flixlix-cards/shared/i18n";
 import {
   actionSchema,
   customColorsSchema,

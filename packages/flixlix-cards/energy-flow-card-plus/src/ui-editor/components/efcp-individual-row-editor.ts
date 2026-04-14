@@ -1,15 +1,15 @@
-import { type EnergyFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
-import localize from "@/localize/localize";
 import { individualSchema } from "@/ui-editor/schema/individual";
-import {
-  type EditSubElementEvent,
-  type EntityConfig,
-  type LovelaceRowConfig,
-} from "@/ui-editor/types/entity-rows";
 import { fireEvent } from "@/ui-editor/utils/fire-event";
 import { loadHaForm } from "@/ui-editor/utils/load-ha-form";
 import { sortableStyles } from "@/ui-editor/utils/sortable-styles";
 import { loadSortable, type SortableInstance } from "@/ui-editor/utils/sortable.ondemand";
+import localize from "@flixlix-cards/shared/i18n";
+import {
+  type EditSubElementEvent,
+  type EntityConfig,
+  type LovelaceRowConfig,
+  type PowerFlowCardPlusConfig,
+} from "@flixlix-cards/shared/types";
 import { mdiClose, mdiDrag, mdiPencil } from "@mdi/js";
 import { type HomeAssistant } from "custom-card-helpers";
 import { css, type CSSResultGroup, html, LitElement } from "lit";
@@ -30,11 +30,11 @@ declare global {
   }
 }
 
-@customElement("individual-row-editor")
+@customElement("efcp-individual-row-editor")
 export class IndividualRowEditor extends LitElement {
   @property({ attribute: false }) protected hass?: HomeAssistant;
 
-  @property({ attribute: false }) protected config?: EnergyFlowCardPlusConfig;
+  @property({ attribute: false }) protected config?: PowerFlowCardPlusConfig;
 
   @property({ attribute: false }) protected entities?: LovelaceRowConfig[];
 
@@ -363,6 +363,6 @@ export class IndividualRowEditor extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "individual-row-editor": IndividualRowEditor;
+    "efcp-individual-row-editor": IndividualRowEditor;
   }
 }

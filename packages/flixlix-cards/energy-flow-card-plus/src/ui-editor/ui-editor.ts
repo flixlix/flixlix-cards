@@ -1,21 +1,23 @@
-import { type EnergyFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
+import localize from "@flixlix-cards/shared/i18n";
+import {
+  type ConfigPage,
+  type LovelaceRowConfig,
+  type PowerFlowCardPlusConfig,
+} from "@flixlix-cards/shared/types";
+import { defaultValues } from "@flixlix-cards/shared/utils/get-default-config";
 import { fireEvent, type HomeAssistant, type LovelaceCardEditor } from "custom-card-helpers";
 import { LitElement, css, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { assert } from "superstruct";
-import localize from "../localize/localize";
-import { defaultValues } from "../utils/get-default-config";
-import "./components/individual-devices-editor";
-import "./components/link-subpage";
-import "./components/subpage-header";
+import "./components/efcp-individual-devices-editor";
+import "./components/efcp-link-subpage";
+import "./components/efcp-subpage-header";
 import { advancedOptionsSchema, cardConfigStruct, generalConfigSchema } from "./schema/_schema-all";
 import { batterySchema } from "./schema/battery";
 import { nonFossilSchema } from "./schema/fossil-fuel-percentage";
 import { gridSchema } from "./schema/grid";
 import { homeSchema } from "./schema/home";
 import { solarSchema } from "./schema/solar";
-import { type ConfigPage } from "./types/config-page";
-import { type LovelaceRowConfig } from "./types/entity-rows";
 import { loadHaForm } from "./utils/load-ha-form";
 
 const CONFIG_PAGES: {
@@ -62,11 +64,11 @@ const CONFIG_PAGES: {
 @customElement("energy-flow-card-plus-editor")
 export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardEditor {
   @property({ attribute: false }) public hass!: HomeAssistant;
-  @state() private _config?: EnergyFlowCardPlusConfig;
+  @state() private _config?: PowerFlowCardPlusConfig;
   @state() private _configEntities?: LovelaceRowConfig[] = [];
   @state() private _currentConfigPage: ConfigPage = null;
 
-  public async setConfig(config: EnergyFlowCardPlusConfig): Promise<void> {
+  public async setConfig(config: PowerFlowCardPlusConfig): Promise<void> {
     assert(config, cardConfigStruct);
     this._config = config;
   }

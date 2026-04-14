@@ -1,4 +1,4 @@
-import localize from "@/localize/localize";
+import localize from "@flixlix-cards/shared/i18n";
 import { actionSchema, getBaseMainConfigSchema, secondaryInfoSchema } from "./_schema-base";
 
 const mainSchema = {
@@ -14,7 +14,7 @@ const mainSchema = {
             { value: "power", label: "Power" },
             { value: "percentage", label: "Percentage" },
           ],
-          custom_value: true,
+          mode: "dropdown",
         },
       },
     },
@@ -32,6 +32,7 @@ const mainSchema = {
       name: "display_zero",
       label: "Display Zero",
       selector: { boolean: {} },
+      default: true,
     },
     {
       name: "display_zero_tolerance",
@@ -42,12 +43,13 @@ const mainSchema = {
       name: "display_zero_state",
       label: "Display Zero State",
       selector: { boolean: {} },
+      default: true,
     },
     {
       name: "unit_white_space",
       label: "Unit White Space",
-      default: true,
       selector: { boolean: {} },
+      default: true,
     },
     {
       name: "use_metadata",

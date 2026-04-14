@@ -1,53 +1,59 @@
-import { batteryElement } from "@/components/battery";
-import { flowElement } from "@/components/flows";
-import { gridElement } from "@/components/grid";
-import { homeElement } from "@/components/home";
-import { individualLeftBottomElement } from "@/components/individual-left-bottom-element";
-import { individualLeftTopElement } from "@/components/individual-left-top-element";
-import { individualRightBottomElement } from "@/components/individual-right-bottom-element";
-import { individualRightTopElement } from "@/components/individual-right-top-element";
-import { dashboardLinkElement } from "@/components/misc/dashboard-link";
-import { nonFossilElement } from "@/components/non-fossil";
-import { solarElement } from "@/components/solar";
-import { handleAction } from "@/ha/panels/lovelace/common/handle-action";
+import { batteryElement } from "@flixlix-cards/shared/components/battery";
+import { flowElement } from "@flixlix-cards/shared/components/flows/index";
+import { gridElement } from "@flixlix-cards/shared/components/grid";
+import { homeElement } from "@flixlix-cards/shared/components/home";
+import { individualLeftBottomElement } from "@flixlix-cards/shared/components/individual-left-bottom-element";
+import { individualLeftTopElement } from "@flixlix-cards/shared/components/individual-left-top-element";
+import { individualRightBottomElement } from "@flixlix-cards/shared/components/individual-right-bottom-element";
+import { individualRightTopElement } from "@flixlix-cards/shared/components/individual-right-top-element";
+import { dashboardLinkElement } from "@flixlix-cards/shared/components/misc/dashboard-link";
+import { nonFossilElement } from "@flixlix-cards/shared/components/non-fossil";
+import { solarElement } from "@flixlix-cards/shared/components/solar";
+import { handleAction } from "@flixlix-cards/shared/ha/panels/lovelace/common/handle-action";
+import {
+  type RenderTemplateResult,
+  subscribeRenderTemplate,
+} from "@flixlix-cards/shared/ha/template/ha-websocket";
 import {
   getBatteryInState,
   getBatteryOutState,
   getBatteryStateOfCharge,
-} from "@/states/raw/battery";
+} from "@flixlix-cards/shared/states/raw/battery";
 import {
   getGridConsumptionState,
   getGridProductionState,
   getGridSecondaryState,
-} from "@/states/raw/grid";
-import { getHomeSecondaryState } from "@/states/raw/home";
+} from "@flixlix-cards/shared/states/raw/grid";
+import { getHomeSecondaryState } from "@flixlix-cards/shared/states/raw/home";
 import {
   getIndividualObject,
   type IndividualObject,
-} from "@/states/raw/individual/get-individual-object";
+} from "@flixlix-cards/shared/states/raw/individual/get-individual-object";
 import {
   getNonFossilHas,
   getNonFossilHasPercentage,
   getNonFossilSecondaryState,
-} from "@/states/raw/non-fossil";
-import { getSolarSecondaryState, getSolarState } from "@/states/raw/solar";
-import { adjustZeroTolerance } from "@/states/tolerance/base";
-import { doesEntityExist } from "@/states/utils/existence-entity";
-import { getEntityState } from "@/states/utils/get-entity-state";
-import { getEntityStateWatts } from "@/states/utils/get-entity-state-watts";
-import { styles } from "@/style";
-import { allDynamicStyles } from "@/style/all";
-import { type RenderTemplateResult, subscribeRenderTemplate } from "@/template/ha-websocket.js";
+} from "@flixlix-cards/shared/states/raw/non-fossil";
+import { getSolarSecondaryState, getSolarState } from "@flixlix-cards/shared/states/raw/solar";
+import { adjustZeroTolerance } from "@flixlix-cards/shared/states/tolerance/base";
+import { doesEntityExist } from "@flixlix-cards/shared/states/utils/existence-entity";
+import { getEntityState } from "@flixlix-cards/shared/states/utils/get-entity-state";
+import { getEntityStateWatts } from "@flixlix-cards/shared/states/utils/get-entity-state-watts";
+import { allDynamicStyles, styles } from "@flixlix-cards/shared/style";
 import {
   type ActionConfigSet,
+  type EnergyFlowCardPlusConfig,
   type GridObject,
   type HomeSources,
   type NewDur,
   type TemplatesObj,
-} from "@/type";
-import { checkShouldShowDots } from "@/utils/check-should-show-dots";
-import { computeFieldIcon, computeFieldName } from "@/utils/compute-field-attributes";
-import { computeFlowRate } from "@/utils/compute-flow-rate";
+} from "@flixlix-cards/shared/types";
+import { checkShouldShowDots } from "@flixlix-cards/shared/utils/check-should-show-dots";
+import {
+  computeFieldIcon,
+  computeFieldName,
+} from "@flixlix-cards/shared/utils/compute-field-attributes";
+import { computeFlowRate } from "@flixlix-cards/shared/utils/compute-flow-rate";
 import {
   checkHasBottomIndividual,
   checkHasRightIndividual,
@@ -55,13 +61,13 @@ import {
   getBottomRightIndividual,
   getTopLeftIndividual,
   getTopRightIndividual,
-} from "@/utils/compute-individual-position";
-import { computePowerDistributionAfterSolarAndBattery } from "@/utils/compute-power-distribution";
-import { displayValue } from "@/utils/display-value";
-import { defaultValues, getDefaultConfig } from "@/utils/get-default-config";
-import { registerCustomCard } from "@/utils/register-custom-card";
-import { sortIndividualObjects } from "@/utils/sort-individual-objects";
-import { coerceNumber } from "@/utils/utils";
+} from "@flixlix-cards/shared/utils/compute-individual-position";
+import { computePowerDistributionAfterSolarAndBattery } from "@flixlix-cards/shared/utils/compute-power-distribution";
+import { displayValue } from "@flixlix-cards/shared/utils/display-value";
+import { defaultValues, getDefaultConfig } from "@flixlix-cards/shared/utils/get-default-config";
+import { registerCustomCard } from "@flixlix-cards/shared/utils/register-custom-card";
+import { sortIndividualObjects } from "@flixlix-cards/shared/utils/sort-individual-objects";
+import { coerceNumber } from "@flixlix-cards/shared/utils/utils";
 import {
   type ActionConfig,
   type HomeAssistant,
@@ -70,7 +76,7 @@ import {
 import { type UnsubscribeFunc } from "home-assistant-js-websocket";
 import { html, LitElement, nothing, type PropertyValues, type TemplateResult } from "lit";
 import { customElement, property, query, state } from "lit/decorators.js";
-import { type EnergyFlowCardPlusConfig } from "./energy-flow-card-plus-config";
+import packageJson from "../package.json" with { type: "json" };
 
 const circleCircumference = 238.76104;
 
@@ -79,6 +85,7 @@ registerCustomCard({
   name: "Energy Flow Card Plus",
   description:
     "An extended version of the power flow card with richer options, advanced features and a few small UI enhancements. Inspired by the Energy Dashboard.",
+  version: packageJson.version,
 });
 
 @customElement("energy-flow-card-plus")
@@ -388,7 +395,9 @@ export class EnergyFlowCardPlus extends LitElement {
         style=${this._config.style_ha_card ? this._config.style_ha_card : ""}
       >
         <div
-          class="card-content ${this._config.full_size ? "full-size" : ""}"
+          class="card-content ${this._config.full_size ? "full-size" : ""} ${this._config.no_labels
+            ? "no-labels"
+            : ""}"
           id="energy-flow-card-plus"
           style=${this._config.style_card_content ? this._config.style_card_content : ""}
         >
@@ -991,25 +1000,28 @@ export class EnergyFlowCardPlus extends LitElement {
     const individualFieldRightTop = getTopRightIndividual(visibleIndividualObjects);
     const individualFieldRightBottom = getBottomRightIndividual(visibleIndividualObjects);
 
-    allDynamicStyles(this, {
-      grid,
-      solar,
-      battery,
-      display_zero_lines_grey_color:
-        this._config.display_zero_lines?.mode === "grey_out"
-          ? this._config.display_zero_lines?.grey_color
-          : "",
-      display_zero_lines_transparency:
-        this._config.display_zero_lines?.mode === "transparency"
-          ? this._config.display_zero_lines?.transparency
-          : "",
-      entities,
-      homeLargestSource,
-      homeSources,
-      individual: sortedIndividualObjects,
-      nonFossil,
-      isCardWideEnough,
-    });
+    allDynamicStyles(
+      this as any,
+      {
+        grid,
+        solar,
+        battery,
+        display_zero_lines_grey_color:
+          this._config.display_zero_lines?.mode === "grey_out"
+            ? this._config.display_zero_lines?.grey_color
+            : "",
+        display_zero_lines_transparency:
+          this._config.display_zero_lines?.mode === "transparency"
+            ? this._config.display_zero_lines?.transparency
+            : undefined,
+        entities,
+        homeLargestSource,
+        homeSources,
+        individual: sortedIndividualObjects as any,
+        nonFossil,
+        isCardWideEnough,
+      } as any
+    );
     return {
       entities,
       grid,
@@ -1143,5 +1155,5 @@ export class EnergyFlowCardPlus extends LitElement {
     }
   }
 
-  static styles = styles;
+  static styles = styles as any;
 }

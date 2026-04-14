@@ -44,6 +44,7 @@ export const cardConfigStruct = assign(
     style_ha_card: optional(any()),
     style_card_content: optional(any()),
     disable_dots: optional(boolean()),
+    no_labels: optional(boolean()),
     entities: object({
       battery: optional(any()),
       grid: optional(any()),
@@ -187,6 +188,7 @@ export const advancedOptionsSchema = memoizeOne((localize, displayZeroLinesMode:
         name: "clickable_entities",
         label: "Clickable Entities",
         selector: { boolean: {} },
+        default: true,
       },
       {
         name: "disable_dots",
@@ -194,14 +196,21 @@ export const advancedOptionsSchema = memoizeOne((localize, displayZeroLinesMode:
         selector: { boolean: {} },
       },
       {
+        name: "no_labels",
+        label: localize("editor.no_labels"),
+        selector: { boolean: {} },
+      },
+      {
         name: "use_new_flow_rate_model",
         label: "New Flow Model?",
         selector: { boolean: {} },
+        default: true,
       },
       {
         name: "sort_individual_devices",
         label: "Sort individual devices by usage",
         selector: { boolean: {} },
+        default: true,
       },
       {
         name: "allow_layout_break",
