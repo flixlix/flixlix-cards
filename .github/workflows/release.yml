@@ -45,61 +45,61 @@ jobs:
           DIST_REPO_TOKEN: ${{ secrets.DIST_REPO_TOKEN }}
           GH_TOKEN: ${{ secrets.DIST_REPO_TOKEN }}
         run: |
-          git push origin --tags
-
-          for PKG_JSON in packages/**/package.json; do
+          # Loop through all card packages
+          for PKG_JSON in packages/flixlix-cards/*/package.json; do
             PKG_DIR=$(dirname "$PKG_JSON")
             NAME=$(jq -r '.name' "$PKG_JSON")
             VERSION=$(jq -r '.version' "$PKG_JSON")
             CLEAN_NAME=$(echo $NAME | sed 's|^@.*/||')
-            MONO_TAG="${NAME}@${VERSION}"
 
-            TAG_IN_COMMIT=$(git tag --points-at HEAD | grep -x "$MONO_TAG" || true)
-            
-            if [ -n "$TAG_IN_COMMIT" ]; then
-              echo "🚀 Creating Monorepo release for $MONO_TAG"
+            # CHECK IF VERSION CHANGED IN THIS COMMIT
+            # This compares the version in this commit to the version in the previous commit
+            OLD_VERSION=$(git show HEAD~1:"$PKG_JSON" | jq -r '.version' || echo "0.0.0")
+
+            if [ "$VERSION" != "$OLD_VERSION" ]; then
+              echo "✨ Version change detected for $NAME: $OLD_VERSION -> $VERSION"
               
+              # 1. Extract Changelog Notes
               CHANGELOG_PATH="${PKG_DIR}/CHANGELOG.md"
-              NOTES="New release."
+              NOTES="Release v${VERSION}"
               if [ -f "$CHANGELOG_PATH" ]; then
+                # Get notes between the new version and the one before it
                 NOTES=$(sed -n "/## ${VERSION}/,/## /p" "$CHANGELOG_PATH" | sed '$d')
                 if [ ${#NOTES} -lt 10 ]; then NOTES="Release v${VERSION}"; fi
               fi
 
-              # Determine if this is a prerelease
+              # 2. Prerelease detection
               PRERELEASE_FLAG=""
               if [[ "$VERSION" == *"-"* ]]; then
                 PRERELEASE_FLAG="--prerelease"
-                echo "📦 Detected prerelease version: $VERSION"
               fi
 
-              gh release create "$MONO_TAG" --title "$MONO_TAG" --notes "$NOTES" $PRERELEASE_FLAG || true
+              # 3. Build and Sync to Storefront
+              echo "📦 Syncing Card: $CLEAN_NAME to distribution repo..."
+              pnpm --filter "$NAME" build
+              
+              rm -rf dist-repo
+              git clone "https://x-access-token:${DIST_REPO_TOKEN}@github.com/flixlix/${CLEAN_NAME}.git" dist-repo
+              
+              cp -f "${PKG_DIR}/dist/${CLEAN_NAME}.js" dist-repo/
+              cp -f "${PKG_DIR}/hacs.json" dist-repo/
+              cp -f "${PKG_DIR}/README.md" dist-repo/
+              cp -f "${PKG_DIR}/CHANGELOG.md" dist-repo/ || true
 
-              if [[ "$PKG_DIR" == *"packages/flixlix-cards/"* ]]; then
-                echo "📦 Syncing Card: $CLEAN_NAME to distribution repo..."
-                
-                pnpm --filter "$NAME" build
-                rm -rf dist-repo
-                git clone "https://x-access-token:${DIST_REPO_TOKEN}@github.com/flixlix/${CLEAN_NAME}.git" dist-repo
-                
-                cp -f "${PKG_DIR}/dist/${CLEAN_NAME}.js" dist-repo/
-                cp -f "${PKG_DIR}/hacs.json" dist-repo/
-                cp -f "${PKG_DIR}/README.md" dist-repo/
-                cp -f "${PKG_DIR}/CHANGELOG.md" dist-repo/ || true
-
-                cd dist-repo
-                git config user.name "github-actions[bot]"
-                git config user.email "github-actions[bot]@users.noreply.github.com"
-                git add .
-                
-                if ! git diff-index --quiet HEAD; then
-                  git commit -m "Release v${VERSION}"
-                  git tag -a "v${VERSION}" -m "Release v${VERSION}"
-                  git push origin main --tags --force
-                  gh release create "v${VERSION}" "${CLEAN_NAME}.js" --repo "flixlix/${CLEAN_NAME}" --title "v${VERSION}" --notes "$NOTES" $PRERELEASE_FLAG
-                fi
-                cd ..
-                rm -rf dist-repo
+              cd dist-repo
+              git config user.name "github-actions[bot]"
+              git config user.email "github-actions[bot]@users.noreply.github.com"
+              git add .
+              
+              if ! git diff-index --quiet HEAD; then
+                git commit -m "Release v${VERSION}"
+                git tag -a "v${VERSION}" -m "Release v${VERSION}"
+                git push origin main --tags --force
+                gh release create "v${VERSION}" "${CLEAN_NAME}.js" --repo "flixlix/${CLEAN_NAME}" --title "v${VERSION}" --notes "$NOTES" $PRERELEASE_FLAG
               fi
+              cd ..
+              rm -rf dist-repo
+            else
+              echo "✅ No version change for $NAME ($VERSION)"
             fi
           done
