@@ -1,12 +1,12 @@
 import { getEntityStateWatts } from "@flixlix-cards/shared/states/utils/get-entity-state-watts";
-import { displayValue } from "@flixlix-cards/shared/utils/display-value";
-import { isNumberValue } from "@flixlix-cards/shared/utils/utils";
 import {
   type CardMainContext,
   type ConfigEntities,
   type PowerFlowCardPlusConfig,
   type TemplatesObj,
 } from "@flixlix-cards/shared/types";
+import { displayValue } from "@flixlix-cards/shared/utils/display-value";
+import { isNumberValue } from "@flixlix-cards/shared/utils/utils";
 import { html, nothing } from "lit";
 import { generalSecondarySpan } from "./spans/general-secondary-span";
 

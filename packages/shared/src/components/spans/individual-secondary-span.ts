@@ -1,11 +1,11 @@
 import { type IndividualObject } from "@flixlix-cards/shared/states/raw/individual/get-individual-object";
-import { displayValue } from "@flixlix-cards/shared/utils/display-value";
-import { isNumberValue } from "@flixlix-cards/shared/utils/utils";
 import {
   type CardMainContext,
   type PowerFlowCardPlusConfig,
   type TemplatesObj,
 } from "@flixlix-cards/shared/types";
+import { displayValue } from "@flixlix-cards/shared/utils/display-value";
+import { isNumberValue } from "@flixlix-cards/shared/utils/utils";
 import { type HomeAssistant } from "custom-card-helpers";
 import { html, nothing } from "lit";
 import { baseSecondarySpan } from "./base-secondary-span";

@@ -1,6 +1,9 @@
-import { computeFieldIcon, computeFieldName } from "@flixlix-cards/shared/utils/compute-field-attributes";
-import { convertColorListToHex } from "@flixlix-cards/shared/utils/convert-color";
 import { type IndividualDeviceType } from "@flixlix-cards/shared/types";
+import {
+  computeFieldIcon,
+  computeFieldName,
+} from "@flixlix-cards/shared/utils/compute-field-attributes";
+import { convertColorListToHex } from "@flixlix-cards/shared/utils/convert-color";
 import { type ActionConfig, type HomeAssistant } from "custom-card-helpers";
 import { getIndividualSecondaryState, getIndividualState } from ".";
 import { hasIndividualObject } from "./has-individual-object";

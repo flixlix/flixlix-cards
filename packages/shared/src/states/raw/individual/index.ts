@@ -1,7 +1,7 @@
 import { getEntityStateObj } from "@flixlix-cards/shared/states/utils/get-entity-state-obj";
 import { getEntityStateWatts } from "@flixlix-cards/shared/states/utils/get-entity-state-watts";
-import { isNumberValue } from "@flixlix-cards/shared/utils/utils";
 import { type IndividualDeviceType } from "@flixlix-cards/shared/types";
+import { isNumberValue } from "@flixlix-cards/shared/utils/utils";
 import { type HomeAssistant } from "custom-card-helpers";
 
 export const getIndividualState = (hass: HomeAssistant, field: IndividualDeviceType) => {

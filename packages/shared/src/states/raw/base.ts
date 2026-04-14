@@ -2,8 +2,8 @@ import { getEntityStateWatts } from "@flixlix-cards/shared/states/utils/get-enti
 import { isEntityInverted } from "@flixlix-cards/shared/states/utils/is-entity-inverted";
 import { getFirstEntityName } from "@flixlix-cards/shared/states/utils/mutli-entity";
 import { onlyNegative, onlyPositive } from "@flixlix-cards/shared/states/utils/negative-positive";
-import { isNumberValue } from "@flixlix-cards/shared/utils/utils";
 import { type PowerFlowCardPlusConfig } from "@flixlix-cards/shared/types";
+import { isNumberValue } from "@flixlix-cards/shared/utils/utils";
 import { type HomeAssistant } from "custom-card-helpers";
 
 type BaseEntityField = Exclude<keyof PowerFlowCardPlusConfig["entities"], "individual">;

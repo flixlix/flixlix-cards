@@ -1,3 +1,4 @@
+import { type PowerFlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { checkShouldShowDots } from "@flixlix-cards/shared/utils/check-should-show-dots";
 import {
   checkHasBottomIndividual,
@@ -5,7 +6,6 @@ import {
 } from "@flixlix-cards/shared/utils/compute-individual-position";
 import { showLine } from "@flixlix-cards/shared/utils/show-line";
 import { styleLine } from "@flixlix-cards/shared/utils/style-line";
-import { type PowerFlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { html, nothing, svg } from "lit";
 import { classMap } from "lit/directives/class-map.js";
 import { type Flows } from "./index";

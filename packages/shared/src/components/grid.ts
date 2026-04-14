@@ -1,10 +1,10 @@
-import { displayValue } from "@flixlix-cards/shared/utils/display-value";
 import {
   type CardMainContext,
   type ConfigEntities,
   type PowerFlowCardPlusConfig,
   type TemplatesObj,
 } from "@flixlix-cards/shared/types";
+import { displayValue } from "@flixlix-cards/shared/utils/display-value";
 import { html, nothing } from "lit";
 import { generalSecondarySpan } from "./spans/general-secondary-span";
 

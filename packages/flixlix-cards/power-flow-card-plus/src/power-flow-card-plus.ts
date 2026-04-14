@@ -1,12 +1,12 @@
-import { individualLeftBottomElement } from "@flixlix-cards/shared/components/individual-left-bottom-element";
-import { dashboardLinkElement } from "@flixlix-cards/shared/components/misc/dashboard-link";
 import { batteryElement } from "@flixlix-cards/shared/components/battery";
 import { flowElement } from "@flixlix-cards/shared/components/flows/index";
 import { gridElement } from "@flixlix-cards/shared/components/grid";
 import { homeElement } from "@flixlix-cards/shared/components/home";
+import { individualLeftBottomElement } from "@flixlix-cards/shared/components/individual-left-bottom-element";
 import { individualLeftTopElement } from "@flixlix-cards/shared/components/individual-left-top-element";
 import { individualRightBottomElement } from "@flixlix-cards/shared/components/individual-right-bottom-element";
 import { individualRightTopElement } from "@flixlix-cards/shared/components/individual-right-top-element";
+import { dashboardLinkElement } from "@flixlix-cards/shared/components/misc/dashboard-link";
 import { nonFossilElement } from "@flixlix-cards/shared/components/non-fossil";
 import { solarElement } from "@flixlix-cards/shared/components/solar";
 import { handleAction } from "@flixlix-cards/shared/ha/panels/lovelace/common/handle-action";

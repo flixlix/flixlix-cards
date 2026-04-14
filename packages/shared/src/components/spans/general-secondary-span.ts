@@ -1,10 +1,10 @@
-import { displayValue } from "@flixlix-cards/shared/utils/display-value";
 import {
   type ActionConfigSet,
   type CardMainContext,
   type PowerFlowCardPlusConfig,
   type TemplatesObj,
 } from "@flixlix-cards/shared/types";
+import { displayValue } from "@flixlix-cards/shared/utils/display-value";
 import { type HomeAssistant } from "custom-card-helpers";
 import { nothing } from "lit";
 import { baseSecondarySpan } from "./base-secondary-span";

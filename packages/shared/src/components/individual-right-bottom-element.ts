@@ -1,14 +1,14 @@
 import { type IndividualObject } from "@flixlix-cards/shared/states/raw/individual/get-individual-object";
-import { checkShouldShowDots } from "@flixlix-cards/shared/utils/check-should-show-dots";
-import { computeIndividualFlowRate } from "@flixlix-cards/shared/utils/compute-flow-rate";
-import { showLine } from "@flixlix-cards/shared/utils/show-line";
-import { styleLine } from "@flixlix-cards/shared/utils/style-line";
 import {
   type CardMainContext,
   type NewDur,
   type PowerFlowCardPlusConfig,
   type TemplatesObj,
 } from "@flixlix-cards/shared/types";
+import { checkShouldShowDots } from "@flixlix-cards/shared/utils/check-should-show-dots";
+import { computeIndividualFlowRate } from "@flixlix-cards/shared/utils/compute-flow-rate";
+import { showLine } from "@flixlix-cards/shared/utils/show-line";
+import { styleLine } from "@flixlix-cards/shared/utils/style-line";
 import { html, nothing, svg } from "lit";
 import { individualSecondarySpan } from "./spans/individual-secondary-span";
 

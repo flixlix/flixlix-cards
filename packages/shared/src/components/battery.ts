@@ -1,9 +1,9 @@
-import { displayValue } from "@flixlix-cards/shared/utils/display-value";
 import {
   type CardMainContext,
   type ConfigEntities,
   type PowerFlowCardPlusConfig,
 } from "@flixlix-cards/shared/types";
+import { displayValue } from "@flixlix-cards/shared/utils/display-value";
 import { html, nothing } from "lit";
 
 export const batteryElement = (
