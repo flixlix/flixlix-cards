@@ -1,10 +1,14 @@
-import { type PowerFlowCardPlusConfig } from "@/power-flow-card-plus-config";
 import localize from "@flixlix-cards/shared/i18n";
+import {
+  type ConfigPage,
+  type LovelaceRowConfig,
+  type PowerFlowCardPlusConfig,
+} from "@flixlix-cards/shared/types";
+import { defaultValues } from "@flixlix-cards/shared/utils/get-default-config";
 import { fireEvent, type HomeAssistant, type LovelaceCardEditor } from "custom-card-helpers";
 import { LitElement, css, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { assert } from "superstruct";
-import { defaultValues } from "../utils/get-default-config";
 import "./components/individual-devices-editor";
 import "./components/link-subpage";
 import "./components/subpage-header";
@@ -14,8 +18,6 @@ import { nonFossilSchema } from "./schema/fossil-fuel-percentage";
 import { gridSchema } from "./schema/grid";
 import { homeSchema } from "./schema/home";
 import { solarSchema } from "./schema/solar";
-import { type ConfigPage } from "./types/config-page";
-import { type LovelaceRowConfig } from "./types/entity-rows";
 import { loadHaForm } from "./utils/load-ha-form";
 
 const CONFIG_PAGES: {

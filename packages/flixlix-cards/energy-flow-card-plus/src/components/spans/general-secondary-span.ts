@@ -1,4 +1,4 @@
-import { type PowerFlowCardPlus } from "@/energy-flow-card-plus";
+import { type EnergyFlowCardPlus } from "@/energy-flow-card-plus";
 import { type EnergyFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
 import { type ActionConfigSet, type TemplatesObj } from "@/type";
 import { displayValue } from "@/utils/display-value";
@@ -10,7 +10,7 @@ type SecondaryKey = "grid" | "solar" | "home" | "nonFossilFuel";
 
 export const generalSecondarySpan = (
   hass: HomeAssistant,
-  main: PowerFlowCardPlus,
+  main: EnergyFlowCardPlus,
   config: EnergyFlowCardPlusConfig,
   templatesObj: TemplatesObj,
   field: {

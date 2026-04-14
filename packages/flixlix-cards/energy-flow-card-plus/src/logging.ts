@@ -1,5 +1,5 @@
 import { debounce } from "custom-card-helpers";
-import packageJson from "../package.json" assert { type: "json" };
+import packageJson from "../package.json" with { type: "json" };
 
 const { version } = packageJson;
 

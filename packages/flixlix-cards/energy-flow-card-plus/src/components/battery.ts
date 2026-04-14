@@ -1,10 +1,10 @@
-import { type PowerFlowCardPlus } from "@/energy-flow-card-plus";
+import { type EnergyFlowCardPlus } from "@/energy-flow-card-plus";
 import { type ConfigEntities, type EnergyFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
 import { displayValue } from "@/utils/display-value";
 import { html, nothing } from "lit";
 
 export const batteryElement = (
-  main: PowerFlowCardPlus,
+  main: EnergyFlowCardPlus,
   config: EnergyFlowCardPlusConfig,
   {
     battery,

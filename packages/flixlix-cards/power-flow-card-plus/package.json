@@ -84,7 +84,8 @@
     "rollup": "^4.60.1",
     "rollup-plugin-minify-html-literals": "^1.2.6",
     "rollup-plugin-serve": "^1.1.1",
-    "typescript": "^4.9.5",
+    "typescript": "^6.0.2",
+    "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^4.1.4"
   },
   "packageManager": "pnpm@10.33.0"

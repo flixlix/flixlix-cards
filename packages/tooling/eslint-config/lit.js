@@ -26,7 +26,7 @@ export default defineConfig([
   },
   litConfigs["flat/recommended"],
   {
-    files: ["src/logging.ts"],
+    files: ["src/logging.ts", "**/logging.ts"],
     rules: {
       "no-console": "off",
     },

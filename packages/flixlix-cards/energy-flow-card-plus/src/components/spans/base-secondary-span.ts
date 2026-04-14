@@ -1,9 +1,9 @@
-import { type PowerFlowCardPlus } from "@/energy-flow-card-plus";
+import { type EnergyFlowCardPlus } from "@/energy-flow-card-plus";
 import { type ActionConfigSet, offlineStr } from "@/type";
 import { html, nothing } from "lit";
 
 type BaseSecondarySpan = {
-  main: PowerFlowCardPlus;
+  main: EnergyFlowCardPlus;
   className: string;
   template?: string;
   value?: string;

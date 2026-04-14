@@ -1,10 +1,9 @@
-import { type PowerFlowCardPlusConfig } from "@/power-flow-card-plus-config";
 import localize from "@flixlix-cards/shared/i18n";
+import { type ConfigPage, type PowerFlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { mdiArrowLeft } from "@mdi/js";
 import { fireEvent, type HomeAssistant } from "custom-card-helpers";
 import { css, type CSSResultGroup, html, LitElement, type TemplateResult } from "lit";
 import { customElement, property } from "lit-element";
-import { type ConfigPage } from "../types/config-page";
 
 declare global {
   interface HASSDomEvents {

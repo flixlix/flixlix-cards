@@ -1,4 +1,4 @@
-import { type PowerFlowCardPlus } from "@/energy-flow-card-plus";
+import { type EnergyFlowCardPlus } from "@/energy-flow-card-plus";
 import { type EnergyFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
 import { type IndividualObject } from "@/states/raw/individual/get-individual-object";
 import { type NewDur, type TemplatesObj } from "@/type";
@@ -20,7 +20,7 @@ interface TopIndividual {
 }
 
 export const individualRightTopElement = (
-  main: PowerFlowCardPlus,
+  main: EnergyFlowCardPlus,
   config: EnergyFlowCardPlusConfig,
   { individualObj, templatesObj, displayState, newDur, battery, individualObjs }: TopIndividual
 ) => {

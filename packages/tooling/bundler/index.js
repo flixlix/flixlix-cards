@@ -45,6 +45,11 @@ export function createCardConfig(options) {
         declaration: false,
         declarationMap: false,
         ignoreDeprecations: "6.0",
+        compilerOptions: {
+          rootDir: "../..",
+        },
+        filterRoot: false,
+        include: ["**/*.ts", "**/*.tsx", "../../shared/src/**/*.ts", "../../shared/src/**/*.tsx"],
       }),
       nodeResolve(),
       json({ compact: true }),

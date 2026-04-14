@@ -1,4 +1,4 @@
-import { type PowerFlowCardPlus } from "@/energy-flow-card-plus";
+import { type EnergyFlowCardPlus } from "@/energy-flow-card-plus";
 import { type ConfigEntities } from "@/energy-flow-card-plus-config";
 import { type IndividualObject } from "@/states/raw/individual/get-individual-object";
 import { type IndividualDeviceType } from "@/type";
@@ -12,7 +12,7 @@ interface AllDynamicStyles {
 }
 
 export const allDynamicStyles = (
-  main: PowerFlowCardPlus,
+  main: EnergyFlowCardPlus,
   {
     grid,
     solar,

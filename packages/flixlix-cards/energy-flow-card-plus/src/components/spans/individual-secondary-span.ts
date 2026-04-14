@@ -1,4 +1,4 @@
-import { type PowerFlowCardPlus } from "@/energy-flow-card-plus";
+import { type EnergyFlowCardPlus } from "@/energy-flow-card-plus";
 import { type EnergyFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
 import { type IndividualObject } from "@/states/raw/individual/get-individual-object";
 import { type TemplatesObj } from "@/type";
@@ -12,7 +12,7 @@ export type IndividualKey = `left-top` | `left-bottom` | `right-top` | `right-bo
 
 export const individualSecondarySpan = (
   hass: HomeAssistant,
-  main: PowerFlowCardPlus,
+  main: EnergyFlowCardPlus,
   config: EnergyFlowCardPlusConfig,
   templatesObj: TemplatesObj,
   individual: IndividualObject,

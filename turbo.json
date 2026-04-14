@@ -21,6 +21,11 @@
       "dependsOn": ["^test", "^lint", "^format:check"],
       "inputs": ["$TURBO_DEFAULT$"]
     },
+    "typecheck": {
+      "cache": false,
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$"]
+    },
     "lint": {},
     "dev": {
       "cache": false,

@@ -1,35 +1,16 @@
-import { type PowerFlowCardPlusConfig } from "@/power-flow-card-plus-config";
-import { type IndividualDeviceType } from "@/type";
 import localize from "@flixlix-cards/shared/i18n";
 import {
-  type ActionConfig,
-  fireEvent,
-  type HASSDomEvent,
-  type HomeAssistant,
-} from "custom-card-helpers";
+  type EditSubElementEvent,
+  type IndividualDeviceType,
+  type LovelaceRowConfig,
+  type PowerFlowCardPlusConfig,
+  type SubElementEditorConfig,
+} from "@flixlix-cards/shared/types";
+import { fireEvent, type HASSDomEvent, type HomeAssistant } from "custom-card-helpers";
 import { css, type CSSResultGroup, html, LitElement, type TemplateResult } from "lit";
 import { customElement, property, state } from "lit-element";
 import { individualDevicesSchema } from "../schema/_schema-all";
-import {
-  type EditSubElementEvent,
-  type LovelaceRowConfig,
-  type SubElementEditorConfig,
-} from "../types/entity-rows";
 import "./individual-row-editor";
-
-export interface GUIModeChangedEvent {
-  guiMode: boolean;
-  guiModeAvailable: boolean;
-}
-
-export interface EditorTarget extends EventTarget {
-  value?: string;
-  index?: number;
-  checked?: boolean;
-  configValue?: string;
-  type?: HTMLInputElement["type"];
-  config: ActionConfig;
-}
 
 export function processEditorEntities(
   entities: Array<string | IndividualDeviceType>

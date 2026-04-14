@@ -13,6 +13,7 @@
     "release": "turbo run build && changeset publish",
     "release:tag": "changeset tag",
     "precommit": "turbo run precommit",
+    "typecheck": "turbo run typecheck",
     "start:hass": "docker run --rm -p8123:8123 -v ./.hass_dev:/config homeassistant/home-assistant:beta",
     "test": "npx turbo test --filter=!@flixlix-cards/web"
   },

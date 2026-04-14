@@ -1,4 +1,4 @@
-import { type PowerFlowCardPlus } from "@/energy-flow-card-plus";
+import { type EnergyFlowCardPlus } from "@/energy-flow-card-plus";
 import { type ConfigEntities, type EnergyFlowCardPlusConfig } from "@/energy-flow-card-plus-config";
 import { type NewDur, type TemplatesObj } from "@/type";
 import { checkShouldShowDots } from "@/utils/check-should-show-dots";
@@ -18,7 +18,7 @@ interface NonFossil {
 }
 
 export const nonFossilElement = (
-  main: PowerFlowCardPlus,
+  main: EnergyFlowCardPlus,
   config: EnergyFlowCardPlusConfig,
   { nonFossil, entities, templatesObj, grid, newDur }: NonFossil
 ) => {
