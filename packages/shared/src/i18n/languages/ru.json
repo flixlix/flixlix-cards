@@ -3,7 +3,8 @@
     "label": {
       "car": "Автомобиль",
       "motorbike": "Мотоцикл"
-    }
+    },
+    "compare_tooltip": "Сравнить с предыдущим периодом"
   },
   "editor": {
     "entity_generator": "Генератор",
@@ -83,6 +84,12 @@
     "navigation_path": "путь навигации",
     "sort_individual_devices": "Сортировка отдельных устройств",
     "allow_layout_break": "Разрешить разрыв макета",
-    "no_labels": "Без подписей"
+    "no_labels": "Без подписей",
+    "vertical_opening_direction": "Направление вертикального открытия",
+    "opening_direction": "Направление открытия",
+    "disable_compare": "Отключить сравнение",
+    "collection_key": "Ключ коллекции",
+    "collection_key_helper": "Необязательный ключ для сбора энергетических данных",
+    "hide_overflow": "Скрыть меню переполнения"
   }
 }

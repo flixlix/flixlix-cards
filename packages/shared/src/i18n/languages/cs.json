@@ -3,7 +3,8 @@
     "label": {
       "car": "Auto",
       "motorbike": "Motorka"
-    }
+    },
+    "compare_tooltip": "Porovnat s předchozím obdobím"
   },
   "editor": {
     "entity_generator": "Generátor",
@@ -83,6 +84,12 @@
     "navigation_path": "Navigační cesta",
     "sort_individual_devices": "Seřaďte individuálně",
     "allow_layout_break": "Povolit zalomení rozvržení",
-    "no_labels": "Bez popisků"
+    "no_labels": "Bez popisků",
+    "vertical_opening_direction": "Směr svislého otevírání",
+    "opening_direction": "Směr otevírání",
+    "disable_compare": "Zakázat porovnání",
+    "collection_key": "Klíč kolekce",
+    "collection_key_helper": "Volitelný klíč pro sběr energetických dat",
+    "hide_overflow": "Skrýt rozbalovací nabídku"
   }
 }

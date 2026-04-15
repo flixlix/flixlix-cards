@@ -3,7 +3,8 @@
     "label": {
       "car": "कार",
       "motorbike": "मोटरसाइकिल"
-    }
+    },
+    "compare_tooltip": "पिछली अवधि से तुलना करें"
   },
   "editor": {
     "entity_generator": "जनरेटर",
@@ -83,6 +84,12 @@
     "navigation_path": "नेविगेशन पथ",
     "sort_individual_devices": "व्यक्तिगत डिवाइस क्रमबद्ध करें",
     "allow_layout_break": "लेआउट तोड़ने की अनुमति दें",
-    "no_labels": "कोई लेबल नहीं"
+    "no_labels": "कोई लेबल नहीं",
+    "vertical_opening_direction": "लंबवत खुलने की दिशा",
+    "opening_direction": "खुलने की दिशा",
+    "disable_compare": "तुलना अक्षम करें",
+    "collection_key": "संग्रह कुंजी",
+    "collection_key_helper": "ऊर्जा डेटा संग्रह के लिए वैकल्पिक कुंजी",
+    "hide_overflow": "ओवरफ़्लो मेनू छुपाएँ"
   }
 }

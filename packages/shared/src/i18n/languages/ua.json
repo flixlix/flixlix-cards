@@ -3,7 +3,8 @@
     "label": {
       "car": "Автомобіль",
       "motorbike": "Мотоцикл"
-    }
+    },
+    "compare_tooltip": "Порівняти з попереднім періодом"
   },
   "editor": {
     "entity_generator": "Генератор сутностей",
@@ -83,6 +84,12 @@
     "navigation_path": "Шлях переходу",
     "sort_individual_devices": "Сортувати окремі пристрої",
     "allow_layout_break": "Дозволити розрив макета",
-    "no_labels": "Без підписів"
+    "no_labels": "Без підписів",
+    "vertical_opening_direction": "Напрямок вертикального відкриття",
+    "opening_direction": "Напрямок відкриття",
+    "disable_compare": "Вимкнути порівняння",
+    "collection_key": "Ключ колекції",
+    "collection_key_helper": "Необов'язковий ключ для збору енергетичних даних",
+    "hide_overflow": "Приховати меню переповнення"
   }
 }

@@ -3,7 +3,8 @@
     "label": {
       "car": "Cotxe",
       "motorbike": "Moto"
-    }
+    },
+    "compare_tooltip": "Compara amb el període anterior"
   },
   "editor": {
     "entity_generator": "Generador",
@@ -83,6 +84,12 @@
     "navigation_path": "Ruta de Navegació",
     "sort_individual_devices": "Ordena Dispositius Individuals",
     "allow_layout_break": "Permet trencar el disseny",
-    "no_labels": "Sense etiquetes"
+    "no_labels": "Sense etiquetes",
+    "vertical_opening_direction": "Direcció d'Obertura Vertical",
+    "opening_direction": "Direcció d'Obertura",
+    "disable_compare": "Desactivar Comparació",
+    "collection_key": "Clau de Col·lecció",
+    "collection_key_helper": "Clau opcional per a la recollida de dades energètiques",
+    "hide_overflow": "Amaga el Menú Desplegable"
   }
 }
