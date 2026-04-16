@@ -47,6 +47,7 @@ export function createCardConfig(options) {
         ignoreDeprecations: "6.0",
         compilerOptions: {
           rootDir: "../..",
+          target: "es2020",
         },
         filterRoot: false,
         include: ["**/*.ts", "**/*.tsx", "../../shared/src/**/*.ts", "../../shared/src/**/*.tsx"],
@@ -57,8 +58,18 @@ export function createCardConfig(options) {
       ...(babelPlugin
         ? [
             babelPlugin({
-              exclude: "node_modules/**",
               babelHelpers: "bundled",
+              exclude: [/node_modules\/@mdi/],
+              presets: [
+                [
+                  "@babel/preset-env",
+                  {
+                    targets: "iOS >= 15, Safari >= 15, Chrome >= 80, Firefox >= 80",
+                    bugfixes: true,
+                    modules: false,
+                  },
+                ],
+              ],
             }),
           ]
         : []),
