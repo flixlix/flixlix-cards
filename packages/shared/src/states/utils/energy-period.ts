@@ -355,14 +355,14 @@ export const subscribeEnergyCollectionData = (
     return null;
   }
 
-  const unsub = (collection.subscribe as (cb: (data: Record<string, unknown>) => void) => () => void)(
-    (data) => {
-      callback({
-        co2SignalEntity: data?.co2SignalEntity as string | undefined,
-        fossilEnergyConsumption: data?.fossilEnergyConsumption as FossilEnergyConsumption | undefined,
-      });
-    }
-  );
+  const unsub = (
+    collection.subscribe as (cb: (data: Record<string, unknown>) => void) => () => void
+  )((data) => {
+    callback({
+      co2SignalEntity: data?.co2SignalEntity as string | undefined,
+      fossilEnergyConsumption: data?.fossilEnergyConsumption as FossilEnergyConsumption | undefined,
+    });
+  });
 
   return typeof unsub === "function" ? unsub : null;
 };
