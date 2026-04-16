@@ -1,4 +1,4 @@
-import { type PowerFlowCardPlusConfig } from "@flixlix-cards/shared/types";
+import { type FlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { checkShouldShowDots } from "@flixlix-cards/shared/utils/check-should-show-dots";
 import {
   checkHasBottomIndividual,
@@ -11,7 +11,7 @@ import { classMap } from "lit/directives/class-map.js";
 import { type Flows } from "./index";
 
 const batteryFromGridDot = (
-  config: PowerFlowCardPlusConfig,
+  config: FlowCardPlusConfig,
   grid: Flows["grid"],
   newDur: Flows["newDur"]
 ) => {
@@ -31,7 +31,7 @@ const batteryFromGridDot = (
 };
 
 const batteryToGridDot = (
-  config: PowerFlowCardPlusConfig,
+  config: FlowCardPlusConfig,
   battery: Flows["battery"],
   newDur: Flows["newDur"]
 ) => {
@@ -49,7 +49,7 @@ const batteryToGridDot = (
 type FlowBatteryToGridFlows = Pick<Flows, Exclude<keyof Flows, "solar">>;
 
 export const flowBatteryToGrid = (
-  config: PowerFlowCardPlusConfig,
+  config: FlowCardPlusConfig,
   { battery, grid, individual, newDur }: FlowBatteryToGridFlows
 ) => {
   const shouldShow =

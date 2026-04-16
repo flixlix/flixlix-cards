@@ -13,6 +13,9 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
+      # ============================================
+      # SETUP
+      # ============================================
       - name: Checkout Source
         uses: actions/checkout@v4
         with:
@@ -31,7 +34,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Versioning (Changesets)
+      # ============================================
+      # CHANGESETS (Version PR or Tag)
+      # ============================================
+      - name: Run Changesets
         id: changesets
         uses: changesets/action@v1
         with:
@@ -39,67 +45,251 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Sync & Create Releases
-        if: steps.changesets.outputs.hasChangesets == 'false'
+      # ============================================
+      # DISTRIBUTION (Sync to Dist Repos)
+      # ============================================
+      - name: Sync Packages to Distribution Repos
+        if: steps.changesets.outputs.published == 'true'
         env:
           DIST_REPO_TOKEN: ${{ secrets.DIST_REPO_TOKEN }}
           GH_TOKEN: ${{ secrets.DIST_REPO_TOKEN }}
+          PUBLISHED_PACKAGES: ${{ steps.changesets.outputs.publishedPackages }}
         run: |
-          # Loop through all card packages
-          for PKG_JSON in packages/flixlix-cards/*/package.json; do
-            PKG_DIR=$(dirname "$PKG_JSON")
-            NAME=$(jq -r '.name' "$PKG_JSON")
-            VERSION=$(jq -r '.version' "$PKG_JSON")
-            CLEAN_NAME=$(echo $NAME | sed 's|^@.*/||')
+          set -euo pipefail
 
-            # CHECK IF VERSION CHANGED IN THIS COMMIT
-            # This compares the version in this commit to the version in the previous commit
-            OLD_VERSION=$(git show HEAD~1:"$PKG_JSON" | jq -r '.version' || echo "0.0.0")
+          # ==========================================
+          # Helper Functions
+          # ==========================================
+          log_group_start() {
+            echo "::group::$1"
+          }
 
-            if [ "$VERSION" != "$OLD_VERSION" ]; then
-              echo "✨ Version change detected for $NAME: $OLD_VERSION -> $VERSION"
-              
-              # 1. Extract Changelog Notes
-              CHANGELOG_PATH="${PKG_DIR}/CHANGELOG.md"
-              NOTES="Release v${VERSION}"
-              if [ -f "$CHANGELOG_PATH" ]; then
-                # Get notes between the new version and the one before it
-                NOTES=$(sed -n "/## ${VERSION}/,/## /p" "$CHANGELOG_PATH" | sed '$d')
-                if [ ${#NOTES} -lt 10 ]; then NOTES="Release v${VERSION}"; fi
+          log_group_end() {
+            echo "::endgroup::"
+          }
+
+          log_error() {
+            echo "::error::$1"
+          }
+
+          log_warning() {
+            echo "::warning::$1"
+          }
+
+          log_notice() {
+            echo "::notice::$1"
+          }
+
+          # ==========================================
+          # Validation
+          # ==========================================
+          log_group_start "🔍 Validating Environment"
+
+          if [ -z "$DIST_REPO_TOKEN" ]; then
+            log_error "DIST_REPO_TOKEN is not set"
+            exit 1
+          fi
+
+          if [ -z "$PUBLISHED_PACKAGES" ] || [ "$PUBLISHED_PACKAGES" == "[]" ]; then
+            log_warning "No packages were published. Skipping distribution."
+            exit 0
+          fi
+
+          echo "Published packages:"
+          echo "$PUBLISHED_PACKAGES" | jq '.'
+
+          log_group_end
+
+          # ==========================================
+          # Process Each Published Package
+          # ==========================================
+          echo "$PUBLISHED_PACKAGES" | jq -c '.[]' | while read -r pkg; do
+            NAME=$(echo "$pkg" | jq -r '.name')
+            VERSION=$(echo "$pkg" | jq -r '.version')
+            CLEAN_NAME=$(echo "$NAME" | sed 's|^@.*/||')
+
+            log_group_start "📦 Processing: $NAME@$VERSION"
+
+            # ------------------------------------------
+            # Step 1: Find package directory
+            # ------------------------------------------
+            echo "→ Finding package directory..."
+            PKG_DIR=$(find packages -name package.json -exec grep -l "\"name\": \"$NAME\"" {} + 2>/dev/null | head -1 | xargs dirname)
+
+            if [ -z "$PKG_DIR" ] || [ ! -d "$PKG_DIR" ]; then
+              log_error "Could not find package directory for $NAME"
+              log_group_end
+              continue
+            fi
+
+            echo "  Found at: $PKG_DIR"
+
+            # ------------------------------------------
+            # Step 2: Build the package
+            # ------------------------------------------
+            echo "→ Building package..."
+            if ! pnpm --filter "$NAME" build; then
+              log_error "Build failed for $NAME"
+              log_group_end
+              continue
+            fi
+
+            # Verify build output exists
+            BUILD_OUTPUT="${PKG_DIR}/dist/${CLEAN_NAME}.js"
+            if [ ! -f "$BUILD_OUTPUT" ]; then
+              log_error "Build output not found: $BUILD_OUTPUT"
+              log_group_end
+              continue
+            fi
+
+            echo "  Build successful: $BUILD_OUTPUT"
+
+            # ------------------------------------------
+            # Step 3: Clone distribution repository
+            # ------------------------------------------
+            echo "→ Cloning distribution repository..."
+            rm -rf dist-repo
+
+            DIST_REPO_URL="https://x-access-token:${DIST_REPO_TOKEN}@github.com/flixlix/${CLEAN_NAME}.git"
+
+            if ! git clone "$DIST_REPO_URL" dist-repo 2>/dev/null; then
+              log_error "Failed to clone distribution repo: flixlix/${CLEAN_NAME}"
+              log_group_end
+              continue
+            fi
+
+            echo "  Cloned: flixlix/${CLEAN_NAME}"
+
+            # ------------------------------------------
+            # Step 4: Copy distribution files
+            # ------------------------------------------
+            echo "→ Copying distribution files..."
+
+            # Required files
+            cp -f "$BUILD_OUTPUT" "dist-repo/${CLEAN_NAME}.js"
+            echo "  ✓ ${CLEAN_NAME}.js"
+
+            # package.json (stripped of dev dependencies)
+            jq 'del(.dependencies, .devDependencies, .scripts, .packageManager, .main, .exports)' "${PKG_DIR}/package.json" > dist-repo/package.json
+            echo "  ✓ package.json (cleaned)"
+
+            # Optional files (don't fail if missing)
+            for file in hacs.json README.md CHANGELOG.md LICENSE; do
+              if [ -f "${PKG_DIR}/${file}" ]; then
+                cp -f "${PKG_DIR}/${file}" "dist-repo/${file}"
+                echo "  ✓ ${file}"
+              else
+                echo "  ⊘ ${file} (not found, skipping)"
               fi
+            done
 
-              # 2. Prerelease detection
-              PRERELEASE_FLAG=""
-              if [[ "$VERSION" == *"-"* ]]; then
-                PRERELEASE_FLAG="--prerelease"
+            # ------------------------------------------
+            # Step 5: Extract changelog notes
+            # ------------------------------------------
+            echo "→ Extracting changelog notes..."
+            CHANGELOG_PATH="${PKG_DIR}/CHANGELOG.md"
+            NOTES="Release v${VERSION}"
+
+            if [ -f "$CHANGELOG_PATH" ]; then
+              # Extract content between ## VERSION and the next ## header
+              EXTRACTED_NOTES=$(sed -n "/^## ${VERSION}/,/^## /p" "$CHANGELOG_PATH" | sed '1d;$d' | sed '/^$/d')
+
+              if [ -n "$EXTRACTED_NOTES" ] && [ ${#EXTRACTED_NOTES} -gt 10 ]; then
+                NOTES="$EXTRACTED_NOTES"
+                echo "  Extracted ${#NOTES} characters from CHANGELOG"
+              else
+                echo "  Using default release notes"
               fi
+            fi
 
-              # 3. Build and Sync to Storefront
-              echo "📦 Syncing Card: $CLEAN_NAME to distribution repo..."
-              pnpm --filter "$NAME" build
-              
-              rm -rf dist-repo
-              git clone "https://x-access-token:${DIST_REPO_TOKEN}@github.com/flixlix/${CLEAN_NAME}.git" dist-repo
-              
-              cp -f "${PKG_DIR}/dist/${CLEAN_NAME}.js" dist-repo/
-              cp -f "${PKG_DIR}/hacs.json" dist-repo/
-              cp -f "${PKG_DIR}/README.md" dist-repo/
-              cp -f "${PKG_DIR}/CHANGELOG.md" dist-repo/ || true
+            # ------------------------------------------
+            # Step 6: Commit and push changes
+            # ------------------------------------------
+            echo "→ Committing changes..."
+            cd dist-repo
 
-              cd dist-repo
-              git config user.name "github-actions[bot]"
-              git config user.email "github-actions[bot]@users.noreply.github.com"
-              git add .
-              
-              if ! git diff-index --quiet HEAD; then
-                git commit -m "Release v${VERSION}"
-                git tag -a "v${VERSION}" -m "Release v${VERSION}"
-                git push origin main --tags --force
-                gh release create "v${VERSION}" "${CLEAN_NAME}.js" --repo "flixlix/${CLEAN_NAME}" --title "v${VERSION}" --notes "$NOTES" $PRERELEASE_FLAG
-              fi
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add -A
+
+            # Check if there are changes to commit
+            if git diff-index --quiet HEAD 2>/dev/null; then
+              echo "  No file changes detected"
+            else
+              git commit -m "Release v${VERSION}"
+              echo "  ✓ Committed changes"
+            fi
+
+            # ------------------------------------------
+            # Step 7: Create and push tag
+            # ------------------------------------------
+            echo "→ Creating tag v${VERSION}..."
+            TAG_NAME="v${VERSION}"
+
+            # Check if tag already exists on remote
+            if git ls-remote --tags origin | grep -q "refs/tags/${TAG_NAME}$"; then
+              log_warning "Tag ${TAG_NAME} already exists on remote. Skipping."
               cd ..
               rm -rf dist-repo
-            else
-              echo "✅ No version change for $NAME ($VERSION)"
+              log_group_end
+              continue
             fi
+
+            git tag -a "$TAG_NAME" -m "Release ${TAG_NAME}"
+            echo "  ✓ Tag created"
+
+            # ------------------------------------------
+            # Step 8: Push to remote
+            # ------------------------------------------
+            echo "→ Pushing to remote..."
+            if ! git push origin main --tags; then
+              log_error "Failed to push to flixlix/${CLEAN_NAME}"
+              cd ..
+              rm -rf dist-repo
+              log_group_end
+              continue
+            fi
+
+            echo "  ✓ Pushed to origin"
+
+            # ------------------------------------------
+            # Step 9: Create GitHub Release
+            # ------------------------------------------
+            echo "→ Creating GitHub Release..."
+
+            # Determine if this is a prerelease
+            PRERELEASE_FLAG=""
+            if [[ "$VERSION" == *"-"* ]]; then
+              PRERELEASE_FLAG="--prerelease"
+              echo "  Detected prerelease version"
+            fi
+
+            # Create the release
+            if ! gh release create "$TAG_NAME" "${CLEAN_NAME}.js" \
+              --repo "flixlix/${CLEAN_NAME}" \
+              --title "$TAG_NAME" \
+              --notes "$NOTES" \
+              $PRERELEASE_FLAG; then
+              log_error "Failed to create GitHub release for ${CLEAN_NAME}@${VERSION}"
+              cd ..
+              rm -rf dist-repo
+              log_group_end
+              continue
+            fi
+
+            echo "  ✓ GitHub Release created"
+
+            # ------------------------------------------
+            # Cleanup
+            # ------------------------------------------
+            cd ..
+            rm -rf dist-repo
+
+            log_notice "✅ Successfully released ${NAME}@${VERSION} to flixlix/${CLEAN_NAME}"
+            log_group_end
           done
+
+          echo ""
+          echo "========================================"
+          echo "🎉 Distribution complete!"
+          echo "========================================"

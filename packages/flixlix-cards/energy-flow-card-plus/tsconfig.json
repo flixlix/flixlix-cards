@@ -11,7 +11,7 @@
     "emitDecoratorMetadata": true,
     "types": ["vitest/globals"],
     "paths": {
-      "@/*": ["./src/*", "../../shared/src/*"]
+      "@/*": ["./src/*"]
     }
   },
   "include": ["src"],

@@ -1,11 +1,11 @@
 import { getEntityStateWatts } from "@flixlix-cards/shared/states/utils/get-entity-state-watts";
 import { isEntityInverted } from "@flixlix-cards/shared/states/utils/is-entity-inverted";
 import { onlyNegative, onlyPositive } from "@flixlix-cards/shared/states/utils/negative-positive";
-import { type PowerFlowCardPlusConfig } from "@flixlix-cards/shared/types";
+import { type FlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { type HomeAssistant } from "custom-card-helpers";
 import { getSecondaryState } from "./base";
 
-export const getSolarState = (hass: HomeAssistant, config: PowerFlowCardPlusConfig) => {
+export const getSolarState = (hass: HomeAssistant, config: FlowCardPlusConfig) => {
   const entity = config.entities.solar?.entity;
   const secondaryEntity = config.entities.solar?.secondary_info?.entity;
 
@@ -26,5 +26,5 @@ export const getSolarState = (hass: HomeAssistant, config: PowerFlowCardPlusConf
   return onlyPositive(totalSolarState);
 };
 
-export const getSolarSecondaryState = (hass: HomeAssistant, config: PowerFlowCardPlusConfig) =>
+export const getSolarSecondaryState = (hass: HomeAssistant, config: FlowCardPlusConfig) =>
   getSecondaryState(hass, config, "solar");

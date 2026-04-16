@@ -95,20 +95,16 @@ export function computeEnergyDistribution(params: {
 
   let batteryToGrid = Math.min(remainingBatteryOut, remainingToGrid);
   remainingBatteryOut -= batteryToGrid;
-  remainingToGrid -= batteryToGrid;
 
   const secondGridToBattery = Math.min(remainingFromGrid, remainingBatteryIn);
   gridToBattery += secondGridToBattery;
   remainingFromGrid -= secondGridToBattery;
-  remainingBatteryIn -= secondGridToBattery;
 
   const solarToHome = Math.min(remainingConsumption, remainingSolar);
   remainingConsumption -= solarToHome;
-  remainingSolar -= solarToHome;
 
   const batteryToHome = Math.min(remainingConsumption, remainingBatteryOut);
   remainingConsumption -= batteryToHome;
-  remainingBatteryOut -= batteryToHome;
 
   const gridToHome = Math.min(remainingConsumption, remainingFromGrid);
 

@@ -62,7 +62,7 @@ export const allDynamicStyles = (main: HostWithStyle, input: DynamicStylesInput)
       ? "var(--energy-grid-consumption-color)"
       : grid.color.circle_type === "production"
         ? "var(--energy-grid-return-color)"
-        : grid.color.circle_type === "color_dynamically"
+        : grid.color.circle_type !== "no_color"
           ? (grid.state.fromGrid ?? 0) >= (grid.state.toGrid ?? 0)
             ? "var(--energy-grid-consumption-color)"
             : "var(--energy-grid-return-color)"
@@ -170,7 +170,7 @@ export const allDynamicStyles = (main: HostWithStyle, input: DynamicStylesInput)
       ? "var(--energy-battery-in-color)"
       : battery.color.circle_type === "production"
         ? "var(--energy-battery-out-color)"
-        : battery.color.circle_type === "color_dynamically"
+        : battery.color.circle_type !== "no_color"
           ? battery.state.fromBattery >= battery.state.toBattery
             ? "var(--energy-battery-out-color)"
             : "var(--energy-battery-in-color)"

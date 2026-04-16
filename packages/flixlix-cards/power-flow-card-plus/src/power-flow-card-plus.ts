@@ -9,6 +9,8 @@ import { individualRightTopElement } from "@flixlix-cards/shared/components/indi
 import { dashboardLinkElement } from "@flixlix-cards/shared/components/misc/dashboard-link";
 import { nonFossilElement } from "@flixlix-cards/shared/components/non-fossil";
 import { solarElement } from "@flixlix-cards/shared/components/solar";
+import { spacer } from "@flixlix-cards/shared/components/spacer";
+import { CIRCLE_CIRCUMFERENCE } from "@flixlix-cards/shared/const/circle";
 import { handleAction } from "@flixlix-cards/shared/ha/panels/lovelace/common/handle-action";
 import {
   type RenderTemplateResult,
@@ -77,8 +79,6 @@ import { type UnsubscribeFunc } from "home-assistant-js-websocket";
 import { html, LitElement, nothing, type PropertyValues, type TemplateResult } from "lit";
 import { customElement, property, query, state } from "lit/decorators.js";
 import packageJson from "../package.json" with { type: "json" };
-
-const circleCircumference = 238.76104;
 
 registerCustomCard({
   type: "power-flow-card-plus",
@@ -419,7 +419,7 @@ export class PowerFlowCardPlus extends LitElement {
                       templatesObj,
                     })
                   : individualObjs?.some((individual) => individual?.has)
-                    ? html`<div class="spacer"></div>`
+                    ? spacer
                     : nothing}
                 ${individualFieldLeftTop
                   ? individualLeftTopElement(this, this._config, {
@@ -428,7 +428,7 @@ export class PowerFlowCardPlus extends LitElement {
                       newDur,
                       templatesObj,
                     })
-                  : html`<div class="spacer"></div>`}
+                  : spacer}
                 ${checkHasRightIndividual(individualObjs)
                   ? individualRightTopElement(this, this._config, {
                       displayState: getIndividualDisplayState(individualFieldRightTop),
@@ -448,11 +448,11 @@ export class PowerFlowCardPlus extends LitElement {
                   grid,
                   templatesObj,
                 })
-              : html`<div class="spacer"></div>`}
-            <div class="spacer"></div>
+              : spacer}
+            ${spacer}
             ${!entities.home?.hide
               ? homeElement(this, this._config, {
-                  circleCircumference,
+                  CIRCLE_CIRCUMFERENCE,
                   entities,
                   grid,
                   home,
@@ -465,15 +465,13 @@ export class PowerFlowCardPlus extends LitElement {
                   homeUsageToDisplay,
                   individual: individualObjs,
                 })
-              : html`<div class="spacer"></div>`}
-            ${checkHasRightIndividual(individualObjs) ? html` <div class="spacer"></div>` : nothing}
+              : spacer}
+            ${checkHasRightIndividual(individualObjs) ? spacer : nothing}
           </div>
           ${battery.has || checkHasBottomIndividual(individualObjs)
             ? html`<div class="row">
-                <div class="spacer"></div>
-                ${battery.has
-                  ? batteryElement(this, this._config, { battery, entities })
-                  : html`<div class="spacer"></div>`}
+                ${spacer}
+                ${battery.has ? batteryElement(this, this._config, { battery, entities }) : spacer}
                 ${individualFieldLeftBottom
                   ? individualLeftBottomElement(this, this._config, {
                       displayState: getIndividualDisplayState(individualFieldLeftBottom),
@@ -481,7 +479,7 @@ export class PowerFlowCardPlus extends LitElement {
                       newDur,
                       templatesObj,
                     })
-                  : html`<div class="spacer"></div>`}
+                  : spacer}
                 ${checkHasRightIndividual(individualObjs)
                   ? individualRightBottomElement(this, this._config, {
                       displayState: getIndividualDisplayState(individualFieldRightBottom),
@@ -491,7 +489,7 @@ export class PowerFlowCardPlus extends LitElement {
                     })
                   : nothing}
               </div>`
-            : html`<div class="spacer"></div>`}
+            : spacer}
           ${flowElement(this._config, {
             battery,
             grid,
@@ -547,7 +545,7 @@ export class PowerFlowCardPlus extends LitElement {
     ) {
       this.style.setProperty(
         "--clickable-cursor",
-        this._config.clickable_entities ? "pointer" : "default"
+        this._config.clickable_entities !== false ? "pointer" : "default"
       );
       this._renderData = this._computeRenderData();
     }
@@ -703,7 +701,7 @@ export class PowerFlowCardPlus extends LitElement {
       name: computeFieldName(
         this.hass,
         entities?.home,
-        this.hass.localize("ui.panel.lovelace.cards.energy.energy_distribution.home")
+        this.hass.localize("ui.panel.lovelace.strategy.home.home")
       ),
       tap_action: entities.home?.tap_action,
       hold_action: entities.home?.hold_action,
@@ -813,16 +811,16 @@ export class PowerFlowCardPlus extends LitElement {
       0
     );
     const homeBatteryCircumference = battery.state.toHome
-      ? circleCircumference * (battery.state.toHome / totalHomeConsumption)
+      ? CIRCLE_CIRCUMFERENCE * (battery.state.toHome / totalHomeConsumption)
       : 0;
     const homeSolarCircumference = solar.state.toHome
-      ? circleCircumference * (solar.state.toHome / totalHomeConsumption)
+      ? CIRCLE_CIRCUMFERENCE * (solar.state.toHome / totalHomeConsumption)
       : 0;
     const homeNonFossilCircumference = nonFossil.state.power
-      ? circleCircumference * (nonFossil.state.power / totalHomeConsumption)
+      ? CIRCLE_CIRCUMFERENCE * (nonFossil.state.power / totalHomeConsumption)
       : 0;
     const homeGridCircumference =
-      circleCircumference *
+      CIRCLE_CIRCUMFERENCE *
       ((totalHomeConsumption -
         (nonFossil.state.power ?? 0) -
         (battery.state.toHome ?? 0) -

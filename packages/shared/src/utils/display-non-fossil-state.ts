@@ -1,14 +1,14 @@
 import { isEntityAvailable } from "@flixlix-cards/shared/states/utils/existence-entity";
 import { getEntityState } from "@flixlix-cards/shared/states/utils/get-entity-state";
 import { getEntityStateWatts } from "@flixlix-cards/shared/states/utils/get-entity-state-watts";
-import { type PowerFlowCardPlusConfig } from "@flixlix-cards/shared/types";
+import { type FlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { displayValue } from "@flixlix-cards/shared/utils/display-value";
 import { unavailableOrMisconfiguredError } from "@flixlix-cards/shared/utils/unavailable-error";
 import { type HomeAssistant } from "custom-card-helpers";
 
 export const displayNonFossilState = (
   hass: HomeAssistant,
-  config: PowerFlowCardPlusConfig,
+  config: FlowCardPlusConfig,
   entityFossil: string,
   totalFromGrid: number
 ): string | number => {

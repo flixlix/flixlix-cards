@@ -1,14 +1,14 @@
 import {
   type CardMainContext,
   type ConfigEntities,
-  type PowerFlowCardPlusConfig,
+  type FlowCardPlusConfig,
 } from "@flixlix-cards/shared/types";
 import { displayValue } from "@flixlix-cards/shared/utils/display-value";
 import { html, nothing } from "lit";
 
 export const batteryElement = (
   main: CardMainContext,
-  config: PowerFlowCardPlusConfig,
+  config: FlowCardPlusConfig,
   {
     battery,
     entities,

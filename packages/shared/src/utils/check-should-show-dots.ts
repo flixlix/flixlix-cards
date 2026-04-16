@@ -1,6 +1,6 @@
-import { type PowerFlowCardPlusConfig } from "@flixlix-cards/shared/types";
+import { type FlowCardPlusConfig } from "@flixlix-cards/shared/types";
 
-export const checkShouldShowDots = (config: PowerFlowCardPlusConfig) => {
+export const checkShouldShowDots = (config: FlowCardPlusConfig) => {
   if (config.disable_dots === true) {
     return false;
   }

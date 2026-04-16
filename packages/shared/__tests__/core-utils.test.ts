@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 
 import { adjustZeroTolerance } from "../src/states/tolerance/base";
-import { type PowerFlowCardPlusConfig } from "../src/types";
+import { type FlowCardPlusConfig } from "../src/types";
 import { computeFlowRate, computeIndividualFlowRate } from "../src/utils/compute-flow-rate";
 import { displayValue } from "../src/utils/display-value";
 
@@ -30,7 +30,7 @@ describe("core utils", () => {
       max_flow_rate: 10,
       min_flow_rate: 1,
       use_new_flow_rate_model: true,
-    } as unknown as PowerFlowCardPlusConfig;
+    } as unknown as FlowCardPlusConfig;
 
     expect(computeFlowRate(config, 101, 0)).toBe(1);
   });
@@ -42,7 +42,7 @@ describe("core utils", () => {
       max_flow_rate: 10,
       min_flow_rate: 1,
       use_new_flow_rate_model: true,
-    } as unknown as PowerFlowCardPlusConfig;
+    } as unknown as FlowCardPlusConfig;
 
     expect(computeFlowRate(config, 0, 0)).toBe(10);
     expect(computeFlowRate(config, 100, 0)).toBe(1);
@@ -56,7 +56,7 @@ describe("core utils", () => {
       max_flow_rate: 10,
       min_flow_rate: 1,
       use_new_flow_rate_model: false,
-    } as unknown as PowerFlowCardPlusConfig;
+    } as unknown as FlowCardPlusConfig;
 
     expect(computeFlowRate(config, 25, 100)).toBeCloseTo(7.75, 10);
   });
@@ -79,7 +79,7 @@ describe("core utils", () => {
       kw_decimals: 1,
       w_decimals: 0,
       watt_threshold: 1000,
-    } as unknown as PowerFlowCardPlusConfig;
+    } as unknown as FlowCardPlusConfig;
     expect(displayValue(hass, config, null, {})).toBe("0 W");
   });
 
@@ -89,7 +89,7 @@ describe("core utils", () => {
       kw_decimals: 1,
       w_decimals: 0,
       watt_threshold: 1000,
-    } as unknown as PowerFlowCardPlusConfig;
+    } as unknown as FlowCardPlusConfig;
     expect(displayValue(hass, config, 1500, {})).toBe("1.5 kW");
   });
 
@@ -99,7 +99,7 @@ describe("core utils", () => {
       kw_decimals: 1,
       w_decimals: 0,
       watt_threshold: 1000,
-    } as unknown as PowerFlowCardPlusConfig;
+    } as unknown as FlowCardPlusConfig;
     expect(displayValue(hass, config, 500, {})).toBe("500 W");
   });
 
@@ -109,7 +109,7 @@ describe("core utils", () => {
       kw_decimals: 1,
       w_decimals: 0,
       watt_threshold: 1000,
-    } as unknown as PowerFlowCardPlusConfig;
+    } as unknown as FlowCardPlusConfig;
     expect(displayValue(hass, config, -500, { accept_negative: false })).toBe("500 W");
     expect(displayValue(hass, config, -500, { accept_negative: true })).toBe("-500 W");
   });

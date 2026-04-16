@@ -1,5 +1,5 @@
 import { type IndividualObject } from "@flixlix-cards/shared/states/raw/individual/get-individual-object";
-import { type NewDur, type PowerFlowCardPlusConfig } from "@flixlix-cards/shared/types";
+import { type FlowCardPlusConfig, type NewDur } from "@flixlix-cards/shared/types";
 import { html } from "lit";
 import { flowBatteryToGrid } from "./battery-to-grid";
 import { flowBatteryToHome } from "./battery-to-home";
@@ -17,7 +17,7 @@ export interface Flows {
 }
 
 export const flowElement = (
-  config: PowerFlowCardPlusConfig,
+  config: FlowCardPlusConfig,
   { battery, grid, individual, solar, newDur }: Flows
 ) => {
   return html`

@@ -10,7 +10,8 @@
     "./components/*": "./src/components/*.ts",
     "./ha/*": "./src/ha/*.ts",
     "./states/*": "./src/states/*.ts",
-    "./utils/*": "./src/utils/*.ts"
+    "./utils/*": "./src/utils/*.ts",
+    "./const/*": "./src/const/*.ts"
   },
   "peerDependencies": {
     "custom-card-helpers": "^1.9.0",

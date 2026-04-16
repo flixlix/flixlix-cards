@@ -1,7 +1,7 @@
 import {
   type ActionConfigSet,
   type CardMainContext,
-  type PowerFlowCardPlusConfig,
+  type FlowCardPlusConfig,
   type TemplatesObj,
 } from "@flixlix-cards/shared/types";
 import { displayValue } from "@flixlix-cards/shared/utils/display-value";
@@ -14,7 +14,7 @@ type SecondaryKey = "grid" | "solar" | "home" | "nonFossilFuel";
 export const generalSecondarySpan = (
   hass: HomeAssistant,
   main: CardMainContext,
-  config: PowerFlowCardPlusConfig,
+  config: FlowCardPlusConfig,
   templatesObj: TemplatesObj,
   field: {
     secondary: {

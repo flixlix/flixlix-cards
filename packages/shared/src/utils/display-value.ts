@@ -1,4 +1,4 @@
-import { type PowerFlowCardPlusConfig } from "@flixlix-cards/shared/types";
+import { type FlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { type HomeAssistant, formatNumber } from "custom-card-helpers";
 import { isNumberValue, round } from "./utils";
 
@@ -12,7 +12,7 @@ import { isNumberValue, round } from "./utils";
  */
 export const displayValue = (
   hass: HomeAssistant,
-  config: PowerFlowCardPlusConfig,
+  config: FlowCardPlusConfig,
   value: number | string | null,
   {
     unit,

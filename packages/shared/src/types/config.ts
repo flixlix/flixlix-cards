@@ -37,6 +37,10 @@ interface mainConfigOptions {
   allow_layout_break?: boolean;
 }
 
+export interface FlowCardPlusConfig extends LovelaceCardConfig, mainConfigOptions {
+  entities: ConfigEntities;
+}
+
 export interface PowerFlowCardPlusConfig extends LovelaceCardConfig, mainConfigOptions {
   entities: ConfigEntities;
 }

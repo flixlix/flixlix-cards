@@ -1,4 +1,4 @@
-import { type PowerFlowCardPlusConfig } from "@flixlix-cards/shared/types";
+import { type FlowCardPlusConfig } from "@flixlix-cards/shared/types";
 
 const newFlowRateMapRange = (
   value: number,
@@ -11,7 +11,7 @@ const newFlowRateMapRange = (
   return ((value - minIn) * (maxOut - minOut)) / (maxIn - minIn) + minOut;
 };
 
-const newFlowRate = (config: PowerFlowCardPlusConfig, value: number): number => {
+const newFlowRate = (config: FlowCardPlusConfig, value: number): number => {
   const maxPower = config.max_expected_power;
   const minPower = config.min_expected_power;
   const maxRate = config.max_flow_rate;
@@ -19,7 +19,7 @@ const newFlowRate = (config: PowerFlowCardPlusConfig, value: number): number => 
   return newFlowRateMapRange(value, maxRate, minRate, minPower, maxPower);
 };
 
-const oldFlowRate = (config: PowerFlowCardPlusConfig, value: number, total: number): number => {
+const oldFlowRate = (config: FlowCardPlusConfig, value: number, total: number): number => {
   const min = config.min_flow_rate;
   const max = config.max_flow_rate;
   const denominator = total > 0 ? total : value > 0 ? value : 1;
@@ -28,7 +28,7 @@ const oldFlowRate = (config: PowerFlowCardPlusConfig, value: number, total: numb
 };
 
 export const computeFlowRate = (
-  config: PowerFlowCardPlusConfig,
+  config: FlowCardPlusConfig,
   value: number,
   total: number
 ): number => {

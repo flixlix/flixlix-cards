@@ -2,8 +2,8 @@ import { type IndividualObject } from "@flixlix-cards/shared/states/raw/individu
 import {
   type CardMainContext,
   type ConfigEntities,
+  type FlowCardPlusConfig,
   type NewDur,
-  type PowerFlowCardPlusConfig,
   type TemplatesObj,
 } from "@flixlix-cards/shared/types";
 import { html, nothing, svg } from "lit";
@@ -17,7 +17,7 @@ interface Home {
   newDur: NewDur;
   homeUsageToDisplay: string;
   homeSolarCircumference: number;
-  circleCircumference: number;
+  CIRCLE_CIRCUMFERENCE: number;
   homeBatteryCircumference: number;
   homeNonFossilCircumference: number;
   homeGridCircumference: number;
@@ -26,14 +26,14 @@ interface Home {
 
 export const homeElement = (
   main: CardMainContext,
-  config: PowerFlowCardPlusConfig,
+  config: FlowCardPlusConfig,
   {
     home,
     entities,
     templatesObj,
     homeUsageToDisplay,
     homeSolarCircumference,
-    circleCircumference,
+    CIRCLE_CIRCUMFERENCE,
     homeBatteryCircumference,
     homeNonFossilCircumference,
     homeGridCircumference,
@@ -42,11 +42,12 @@ export const homeElement = (
 ) => {
   const showHomeLabel = individual.filter((i) => i.has).length <= 1;
   const isHomeEntityDefined = entities.home?.entity !== undefined;
+  const noActionSet = ["none", undefined];
   const staticAction =
-    entities.home?.tap_action?.action !== "none" ||
-    entities.home?.hold_action !== undefined ||
-    entities.home?.double_tap_action !== undefined;
-  const isClickable = isHomeEntityDefined && staticAction;
+    !noActionSet.includes(entities.home?.tap_action?.action) ||
+    !noActionSet.includes(entities.home?.hold_action?.action) ||
+    !noActionSet.includes(entities.home?.double_tap_action?.action);
+  const isClickable = isHomeEntityDefined || staticAction;
   const disableEntityClick = config.clickable_entities === false || !isClickable;
 
   return html`
@@ -86,10 +87,10 @@ export const homeElement = (
                   cx="40"
                   cy="40"
                   r="38"
-                  stroke-dasharray="${homeSolarCircumference} ${circleCircumference -
+                  stroke-dasharray="${homeSolarCircumference} ${CIRCLE_CIRCUMFERENCE -
                   homeSolarCircumference}"
                   shape-rendering="geometricPrecision"
-                  stroke-dashoffset="-${circleCircumference - homeSolarCircumference}"
+                  stroke-dashoffset="-${CIRCLE_CIRCUMFERENCE - homeSolarCircumference}"
                 />`
             : nothing}
           ${homeBatteryCircumference
@@ -98,9 +99,9 @@ export const homeElement = (
                   cx="40"
                   cy="40"
                   r="38"
-                  stroke-dasharray="${homeBatteryCircumference} ${circleCircumference -
+                  stroke-dasharray="${homeBatteryCircumference} ${CIRCLE_CIRCUMFERENCE -
                   homeBatteryCircumference}"
-                  stroke-dashoffset="-${circleCircumference -
+                  stroke-dashoffset="-${CIRCLE_CIRCUMFERENCE -
                   homeBatteryCircumference -
                   (homeSolarCircumference || 0)}"
                   shape-rendering="geometricPrecision"
@@ -112,9 +113,9 @@ export const homeElement = (
                   cx="40"
                   cy="40"
                   r="38"
-                  stroke-dasharray="${homeNonFossilCircumference} ${circleCircumference -
+                  stroke-dasharray="${homeNonFossilCircumference} ${CIRCLE_CIRCUMFERENCE -
                   homeNonFossilCircumference}"
-                  stroke-dashoffset="-${circleCircumference -
+                  stroke-dashoffset="-${CIRCLE_CIRCUMFERENCE -
                   homeNonFossilCircumference -
                   (homeBatteryCircumference || 0) -
                   (homeSolarCircumference || 0)}"
@@ -127,10 +128,10 @@ export const homeElement = (
             cy="40"
             r="38"
             stroke-dasharray="${homeGridCircumference ??
-            circleCircumference -
+            CIRCLE_CIRCUMFERENCE -
               homeSolarCircumference! -
               (homeBatteryCircumference || 0)} ${homeGridCircumference !== undefined
-              ? circleCircumference - homeGridCircumference
+              ? CIRCLE_CIRCUMFERENCE - homeGridCircumference
               : homeSolarCircumference! + (homeBatteryCircumference || 0)}"
             stroke-dashoffset="0"
             shape-rendering="geometricPrecision"

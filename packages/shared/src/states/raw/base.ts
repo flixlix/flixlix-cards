@@ -2,15 +2,15 @@ import { getEntityStateWatts } from "@flixlix-cards/shared/states/utils/get-enti
 import { isEntityInverted } from "@flixlix-cards/shared/states/utils/is-entity-inverted";
 import { getFirstEntityName } from "@flixlix-cards/shared/states/utils/mutli-entity";
 import { onlyNegative, onlyPositive } from "@flixlix-cards/shared/states/utils/negative-positive";
-import { type PowerFlowCardPlusConfig } from "@flixlix-cards/shared/types";
+import { type FlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { isNumberValue } from "@flixlix-cards/shared/utils/utils";
 import { type HomeAssistant } from "custom-card-helpers";
 
-type BaseEntityField = Exclude<keyof PowerFlowCardPlusConfig["entities"], "individual">;
+type BaseEntityField = Exclude<keyof FlowCardPlusConfig["entities"], "individual">;
 
 export const getSecondaryState = (
   hass: HomeAssistant,
-  config: PowerFlowCardPlusConfig,
+  config: FlowCardPlusConfig,
   field: BaseEntityField
 ) => {
   const entity = config.entities?.[field]?.secondary_info?.entity;
@@ -28,7 +28,7 @@ export const getSecondaryState = (
 
 export const getFieldInState = (
   hass: HomeAssistant,
-  config: PowerFlowCardPlusConfig,
+  config: FlowCardPlusConfig,
   field: BaseEntityField
 ) => {
   const entity = config.entities[field]?.entity;
@@ -47,7 +47,7 @@ export const getFieldInState = (
 
 export const getFieldOutState = (
   hass: HomeAssistant,
-  config: PowerFlowCardPlusConfig,
+  config: FlowCardPlusConfig,
   field: BaseEntityField
 ) => {
   const entity = config.entities[field]?.entity;

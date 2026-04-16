@@ -1,6 +1,6 @@
-import { type PowerFlowCardPlusConfig } from "@flixlix-cards/shared/types";
+import { type FlowCardPlusConfig } from "@flixlix-cards/shared/types";
 
-export const styleLine = (power: number, config: PowerFlowCardPlusConfig): string => {
+export const styleLine = (power: number, config: FlowCardPlusConfig): string => {
   if (power > 0) return "";
   const displayZeroMode = config?.display_zero_lines?.mode;
   if (displayZeroMode === "show" || displayZeroMode === undefined) return "";

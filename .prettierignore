@@ -12,3 +12,7 @@ node_modules
 # Other artifacts
 .turbo
 *.log
+
+# Tanstack specific
+.output
+routeTree.gen.ts
