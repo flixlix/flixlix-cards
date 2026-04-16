@@ -34,7 +34,9 @@ import {
   fetchEnergyPeriodGrowth,
   getEntityEnergyFromGrowthMap,
   getGlobalEnergyPeriodWindow,
+  subscribeEnergyCollectionData,
   watchGlobalEnergyPeriodChanges,
+  type EnergyCollectionFossilData,
   type EnergyPeriodWindow,
 } from "@flixlix-cards/shared/states/utils/energy-period";
 import { doesEntityExist } from "@flixlix-cards/shared/states/utils/existence-entity";
@@ -101,7 +103,9 @@ export class EnergyFlowCardPlus extends LitElement {
   @state() private _energyWindow: EnergyPeriodWindow | null = null;
   @state() private _energyGrowthMap: Record<string, number> = {};
   @state() private _energyDataLoaded = false;
+  @state() private _fossilEnergyData: EnergyCollectionFossilData = {};
   private _unsubEnergyPeriodListener?: () => void;
+  private _unsubFossilData?: () => void;
   private _energyRefreshInFlight?: Promise<void>;
   private _energyRefreshGeneration = 0;
   private _energyRefreshPending = false;
@@ -188,6 +192,7 @@ export class EnergyFlowCardPlus extends LitElement {
     }
     this._tryConnectAll();
     this._ensureEnergyPeriodListener();
+    this._ensureFossilDataSubscription();
     void this._refreshEnergyData();
   }
 
@@ -199,6 +204,8 @@ export class EnergyFlowCardPlus extends LitElement {
     }
     this._unsubEnergyPeriodListener?.();
     this._unsubEnergyPeriodListener = undefined;
+    this._unsubFossilData?.();
+    this._unsubFossilData = undefined;
     this._tryDisconnectAll();
     super.disconnectedCallback();
   }
@@ -312,6 +319,20 @@ export class EnergyFlowCardPlus extends LitElement {
     if (unsub) {
       this._unsubEnergyPeriodListener = unsub;
       void this._refreshEnergyData();
+    }
+  }
+
+  private _ensureFossilDataSubscription(): void {
+    if (this._unsubFossilData || !this.hass) return;
+    const unsub = subscribeEnergyCollectionData(
+      this.hass,
+      (data) => {
+        this._fossilEnergyData = data;
+      },
+      this._energyCollectionKey
+    );
+    if (unsub) {
+      this._unsubFossilData = unsub;
     }
   }
 
@@ -524,6 +545,7 @@ export class EnergyFlowCardPlus extends LitElement {
                   newDur,
                   nonFossil,
                   templatesObj,
+                  fossilEnergyConsumption: this._fossilEnergyData?.fossilEnergyConsumption,
                 })}
                 ${solar.has
                   ? solarElement(this, this._config, {
@@ -667,6 +689,7 @@ export class EnergyFlowCardPlus extends LitElement {
     }
     if (changedProps.has("hass") || changedProps.has("_config")) {
       this._ensureEnergyPeriodListener();
+      this._ensureFossilDataSubscription();
     }
     if (changedProps.has("_config")) {
       void this._refreshEnergyData();
@@ -677,6 +700,7 @@ export class EnergyFlowCardPlus extends LitElement {
       changedProps.has("_templateResults") ||
       changedProps.has("_width") ||
       changedProps.has("_energyGrowthMap") ||
+      changedProps.has("_fossilEnergyData") ||
       this._renderData === undefined
     ) {
       this.style.setProperty(
@@ -964,6 +988,7 @@ export class EnergyFlowCardPlus extends LitElement {
       nonFossil,
       getEntityStateValue: (entityId) => getEnergyEntityState(entityId),
       getEntityState: (entityId) => getEntityState(this.hass, entityId),
+      fossilEnergyConsumption: this._fossilEnergyData?.fossilEnergyConsumption,
     });
     const totalIndividualConsumption =
       individualObjs?.reduce((a, b) => a + (b.has ? b.state || 0 : 0), 0) || 0;

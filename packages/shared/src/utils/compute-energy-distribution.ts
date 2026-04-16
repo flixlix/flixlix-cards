@@ -1,3 +1,8 @@
+import {
+  computeNonFossilFromCollection,
+  type FossilEnergyConsumption,
+} from "@flixlix-cards/shared/states/utils/energy-period";
+
 type ComputeEntityStateValue = (entityId: string) => number;
 type ComputeEntityState = (entityId: string | undefined) => number | null;
 
@@ -61,6 +66,7 @@ export function computeEnergyDistribution(params: {
   nonFossil: NonFossil;
   getEntityStateValue: ComputeEntityStateValue;
   getEntityState: ComputeEntityState;
+  fossilEnergyConsumption?: FossilEnergyConsumption;
 }): void {
   const { entities, grid, solar, battery, nonFossil, getEntityStateValue, getEntityState } = params;
 
@@ -141,8 +147,16 @@ export function computeEnergyDistribution(params: {
   }
 
   if (nonFossil.has) {
-    const nonFossilFuelDecimal =
-      1 - (getEntityState(entities.fossil_fuel_percentage?.entity) ?? 0) / 100;
-    nonFossil.state.power = (grid.state.toHome ?? 0) * nonFossilFuelDecimal;
+    if (params.fossilEnergyConsumption) {
+      const { nonFossilPercentage } = computeNonFossilFromCollection(
+        params.fossilEnergyConsumption,
+        grid.state.fromGrid ?? 0
+      );
+      nonFossil.state.power = (grid.state.toHome ?? 0) * (nonFossilPercentage / 100);
+    } else {
+      const nonFossilFuelDecimal =
+        1 - (getEntityState(entities.fossil_fuel_percentage?.entity) ?? 0) / 100;
+      nonFossil.state.power = (grid.state.toHome ?? 0) * nonFossilFuelDecimal;
+    }
   }
 }
