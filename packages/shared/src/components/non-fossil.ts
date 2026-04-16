@@ -1,4 +1,5 @@
 import { spacer } from "@flixlix-cards/shared/components/spacer";
+import { type FossilEnergyConsumption } from "@flixlix-cards/shared/states/utils/energy-period";
 import {
   type CardMainContext,
   type ConfigEntities,
@@ -20,12 +21,13 @@ interface NonFossil {
   entities: ConfigEntities;
   nonFossil: any;
   grid: any;
+  fossilEnergyConsumption?: FossilEnergyConsumption;
 }
 
 export const nonFossilElement = (
   main: CardMainContext,
   config: FlowCardPlusConfig,
-  { nonFossil, entities, templatesObj, grid, newDur }: NonFossil
+  { nonFossil, entities, templatesObj, grid, newDur, fossilEnergyConsumption }: NonFossil
 ): TemplateResult => {
   const disableEntityClick = config.clickable_entities === false;
   if (!nonFossil.hasPercentage) return spacer;
@@ -84,7 +86,8 @@ export const nonFossilElement = (
                 main.hass,
                 config,
                 entities!.fossil_fuel_percentage!.entity,
-                grid.state.fromGrid
+                grid.state.fromGrid,
+                fossilEnergyConsumption
               )}</span
             >
           `

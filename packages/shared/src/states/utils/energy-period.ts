@@ -337,3 +337,43 @@ export const getEntityEnergyFromGrowthMap = (
   if (!entity) return 0;
   return getEntityNames(entity).reduce((sum, entityId) => sum + (growthMap[entityId] ?? 0), 0);
 };
+
+export type FossilEnergyConsumption = Record<string, number>;
+
+export type EnergyCollectionFossilData = {
+  co2SignalEntity?: string;
+  fossilEnergyConsumption?: FossilEnergyConsumption;
+};
+
+export const subscribeEnergyCollectionData = (
+  hass: HomeAssistant,
+  callback: (data: EnergyCollectionFossilData) => void,
+  collectionKey?: string
+): (() => void) | null => {
+  const collection = getEnergyCollection(hass, collectionKey) as Record<string, unknown> | null;
+  if (!collection || typeof collection.subscribe !== "function") {
+    return null;
+  }
+
+  const unsub = (collection.subscribe as (cb: (data: Record<string, unknown>) => void) => () => void)(
+    (data) => {
+      callback({
+        co2SignalEntity: data?.co2SignalEntity as string | undefined,
+        fossilEnergyConsumption: data?.fossilEnergyConsumption as FossilEnergyConsumption | undefined,
+      });
+    }
+  );
+
+  return typeof unsub === "function" ? unsub : null;
+};
+
+export const computeNonFossilFromCollection = (
+  fossilEnergyConsumption: FossilEnergyConsumption,
+  gridFromGridWh: number
+): { nonFossilEnergy: number; nonFossilPercentage: number } => {
+  const highCarbonEnergyWh =
+    Object.values(fossilEnergyConsumption).reduce((sum, a) => sum + a, 0) * 1000;
+  const nonFossilEnergy = Math.max(gridFromGridWh - highCarbonEnergyWh, 0);
+  const nonFossilPercentage = gridFromGridWh > 0 ? (nonFossilEnergy / gridFromGridWh) * 100 : 0;
+  return { nonFossilEnergy, nonFossilPercentage };
+};
