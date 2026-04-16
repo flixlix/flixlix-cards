@@ -2,9 +2,6 @@ import { TanStackDevtools } from "@tanstack/react-devtools";
 import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 
-import { AppSidebar } from "#/components/app-sidebar";
-import ThemeToggle from "#/components/ThemeToggle";
-import { SidebarProvider, SidebarTrigger } from "@flixlix-cards/ui/components/sidebar";
 import { TooltipProvider } from "@flixlix-cards/ui/components/tooltip";
 import globalsCss from "@flixlix-cards/ui/globals.css?url";
 
@@ -21,10 +18,15 @@ export const Route = createRootRoute({
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "Flixlix Cards",
+        title: "flixlix-cards",
       },
     ],
     links: [
+      {
+        rel: "icon",
+        type: "image/svg+xml",
+        href: "/favicon.svg",
+      },
       {
         rel: "stylesheet",
         href: globalsCss,
@@ -43,26 +45,23 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body className="font-sans antialiased wrap-anywhere selection:bg-orange-300/50">
         <TooltipProvider>
-          <SidebarProvider>
-            <AppSidebar />
-            <SidebarTrigger />
-            {children}
-            <div className="fixed bottom-4 left-4">
-              <ThemeToggle />
-            </div>
-            <TanStackDevtools
-              config={{
-                position: "bottom-right",
-              }}
-              plugins={[
-                {
-                  name: "Tanstack Router",
-                  render: <TanStackRouterDevtoolsPanel />,
-                },
-              ]}
-            />
-            <Scripts />
-          </SidebarProvider>
+          {/* <SidebarProvider> */}
+          {/* <AppSidebar /> */}
+          {/* <SidebarTrigger /> */}
+          {children}
+          <TanStackDevtools
+            config={{
+              position: "bottom-right",
+            }}
+            plugins={[
+              {
+                name: "Tanstack Router",
+                render: <TanStackRouterDevtoolsPanel />,
+              },
+            ]}
+          />
+          <Scripts />
+          {/* </SidebarProvider> */}
         </TooltipProvider>
       </body>
     </html>
