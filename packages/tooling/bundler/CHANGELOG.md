@@ -1,5 +1,11 @@
 # @flixlix-cards/bundler
 
+## 0.0.3
+
+### Patch Changes
+
+- c26189b: fix support for older browsers by targeting es2020 in the final bundle
+
 ## 0.0.2
 
 ### Patch Changes
