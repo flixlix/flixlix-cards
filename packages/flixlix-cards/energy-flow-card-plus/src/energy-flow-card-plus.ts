@@ -37,6 +37,7 @@ import {
 } from "@flixlix-cards/shared/states/utils/energy-period";
 import { doesEntityExist } from "@flixlix-cards/shared/states/utils/existence-entity";
 import { getEntityState } from "@flixlix-cards/shared/states/utils/get-entity-state";
+import { getEntityStateWh } from "@flixlix-cards/shared/states/utils/get-entity-state-wh";
 import { getEntityNames } from "@flixlix-cards/shared/states/utils/mutli-entity";
 import { allDynamicStyles, styles } from "@flixlix-cards/shared/style";
 import {
@@ -681,10 +682,15 @@ export class EnergyFlowCardPlus extends LitElement {
   }
 
   private _computeRenderData() {
-    const { entities } = this._config;
+    const { entities, energy_date_selection } = this._config;
+    const useDateSelection = energy_date_selection !== false;
     const initialNumericState = null as null | number;
-    const getEnergy = (entity?: string) =>
-      getEntityEnergyFromGrowthMap(this._energyGrowthMap, entity);
+    const getEnergyEntityState = (entity?: string): number => {
+      if (!useDateSelection) {
+        return getEntityStateWh(this.hass, entity) ?? 0;
+      }
+      return getEntityEnergyFromGrowthMap(this._energyGrowthMap, entity);
+    };
     const grid: GridObject = {
       entity: entities.grid?.entity,
       has: entities?.grid?.entity !== undefined,
@@ -693,12 +699,12 @@ export class EnergyFlowCardPlus extends LitElement {
       state: {
         fromGrid:
           typeof entities.grid?.entity === "string"
-            ? getEnergy(entities.grid.entity)
-            : getEnergy(entities.grid?.entity?.consumption),
+            ? getEnergyEntityState(entities.grid.entity)
+            : getEnergyEntityState(entities.grid?.entity?.consumption),
         toGrid:
           typeof entities.grid?.entity === "string"
             ? 0
-            : getEnergy(entities.grid?.entity?.production),
+            : getEnergyEntityState(entities.grid?.entity?.production),
         toBattery: initialNumericState,
         toHome: initialNumericState,
       },
@@ -754,7 +760,7 @@ export class EnergyFlowCardPlus extends LitElement {
       },
     };
     const hasSolarEntity = entities.solar?.entity !== undefined;
-    const solarTotal = getEnergy(entities.solar?.entity as string | undefined);
+    const solarTotal = getEnergyEntityState(entities.solar?.entity as string | undefined);
     const isProducingSolar = (solarTotal ?? 0) > 0;
     const displayZero = entities.solar?.display_zero !== false || isProducingSolar;
     const solar = {
@@ -819,11 +825,11 @@ export class EnergyFlowCardPlus extends LitElement {
         toBattery:
           typeof entities.battery?.entity === "string"
             ? 0
-            : getEnergy(entities.battery?.entity?.consumption),
+            : getEnergyEntityState(entities.battery?.entity?.consumption),
         fromBattery:
           typeof entities.battery?.entity === "string"
-            ? getEnergy(entities.battery.entity)
-            : getEnergy(entities.battery?.entity?.production),
+            ? getEnergyEntityState(entities.battery.entity)
+            : getEnergyEntityState(entities.battery?.entity?.production),
         toGrid: 0,
         toHome: 0,
       },
@@ -868,7 +874,7 @@ export class EnergyFlowCardPlus extends LitElement {
     const individualObjs: IndividualObject[] =
       entities.individual?.map((individual) => {
         const obj = getIndividualObject(this.hass, individual);
-        obj.state = getEnergy(individual.entity);
+        obj.state = getEnergyEntityState(individual.entity);
         if (!obj.unit) obj.unit = "Wh";
         return obj;
       }) || [];
@@ -950,7 +956,7 @@ export class EnergyFlowCardPlus extends LitElement {
       solar,
       battery,
       nonFossil,
-      getEntityStateValue: (entityId) => getEnergy(entityId),
+      getEntityStateValue: (entityId) => getEnergyEntityState(entityId),
       getEntityState: (entityId) => getEntityState(this.hass, entityId),
     });
     const totalIndividualConsumption =
@@ -981,14 +987,14 @@ export class EnergyFlowCardPlus extends LitElement {
           ? displayValue(
               this.hass,
               this._config,
-              getEnergy(entities.home.entity) - totalIndividualConsumption,
+              getEnergyEntityState(entities.home.entity) - totalIndividualConsumption,
               {
                 unit: entities.home?.unit_of_measurement,
                 unitWhiteSpace: entities.home?.unit_white_space,
                 watt_threshold: this._config.watt_threshold,
               }
             )
-          : displayValue(this.hass, this._config, getEnergy(entities.home.entity), {
+          : displayValue(this.hass, this._config, getEnergyEntityState(entities.home.entity), {
               unit: entities.home?.unit_of_measurement,
               unitWhiteSpace: entities.home?.unit_white_space,
               watt_threshold: this._config.watt_threshold,
