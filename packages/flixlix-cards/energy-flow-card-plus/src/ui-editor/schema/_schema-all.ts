@@ -28,13 +28,14 @@ export const cardConfigStruct = assign(
     second_dashboard_link: optional(string()),
     second_dashboard_link_label: optional(string()),
     inverted_entities: optional(any()),
-    w_decimals: optional(integer()),
-    kw_decimals: optional(integer()),
+    wh_decimals: optional(integer()),
+    kwh_decimals: optional(integer()),
+    mwh_decimals: optional(integer()),
     min_flow_rate: optional(number()),
     max_flow_rate: optional(number()),
     min_expected_power: optional(number()),
     max_expected_power: optional(number()),
-    watt_threshold: optional(number()),
+    wh_threshold: optional(number()),
     clickable_entities: optional(boolean()),
     transparency_zero_lines: optional(number()),
     greyout_zero_lines: optional(boolean()),
@@ -45,6 +46,7 @@ export const cardConfigStruct = assign(
     style_card_content: optional(any()),
     disable_dots: optional(boolean()),
     no_labels: optional(boolean()),
+    energy_date_selection: optional(boolean()),
     entities: object({
       battery: optional(any()),
       grid: optional(any()),
@@ -149,13 +151,18 @@ export const advancedOptionsSchema = memoizeOne((localize, displayZeroLinesMode:
         selector: { text: {} },
       },
       {
-        name: "w_decimals",
+        name: "wh_decimals",
         label: "Wh Decimals",
         selector: { number: { mode: "box", min: 0, max: 5, step: 1 } },
       },
       {
-        name: "kw_decimals",
+        name: "kwh_decimals",
         label: "kWh Decimals",
+        selector: { number: { mode: "box", min: 0, max: 5, step: 1 } },
+      },
+      {
+        name: "mwh_decimals",
+        label: "MWh Decimals",
         selector: { number: { mode: "box", min: 0, max: 5, step: 1 } },
       },
       {
@@ -169,7 +176,7 @@ export const advancedOptionsSchema = memoizeOne((localize, displayZeroLinesMode:
         selector: { number: { mode: "box", min: 0, max: 1000000, step: 0.01 } },
       },
       {
-        name: "watt_threshold",
+        name: "wh_threshold",
         label: "Wh to kWh Threshold",
         selector: { number: { mode: "box", min: 0, max: 1000000, step: 1 } },
       },
@@ -184,6 +191,12 @@ export const advancedOptionsSchema = memoizeOne((localize, displayZeroLinesMode:
         name: "disable_dots",
         label: "Disable Moving Dots",
         selector: { boolean: {} },
+      },
+      {
+        name: "energy_date_selection",
+        label: "Use Date Selection",
+        selector: { boolean: {} },
+        default: true,
       },
       {
         name: "no_labels",
