@@ -19,8 +19,7 @@
     "type": "git",
     "url": "git+https://github.com/flixlix/power-flow-card-plus.git"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "flixlix",
   "bugs": {
     "url": "https://github.com/flixlix/power-flow-card-plus/issues"
   },
