@@ -3,7 +3,8 @@
     "label": {
       "car": "Car",
       "motorbike": "Motorbike"
-    }
+    },
+    "compare_tooltip": "Compare with previous period"
   },
   "editor": {
     "entity_generator": "Generator",
@@ -83,6 +84,12 @@
     "navigation_path": "Navigation Path",
     "sort_individual_devices": "Sort individual devices",
     "allow_layout_break": "Allow Layout Break",
-    "no_labels": "No Labels"
+    "no_labels": "No Labels",
+    "vertical_opening_direction": "Vertical Opening Direction",
+    "opening_direction": "Opening Direction",
+    "disable_compare": "Disable Compare",
+    "collection_key": "Collection Key",
+    "collection_key_helper": "Optional key for the energy data collection",
+    "hide_overflow": "Hide Overflow Menu"
   }
 }

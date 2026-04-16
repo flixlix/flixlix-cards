@@ -3,7 +3,8 @@
     "label": {
       "car": "Bil",
       "motorbike": "Motorcykel"
-    }
+    },
+    "compare_tooltip": "Jämför med föregående period"
   },
   "editor": {
     "entity_generator": "Generator",
@@ -83,6 +84,12 @@
     "navigation_path": "Navigationsväg",
     "sort_individual_devices": "Sortera enskilda enheter",
     "allow_layout_break": "Tillåt layoutbrytning",
-    "no_labels": "Inga etiketter"
+    "no_labels": "Inga etiketter",
+    "vertical_opening_direction": "Vertikal öppningsriktning",
+    "opening_direction": "Öppningsriktning",
+    "disable_compare": "Avaktivera jämförelse",
+    "collection_key": "Samlingsnyckel",
+    "collection_key_helper": "Valfri nyckel för insamling av energidata",
+    "hide_overflow": "Dölj överflödesmeny"
   }
 }

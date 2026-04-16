@@ -3,7 +3,8 @@
     "label": {
       "car": "Auto",
       "motorbike": "Motorfiets"
-    }
+    },
+    "compare_tooltip": "Vergelijk met vorige periode"
   },
   "editor": {
     "entity_generator": "Generator",
@@ -83,6 +84,12 @@
     "navigation_path": "Navigatiepad",
     "sort_individual_devices": "Sorteer individuele apparaten",
     "allow_layout_break": "Lay-out doorbreken toestaan",
-    "no_labels": "Geen labels"
+    "no_labels": "Geen labels",
+    "vertical_opening_direction": "Verticale Openingsrichting",
+    "opening_direction": "Openingsrichting",
+    "disable_compare": "Vergelijking Uitschakelen",
+    "collection_key": "Verzamelsleutel",
+    "collection_key_helper": "Optionele sleutel voor de energiegegevensverzameling",
+    "hide_overflow": "Overloop Menu Verbergen"
   }
 }

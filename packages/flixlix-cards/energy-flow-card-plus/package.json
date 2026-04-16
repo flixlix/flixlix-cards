@@ -36,8 +36,7 @@
     "format:check": "prettier --check . --ignore-path ../../../.prettierignore",
     "test": "vitest run",
     "test:watch": "vitest",
-    "precommit": "pnpm typecheck && pnpm format:check && pnpm test && pnpm lint",
-    "start:hass": "docker run --rm -p8123:8123 -v ./.hass_dev:/config homeassistant/home-assistant:beta"
+    "precommit": "pnpm typecheck && pnpm format:check && pnpm test && pnpm lint"
   },
   "dependencies": {
     "@flixlix-cards/shared": "workspace:*",

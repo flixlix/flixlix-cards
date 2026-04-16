@@ -3,7 +3,8 @@
     "label": {
       "car": "Carro",
       "motorbike": "Mota"
-    }
+    },
+    "compare_tooltip": "Comparar com o período anterior"
   },
   "editor": {
     "entity_generator": "Gerador",
@@ -83,6 +84,12 @@
     "navigation_path": "Caminho de Navegação",
     "sort_individual_devices": "Classifique dispositivos individuais",
     "allow_layout_break": "Permitir quebra de layout",
-    "no_labels": "Sem etiquetas"
+    "no_labels": "Sem etiquetas",
+    "vertical_opening_direction": "Direção de Abertura Vertical",
+    "opening_direction": "Direção de Abertura",
+    "disable_compare": "Desativar Comparação",
+    "collection_key": "Chave de Coleção",
+    "collection_key_helper": "Chave opcional para a recolha de dados energéticos",
+    "hide_overflow": "Esconder Menu Extra"
   }
 }

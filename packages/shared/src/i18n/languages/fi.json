@@ -3,7 +3,8 @@
     "label": {
       "car": "Auto",
       "motorbike": "Moottoripyörä"
-    }
+    },
+    "compare_tooltip": "Vertaa edelliseen jaksoon"
   },
   "editor": {
     "entity_generator": "Generaattori",
@@ -83,6 +84,12 @@
     "navigation_path": "Navigointipolku",
     "sort_individual_devices": "Lajittele yksittäiset laitteet",
     "allow_layout_break": "Salli asettelun rivitys",
-    "no_labels": "Ei nimiöitä"
+    "no_labels": "Ei nimiöitä",
+    "vertical_opening_direction": "Pystysuuntainen avautumissuunta",
+    "opening_direction": "Avautumissuunta",
+    "disable_compare": "Poista vertailu käytöstä",
+    "collection_key": "Kokoelma-avain",
+    "collection_key_helper": "Valinnainen avain energiatietojen keräämiseen",
+    "hide_overflow": "Piilota ylivuotovalikko"
   }
 }
