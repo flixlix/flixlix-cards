@@ -76,6 +76,7 @@ describe("core utils", () => {
   test("displayValue returns 0 for null", () => {
     const hass = { locale: "en" } as any;
     const config = {
+      type: "power-flow-card-plus",
       kw_decimals: 1,
       w_decimals: 0,
       watt_threshold: 1000,
@@ -86,6 +87,7 @@ describe("core utils", () => {
   test("displayValue chooses kW when unit is missing and value >= watt_threshold", () => {
     const hass = { locale: "en" } as any;
     const config = {
+      type: "power-flow-card-plus",
       kw_decimals: 1,
       w_decimals: 0,
       watt_threshold: 1000,
@@ -96,6 +98,7 @@ describe("core utils", () => {
   test("displayValue uses W when unit is missing and value < watt_threshold", () => {
     const hass = { locale: "en" } as any;
     const config = {
+      type: "power-flow-card-plus",
       kw_decimals: 1,
       w_decimals: 0,
       watt_threshold: 1000,
@@ -106,6 +109,7 @@ describe("core utils", () => {
   test("displayValue respects accept_negative", () => {
     const hass = { locale: "en" } as any;
     const config = {
+      type: "power-flow-card-plus",
       kw_decimals: 1,
       w_decimals: 0,
       watt_threshold: 1000,

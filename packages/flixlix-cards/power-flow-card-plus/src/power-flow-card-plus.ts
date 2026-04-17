@@ -722,7 +722,13 @@ export class PowerFlowCardPlus extends LitElement {
       },
     };
     const individualObjs: IndividualObject[] =
-      entities.individual?.map((individual) => getIndividualObject(this.hass, individual)) || [];
+      entities.individual?.map((individual) =>
+        getIndividualObject({
+          hass: this.hass,
+          config: this._config,
+          field: individual,
+        })
+      ) || [];
     const nonFossil = {
       entity: entities.fossil_fuel_percentage?.entity,
       name: computeFieldName(

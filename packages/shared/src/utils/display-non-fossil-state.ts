@@ -7,6 +7,7 @@ import { getEntityState } from "@flixlix-cards/shared/states/utils/get-entity-st
 import { getEntityStateWatts } from "@flixlix-cards/shared/states/utils/get-entity-state-watts";
 import { type FlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { displayValue } from "@flixlix-cards/shared/utils/display-value";
+import { isEnergyCard } from "@flixlix-cards/shared/utils/is-energy-card";
 import { unavailableOrMisconfiguredError } from "@flixlix-cards/shared/utils/unavailable-error";
 import { type HomeAssistant } from "custom-card-helpers";
 
@@ -17,9 +18,8 @@ export const displayNonFossilState = (
   totalFromGrid: number,
   fossilEnergyConsumption?: FossilEnergyConsumption
 ): string | number => {
-  const cardType = config.type ?? "";
-  const isEnergyCard = cardType.includes("energy-flow-card-plus");
-  const unit = isEnergyCard ? "Wh" : "W";
+  const energyCard = isEnergyCard(config);
+  const unit = energyCard ? "Wh" : "W";
   const unitWhiteSpace = config.entities.fossil_fuel_percentage?.unit_white_space ?? true;
   const unitOfMeasurement: "W" | "Wh" | "%" =
     config.entities.fossil_fuel_percentage?.state_type === "percentage" ? "%" : unit;
