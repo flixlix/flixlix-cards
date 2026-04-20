@@ -28,14 +28,14 @@ export const cardConfigStruct = assign(
     second_dashboard_link: optional(string()),
     second_dashboard_link_label: optional(string()),
     inverted_entities: optional(any()),
-    wh_decimals: optional(integer()),
-    kwh_decimals: optional(integer()),
-    mwh_decimals: optional(integer()),
+    base_decimals: optional(integer()),
+    kilo_decimals: optional(integer()),
+    mega_decimals: optional(integer()),
     min_flow_rate: optional(number()),
     max_flow_rate: optional(number()),
     min_expected_power: optional(number()),
     max_expected_power: optional(number()),
-    wh_threshold: optional(number()),
+    kilo_threshold: optional(number()),
     clickable_entities: optional(boolean()),
     transparency_zero_lines: optional(number()),
     greyout_zero_lines: optional(boolean()),
@@ -57,6 +57,11 @@ export const cardConfigStruct = assign(
     }),
     sort_individual_devices: optional(boolean()),
     allow_layout_break: optional(boolean()),
+
+    /* LEGACY - JUST TO AVOID ERRORS */
+    wh_threshold: optional(number()),
+    wh_decimals: optional(number()),
+    kwh_decimals: optional(number()),
   })
 );
 
@@ -151,17 +156,17 @@ export const advancedOptionsSchema = memoizeOne((localize, displayZeroLinesMode:
         selector: { text: {} },
       },
       {
-        name: "wh_decimals",
+        name: "base_decimals",
         label: "Wh Decimals",
         selector: { number: { mode: "box", min: 0, max: 5, step: 1 } },
       },
       {
-        name: "kwh_decimals",
+        name: "kilo_decimals",
         label: "kWh Decimals",
         selector: { number: { mode: "box", min: 0, max: 5, step: 1 } },
       },
       {
-        name: "mwh_decimals",
+        name: "mega_decimals",
         label: "MWh Decimals",
         selector: { number: { mode: "box", min: 0, max: 5, step: 1 } },
       },
@@ -176,7 +181,7 @@ export const advancedOptionsSchema = memoizeOne((localize, displayZeroLinesMode:
         selector: { number: { mode: "box", min: 0, max: 1000000, step: 0.01 } },
       },
       {
-        name: "wh_threshold",
+        name: "kilo_threshold",
         label: "Wh to kWh Threshold",
         selector: { number: { mode: "box", min: 0, max: 1000000, step: 1 } },
       },

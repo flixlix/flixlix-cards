@@ -161,13 +161,14 @@ export class EnergyFlowCardPlus extends LitElement {
     ) {
       throw new Error("At least one entity for battery, grid or solar must be defined");
     }
+
     this._config = {
       ...config,
-      kw_decimals: coerceNumber(config.kw_decimals, defaultValues.kilowattDecimals),
       min_flow_rate: coerceNumber(config.min_flow_rate, defaultValues.minFlowRate),
       max_flow_rate: coerceNumber(config.max_flow_rate, defaultValues.maxFlowRate),
-      w_decimals: coerceNumber(config.w_decimals, defaultValues.wattDecimals),
-      watt_threshold: coerceNumber(config.watt_threshold, defaultValues.wattThreshold),
+      base_decimals: coerceNumber(config.base_decimals, defaultValues.baseDecimals),
+      kilo_decimals: coerceNumber(config.kilo_decimals, defaultValues.kiloDecimals),
+      kilo_threshold: coerceNumber(config.kilo_threshold, defaultValues.kiloThreshold),
       max_expected_power: coerceNumber(config.max_expected_power, defaultValues.maxExpectedPower),
       min_expected_power: coerceNumber(config.min_expected_power, defaultValues.minExpectedPower),
       use_new_flow_rate_model: false,
@@ -1023,13 +1024,13 @@ export class EnergyFlowCardPlus extends LitElement {
               {
                 unit: entities.home?.unit_of_measurement,
                 unitWhiteSpace: entities.home?.unit_white_space,
-                watt_threshold: this._config.watt_threshold,
+                kilo_threshold: this._config.kilo_threshold,
               }
             )
           : displayValue(this.hass, this._config, getEnergyEntityStateLocal(entities.home.entity), {
               unit: entities.home?.unit_of_measurement,
               unitWhiteSpace: entities.home?.unit_white_space,
-              watt_threshold: this._config.watt_threshold,
+              kilo_threshold: this._config.kilo_threshold,
             })
         : entities.home?.subtract_individual
           ? displayValue(
@@ -1039,13 +1040,13 @@ export class EnergyFlowCardPlus extends LitElement {
               {
                 unit: entities.home?.unit_of_measurement,
                 unitWhiteSpace: entities.home?.unit_white_space,
-                watt_threshold: this._config.watt_threshold,
+                kilo_threshold: this._config.kilo_threshold,
               }
             )
           : displayValue(this.hass, this._config, totalHomeConsumption, {
               unit: entities.home?.unit_of_measurement,
               unitWhiteSpace: entities.home?.unit_white_space,
-              watt_threshold: this._config.watt_threshold,
+              kilo_threshold: this._config.kilo_threshold,
             });
     const totalLines =
       (grid.state.toHome ?? 0) +

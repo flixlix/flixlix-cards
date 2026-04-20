@@ -150,11 +150,11 @@ export class PowerFlowCardPlus extends LitElement {
     }
     this._config = {
       ...config,
-      kw_decimals: coerceNumber(config.kw_decimals, defaultValues.kilowattDecimals),
       min_flow_rate: coerceNumber(config.min_flow_rate, defaultValues.minFlowRate),
       max_flow_rate: coerceNumber(config.max_flow_rate, defaultValues.maxFlowRate),
-      w_decimals: coerceNumber(config.w_decimals, defaultValues.wattDecimals),
-      watt_threshold: coerceNumber(config.watt_threshold, defaultValues.wattThreshold),
+      base_decimals: coerceNumber(config.base_decimals, defaultValues.baseDecimals),
+      kilo_decimals: coerceNumber(config.kilo_decimals, defaultValues.kiloDecimals),
+      kilo_threshold: coerceNumber(config.kilo_threshold, defaultValues.kiloThreshold),
       max_expected_power: coerceNumber(config.max_expected_power, defaultValues.maxExpectedPower),
       min_expected_power: coerceNumber(config.min_expected_power, defaultValues.minExpectedPower),
       display_zero_lines: {
@@ -384,7 +384,7 @@ export class PowerFlowCardPlus extends LitElement {
         decimals: field?.decimals,
         unit: field?.unit,
         unitWhiteSpace: field?.unit_white_space,
-        watt_threshold: this._config.watt_threshold,
+        kilo_threshold: this._config.kilo_threshold,
       });
     };
 
@@ -842,7 +842,7 @@ export class PowerFlowCardPlus extends LitElement {
               {
                 unit: entities.home?.unit_of_measurement,
                 unitWhiteSpace: entities.home?.unit_white_space,
-                watt_threshold: this._config.watt_threshold,
+                kilo_threshold: this._config.kilo_threshold,
               }
             )
           : displayValue(
@@ -852,7 +852,7 @@ export class PowerFlowCardPlus extends LitElement {
               {
                 unit: entities.home?.unit_of_measurement,
                 unitWhiteSpace: entities.home?.unit_white_space,
-                watt_threshold: this._config.watt_threshold,
+                kilo_threshold: this._config.kilo_threshold,
               }
             )
         : entities.home?.subtract_individual
@@ -863,13 +863,13 @@ export class PowerFlowCardPlus extends LitElement {
               {
                 unit: entities.home?.unit_of_measurement,
                 unitWhiteSpace: entities.home?.unit_white_space,
-                watt_threshold: this._config.watt_threshold,
+                kilo_threshold: this._config.kilo_threshold,
               }
             )
           : displayValue(this.hass, this._config, totalHomeConsumption, {
               unit: entities.home?.unit_of_measurement,
               unitWhiteSpace: entities.home?.unit_white_space,
-              watt_threshold: this._config.watt_threshold,
+              kilo_threshold: this._config.kilo_threshold,
             });
     const totalLines =
       (grid.state.toHome ?? 0) +

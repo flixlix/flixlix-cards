@@ -46,7 +46,7 @@ export const generalSecondarySpan = (
       unitWhiteSpace: field.secondary.unit_white_space,
       decimals: field.secondary.decimals,
       accept_negative: field.secondary.accept_negative,
-      watt_threshold: config.watt_threshold,
+      kilo_threshold: config.kilo_threshold,
     }),
     actions: {
       tap_action: field.secondary.tap_action,

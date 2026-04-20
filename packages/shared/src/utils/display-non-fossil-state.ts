@@ -36,7 +36,7 @@ export const displayNonFossilState = (
       if (displayZeroTolerance && value < displayZeroTolerance) value = 0;
       return displayValue(hass, config, value, {
         unitWhiteSpace,
-        watt_threshold: config.watt_threshold,
+        kilo_threshold: config.kilo_threshold,
       });
     }
     let value = nonFossilPercentage;
@@ -45,7 +45,7 @@ export const displayNonFossilState = (
       unit: "%",
       unitWhiteSpace,
       decimals: 0,
-      watt_threshold: config.watt_threshold,
+      kilo_threshold: config.kilo_threshold,
     });
   }
   if (!entityFossil || !isEntityAvailable(hass, entityFossil)) {
@@ -69,7 +69,7 @@ export const displayNonFossilState = (
     }
     return displayValue(hass, config, nonFossilFuelWatts, {
       unitWhiteSpace,
-      watt_threshold: config.watt_threshold,
+      kilo_threshold: config.kilo_threshold,
     });
   }
   let nonFossilFuelPercentage: number = 100 - (getEntityState(hass, entityFossil) ?? 0);
@@ -82,6 +82,6 @@ export const displayNonFossilState = (
     unit: "%",
     unitWhiteSpace,
     decimals: 0,
-    watt_threshold: config.watt_threshold,
+    kilo_threshold: config.kilo_threshold,
   });
 };

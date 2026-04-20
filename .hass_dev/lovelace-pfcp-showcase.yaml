@@ -22,13 +22,13 @@ views:
             clickable_entities: true
             display_zero_lines: true
             use_new_flow_rate_model: true
-            w_decimals: 0
-            kw_decimals: 1
+            base_decimals: 0
+            kilo_decimals: 1
             min_flow_rate: 0.75
             max_flow_rate: 6
             max_expected_power: 2000
             min_expected_power: 0.01
-            watt_threshold: 1000
+            kilo_threshold: 1000
             transparency_zero_lines: 0
             sort_individual_devices: false
       - type: grid
@@ -44,13 +44,13 @@ views:
             clickable_entities: true
             display_zero_lines: true
             use_new_flow_rate_model: true
-            w_decimals: 0
-            kw_decimals: 1
+            base_decimals: 0
+            kilo_decimals: 1
             min_flow_rate: 0.75
             max_flow_rate: 6
             max_expected_power: 2000
             min_expected_power: 0.01
-            watt_threshold: 1000
+            kilo_threshold: 1000
             transparency_zero_lines: 0
             sort_individual_devices: false
           - type: heading
@@ -75,13 +75,13 @@ views:
             clickable_entities: true
             display_zero_lines: true
             use_new_flow_rate_model: true
-            w_decimals: 0
-            kw_decimals: 1
+            base_decimals: 0
+            kilo_decimals: 1
             min_flow_rate: 0.75
             max_flow_rate: 6
             max_expected_power: 2000
             min_expected_power: 0.01
-            watt_threshold: 1000
+            kilo_threshold: 1000
             transparency_zero_lines: 0
             sort_individual_devices: false
       - type: grid
@@ -99,13 +99,13 @@ views:
             clickable_entities: true
             display_zero_lines: true
             use_new_flow_rate_model: true
-            w_decimals: 0
-            kw_decimals: 1
+            base_decimals: 0
+            kilo_decimals: 1
             min_flow_rate: 0.75
             max_flow_rate: 6
             max_expected_power: 2000
             min_expected_power: 0.01
-            watt_threshold: 1000
+            kilo_threshold: 1000
             transparency_zero_lines: 0
             sort_individual_devices: false
           - type: heading
@@ -123,13 +123,13 @@ views:
             clickable_entities: true
             display_zero_lines: true
             use_new_flow_rate_model: true
-            w_decimals: 0
-            kw_decimals: 1
+            base_decimals: 0
+            kilo_decimals: 1
             min_flow_rate: 0.75
             max_flow_rate: 6
             max_expected_power: 2000
             min_expected_power: 0.01
-            watt_threshold: 1000
+            kilo_threshold: 1000
             transparency_zero_lines: 0
             sort_individual_devices: false
       - type: grid
@@ -155,13 +155,13 @@ views:
             clickable_entities: true
             display_zero_lines: true
             use_new_flow_rate_model: true
-            w_decimals: 0
-            kw_decimals: 1
+            base_decimals: 0
+            kilo_decimals: 1
             min_flow_rate: 0.75
             max_flow_rate: 6
             max_expected_power: 2000
             min_expected_power: 0.01
-            watt_threshold: 1000
+            kilo_threshold: 1000
             transparency_zero_lines: 0
             sort_individual_devices: false
           - type: heading
@@ -183,13 +183,13 @@ views:
             clickable_entities: true
             display_zero_lines: true
             use_new_flow_rate_model: true
-            w_decimals: 0
-            kw_decimals: 1
+            base_decimals: 0
+            kilo_decimals: 1
             min_flow_rate: 0.75
             max_flow_rate: 6
             max_expected_power: 2000
             min_expected_power: 0.01
-            watt_threshold: 1000
+            kilo_threshold: 1000
             transparency_zero_lines: 0
             sort_individual_devices: false
       - type: grid
@@ -226,13 +226,13 @@ views:
             clickable_entities: true
             display_zero_lines: true
             use_new_flow_rate_model: true
-            w_decimals: 0
-            kw_decimals: 1
+            base_decimals: 0
+            kilo_decimals: 1
             min_flow_rate: 0.75
             max_flow_rate: 6
             max_expected_power: 2000
             min_expected_power: 0.01
-            watt_threshold: 1000
+            kilo_threshold: 1000
             transparency_zero_lines: 0
             sort_individual_devices: false
           - type: heading
@@ -258,13 +258,13 @@ views:
             clickable_entities: true
             display_zero_lines: true
             use_new_flow_rate_model: true
-            w_decimals: 0
-            kw_decimals: 1
+            base_decimals: 0
+            kilo_decimals: 1
             min_flow_rate: 0.75
             max_flow_rate: 6
             max_expected_power: 2000
             min_expected_power: 0.01
-            watt_threshold: 1000
+            kilo_threshold: 1000
             transparency_zero_lines: 0
             sort_individual_devices: false
     max_columns: 2

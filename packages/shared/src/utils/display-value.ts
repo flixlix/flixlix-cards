@@ -20,13 +20,13 @@ export const displayValue = (
     unitWhiteSpace,
     decimals,
     accept_negative,
-    watt_threshold = 1000,
+    kilo_threshold = 1000,
   }: {
     unit?: string;
     unitWhiteSpace?: boolean;
     decimals?: number;
     accept_negative?: boolean;
-    watt_threshold?: number;
+    kilo_threshold?: number;
   }
 ): string => {
   const whiteSpace = unitWhiteSpace === false ? "" : " ";
@@ -42,9 +42,9 @@ export const displayValue = (
 
   const valueInNumber = Number(value);
 
-  const isKilo = unit === undefined && valueInNumber >= watt_threshold;
+  const isKilo = unit === undefined && valueInNumber >= kilo_threshold;
 
-  const decimalsToRound = decimals ?? (isKilo ? config.kw_decimals : config.w_decimals);
+  const decimalsToRound = decimals ?? (isKilo ? config.kilo_decimals : config.base_decimals);
 
   const transformValue = (v: number) => (!accept_negative ? Math.abs(v) : v);
 
