@@ -1,4 +1,5 @@
 import { type FlowCardPlusConfig } from "@flixlix-cards/shared/types";
+import { isEnergyCard } from "@flixlix-cards/shared/utils/is-energy-card";
 import { type HomeAssistant, formatNumber } from "custom-card-helpers";
 import { isNumberValue, round } from "./utils";
 
@@ -29,9 +30,9 @@ export const displayValue = (
   }
 ): string => {
   const whiteSpace = unitWhiteSpace === false ? "" : " ";
-  const isEnergyCard = (config?.type ?? "").includes("energy-flow-card-plus");
-  const baseUnit = isEnergyCard ? "Wh" : "W";
-  const kiloUnit = isEnergyCard ? "kWh" : "kW";
+  const energyCard = isEnergyCard(config);
+  const baseUnit = energyCard ? "Wh" : "W";
+  const kiloUnit = energyCard ? "kWh" : "kW";
 
   if (value === null || value === undefined || value === "") {
     return `0${whiteSpace}${unit ?? baseUnit}`;

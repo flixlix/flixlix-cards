@@ -32,7 +32,6 @@ import { getSolarSecondaryState } from "@flixlix-cards/shared/states/raw/solar";
 import { adjustZeroTolerance } from "@flixlix-cards/shared/states/tolerance/base";
 import {
   fetchEnergyPeriodGrowth,
-  getEntityEnergyFromGrowthMap,
   getGlobalEnergyPeriodWindow,
   subscribeEnergyCollectionData,
   watchGlobalEnergyPeriodChanges,
@@ -41,7 +40,6 @@ import {
 } from "@flixlix-cards/shared/states/utils/energy-period";
 import { doesEntityExist } from "@flixlix-cards/shared/states/utils/existence-entity";
 import { getEntityState } from "@flixlix-cards/shared/states/utils/get-entity-state";
-import { getEntityStateWh } from "@flixlix-cards/shared/states/utils/get-entity-state-wh";
 import { getEntityNames } from "@flixlix-cards/shared/states/utils/mutli-entity";
 import { allDynamicStyles, styles } from "@flixlix-cards/shared/style";
 import {
@@ -69,6 +67,7 @@ import {
 } from "@flixlix-cards/shared/utils/compute-individual-position";
 import { displayValue } from "@flixlix-cards/shared/utils/display-value";
 import { defaultValues, getDefaultConfig } from "@flixlix-cards/shared/utils/get-default-config";
+import { getEnergyEntityState } from "@flixlix-cards/shared/utils/get-energy-entity-state";
 import { registerCustomCard } from "@flixlix-cards/shared/utils/register-custom-card";
 import { sortIndividualObjects } from "@flixlix-cards/shared/utils/sort-individual-objects";
 import { coerceNumber } from "@flixlix-cards/shared/utils/utils";
@@ -715,11 +714,8 @@ export class EnergyFlowCardPlus extends LitElement {
     const { entities, energy_date_selection } = this._config;
     const useDateSelection = energy_date_selection !== false;
     const initialNumericState = null as null | number;
-    const getEnergyEntityState = (entity?: string): number => {
-      if (!useDateSelection) {
-        return getEntityStateWh(this.hass, entity) ?? 0;
-      }
-      return getEntityEnergyFromGrowthMap(this._energyGrowthMap, entity);
+    const getEnergyEntityStateLocal = (entity?: string): number => {
+      return getEnergyEntityState(this.hass, this._energyGrowthMap, useDateSelection, entity);
     };
     const grid: GridObject = {
       entity: entities.grid?.entity,
@@ -729,12 +725,12 @@ export class EnergyFlowCardPlus extends LitElement {
       state: {
         fromGrid:
           typeof entities.grid?.entity === "string"
-            ? getEnergyEntityState(entities.grid.entity)
-            : getEnergyEntityState(entities.grid?.entity?.consumption),
+            ? getEnergyEntityStateLocal(entities.grid.entity)
+            : getEnergyEntityStateLocal(entities.grid?.entity?.consumption),
         toGrid:
           typeof entities.grid?.entity === "string"
             ? 0
-            : getEnergyEntityState(entities.grid?.entity?.production),
+            : getEnergyEntityStateLocal(entities.grid?.entity?.production),
         toBattery: initialNumericState,
         toHome: initialNumericState,
       },
@@ -790,7 +786,7 @@ export class EnergyFlowCardPlus extends LitElement {
       },
     };
     const hasSolarEntity = entities.solar?.entity !== undefined;
-    const solarTotal = getEnergyEntityState(entities.solar?.entity as string | undefined);
+    const solarTotal = getEnergyEntityStateLocal(entities.solar?.entity as string | undefined);
     const isProducingSolar = (solarTotal ?? 0) > 0;
     const displayZero = entities.solar?.display_zero !== false || isProducingSolar;
     const solar = {
@@ -855,11 +851,11 @@ export class EnergyFlowCardPlus extends LitElement {
         toBattery:
           typeof entities.battery?.entity === "string"
             ? 0
-            : getEnergyEntityState(entities.battery?.entity?.consumption),
+            : getEnergyEntityStateLocal(entities.battery?.entity?.consumption),
         fromBattery:
           typeof entities.battery?.entity === "string"
-            ? getEnergyEntityState(entities.battery.entity)
-            : getEnergyEntityState(entities.battery?.entity?.production),
+            ? getEnergyEntityStateLocal(entities.battery.entity)
+            : getEnergyEntityStateLocal(entities.battery?.entity?.production),
         toGrid: 0,
         toHome: 0,
       },
@@ -903,8 +899,13 @@ export class EnergyFlowCardPlus extends LitElement {
     };
     const individualObjs: IndividualObject[] =
       entities.individual?.map((individual) => {
-        const obj = getIndividualObject(this.hass, individual);
-        obj.state = getEnergyEntityState(individual.entity);
+        const obj = getIndividualObject({
+          hass: this.hass,
+          config: this._config,
+          energyGrowthMap: this._energyGrowthMap,
+          useDateSelection: useDateSelection,
+          field: individual,
+        });
         if (!obj.unit) obj.unit = "Wh";
         return obj;
       }) || [];
@@ -986,7 +987,7 @@ export class EnergyFlowCardPlus extends LitElement {
       solar,
       battery,
       nonFossil,
-      getEntityStateValue: (entityId) => getEnergyEntityState(entityId),
+      getEntityStateValue: (entityId) => getEnergyEntityStateLocal(entityId),
       getEntityState: (entityId) => getEntityState(this.hass, entityId),
       fossilEnergyConsumption: this._fossilEnergyData?.fossilEnergyConsumption,
     });
@@ -1018,14 +1019,14 @@ export class EnergyFlowCardPlus extends LitElement {
           ? displayValue(
               this.hass,
               this._config,
-              getEnergyEntityState(entities.home.entity) - totalIndividualConsumption,
+              getEnergyEntityStateLocal(entities.home.entity) - totalIndividualConsumption,
               {
                 unit: entities.home?.unit_of_measurement,
                 unitWhiteSpace: entities.home?.unit_white_space,
                 watt_threshold: this._config.watt_threshold,
               }
             )
-          : displayValue(this.hass, this._config, getEnergyEntityState(entities.home.entity), {
+          : displayValue(this.hass, this._config, getEnergyEntityStateLocal(entities.home.entity), {
               unit: entities.home?.unit_of_measurement,
               unitWhiteSpace: entities.home?.unit_white_space,
               watt_threshold: this._config.watt_threshold,
