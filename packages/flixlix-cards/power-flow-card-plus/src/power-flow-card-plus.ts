@@ -16,6 +16,7 @@ import {
   type RenderTemplateResult,
   subscribeRenderTemplate,
 } from "@flixlix-cards/shared/ha/template/ha-websocket";
+import localize from "@flixlix-cards/shared/i18n";
 import {
   getBatteryInState,
   getBatteryOutState,
@@ -697,11 +698,7 @@ export class PowerFlowCardPlus extends LitElement {
       has: entities?.home?.entity !== undefined,
       state: initialNumericState,
       icon: computeFieldIcon(this.hass, entities?.home, "mdi:home"),
-      name: computeFieldName(
-        this.hass,
-        entities?.home,
-        this.hass.localize("ui.panel.lovelace.strategy.home.home")
-      ),
+      name: computeFieldName(this.hass, entities?.home, localize("editor.home")),
       tap_action: entities.home?.tap_action,
       hold_action: entities.home?.hold_action,
       double_tap_action: entities.home?.double_tap_action,
