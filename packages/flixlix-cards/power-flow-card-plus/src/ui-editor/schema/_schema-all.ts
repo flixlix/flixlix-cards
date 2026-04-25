@@ -28,13 +28,15 @@ export const cardConfigStruct = assign(
     second_dashboard_link: optional(string()),
     second_dashboard_link_label: optional(string()),
     inverted_entities: optional(any()),
-    w_decimals: optional(integer()),
-    kw_decimals: optional(integer()),
+    base_decimals: optional(integer()),
+    kilo_decimals: optional(integer()),
+    mega_decimals: optional(integer()),
+    mega_threshold: optional(number()),
     min_flow_rate: optional(number()),
     max_flow_rate: optional(number()),
     min_expected_power: optional(number()),
     max_expected_power: optional(number()),
-    watt_threshold: optional(number()),
+    kilo_threshold: optional(number()),
     clickable_entities: optional(boolean()),
     transparency_zero_lines: optional(number()),
     greyout_zero_lines: optional(boolean()),
@@ -149,13 +151,18 @@ export const advancedOptionsSchema = memoizeOne((localize, displayZeroLinesMode:
         selector: { text: {} },
       },
       {
-        name: "w_decimals",
+        name: "base_decimals",
         label: "Watt Decimals",
         selector: { number: { mode: "box", min: 0, max: 5, step: 1 } },
       },
       {
-        name: "kw_decimals",
+        name: "kilo_decimals",
         label: "kW Decimals",
+        selector: { number: { mode: "box", min: 0, max: 5, step: 1 } },
+      },
+      {
+        name: "mega_decimals",
+        label: "MW Decimals",
         selector: { number: { mode: "box", min: 0, max: 5, step: 1 } },
       },
       {
@@ -179,11 +186,15 @@ export const advancedOptionsSchema = memoizeOne((localize, displayZeroLinesMode:
         selector: { number: { mode: "box", min: 0, max: 1000000, step: 0.01 } },
       },
       {
-        name: "watt_threshold",
-        label: "Watt to Kilowatt Threshold",
+        name: "kilo_threshold",
+        label: "Kilowatt Threshold",
         selector: { number: { mode: "box", min: 0, max: 1000000, step: 1 } },
       },
-
+      {
+        name: "mega_threshold",
+        label: "Megawatt Threshold",
+        selector: { number: { mode: "box", min: 0, max: 10000000, step: 1 } },
+      },
       {
         name: "clickable_entities",
         label: "Clickable Entities",

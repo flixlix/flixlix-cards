@@ -20,12 +20,11 @@ interface mainConfigOptions {
   max_expected_power: number;
   min_expected_power: number;
   use_new_flow_rate_model?: boolean;
-  w_decimals: number;
-  kw_decimals: number;
-  watt_threshold: number;
-  wh_decimals: number;
-  kwh_decimals: number;
-  wh_threshold: number;
+  base_decimals: number;
+  kilo_decimals: number;
+  kilo_threshold: number;
+  mega_decimals: number;
+  mega_threshold: number;
   full_size?: boolean;
   style_ha_card?: any;
   style_card_content?: any;
@@ -38,6 +37,10 @@ interface mainConfigOptions {
   };
   sort_individual_devices?: boolean;
   allow_layout_break?: boolean;
+  /* LEGACY - JUST TO AVOID ERRORS */
+  wh_threshold?: number;
+  wh_decimals?: number;
+  kwh_decimals?: number;
 }
 
 export interface FlowCardPlusConfig extends LovelaceCardConfig, mainConfigOptions {

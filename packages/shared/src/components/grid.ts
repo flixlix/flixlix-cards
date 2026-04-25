@@ -130,7 +130,6 @@ export const gridElement = (
               unit: grid.unit,
               unitWhiteSpace: grid.unit_white_space,
               decimals: grid.decimals,
-              watt_threshold: config.watt_threshold,
             })}
           </span>`
         : nothing}
@@ -186,7 +185,6 @@ export const gridElement = (
               unit: grid.unit,
               unitWhiteSpace: grid.unit_white_space,
               decimals: grid.decimals,
-              watt_threshold: config.watt_threshold,
             })}
           </span>`
         : nothing}

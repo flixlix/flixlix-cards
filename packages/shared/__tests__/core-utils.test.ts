@@ -77,31 +77,31 @@ describe("core utils", () => {
     const hass = { locale: "en" } as any;
     const config = {
       type: "power-flow-card-plus",
-      kw_decimals: 1,
-      w_decimals: 0,
-      watt_threshold: 1000,
+      kilo_decimals: 1,
+      base_decimals: 0,
+      kilo_threshold: 1000,
     } as unknown as FlowCardPlusConfig;
     expect(displayValue(hass, config, null, {})).toBe("0 W");
   });
 
-  test("displayValue chooses kW when unit is missing and value >= watt_threshold", () => {
+  test("displayValue chooses kW when unit is missing and value >= kilo_threshold", () => {
     const hass = { locale: "en" } as any;
     const config = {
       type: "power-flow-card-plus",
-      kw_decimals: 1,
-      w_decimals: 0,
-      watt_threshold: 1000,
+      kilo_decimals: 1,
+      base_decimals: 0,
+      kilo_threshold: 1000,
     } as unknown as FlowCardPlusConfig;
     expect(displayValue(hass, config, 1500, {})).toBe("1.5 kW");
   });
 
-  test("displayValue uses W when unit is missing and value < watt_threshold", () => {
+  test("displayValue uses W when unit is missing and value < kilo_threshold", () => {
     const hass = { locale: "en" } as any;
     const config = {
       type: "power-flow-card-plus",
-      kw_decimals: 1,
-      w_decimals: 0,
-      watt_threshold: 1000,
+      kilo_decimals: 1,
+      base_decimals: 0,
+      kilo_threshold: 1000,
     } as unknown as FlowCardPlusConfig;
     expect(displayValue(hass, config, 500, {})).toBe("500 W");
   });
@@ -110,9 +110,9 @@ describe("core utils", () => {
     const hass = { locale: "en" } as any;
     const config = {
       type: "power-flow-card-plus",
-      kw_decimals: 1,
-      w_decimals: 0,
-      watt_threshold: 1000,
+      kilo_decimals: 1,
+      base_decimals: 0,
+      kilo_threshold: 1000,
     } as unknown as FlowCardPlusConfig;
     expect(displayValue(hass, config, -500, { accept_negative: false })).toBe("500 W");
     expect(displayValue(hass, config, -500, { accept_negative: true })).toBe("-500 W");

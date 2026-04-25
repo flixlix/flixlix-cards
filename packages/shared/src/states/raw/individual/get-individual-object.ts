@@ -1,4 +1,4 @@
-import { FlowCardPlusConfig, type IndividualDeviceType } from "@flixlix-cards/shared/types";
+import { type FlowCardPlusConfig, type IndividualDeviceType } from "@flixlix-cards/shared/types";
 import {
   computeFieldIcon,
   computeFieldName,

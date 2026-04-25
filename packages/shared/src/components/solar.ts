@@ -84,7 +84,6 @@ export const solarElement = (
               unit: solar.state.unit,
               unitWhiteSpace: solar.state.unit_white_space,
               decimals: solar.state.decimals,
-              watt_threshold: config.watt_threshold,
             })}
           </span>`
         : nothing}

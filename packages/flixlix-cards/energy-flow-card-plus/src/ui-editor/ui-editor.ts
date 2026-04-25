@@ -90,6 +90,7 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
     if (!this.hass || !this._config) {
       return nothing;
     }
+
     const data = {
       ...this._config,
       display_zero_lines: {
