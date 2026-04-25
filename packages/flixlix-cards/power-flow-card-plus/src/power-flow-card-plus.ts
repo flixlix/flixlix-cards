@@ -194,7 +194,7 @@ export class PowerFlowCardPlus extends LitElement {
 
   public static getStubConfig(hass: HomeAssistant): object {
     // get available power entities
-    return getDefaultConfig(hass);
+    return getDefaultConfig(hass, "power");
   }
 
   public getCardSize(): Promise<number> | number {

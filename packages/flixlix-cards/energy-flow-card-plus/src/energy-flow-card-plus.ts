@@ -217,7 +217,8 @@ export class EnergyFlowCardPlus extends LitElement {
   }
 
   public static getStubConfig(hass: HomeAssistant): object {
-    return getDefaultConfig(hass);
+    // get available energy entities
+    return getDefaultConfig(hass, "energy");
   }
 
   public getCardSize(): Promise<number> | number {
