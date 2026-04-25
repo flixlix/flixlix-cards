@@ -4,13 +4,11 @@ import {
   type LovelaceRowConfig,
   type PowerFlowCardPlusConfig,
 } from "@flixlix-cards/shared/types";
-import { configErrors } from "@flixlix-cards/shared/ui-editor/errors";
 import { defaultValues } from "@flixlix-cards/shared/utils/get-default-config";
 import { fireEvent, type HomeAssistant, type LovelaceCardEditor } from "custom-card-helpers";
 import { LitElement, css, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { assert } from "superstruct";
-import { alertConfigError } from "./components/alert-config.error";
 import "./components/efcp-individual-devices-editor";
 import "./components/efcp-link-subpage";
 import "./components/efcp-subpage-header";
@@ -69,27 +67,8 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
   @state() private _config?: PowerFlowCardPlusConfig;
   @state() private _configEntities?: LovelaceRowConfig[] = [];
   @state() private _currentConfigPage: ConfigPage = null;
-  @state() private _errors: Array<string> = [];
 
   public async setConfig(config: PowerFlowCardPlusConfig): Promise<void> {
-    // const errors: Array<string> = [];
-
-    // if (config.wh_threshold !== undefined) {
-    //   errors.push(configErrors.wh_threshold);
-    // } else {
-    //   errors.filter((error) => error !== configErrors.wh_threshold);
-    // }
-    // if (config.wh_decimals !== undefined) {
-    //   errors.push(configErrors.wh_decimals);
-    // } else {
-    //   errors.filter((error) => error !== configErrors.wh_decimals);
-    // }
-    // if (config.kwh_decimals !== undefined) {
-    //   errors.push(configErrors.kwh_decimals);
-    // } else {
-    //   errors.filter((error) => error !== configErrors.kwh_decimals);
-    // }
-    // this._errors = errors;
     assert(config, cardConfigStruct);
     this._config = config;
   }
@@ -186,7 +165,6 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
 
     return html`
       <div class="card-config">
-        ${alertConfigError(this._errors)}
         <ha-form
           .hass=${this.hass}
           .data=${data}
@@ -219,26 +197,6 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
         },
       };
     }
-
-    const errors: Array<string> = [];
-
-    if (config.wh_threshold !== undefined) {
-      errors.push(configErrors.wh_threshold);
-    } else {
-      errors.filter((error) => error !== configErrors.wh_threshold);
-    }
-    if (config.wh_decimals !== undefined) {
-      errors.push(configErrors.wh_decimals);
-    } else {
-      errors.filter((error) => error !== configErrors.wh_decimals);
-    }
-    if (config.kwh_decimals !== undefined) {
-      errors.push(configErrors.kwh_decimals);
-    } else {
-      errors.filter((error) => error !== configErrors.kwh_decimals);
-    }
-
-    this._errors = errors;
 
     fireEvent(this, "config-changed", { config });
   }
