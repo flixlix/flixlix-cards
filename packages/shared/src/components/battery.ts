@@ -92,7 +92,6 @@ export const batteryElement = (
               unitWhiteSpace: battery.state_of_charge.unit_white_space,
               decimals: battery.state_of_charge.decimals,
               accept_negative: true,
-              watt_threshold: config.watt_threshold,
             })}
           </span>`
         : nothing}
@@ -172,7 +171,6 @@ export const batteryElement = (
               unit: battery.unit,
               unitWhiteSpace: battery.unit_white_space,
               decimals: battery.decimals,
-              watt_threshold: config.watt_threshold,
             })}</span
           >`
         : nothing}
@@ -227,7 +225,6 @@ export const batteryElement = (
               unit: battery.unit,
               unitWhiteSpace: battery.unit_white_space,
               decimals: battery.decimals,
-              watt_threshold: config.watt_threshold,
             })}</span
           >`
         : nothing}

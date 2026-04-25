@@ -1,4 +1,4 @@
-import { type IndividualDeviceType } from "@flixlix-cards/shared/types";
+import { type FlowCardPlusConfig, type IndividualDeviceType } from "@flixlix-cards/shared/types";
 import {
   computeFieldIcon,
   computeFieldName,
@@ -70,13 +70,22 @@ export type IndividualObject = {
   };
 };
 
-export const getIndividualObject = (
-  hass: HomeAssistant,
-  field: IndividualDeviceType | undefined
-): IndividualObject => {
+export const getIndividualObject = ({
+  hass,
+  config,
+  energyGrowthMap,
+  useDateSelection,
+  field,
+}: {
+  hass: HomeAssistant;
+  config: FlowCardPlusConfig;
+  energyGrowthMap?: Record<string, number>;
+  useDateSelection?: boolean;
+  field: IndividualDeviceType | undefined;
+}): IndividualObject => {
   if (!field || !field?.entity) return fallbackIndividualObject;
   const entity = field.entity;
-  const state = getIndividualState(hass, field);
+  const state = getIndividualState({ hass, config, energyGrowthMap, useDateSelection, field });
   const displayZero = field?.display_zero || false;
   const displayZeroTolerance = field?.display_zero_tolerance || 0;
   const has = hasIndividualObject(displayZero, state, displayZeroTolerance);

@@ -1,5 +1,7 @@
 import { type FlowCardPlusConfig } from "@flixlix-cards/shared/types";
+import { isEnergyCard } from "@flixlix-cards/shared/utils/is-energy-card";
 import { type HomeAssistant, formatNumber } from "custom-card-helpers";
+import { defaultValues } from "./get-default-config";
 import { isNumberValue, round } from "./utils";
 
 /**
@@ -19,19 +21,18 @@ export const displayValue = (
     unitWhiteSpace,
     decimals,
     accept_negative,
-    watt_threshold = 1000,
   }: {
     unit?: string;
     unitWhiteSpace?: boolean;
     decimals?: number;
     accept_negative?: boolean;
-    watt_threshold?: number;
   }
 ): string => {
   const whiteSpace = unitWhiteSpace === false ? "" : " ";
-  const isEnergyCard = (config?.type ?? "").includes("energy-flow-card-plus");
-  const baseUnit = isEnergyCard ? "Wh" : "W";
-  const kiloUnit = isEnergyCard ? "kWh" : "kW";
+  const energyCard = isEnergyCard(config);
+  const baseUnit = energyCard ? "Wh" : "W";
+  const kiloUnit = energyCard ? "kWh" : "kW";
+  const megaUnit = energyCard ? "MWh" : "MW";
 
   if (value === null || value === undefined || value === "") {
     return `0${whiteSpace}${unit ?? baseUnit}`;
@@ -41,20 +42,30 @@ export const displayValue = (
 
   const valueInNumber = Number(value);
 
-  const isKilo = unit === undefined && valueInNumber >= watt_threshold;
+  const isKilo =
+    unit === undefined && valueInNumber >= (config.kilo_threshold ?? defaultValues.kiloThreshold);
+  const isMega =
+    unit === undefined && valueInNumber >= (config.mega_threshold ?? defaultValues.megaThreshold);
 
-  const decimalsToRound = decimals ?? (isKilo ? config.kw_decimals : config.w_decimals);
+  const decimalsToRound =
+    (decimals ?? isMega)
+      ? config.mega_decimals
+      : isKilo
+        ? config.kilo_decimals
+        : config.base_decimals;
 
   const transformValue = (v: number) => (!accept_negative ? Math.abs(v) : v);
 
   const v = formatNumber(
     transformValue(
-      isKilo
-        ? round(valueInNumber / 1000, decimalsToRound ?? 2)
-        : round(valueInNumber, decimalsToRound ?? 0)
+      isMega
+        ? round(valueInNumber / 1000000, decimalsToRound ?? 2)
+        : isKilo
+          ? round(valueInNumber / 1000, decimalsToRound ?? 2)
+          : round(valueInNumber, decimalsToRound ?? 0)
     ),
     hass.locale
   );
 
-  return `${v}${whiteSpace}${unit || (isKilo ? kiloUnit : baseUnit)}`;
+  return `${v}${whiteSpace}${unit || (isMega ? megaUnit : isKilo ? kiloUnit : baseUnit)}`;
 };
