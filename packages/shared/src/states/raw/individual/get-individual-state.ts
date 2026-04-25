@@ -15,6 +15,5 @@ export const getIndividualDisplayState = (
     decimals: individualObj.field?.decimals,
     unit: individualObj.field?.unit_of_measurement,
     unitWhiteSpace: individualObj.field?.unit_white_space,
-    kilo_threshold: config.kilo_threshold,
   });
 };

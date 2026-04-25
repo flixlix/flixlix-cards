@@ -1,6 +1,7 @@
 import { type FlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { isEnergyCard } from "@flixlix-cards/shared/utils/is-energy-card";
 import { type HomeAssistant, formatNumber } from "custom-card-helpers";
+import { defaultValues } from "./get-default-config";
 import { isNumberValue, round } from "./utils";
 
 /**
@@ -20,13 +21,11 @@ export const displayValue = (
     unitWhiteSpace,
     decimals,
     accept_negative,
-    kilo_threshold = 1000,
   }: {
     unit?: string;
     unitWhiteSpace?: boolean;
     decimals?: number;
     accept_negative?: boolean;
-    kilo_threshold?: number;
   }
 ): string => {
   const whiteSpace = unitWhiteSpace === false ? "" : " ";
@@ -43,8 +42,10 @@ export const displayValue = (
 
   const valueInNumber = Number(value);
 
-  const isKilo = unit === undefined && valueInNumber >= kilo_threshold;
-  const isMega = unit === undefined && valueInNumber >= config.mega_threshold;
+  const isKilo =
+    unit === undefined && valueInNumber >= (config.kilo_threshold ?? defaultValues.kiloThreshold);
+  const isMega =
+    unit === undefined && valueInNumber >= (config.mega_threshold ?? defaultValues.megaThreshold);
 
   const decimalsToRound =
     (decimals ?? isMega)

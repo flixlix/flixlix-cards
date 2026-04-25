@@ -1025,13 +1025,11 @@ export class EnergyFlowCardPlus extends LitElement {
               {
                 unit: entities.home?.unit_of_measurement,
                 unitWhiteSpace: entities.home?.unit_white_space,
-                kilo_threshold: this._config.kilo_threshold,
               }
             )
           : displayValue(this.hass, this._config, getEnergyEntityStateLocal(entities.home.entity), {
               unit: entities.home?.unit_of_measurement,
               unitWhiteSpace: entities.home?.unit_white_space,
-              kilo_threshold: this._config.kilo_threshold,
             })
         : entities.home?.subtract_individual
           ? displayValue(
@@ -1041,13 +1039,11 @@ export class EnergyFlowCardPlus extends LitElement {
               {
                 unit: entities.home?.unit_of_measurement,
                 unitWhiteSpace: entities.home?.unit_white_space,
-                kilo_threshold: this._config.kilo_threshold,
               }
             )
           : displayValue(this.hass, this._config, totalHomeConsumption, {
               unit: entities.home?.unit_of_measurement,
               unitWhiteSpace: entities.home?.unit_white_space,
-              kilo_threshold: this._config.kilo_threshold,
             });
     const totalLines =
       (grid.state.toHome ?? 0) +

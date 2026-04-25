@@ -29,7 +29,6 @@ export const individualSecondarySpan = (
         unitWhiteSpace: individual.secondary.unit_white_space,
         decimals: individual?.secondary?.decimals || 0,
         accept_negative: individual?.secondary?.accept_negative || false,
-        kilo_threshold: config.kilo_threshold,
       })
     : undefined;
 

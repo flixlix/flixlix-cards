@@ -84,7 +84,6 @@ export const solarElement = (
               unit: solar.state.unit,
               unitWhiteSpace: solar.state.unit_white_space,
               decimals: solar.state.decimals,
-              kilo_threshold: config.kilo_threshold,
             })}
           </span>`
         : nothing}
