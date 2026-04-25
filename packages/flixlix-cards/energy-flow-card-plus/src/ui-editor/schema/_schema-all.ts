@@ -31,6 +31,7 @@ export const cardConfigStruct = assign(
     base_decimals: optional(integer()),
     kilo_decimals: optional(integer()),
     mega_decimals: optional(integer()),
+    mega_threshold: optional(number()),
     min_flow_rate: optional(number()),
     max_flow_rate: optional(number()),
     min_expected_power: optional(number()),
@@ -182,10 +183,14 @@ export const advancedOptionsSchema = memoizeOne((localize, displayZeroLinesMode:
       },
       {
         name: "kilo_threshold",
-        label: "Wh to kWh Threshold",
+        label: "kWh Threshold",
         selector: { number: { mode: "box", min: 0, max: 1000000, step: 1 } },
       },
-
+      {
+        name: "mega_threshold",
+        label: "MWh Threshold",
+        selector: { number: { mode: "box", min: 0, max: 10000000, step: 1 } },
+      },
       {
         name: "clickable_entities",
         label: "Clickable Entities",

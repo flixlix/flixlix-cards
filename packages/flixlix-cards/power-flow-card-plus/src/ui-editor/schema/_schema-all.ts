@@ -30,6 +30,8 @@ export const cardConfigStruct = assign(
     inverted_entities: optional(any()),
     base_decimals: optional(integer()),
     kilo_decimals: optional(integer()),
+    mega_decimals: optional(integer()),
+    mega_threshold: optional(number()),
     min_flow_rate: optional(number()),
     max_flow_rate: optional(number()),
     min_expected_power: optional(number()),
@@ -159,6 +161,11 @@ export const advancedOptionsSchema = memoizeOne((localize, displayZeroLinesMode:
         selector: { number: { mode: "box", min: 0, max: 5, step: 1 } },
       },
       {
+        name: "mega_decimals",
+        label: "MW Decimals",
+        selector: { number: { mode: "box", min: 0, max: 5, step: 1 } },
+      },
+      {
         name: "max_flow_rate",
         label: "Max Flow Rate (Sec/Dot)",
         selector: { number: { mode: "box", min: 0, max: 1000000, step: 0.01 } },
@@ -180,10 +187,14 @@ export const advancedOptionsSchema = memoizeOne((localize, displayZeroLinesMode:
       },
       {
         name: "kilo_threshold",
-        label: "Watt to Kilowatt Threshold",
+        label: "Kilowatt Threshold",
         selector: { number: { mode: "box", min: 0, max: 1000000, step: 1 } },
       },
-
+      {
+        name: "mega_threshold",
+        label: "Megawatt Threshold",
+        selector: { number: { mode: "box", min: 0, max: 10000000, step: 1 } },
+      },
       {
         name: "clickable_entities",
         label: "Clickable Entities",

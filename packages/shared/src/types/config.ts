@@ -23,6 +23,8 @@ interface mainConfigOptions {
   base_decimals: number;
   kilo_decimals: number;
   kilo_threshold: number;
+  mega_decimals: number;
+  mega_threshold: number;
   full_size?: boolean;
   style_ha_card?: any;
   style_card_content?: any;

@@ -10,6 +10,7 @@ export const defaultValues = {
   minExpectedPower: 0.01,
   maxExpectedPower: 2000,
   kiloThreshold: 1000,
+  megaThreshold: 1000000,
   transparencyZeroLines: 0,
   displayZeroLines: {
     mode: "show" as DisplayZeroLinesMode,

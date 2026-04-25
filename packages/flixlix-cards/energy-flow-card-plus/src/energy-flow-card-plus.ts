@@ -169,6 +169,7 @@ export class EnergyFlowCardPlus extends LitElement {
       base_decimals: coerceNumber(config.base_decimals, defaultValues.baseDecimals),
       kilo_decimals: coerceNumber(config.kilo_decimals, defaultValues.kiloDecimals),
       kilo_threshold: coerceNumber(config.kilo_threshold, defaultValues.kiloThreshold),
+      mega_threshold: coerceNumber(config.mega_threshold, defaultValues.megaThreshold),
       max_expected_power: coerceNumber(config.max_expected_power, defaultValues.maxExpectedPower),
       min_expected_power: coerceNumber(config.min_expected_power, defaultValues.minExpectedPower),
       use_new_flow_rate_model: false,
