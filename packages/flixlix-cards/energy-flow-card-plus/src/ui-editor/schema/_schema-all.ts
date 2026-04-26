@@ -48,6 +48,7 @@ export const cardConfigStruct = assign(
     disable_dots: optional(boolean()),
     no_labels: optional(boolean()),
     energy_date_selection: optional(boolean()),
+    collection_key: optional(string()),
     entities: object({
       battery: optional(any()),
       grid: optional(any()),
@@ -207,6 +208,11 @@ export const advancedOptionsSchema = memoizeOne((localize, displayZeroLinesMode:
         label: "Use Date Selection",
         selector: { boolean: {} },
         default: true,
+      },
+      {
+        name: "collection_key",
+        label: "Energy Collection Key",
+        selector: { text: {} },
       },
       {
         name: "no_labels",

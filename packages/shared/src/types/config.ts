@@ -53,6 +53,7 @@ export interface PowerFlowCardPlusConfig extends LovelaceCardConfig, mainConfigO
 
 export interface EnergyFlowCardPlusConfig extends LovelaceCardConfig, mainConfigOptions {
   entities: ConfigEntities;
+  collection_key?: string;
 }
 
 export type IndividualField = IndividualDeviceType[];

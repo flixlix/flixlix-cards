@@ -184,7 +184,14 @@ export class EnergyFlowCardPlus extends LitElement {
           config.display_zero_lines?.grey_color ?? defaultValues.displayZeroLines.grey_color,
       },
     };
-    this._energyCollectionKey = (config as any).collection_key;
+    const previousCollectionKey = this._energyCollectionKey;
+    this._energyCollectionKey = config.collection_key;
+    if (previousCollectionKey !== this._energyCollectionKey) {
+      this._unsubEnergyPeriodListener?.();
+      this._unsubEnergyPeriodListener = undefined;
+      this._unsubFossilData?.();
+      this._unsubFossilData = undefined;
+    }
   }
 
   public connectedCallback() {
