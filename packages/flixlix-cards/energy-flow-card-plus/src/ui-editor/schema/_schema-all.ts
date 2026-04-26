@@ -62,8 +62,10 @@ export const cardConfigStruct = assign(
 
     /* LEGACY - JUST TO AVOID ERRORS */
     wh_threshold: optional(number()),
+    wh_kwh_threshold: optional(number()),
     wh_decimals: optional(number()),
     kwh_decimals: optional(number()),
+    mwh_decimals: optional(number()),
   })
 );
 

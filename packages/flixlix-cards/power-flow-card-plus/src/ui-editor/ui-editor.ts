@@ -86,6 +86,55 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
     this._currentConfigPage = null;
   }
 
+  private _hasLegacyFields(): boolean {
+    if (!this._config) return false;
+    return (
+      this._config.watt_threshold !== undefined ||
+      this._config.w_decimals !== undefined ||
+      this._config.kw_decimals !== undefined
+    );
+  }
+
+  private _migrateLegacyFields(): void {
+    if (!this._config) return;
+    const config: PowerFlowCardPlusConfig = { ...this._config };
+
+    if (typeof config.watt_threshold === "number" && config.kilo_threshold === undefined) {
+      config.kilo_threshold = config.watt_threshold;
+    }
+    if (typeof config.w_decimals === "number" && config.base_decimals === undefined) {
+      config.base_decimals = config.w_decimals;
+    }
+    if (typeof config.kw_decimals === "number" && config.kilo_decimals === undefined) {
+      config.kilo_decimals = config.kw_decimals;
+    }
+
+    delete config.watt_threshold;
+    delete config.w_decimals;
+    delete config.kw_decimals;
+
+    this._config = config;
+    fireEvent(this, "config-changed", { config });
+  }
+
+  private _renderLegacyFieldsAlert() {
+    if (!this._hasLegacyFields()) return nothing;
+    return html`
+      <ha-alert class="legacy-fields-alert" alert-type="warning">
+        Legacy config fields detected. Field names changed: w_decimals -> base_decimals, kw_decimals
+        -> kilo_decimals, watt_threshold -> kilo_threshold.<br />
+        More info: https://github.com/flixlix/power-flow-card-plus/releases/tag/v0.3.5
+        <button
+          class="legacy-fields-alert-button"
+          slot="action"
+          @click=${this._migrateLegacyFields}
+        >
+          Convert automatically
+        </button>
+      </ha-alert>
+    `;
+  }
+
   protected render() {
     if (!this.hass || !this._config) {
       return nothing;
@@ -105,6 +154,7 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
     if (this._currentConfigPage !== null) {
       if (this._currentConfigPage === "individual") {
         return html`
+          ${this._renderLegacyFieldsAlert()}
           <subpage-header @go-back=${this._goBack} page=${this._currentConfigPage}>
           </subpage-header>
           <individual-devices-editor
@@ -126,6 +176,7 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
       const dataForForm = currentPage === "advanced" ? data : data.entities[currentPage];
 
       return html`
+        ${this._renderLegacyFieldsAlert()}
         <subpage-header @go-back=${this._goBack} page=${this._currentConfigPage}> </subpage-header>
         <ha-form
           .hass=${this.hass}
@@ -164,6 +215,7 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
 
     return html`
       <div class="card-config">
+        ${this._renderLegacyFieldsAlert()}
         <ha-form
           .hass=${this.hass}
           .data=${data}
@@ -224,6 +276,20 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
         flex-direction: column;
         gap: 1.5rem;
         margin-bottom: 10px;
+      }
+
+      .legacy-fields-alert {
+        margin-bottom: 8px;
+      }
+
+      .legacy-fields-alert-button {
+        border: none;
+        background: var(--warning-color);
+        border-radius: 99px;
+        color: var(--card-background-color);
+        cursor: pointer;
+        font: inherit;
+        padding: 4px 8px;
       }
 
       .config-header {
