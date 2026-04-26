@@ -28,6 +28,12 @@ const mainSchema = {
       selector: { boolean: {} },
       default: true,
     },
+    {
+      name: "display_zero",
+      label: "Display Zero",
+      selector: { boolean: {} },
+      default: true,
+    },
   ],
 };
 

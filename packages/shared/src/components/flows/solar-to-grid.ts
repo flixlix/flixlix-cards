@@ -28,7 +28,8 @@ export const flowSolarToGrid = (
   config: FlowCardPlusConfig,
   { battery, grid, individual, solar, newDur }: Flows
 ) => {
-  const shouldShow = grid.hasReturnToGrid && solar.has && showLine(config, solar.state.toGrid || 0);
+  const shouldShow =
+    grid.has && grid.hasReturnToGrid && solar.has && showLine(config, solar.state.toGrid || 0);
   if (!shouldShow) return nothing;
 
   return html`<div
