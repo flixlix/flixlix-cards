@@ -1,12 +1,10 @@
 # energy-flow-card-plus
 
-## 0.3.0
-
-### Minor Changes
-
-- [#239](https://github.com/flixlix/flixlix-cards/pull/239) [`5d493fc`](https://github.com/flixlix/flixlix-cards/commit/5d493fc659d6cb8152fc944876d7e31017b25ce3) Thanks [@flixlix](https://github.com/flixlix)! - feat: add `collection_key` option to bind the card to a specific energy data collection, matching the behavior of Home Assistant's built-in Energy Distribution card. Useful when multiple energy dashboards exist and the card should follow a specific dashboard's selected period instead of the active one.
+## 0.2.1
 
 ### Patch Changes
+
+- [#239](https://github.com/flixlix/flixlix-cards/pull/239) [`5d493fc`](https://github.com/flixlix/flixlix-cards/commit/5d493fc659d6cb8152fc944876d7e31017b25ce3) Thanks [@flixlix](https://github.com/flixlix)! - feat: add `collection_key` option to bind the card to a specific energy data collection, matching the behavior of Home Assistant's built-in Energy Distribution card. Useful when multiple energy dashboards exist and the card should follow a specific dashboard's selected period instead of the active one.
 
 - [#227](https://github.com/flixlix/flixlix-cards/pull/227) [`b8ce9e2`](https://github.com/flixlix/flixlix-cards/commit/b8ce9e2a428b97a595ef4e3816f5a6f055678e49) Thanks [@flixlix](https://github.com/flixlix)! - refactor: kilo_threshold avoid redundancy in displayValue func
 
