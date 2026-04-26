@@ -66,6 +66,7 @@ jobs:
           echo "github.event.before: ${{ github.event.before }}"
           echo "github.sha: ${{ github.sha }}"
           echo "changesets published output: '${{ steps.changesets.outputs.publishedPackages }}'"
+          echo "Current branch: $(git branch --show-current)"
           echo "::endgroup::"
 
           # Method 1: Check changesets output (filter internal packages)
@@ -79,7 +80,17 @@ jobs:
             fi
           fi
 
-          echo "::group::Method 2 - Check for new tags"
+          # IMPORTANT: Only proceed if we're on main branch
+          # The changesets action switches to changeset-release/main to prepare the PR
+          current_branch=$(git branch --show-current)
+          if [ "$current_branch" != "main" ]; then
+            echo "::notice::Not on main branch (on $current_branch), skipping release detection"
+            echo "packages=[]" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Only check commits that are actually on main (not the version PR commit)
+          echo "::group::Method 2 - Check for new tags on main"
           packages_json="[]"
 
           for pkg_json in packages/*/package.json packages/*/*/package.json; do
@@ -90,7 +101,6 @@ jobs:
 
             [ -z "$name" ] || [ -z "$version" ] && continue
 
-            # Skip internal packages
             if ! is_publishable "$name"; then
               echo "Skipping internal package: $name"
               continue
@@ -101,11 +111,9 @@ jobs:
 
             echo "Checking $name@$version..."
 
-            # Check if this tag exists locally (created by changeset tag)
             if git tag -l "$name@$version" | grep -q .; then
               echo "  ✓ Found local tag: $name@$version"
 
-              # Check if tag exists on dist repo
               dist_repo_url="https://github.com/flixlix/${clean_name}.git"
               if git ls-remote --tags "$dist_repo_url" 2>/dev/null | grep -q "refs/tags/${tag_name}$"; then
                 echo "  ⊘ Tag $tag_name already exists on dist repo, skipping"
@@ -119,52 +127,55 @@ jobs:
           done
           echo "::endgroup::"
 
-          echo "::group::Method 3 - Fallback: Check git diff"
+          echo "::group::Method 3 - Fallback: Check git diff (main only)"
           if [ "$packages_json" = "[]" ]; then
-            echo "No tagged packages found, checking git history..."
+            echo "No tagged packages found, checking git history on main..."
 
-            for commit in $(git log --oneline -5 --format="%H"); do
-              parent=$(git rev-parse "${commit}^" 2>/dev/null || echo "")
-              [ -z "$parent" ] && continue
+            # Only check commits between event.before and event.sha (the actual push to main)
+            base_sha="${{ github.event.before }}"
+            head_sha="${{ github.sha }}"
+            
+            # Skip if this is a new branch or invalid ref
+            if [ "$base_sha" = "0000000000000000000000000000000000000000" ]; then
+              echo "New branch push, skipping diff check"
+            else
+              files=$(git diff --name-only "$base_sha" "$head_sha" -- 'packages/**/package.json' 2>/dev/null || true)
+              
+              if [ -n "$files" ]; then
+                echo "Changed package.json files between $base_sha and $head_sha:"
+                echo "$files"
+                
+                while IFS= read -r file; do
+                  [ -z "$file" ] && continue
+                  [ -f "$file" ] || continue
 
-              files=$(git diff --name-only "$parent" "$commit" -- 'packages/**/package.json' 2>/dev/null || true)
-              [ -z "$files" ] && continue
+                  old_version=$(git show "${base_sha}:${file}" 2>/dev/null | jq -r '.version // empty' 2>/dev/null || echo "")
+                  new_version=$(jq -r '.version // empty' "$file")
+                  name=$(jq -r '.name // empty' "$file")
 
-              echo "Checking commit $commit..."
-
-              while IFS= read -r file; do
-                [ -z "$file" ] && continue
-                [ -f "$file" ] || continue
-
-                old_version=$(git show "${parent}:${file}" 2>/dev/null | jq -r '.version // empty' 2>/dev/null || echo "")
-                new_version=$(jq -r '.version // empty' "$file")
-                name=$(jq -r '.name // empty' "$file")
-
-                # Skip internal packages
-                if ! is_publishable "$name"; then
-                  continue
-                fi
-
-                if [ -n "$old_version" ] && [ -n "$new_version" ] && [ "$old_version" != "$new_version" ] && [ -n "$name" ]; then
-                  clean_name=$(echo "$name" | sed 's|^@.*/||')
-                  tag_name="v${new_version}"
-
-                  # Check if already in our list
-                  if echo "$packages_json" | jq -e --arg n "$name" '.[] | select(.name == $n)' > /dev/null 2>&1; then
+                  if ! is_publishable "$name"; then
                     continue
                   fi
 
-                  # Check if tag exists on dist repo
-                  dist_repo_url="https://github.com/flixlix/${clean_name}.git"
-                  if git ls-remote --tags "$dist_repo_url" 2>/dev/null | grep -q "refs/tags/${tag_name}$"; then
-                    echo "  ⊘ $name@$new_version already released"
-                  else
-                    echo "  → Found: $name ($old_version → $new_version)"
-                    packages_json=$(echo "$packages_json" | jq -c --arg n "$name" --arg v "$new_version" '. + [{name:$n,version:$v}]')
+                  if [ -n "$old_version" ] && [ -n "$new_version" ] && [ "$old_version" != "$new_version" ] && [ -n "$name" ]; then
+                    clean_name=$(echo "$name" | sed 's|^@.*/||')
+                    tag_name="v${new_version}"
+
+                    if echo "$packages_json" | jq -e --arg n "$name" '.[] | select(.name == $n)' > /dev/null 2>&1; then
+                      continue
+                    fi
+
+                    dist_repo_url="https://github.com/flixlix/${clean_name}.git"
+                    if git ls-remote --tags "$dist_repo_url" 2>/dev/null | grep -q "refs/tags/${tag_name}$"; then
+                      echo "  ⊘ $name@$new_version already released"
+                    else
+                      echo "  → Found: $name ($old_version → $new_version)"
+                      packages_json=$(echo "$packages_json" | jq -c --arg n "$name" --arg v "$new_version" '. + [{name:$n,version:$v}]')
+                    fi
                   fi
-                fi
-              done <<< "$files"
-            done
+                done <<< "$files"
+              fi
+            fi
           fi
           echo "::endgroup::"
 
