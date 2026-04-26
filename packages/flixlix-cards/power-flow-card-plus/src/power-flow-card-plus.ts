@@ -767,6 +767,10 @@ export class PowerFlowCardPlus extends LitElement {
       grid.state.toGrid,
       entities.grid?.display_zero_tolerance
     );
+    const hasGridFlow = (grid.state.fromGrid ?? 0) !== 0 || (grid.state.toGrid ?? 0) !== 0;
+    if (entities.grid?.display_zero === false && !hasGridFlow) {
+      grid.has = false;
+    }
     solar.state.total = adjustZeroTolerance(
       solar.state.total,
       entities.solar?.display_zero_tolerance
@@ -779,6 +783,11 @@ export class PowerFlowCardPlus extends LitElement {
       battery.state.toBattery,
       entities.battery?.display_zero_tolerance
     );
+    const hasBatteryFlow =
+      (battery.state.fromBattery ?? 0) !== 0 || (battery.state.toBattery ?? 0) !== 0;
+    if (entities.battery?.display_zero === false && !hasBatteryFlow) {
+      battery.has = false;
+    }
     if (grid.state.fromGrid === 0) {
       grid.state.toHome = 0;
       grid.state.toBattery = 0;
@@ -806,6 +815,17 @@ export class PowerFlowCardPlus extends LitElement {
       getEntityStateWatts: (entityId) => getEntityStateWatts(this.hass, entityId),
       getEntityState: (entityId) => getEntityState(this.hass, entityId),
     });
+    if (!grid.has) {
+      grid.state.fromGrid = 0;
+      grid.state.toGrid = 0;
+      grid.state.toHome = 0;
+      grid.state.toBattery = 0;
+      solar.state.toGrid = 0;
+      battery.state.toGrid = 0;
+      nonFossil.has = false;
+      nonFossil.hasPercentage = false;
+      nonFossil.state.power = 0;
+    }
     const totalIndividualConsumption =
       individualObjs?.reduce((a, b) => a + (b.has ? b.state || 0 : 0), 0) || 0;
     const totalHomeConsumption = Math.max(

@@ -23,6 +23,12 @@ const mainSchema = {
       selector: { boolean: {} },
     },
     {
+      name: "display_zero",
+      label: "Display Zero",
+      selector: { boolean: {} },
+      default: true,
+    },
+    {
       name: "use_metadata",
       label: "Use Metadata",
       selector: { boolean: {} },
