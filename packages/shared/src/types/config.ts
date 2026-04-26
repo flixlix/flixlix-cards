@@ -38,9 +38,14 @@ interface mainConfigOptions {
   sort_individual_devices?: boolean;
   allow_layout_break?: boolean;
   /* LEGACY - JUST TO AVOID ERRORS */
+  w_threshold?: number;
+  w_decimals?: number;
+  kw_decimals?: number;
   wh_threshold?: number;
+  wh_kwh_threshold?: number;
   wh_decimals?: number;
   kwh_decimals?: number;
+  mwh_decimals?: number;
 }
 
 export interface FlowCardPlusConfig extends LovelaceCardConfig, mainConfigOptions {
@@ -126,6 +131,8 @@ export type ConfigEntities = {
   home?: Home;
   fossil_fuel_percentage?: FossilFuelPercentage;
   individual?: IndividualField;
+  individual1?: IndividualField;
+  individual2?: IndividualField;
 };
 
 export type ConfigEntity =
