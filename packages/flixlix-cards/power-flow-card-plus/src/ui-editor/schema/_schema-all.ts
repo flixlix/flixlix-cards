@@ -54,6 +54,8 @@ export const cardConfigStruct = assign(
       home: optional(any()),
       fossil_fuel_percentage: optional(any()),
       individual: optional(any()),
+      individual1: optional(any()),
+      individual2: optional(any()),
     }),
     sort_individual_devices: optional(boolean()),
     allow_layout_break: optional(boolean()),

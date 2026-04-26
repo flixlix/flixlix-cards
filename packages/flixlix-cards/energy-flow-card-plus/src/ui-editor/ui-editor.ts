@@ -154,6 +154,68 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
     `;
   }
 
+  private _hasLegacyIndividualFields(): boolean {
+    if (!this._config) return false;
+    const entities = this._config.entities as PowerFlowCardPlusConfig["entities"] & {
+      individual1?: unknown;
+      individual2?: unknown;
+    };
+    return entities.individual1 !== undefined || entities.individual2 !== undefined;
+  }
+
+  private _migrateLegacyIndividualFields(): void {
+    if (!this._config) return;
+    const config = {
+      ...this._config,
+      entities: { ...this._config.entities },
+    } as PowerFlowCardPlusConfig & {
+      entities: PowerFlowCardPlusConfig["entities"] & {
+        individual1?: unknown;
+        individual2?: unknown;
+      };
+    };
+    const individual = Array.isArray(config.entities.individual)
+      ? [...config.entities.individual]
+      : [];
+
+    const appendLegacy = (value: unknown) => {
+      if (Array.isArray(value)) {
+        individual.push(...value);
+        return;
+      }
+      if (value !== undefined) {
+        individual.push(value as any);
+      }
+    };
+
+    appendLegacy(config.entities.individual1);
+    appendLegacy(config.entities.individual2);
+
+    config.entities.individual = individual;
+    delete config.entities.individual1;
+    delete config.entities.individual2;
+
+    this._config = config;
+    fireEvent(this, "config-changed", { config });
+  }
+
+  private _renderLegacyIndividualFieldsAlert() {
+    if (!this._hasLegacyIndividualFields()) return nothing;
+    return html`
+      <ha-alert class="legacy-fields-alert" alert-type="warning">
+        Legacy individual fields detected. Field names changed: entities.individual1/individual2 ->
+        entities.individual[].
+        <button
+          class="legacy-fields-alert-button"
+          slot="action"
+          @click=${this._migrateLegacyIndividualFields}
+        >
+          Convert automatically
+        </button>
+      </ha-alert>
+    `;
+  }
+
   protected render() {
     if (!this.hass || !this._config) {
       return nothing;
@@ -174,7 +236,7 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
     if (this._currentConfigPage !== null) {
       if (this._currentConfigPage === "individual") {
         return html`
-          ${this._renderLegacyFieldsAlert()}
+          ${this._renderLegacyFieldsAlert()} ${this._renderLegacyIndividualFieldsAlert()}
           <subpage-header @go-back=${this._goBack} page=${this._currentConfigPage}>
           </subpage-header>
           <individual-devices-editor
@@ -194,9 +256,8 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
             )
           : CONFIG_PAGES.find((page) => page.page === currentPage)?.schema;
       const dataForForm = currentPage === "advanced" ? data : data.entities[currentPage];
-
       return html`
-        ${this._renderLegacyFieldsAlert()}
+        ${this._renderLegacyFieldsAlert()} ${this._renderLegacyIndividualFieldsAlert()}
         <subpage-header @go-back=${this._goBack} page=${this._currentConfigPage}> </subpage-header>
         <ha-form
           .hass=${this.hass}
@@ -215,7 +276,8 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
       if (page === null) return nothing;
       const getIconToUse = () => {
         if (page === "individual" || page === "advanced") return fallbackIcon;
-        return this?._config?.entities[page]?.icon || fallbackIcon;
+        const entityConfig = this?._config?.entities[page] as { icon?: string } | undefined;
+        return entityConfig?.icon || fallbackIcon;
       };
       const icon = getIconToUse();
       return html`
@@ -232,10 +294,9 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
     const renderLinkSubPages = () => {
       return CONFIG_PAGES.map((page) => renderLinkSubpage(page.page, page.icon));
     };
-
     return html`
       <div class="card-config">
-        ${this._renderLegacyFieldsAlert()}
+        ${this._renderLegacyFieldsAlert()} ${this._renderLegacyIndividualFieldsAlert()}
         <ha-form
           .hass=${this.hass}
           .data=${data}

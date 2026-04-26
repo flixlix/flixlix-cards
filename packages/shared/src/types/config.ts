@@ -129,6 +129,8 @@ export type ConfigEntities = {
   home?: Home;
   fossil_fuel_percentage?: FossilFuelPercentage;
   individual?: IndividualField;
+  individual1?: IndividualField;
+  individual2?: IndividualField;
 };
 
 export type ConfigEntity =
