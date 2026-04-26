@@ -126,6 +126,7 @@ Else, if you prefer the graphical editor, use the menu to add the resource:
 | use_new_flow_rate_model     | `boolean` |                  false                   | If `true`, the card will use the [New Flow Formula](#new-flow-formula).                                                                                                                                                  |
 | sort_individual_devices     | `boolean` |           true (since v0.3.1)            | If `true`, sort devices in order of power consumption -> entity id -> alphabetically.                                                                                                                                    |
 | allow_layout_break          | `boolean` |                  false                   | Always allow up to 4 individual devices to show, even when there is not enough space, causing visual layout break.                                                                                                       |
+| collection_key              | `string`  |                                          | Bind this card to a specific Home Assistant energy data collection. Defaults to the energy collection of the active dashboard. Pass the key (e.g. `energy_living_room`) of the dashboard whose selected period should drive this card. Useful when more than one energy dashboard exists. See [Energy Collection Key](#energy-collection-key).                          |
 
 #### Action Configuration
 
@@ -301,6 +302,24 @@ This feature allows you to configure how the card handles a Grid Power Outage sc
 | label_alert         | `string`              | A text that will be displayed below the icon when there is a power outage.                                                                                                                                                                                                                             |
 | calculate_flow_rate | `boolean` or `number` | `false`                                                                                                                                                                                                                                                                                                |
 |                     |                       | If set to `true`, the flow rate will be calculated by using the flow rate formula (either the new or the old one, depending on your configuration). If set to a number, the flow rate will be set to that number. For example, defining the value `10` will ensure one dot will flow every 10 seconds. |
+
+#### Energy Collection Key
+
+This option lets you select which Home Assistant energy data collection drives the card. Home Assistant exposes one collection per energy dashboard, plus the default dashboard collection. Each collection has its own selected period (today, this week, custom range, etc.).
+
+By default, this card binds to the energy collection of whichever dashboard it is rendered inside (the same behavior as the built-in Energy Distribution card). If you have created additional energy dashboards (for example, one per area or one per house) and want this card to follow a specific dashboard's selected period instead of the active one, set `collection_key` to that dashboard's collection key.
+
+Collection keys follow the pattern `energy_<dashboard_url>`. For example, an energy dashboard at `/energy-living-room` exposes the collection key `energy_living_room`. Leave `collection_key` unset to use the default behavior.
+
+```yaml
+type: custom:energy-flow-card-plus
+collection_key: energy_living_room
+entities:
+  grid:
+    entity: sensor.grid_energy
+  solar:
+    entity: sensor.solar_energy
+```
 
 #### Display Zero Lines
 

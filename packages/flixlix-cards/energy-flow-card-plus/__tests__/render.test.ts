@@ -49,4 +49,16 @@ describe("render", () => {
     const rendered = (card as unknown as { render: () => any }).render();
     expect(rendered).toBeTruthy();
   });
+
+  test("accepts collection_key and stores it on the card", () => {
+    const config = {
+      type: "custom:energy-flow-card-plus",
+      collection_key: "energy_living_room",
+      entities: { grid: { entity: "sensor.grid_energy" } },
+    } as EnergyFlowCardPlusConfig;
+    const card = new EnergyFlowCardPlus();
+    card.hass = hass;
+    card.setConfig(config);
+    expect((card as any)._energyCollectionKey).toBe("energy_living_room");
+  });
 });
