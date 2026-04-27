@@ -6,7 +6,10 @@ import { type FlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { isNumberValue } from "@flixlix-cards/shared/utils/utils";
 import { type HomeAssistant } from "custom-card-helpers";
 
-type BaseEntityField = Exclude<keyof FlowCardPlusConfig["entities"], "individual">;
+type BaseEntityField = Exclude<
+  keyof FlowCardPlusConfig["entities"],
+  "individual" | "individual1" | "individual2"
+>;
 
 export const getSecondaryState = (
   hass: HomeAssistant,
