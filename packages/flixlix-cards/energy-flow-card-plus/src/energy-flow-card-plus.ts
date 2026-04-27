@@ -861,12 +861,12 @@ export class EnergyFlowCardPlus extends LitElement {
       state: {
         toBattery:
           typeof entities.battery?.entity === "string"
-            ? 0
-            : getEnergyEntityStateLocal(entities.battery?.entity?.consumption),
-        fromBattery:
-          typeof entities.battery?.entity === "string"
             ? getEnergyEntityStateLocal(entities.battery.entity)
             : getEnergyEntityStateLocal(entities.battery?.entity?.production),
+        fromBattery:
+          typeof entities.battery?.entity === "string"
+            ? 0
+            : getEnergyEntityStateLocal(entities.battery?.entity?.consumption),
         toGrid: 0,
         toHome: 0,
       },
