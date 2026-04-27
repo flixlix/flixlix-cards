@@ -1,5 +1,19 @@
 # @flixlix-cards/shared
 
+## 0.0.5
+
+### Patch Changes
+
+- [#251](https://github.com/flixlix/flixlix-cards/pull/251) [`59ec2b7`](https://github.com/flixlix/flixlix-cards/commit/59ec2b72f4ed12702af89ada19db5d78e146c2ee) Thanks [@flixlix](https://github.com/flixlix)! - refactor: extract ui-editor into shared package
+
+- [#250](https://github.com/flixlix/flixlix-cards/pull/250) [`378c6e1`](https://github.com/flixlix/flixlix-cards/commit/378c6e10b9d9860ff4f2621f869f1fd82f7cda0b) Thanks [@flixlix](https://github.com/flixlix)! - fix: display value round battery soc decimals
+
+- [#249](https://github.com/flixlix/flixlix-cards/pull/249) [`cab9296`](https://github.com/flixlix/flixlix-cards/commit/cab92965b23aff7f66952fda8f862cc48485e0ad) Thanks [@flixlix](https://github.com/flixlix)! - fix: individual legacy config compatibility
+
+- [#254](https://github.com/flixlix/flixlix-cards/pull/254) [`a942417`](https://github.com/flixlix/flixlix-cards/commit/a94241772bef92995336ea65f61ea2a342ffc13f) Thanks [@flixlix](https://github.com/flixlix)! - fix: sortable ui editor double card definition
+
+- [`1fbf1d7`](https://github.com/flixlix/flixlix-cards/commit/1fbf1d786bfe27e8ce0fe1778970217063c38c49) Thanks [@flixlix](https://github.com/flixlix)! - fix: display value round secondary info decimals
+
 ## 0.0.4
 
 ### Patch Changes
