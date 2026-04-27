@@ -1,10 +1,11 @@
 import { describe, expect, test } from "vitest";
-
 import { computeNonFossilFromCollection } from "../src/states/utils/energy-period";
 import { computeEnergyDistribution } from "../src/utils/compute-energy-distribution";
 import { computeFlowRate } from "../src/utils/compute-flow-rate";
 import { computePowerDistributionAfterSolarAndBattery } from "../src/utils/compute-power-distribution";
 import { displayValue } from "../src/utils/display-value";
+
+const thinSpace = `\u2009`;
 
 describe("calculation regressions", () => {
   test("computeEnergyDistribution applies display zero tolerance to grid/battery exchange", () => {
@@ -166,6 +167,7 @@ describe("calculation regressions", () => {
       mega_threshold: 1000000,
     } as any;
 
+    expect(displayValue(hass, config, 1500000, {})).toBe(`1.5${thinSpace}MWh`);
     expect(displayValue(hass, config, 1500000, {})).toContain("MWh");
     expect(displayValue(hass, config, 1500, { unit: "Wh", unitWhiteSpace: false })).toBe("1,500Wh");
   });
