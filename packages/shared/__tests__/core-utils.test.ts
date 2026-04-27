@@ -5,6 +5,8 @@ import { type FlowCardPlusConfig } from "../src/types";
 import { computeFlowRate, computeIndividualFlowRate } from "../src/utils/compute-flow-rate";
 import { displayValue } from "../src/utils/display-value";
 
+const thinSpace = `\u2009`;
+
 describe("core utils", () => {
   test("adjustZeroTolerance returns 0 for null/zero values", () => {
     expect(adjustZeroTolerance(null, 10)).toBe(0);
@@ -81,7 +83,7 @@ describe("core utils", () => {
       base_decimals: 0,
       kilo_threshold: 1000,
     } as unknown as FlowCardPlusConfig;
-    expect(displayValue(hass, config, null, {})).toBe("0 W");
+    expect(displayValue(hass, config, null, {})).toBe(`0${thinSpace}W`);
   });
 
   test("displayValue chooses kW when unit is missing and value >= kilo_threshold", () => {
@@ -92,7 +94,7 @@ describe("core utils", () => {
       base_decimals: 0,
       kilo_threshold: 1000,
     } as unknown as FlowCardPlusConfig;
-    expect(displayValue(hass, config, 1500, {})).toBe("1.5 kW");
+    expect(displayValue(hass, config, 1500, {})).toBe(`1.5${thinSpace}kW`);
   });
 
   test("displayValue uses W when unit is missing and value < kilo_threshold", () => {
@@ -103,7 +105,7 @@ describe("core utils", () => {
       base_decimals: 0,
       kilo_threshold: 1000,
     } as unknown as FlowCardPlusConfig;
-    expect(displayValue(hass, config, 500, {})).toBe("500 W");
+    expect(displayValue(hass, config, 500, {})).toBe(`500${thinSpace}W`);
   });
 
   test("displayValue respects accept_negative", () => {
@@ -114,7 +116,7 @@ describe("core utils", () => {
       base_decimals: 0,
       kilo_threshold: 1000,
     } as unknown as FlowCardPlusConfig;
-    expect(displayValue(hass, config, -500, { accept_negative: false })).toBe("500 W");
-    expect(displayValue(hass, config, -500, { accept_negative: true })).toBe("-500 W");
+    expect(displayValue(hass, config, -500, { accept_negative: false })).toBe(`500${thinSpace}W`);
+    expect(displayValue(hass, config, -500, { accept_negative: true })).toBe(`-500${thinSpace}W`);
   });
 });
