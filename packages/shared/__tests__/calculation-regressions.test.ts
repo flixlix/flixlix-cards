@@ -167,9 +167,7 @@ describe("calculation regressions", () => {
     } as any;
 
     expect(displayValue(hass, config, 1500000, {})).toBe("1.5 MWh");
-    expect(displayValue(hass, config, 1500, { unit: "Wh", unitWhiteSpace: false })).toBe(
-      "1,500Wh"
-    );
+    expect(displayValue(hass, config, 1500, { unit: "Wh", unitWhiteSpace: false })).toBe("1,500Wh");
   });
 
   test("computeNonFossilFromCollection clamps to zero when fossil exceeds grid", () => {
