@@ -28,7 +28,8 @@ export const displayValue = (
     accept_negative?: boolean;
   }
 ): string => {
-  const whiteSpace = unitWhiteSpace === false ? "" : " ";
+  const thinSpace = `\u2009`;
+  const whiteSpace = unitWhiteSpace === false ? "" : thinSpace;
   const energyCard = isEnergyCard(config);
   const baseUnit = energyCard ? "Wh" : "W";
   const kiloUnit = energyCard ? "kWh" : "kW";
@@ -48,21 +49,20 @@ export const displayValue = (
     unit === undefined && valueInNumber >= (config.mega_threshold ?? defaultValues.megaThreshold);
 
   const decimalsToRound =
-    (decimals ?? isMega)
-      ? config.mega_decimals
-      : isKilo
-        ? config.kilo_decimals
-        : config.base_decimals;
+    decimals ??
+    (isMega ? config.mega_decimals : isKilo ? config.kilo_decimals : config.base_decimals);
 
   const transformValue = (v: number) => (!accept_negative ? Math.abs(v) : v);
 
   const v = formatNumber(
     transformValue(
-      isMega
-        ? round(valueInNumber / 1000000, decimalsToRound ?? 2)
-        : isKilo
-          ? round(valueInNumber / 1000, decimalsToRound ?? 2)
-          : round(valueInNumber, decimalsToRound ?? 0)
+      decimals !== undefined
+        ? round(valueInNumber, decimals)
+        : isMega
+          ? round(valueInNumber / 1000000, decimalsToRound ?? 2)
+          : isKilo
+            ? round(valueInNumber / 1000, decimalsToRound ?? 2)
+            : round(valueInNumber, decimalsToRound ?? 0)
     ),
     hass.locale
   );
