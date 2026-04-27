@@ -56,13 +56,11 @@ export const displayValue = (
 
   const v = formatNumber(
     transformValue(
-      decimals !== undefined
-        ? round(valueInNumber, decimals)
-        : isMega
-          ? round(valueInNumber / 1000000, decimalsToRound ?? 2)
-          : isKilo
-            ? round(valueInNumber / 1000, decimalsToRound ?? 2)
-            : round(valueInNumber, decimalsToRound ?? 0)
+      isMega
+        ? round(valueInNumber / 1000000, decimalsToRound ?? 2)
+        : isKilo
+          ? round(valueInNumber / 1000, decimalsToRound ?? 2)
+          : round(valueInNumber, decimalsToRound ?? 0)
     ),
     hass.locale
   );
