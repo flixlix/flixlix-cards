@@ -8,7 +8,7 @@ import {
 } from "@flixlix-cards/shared/types";
 import { fireEvent, type HASSDomEvent, type HomeAssistant } from "custom-card-helpers";
 import { css, type CSSResultGroup, html, LitElement, type TemplateResult } from "lit";
-import { customElement, property, state } from "lit-element";
+import { property, state } from "lit-element";
 import { individualDevicesSchema } from "../schema/_schema-all";
 import "./individual-row-editor";
 
@@ -23,7 +23,6 @@ export function processEditorEntities(
   });
 }
 
-@customElement("individual-devices-editor")
 export class IndividualDevicesEditor extends LitElement {
   public hass!: HomeAssistant;
   @property({ attribute: false }) public config!: PowerFlowCardPlusConfig;
@@ -99,6 +98,10 @@ export class IndividualDevicesEditor extends LitElement {
   static get styles(): CSSResultGroup {
     return css``;
   }
+}
+
+if (!customElements.get("individual-devices-editor")) {
+  customElements.define("individual-devices-editor", IndividualDevicesEditor);
 }
 
 declare global {
