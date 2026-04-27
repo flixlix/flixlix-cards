@@ -4,21 +4,21 @@ import {
   type LovelaceRowConfig,
   type PowerFlowCardPlusConfig,
 } from "@flixlix-cards/shared/types";
+import "@flixlix-cards/shared/ui-editor/components/individual-devices-editor";
+import "@flixlix-cards/shared/ui-editor/components/link-subpage";
+import "@flixlix-cards/shared/ui-editor/components/subpage-header";
+import { batterySchema } from "@flixlix-cards/shared/ui-editor/schema/battery";
+import { nonFossilSchema } from "@flixlix-cards/shared/ui-editor/schema/fossil-fuel-percentage";
+import { gridSchema } from "@flixlix-cards/shared/ui-editor/schema/grid";
+import { homeSchema } from "@flixlix-cards/shared/ui-editor/schema/home";
+import { solarSchema } from "@flixlix-cards/shared/ui-editor/schema/solar";
+import { loadHaForm } from "@flixlix-cards/shared/ui-editor/utils/load-ha-form";
 import { defaultValues } from "@flixlix-cards/shared/utils/get-default-config";
 import { fireEvent, type HomeAssistant, type LovelaceCardEditor } from "custom-card-helpers";
 import { LitElement, css, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { assert } from "superstruct";
-import "./components/efcp-individual-devices-editor";
-import "./components/efcp-link-subpage";
-import "./components/efcp-subpage-header";
 import { advancedOptionsSchema, cardConfigStruct, generalConfigSchema } from "./schema/_schema-all";
-import { batterySchema } from "./schema/battery";
-import { nonFossilSchema } from "./schema/fossil-fuel-percentage";
-import { gridSchema } from "./schema/grid";
-import { homeSchema } from "./schema/home";
-import { solarSchema } from "./schema/solar";
-import { loadHaForm } from "./utils/load-ha-form";
 
 const CONFIG_PAGES: {
   page: ConfigPage;
