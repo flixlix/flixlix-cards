@@ -1,13 +1,13 @@
-import { batterySchema } from "@flixlix-cards/shared/ui-editor/schema/battery";
-import { displayZeroLinesSchema } from "@flixlix-cards/shared/ui-editor/schema/display-zero-lines";
-import { nonFossilSchema } from "@flixlix-cards/shared/ui-editor/schema/fossil-fuel-percentage";
-import { gridSchema } from "@flixlix-cards/shared/ui-editor/schema/grid";
-import { homeSchema } from "@flixlix-cards/shared/ui-editor/schema/home";
-import { individualSchema } from "@flixlix-cards/shared/ui-editor/schema/individual";
-import { solarSchema } from "@flixlix-cards/shared/ui-editor/schema/solar";
 import { mdiBatteryHigh, mdiHome, mdiLeaf, mdiTransmissionTower, mdiWeatherSunny } from "@mdi/js";
 import memoizeOne from "memoize-one";
 import { any, assign, boolean, integer, number, object, optional, string } from "superstruct";
+import { batterySchema } from "./battery";
+import { displayZeroLinesSchema } from "./display-zero-lines";
+import { nonFossilSchema } from "./fossil-fuel-percentage";
+import { gridSchema } from "./grid";
+import { homeSchema } from "./home";
+import { individualSchema } from "./individual";
+import { solarSchema } from "./solar";
 
 const baseLovelaceCardConfig = object({
   type: string(),

@@ -1,8 +1,3 @@
-import { individualSchema } from "@/ui-editor/schema/individual";
-import { fireEvent } from "@/ui-editor/utils/fire-event";
-import { loadHaForm } from "@/ui-editor/utils/load-ha-form";
-import { sortableStyles } from "@/ui-editor/utils/sortable-styles";
-import { loadSortable, type SortableInstance } from "@/ui-editor/utils/sortable.ondemand";
 import localize from "@flixlix-cards/shared/i18n";
 import {
   type EditSubElementEvent,
@@ -10,12 +5,20 @@ import {
   type LovelaceRowConfig,
   type PowerFlowCardPlusConfig,
 } from "@flixlix-cards/shared/types";
+import { fireEvent } from "@flixlix-cards/shared/ui-editor/utils/fire-event";
+import { loadHaForm } from "@flixlix-cards/shared/ui-editor/utils/load-ha-form";
+import { sortableStyles } from "@flixlix-cards/shared/ui-editor/utils/sortable-styles";
+import {
+  loadSortable,
+  type SortableInstance,
+} from "@flixlix-cards/shared/ui-editor/utils/sortable.ondemand";
 import { mdiClose, mdiDrag, mdiPencil } from "@mdi/js";
 import { type HomeAssistant } from "custom-card-helpers";
 import { css, type CSSResultGroup, html, LitElement } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { repeat } from "lit/directives/repeat.js";
 import type { SortableEvent } from "sortablejs";
+import { individualSchema } from "../schema/individual";
 
 declare global {
   interface HASSDomEvents {
