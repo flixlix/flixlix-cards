@@ -15,7 +15,7 @@ import {
 import { mdiClose, mdiDrag, mdiPencil } from "@mdi/js";
 import { type HomeAssistant } from "custom-card-helpers";
 import { css, type CSSResultGroup, html, LitElement } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import { property, state } from "lit/decorators.js";
 import { repeat } from "lit/directives/repeat.js";
 import type { SortableEvent } from "sortablejs";
 import { individualSchema } from "../schema/individual";
@@ -33,7 +33,6 @@ declare global {
   }
 }
 
-@customElement("individual-row-editor")
 export class IndividualRowEditor extends LitElement {
   @property({ attribute: false }) protected hass?: HomeAssistant;
 
@@ -362,6 +361,10 @@ export class IndividualRowEditor extends LitElement {
       `,
     ];
   }
+}
+
+if (!customElements.get("individual-row-editor")) {
+  customElements.define("individual-row-editor", IndividualRowEditor);
 }
 
 declare global {
