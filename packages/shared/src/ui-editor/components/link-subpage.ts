@@ -1,9 +1,8 @@
 import { mdiChevronRight } from "@mdi/js";
 import { fireEvent } from "custom-card-helpers";
 import { css, type CSSResultGroup, html, LitElement, type TemplateResult } from "lit";
-import { customElement, property, query } from "lit-element";
+import { property, query } from "lit-element";
 
-@customElement("link-subpage")
 export class LinkSubpage extends LitElement {
   @property({ type: String }) path!: string;
 
@@ -110,6 +109,10 @@ export class LinkSubpage extends LitElement {
       }
     `;
   }
+}
+
+if (!customElements.get("link-subpage")) {
+  customElements.define("link-subpage", LinkSubpage);
 }
 
 declare global {

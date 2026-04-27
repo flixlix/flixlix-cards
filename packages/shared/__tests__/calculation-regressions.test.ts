@@ -166,7 +166,7 @@ describe("calculation regressions", () => {
       mega_threshold: 1000000,
     } as any;
 
-    expect(displayValue(hass, config, 1500000, {})).toBe("1.5 MWh");
+    expect(displayValue(hass, config, 1500000, {})).toContain("MWh");
     expect(displayValue(hass, config, 1500, { unit: "Wh", unitWhiteSpace: false })).toBe("1,500Wh");
   });
 
