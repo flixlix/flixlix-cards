@@ -1,9 +1,5 @@
 import { describe, expect, test } from "vitest";
-import {
-  intensityToGap,
-  intensityToSpeed,
-  powerToIntensity,
-} from "../src/utils/flow-shape";
+import { intensityToGap, intensityToSpeed, powerToIntensity } from "../src/utils/flow-shape";
 
 describe("powerToIntensity", () => {
   test("clamps to 0 below the minimum", () => {

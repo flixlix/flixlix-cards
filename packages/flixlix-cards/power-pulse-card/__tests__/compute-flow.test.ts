@@ -1,7 +1,7 @@
 import { type HomeAssistant } from "custom-card-helpers";
 import { describe, expect, test } from "vitest";
-import { computePower } from "../src/utils/compute-flow";
 import { type FlixlixPowerCardConfig } from "../src/types";
+import { computePower } from "../src/utils/compute-flow";
 
 type StateMap = Record<string, { state: string; unit?: string }>;
 
@@ -116,9 +116,7 @@ describe("computePower — battery", () => {
     const r = computePower(
       hass,
       cfg({
-        batteries: [
-          { entity: { consumption: "sensor.bat_out", production: "sensor.bat_in" } },
-        ],
+        batteries: [{ entity: { consumption: "sensor.bat_out", production: "sensor.bat_in" } }],
       })
     );
     expect(r.batteries[0]!.total).toBe(300);
