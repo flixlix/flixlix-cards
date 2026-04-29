@@ -63,7 +63,7 @@ input_number:
     name: EV Power
     initial: 10
     min: 0
-    max: 100
+    max: 10000
     step: 0.5
   washing_machine_power:
     name: Washing Machine Power

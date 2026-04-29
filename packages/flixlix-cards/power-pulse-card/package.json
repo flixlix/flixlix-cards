@@ -1,0 +1,77 @@
+{
+  "name": "power-pulse-card",
+  "private": true,
+  "version": "0.0.1-alpha.1",
+  "type": "module",
+  "description": "A modern power flow card for Home Assistant with smooth animated flows and number transitions.",
+  "keywords": [
+    "home-assistant",
+    "homeassistant",
+    "hass",
+    "dashboard",
+    "custom-cards"
+  ],
+  "main": "./dist/power-pulse-card.js",
+  "exports": {
+    ".": "./dist/power-pulse-card.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/flixlix/flixlix-cards.git"
+  },
+  "author": "flixlix",
+  "bugs": {
+    "url": "https://github.com/flixlix/flixlix-cards/issues"
+  },
+  "homepage": "https://github.com/flixlix/flixlix-cards#readme",
+  "scripts": {
+    "build": "pnpm dlx rollup -c",
+    "lint": "eslint \"src/**/*.{ts,tsx}\"",
+    "release": "pnpm build && pnpm changeset tag",
+    "clean": "rimraf dist node_modules",
+    "start": "rollup -wc",
+    "dev": "rollup -c --watch",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write . --ignore-path ../../../.prettierignore",
+    "format:check": "prettier --check . --ignore-path ../../../.prettierignore",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "precommit": "pnpm typecheck && pnpm format:check && pnpm test && pnpm lint"
+  },
+  "dependencies": {
+    "@flixlix-cards/shared": "workspace:*",
+    "@mdi/js": "^7.4.47",
+    "custom-card-helpers": "^1.9.0",
+    "home-assistant-js-websocket": "^8.2.0",
+    "lit": "^2.8.0",
+    "lit-element": "^2.5.1",
+    "lit-html": "^2.8.0",
+    "superstruct": "^1.0.4",
+    "tslib": "^2.8.1"
+  },
+  "devDependencies": {
+    "@flixlix-cards/bundler": "workspace:*",
+    "@flixlix-cards/eslint-config": "workspace:*",
+    "@flixlix-cards/prettier-config": "workspace:*",
+    "@flixlix-cards/testing": "workspace:*",
+    "@flixlix-cards/typescript-config": "workspace:*",
+    "@babel/core": "^7.29.0",
+    "@babel/preset-env": "^7.29.2",
+    "@babel/preset-typescript": "^7.28.5",
+    "@rollup/plugin-babel": "^7.0.0",
+    "@rollup/plugin-commonjs": "^29.0.2",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@rollup/plugin-terser": "^1.0.0",
+    "@rollup/plugin-typescript": "^12.3.0",
+    "@types/node": "^20.19.37",
+    "eslint": "^10.2.0",
+    "rollup": "^4.60.1",
+    "rollup-plugin-minify-html-literals": "^1.2.6",
+    "rollup-plugin-serve": "^1.1.1",
+    "typescript": "^6.0.2",
+    "vite-tsconfig-paths": "^6.1.1",
+    "vitest": "^4.1.4"
+  },
+  "packageManager": "pnpm@10.33.0"
+}

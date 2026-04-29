@@ -272,6 +272,103 @@ importers:
         specifier: ^4.1.4
         version: 4.1.4(@types/node@20.19.39)(happy-dom@20.8.9)(jsdom@28.1.0)(vite@7.3.2(@types/node@20.19.39)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.46.1)(tsx@4.21.0))
 
+  packages/flixlix-cards/power-pulse-card:
+    dependencies:
+      '@flixlix-cards/shared':
+        specifier: workspace:*
+        version: link:../../shared
+      '@mdi/js':
+        specifier: ^7.4.47
+        version: 7.4.47
+      custom-card-helpers:
+        specifier: ^1.9.0
+        version: 1.9.0
+      home-assistant-js-websocket:
+        specifier: ^8.2.0
+        version: 8.2.0
+      lit:
+        specifier: ^2.8.0
+        version: 2.8.0
+      lit-element:
+        specifier: ^2.5.1
+        version: 2.5.1
+      lit-html:
+        specifier: ^2.8.0
+        version: 2.8.0
+      superstruct:
+        specifier: ^1.0.4
+        version: 1.0.4
+      tslib:
+        specifier: ^2.8.1
+        version: 2.8.1
+    devDependencies:
+      '@babel/core':
+        specifier: ^7.29.0
+        version: 7.29.0
+      '@babel/preset-env':
+        specifier: ^7.29.2
+        version: 7.29.2(@babel/core@7.29.0)
+      '@babel/preset-typescript':
+        specifier: ^7.28.5
+        version: 7.28.5(@babel/core@7.29.0)
+      '@flixlix-cards/bundler':
+        specifier: workspace:*
+        version: link:../../tooling/bundler
+      '@flixlix-cards/eslint-config':
+        specifier: workspace:*
+        version: link:../../tooling/eslint-config
+      '@flixlix-cards/prettier-config':
+        specifier: workspace:*
+        version: link:../../tooling/prettier-config
+      '@flixlix-cards/testing':
+        specifier: workspace:*
+        version: link:../../tooling/testing
+      '@flixlix-cards/typescript-config':
+        specifier: workspace:*
+        version: link:../../tooling/typescript-config
+      '@rollup/plugin-babel':
+        specifier: ^7.0.0
+        version: 7.0.0(@babel/core@7.29.0)(@types/babel__core@7.20.5)(rollup@4.60.1)
+      '@rollup/plugin-commonjs':
+        specifier: ^29.0.2
+        version: 29.0.2(rollup@4.60.1)
+      '@rollup/plugin-json':
+        specifier: ^6.1.0
+        version: 6.1.0(rollup@4.60.1)
+      '@rollup/plugin-node-resolve':
+        specifier: ^16.0.3
+        version: 16.0.3(rollup@4.60.1)
+      '@rollup/plugin-terser':
+        specifier: ^1.0.0
+        version: 1.0.0(rollup@4.60.1)
+      '@rollup/plugin-typescript':
+        specifier: ^12.3.0
+        version: 12.3.0(rollup@4.60.1)(tslib@2.8.1)(typescript@6.0.2)
+      '@types/node':
+        specifier: ^20.19.37
+        version: 20.19.39
+      eslint:
+        specifier: ^10.2.0
+        version: 10.2.0(jiti@2.6.1)
+      rollup:
+        specifier: ^4.60.1
+        version: 4.60.1
+      rollup-plugin-minify-html-literals:
+        specifier: ^1.2.6
+        version: 1.2.6(rollup@4.60.1)
+      rollup-plugin-serve:
+        specifier: ^1.1.1
+        version: 1.1.1
+      typescript:
+        specifier: ^6.0.2
+        version: 6.0.2
+      vite-tsconfig-paths:
+        specifier: ^6.1.1
+        version: 6.1.1(typescript@6.0.2)(vite@7.3.2(@types/node@20.19.39)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.46.1)(tsx@4.21.0))
+      vitest:
+        specifier: ^4.1.4
+        version: 4.1.4(@types/node@20.19.39)(happy-dom@20.8.9)(jsdom@28.1.0)(vite@7.3.2(@types/node@20.19.39)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.46.1)(tsx@4.21.0))
+
   packages/flixlix-cards/power-flow-card-plus:
     dependencies:
       '@flixlix-cards/shared':

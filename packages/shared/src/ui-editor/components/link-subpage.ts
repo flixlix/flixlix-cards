@@ -68,7 +68,6 @@ export class LinkSubpage extends LitElement {
       }
 
       .link-subpage {
-        width: 100%;
         display: flex;
         gap: 1rem;
         padding: var(--expansion-panel-summary-padding, 0 8px);
