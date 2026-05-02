@@ -16,10 +16,10 @@ const MODES: { key: ThemeMode; label: string; Icon: typeof Sun }[] = [
 ];
 
 function getInitialMode(): ThemeMode {
-  if (typeof window === "undefined") return "auto";
+  if (typeof window === "undefined") return "light";
   const stored = window.localStorage.getItem("theme");
   if (stored === "light" || stored === "dark" || stored === "auto") return stored;
-  return "auto";
+  return "light";
 }
 
 function applyThemeMode(mode: ThemeMode) {
@@ -35,7 +35,7 @@ function applyThemeMode(mode: ThemeMode) {
 }
 
 export default function ThemeToggle({ className }: { className?: string }) {
-  const [mode, setMode] = useState<ThemeMode>("auto");
+  const [mode, setMode] = useState<ThemeMode>("light");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
