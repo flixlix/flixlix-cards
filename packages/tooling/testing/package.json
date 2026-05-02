@@ -7,10 +7,10 @@
     ".": "./vitest-base.js"
   },
   "dependencies": {
-    "vitest": "^1.4.0",
-    "jsdom": "^24.0.0",
-    "@vitest/ui": "^1.4.0",
-    "@testing-library/dom": "^9.3.4",
+    "vitest": "catalog:packages",
+    "jsdom": "catalog:",
+    "@vitest/ui": "4.1.5",
+    "@testing-library/dom": "catalog:",
     "happy-dom": "^20.8.9"
   }
 }

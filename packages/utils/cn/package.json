@@ -15,15 +15,15 @@
     "format:check": "prettier --check . --ignore-path ../../../.prettierignore"
   },
   "dependencies": {
-    "clsx": "^2.1.1",
-    "tailwind-merge": "^3.0.2"
+    "clsx": "catalog:packages",
+    "tailwind-merge": "catalog:packages"
   },
   "devDependencies": {
     "@flixlix-cards/eslint-config": "workspace:*",
     "@flixlix-cards/prettier-config": "workspace:*",
     "@flixlix-cards/typescript-config": "workspace:*",
-    "eslint": "^9.21.0",
-    "tsup": "^8.4.0",
-    "typescript": "^5.8.2"
+    "eslint": "catalog:packages",
+    "tsup": "catalog:packages",
+    "typescript": "catalog:"
   }
 }

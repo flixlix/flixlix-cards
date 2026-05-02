@@ -14,9 +14,9 @@
   "dependencies": {
     "prettier-plugin-organize-imports": ">=4.1.0",
     "prettier-plugin-tailwindcss": ">=0.6.11",
-    "prettier-plugin-embed": "^0.5.1"
+    "prettier-plugin-embed": "catalog:packages"
   },
   "devDependencies": {
-    "prettier": "^3.5.3"
+    "prettier": "catalog:"
   }
 }

@@ -25,12 +25,12 @@
     "@tanstack/react-router-ssr-query": "latest",
     "@tanstack/react-start": "latest",
     "@tanstack/router-plugin": "^1.132.0",
-    "lucide-react": "^0.545.0",
+    "lucide-react": "catalog:",
     "nitro": "3.0.260311-beta",
     "power-flow-card-plus": "workspace:*",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "tailwindcss": "^4.1.18"
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "tailwindcss": "catalog:"
   },
   "devDependencies": {
     "@flixlix-cards/eslint-config": "workspace:*",
@@ -39,17 +39,17 @@
     "@tailwindcss/typography": "^0.5.16",
     "@tanstack/devtools-vite": "latest",
     "@tanstack/eslint-config": "latest",
-    "@testing-library/dom": "^10.4.1",
+    "@testing-library/dom": "catalog:",
     "@testing-library/react": "^16.3.0",
-    "@types/node": "^22.10.2",
-    "@types/react": "^19.2.0",
-    "@types/react-dom": "^19.2.0",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "^5.1.4",
-    "jsdom": "^28.1.0",
-    "prettier": "^3.8.1",
-    "typescript": "^5.7.2",
+    "jsdom": "catalog:",
+    "prettier": "catalog:",
+    "typescript": "catalog:",
     "vite": "^7.3.1",
-    "vite-tsconfig-paths": "^5.1.4",
+    "vite-tsconfig-paths": "catalog:",
     "vitest": "^3.0.5"
   }
 }

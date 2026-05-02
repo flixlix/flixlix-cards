@@ -13,19 +13,19 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@next/eslint-plugin-next": "^16.2.0",
-    "@typescript-eslint/eslint-plugin": "^8.58.1",
-    "@typescript-eslint/parser": "^8.58.1",
-    "eslint-config-prettier": "^9.1.0",
+    "@typescript-eslint/eslint-plugin": "catalog:packages",
+    "@typescript-eslint/parser": "catalog:packages",
+    "eslint-config-prettier": "catalog:packages",
     "eslint-config-turbo": "^2.0.0",
-    "eslint-plugin-lit": "^2.2.1",
+    "eslint-plugin-lit": "catalog:packages",
     "eslint-plugin-only-warn": "^1.1.0",
     "eslint-plugin-prettier": "^5.5.5",
     "eslint-plugin-turbo": "^2.9.5",
-    "eslint-plugin-wc": "^3.1.0",
+    "eslint-plugin-wc": "catalog:packages",
     "typescript-eslint": "^8.58.1"
   },
   "peerDependencies": {
-    "eslint": "^10.2.0",
-    "typescript": "^6.0.2"
+    "eslint": "catalog:packages",
+    "typescript": "catalog:"
   }
 }
