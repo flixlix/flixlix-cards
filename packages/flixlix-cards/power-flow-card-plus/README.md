@@ -8,6 +8,16 @@
 
 ![2023-03-26-13-04-07](https://user-images.githubusercontent.com/61006057/227771568-78497ecc-e863-46f2-b29e-e15c7c20a154.gif)
 
+> [!TIP]
+> 📖 **Full documentation: [cards.flixlix.com/power-flow-card-plus](https://cards.flixlix.com/power-flow-card-plus)**
+>
+> The docs site has the complete configuration reference, an interactive configurator with copy-pasteable YAML, and ready-made examples — much easier to navigate than this README.
+>
+> - [Installation](https://cards.flixlix.com/power-flow-card-plus/installation)
+> - [Configuration reference](https://cards.flixlix.com/power-flow-card-plus/configuration)
+> - [Interactive configurator](https://cards.flixlix.com/power-flow-card-plus/configurator)
+> - [Examples](https://cards.flixlix.com/power-flow-card-plus/examples)
+
 > [!NOTE]
 > This card is distributed via [flixlix/power-flow-card-plus](https://github.com/flixlix/power-flow-card-plus), but the source code lives in the monorepo at [flixlix/flixlix-cards](https://github.com/flixlix/flixlix-cards). Issues and feature requests will be tracked there going forward.
 
@@ -96,8 +106,11 @@ Else, if you prefer the graphical editor, use the menu to add the resource:
 
 ## Usage
 
+> [!IMPORTANT]
+> The reference below is kept for offline reading. The **canonical, easier-to-navigate version is at [cards.flixlix.com/power-flow-card-plus/configuration](https://cards.flixlix.com/power-flow-card-plus/configuration)** — with grouped options, an interactive configurator, and copy-pasteable examples.
+
 > [!WARNING]  
-> This card offers a **LOT** of configuration options. Don't worry, if you want your card's appearance to match the oficial Energy Flow Card, you will only need to setup the entities. The rest of the options only enable further customization. If this is your goal, please go to [Minimal Configuration](#minimal-configuration)
+> This card offers a **LOT** of configuration options. Don't worry, if you want your card's appearance to match the oficial Energy Flow Card, you will only need to setup the entities. The rest of the options only enable further customization. If this is your goal, please go to [Minimal Configuration](#minimal-configuration) or the [Examples page](https://cards.flixlix.com/power-flow-card-plus/examples) on the docs site.
 
 ### Options
 
