@@ -16,8 +16,9 @@
     "format:check": "prettier --check . --ignore-path ../../.prettierignore"
   },
   "dependencies": {
-    "@flixlix-cards/ui": "workspace:*",
+    "@flixlix-cards/cn": "workspace:*",
     "@flixlix-cards/shared": "workspace:*",
+    "@flixlix-cards/ui": "workspace:*",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-devtools": "latest",
     "@tanstack/react-router": "latest",
@@ -25,6 +26,7 @@
     "@tanstack/react-router-ssr-query": "latest",
     "@tanstack/react-start": "latest",
     "@tanstack/router-plugin": "^1.132.0",
+    "@vercel/analytics": "^2.0.1",
     "lucide-react": "catalog:",
     "nitro": "3.0.260311-beta",
     "power-flow-card-plus": "workspace:*",

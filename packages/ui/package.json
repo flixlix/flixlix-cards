@@ -17,6 +17,7 @@
     "@radix-ui/react-slot": "^1.1.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "catalog:packages",
+    "cmdk": "^1.1.1",
     "embla-carousel-react": "^8.6.0",
     "lucide-react": "catalog:",
     "motion": "^12.6.2",
@@ -37,6 +38,7 @@
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "shadcn": "^4.6.0",
     "tailwindcss": "catalog:",
     "typescript": "catalog:"
   },
