@@ -2,6 +2,9 @@
 
 Thanks for your interest in contributing to the `flixlix-cards` monorepo! This repository contains multiple Home Assistant cards.
 
+> [!TIP]
+> The same guide with nicer formatting (and screenshots) lives at **[cards.flixlix.com/contributing](https://cards.flixlix.com/contributing)**.
+
 ## Requirements
 
 - **Node.js** (LTS recommended): [Download](https://nodejs.org/en/download)
