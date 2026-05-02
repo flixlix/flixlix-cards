@@ -1,7 +1,7 @@
 import { TanStackDevtools } from "@tanstack/react-devtools";
 import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
-import { Analytics } from "@vercel/analytics/next";
+import { Analytics } from "@vercel/analytics/react";
 
 import { TooltipProvider } from "@flixlix-cards/ui/components/tooltip";
 import globalsCss from "@flixlix-cards/ui/globals.css?url";
