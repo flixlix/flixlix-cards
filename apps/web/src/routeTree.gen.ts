@@ -9,50 +9,279 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as DocsRouteImport } from './routes/_docs'
+import { Route as DocsIndexRouteImport } from './routes/_docs/index'
+import { Route as DocsContributingRouteImport } from './routes/_docs/contributing'
+import { Route as DocsPowerFlowCardPlusIndexRouteImport } from './routes/_docs/power-flow-card-plus/index'
+import { Route as DocsEnergyFlowCardPlusIndexRouteImport } from './routes/_docs/energy-flow-card-plus/index'
+import { Route as DocsPowerFlowCardPlusInstallationRouteImport } from './routes/_docs/power-flow-card-plus/installation'
+import { Route as DocsPowerFlowCardPlusExamplesRouteImport } from './routes/_docs/power-flow-card-plus/examples'
+import { Route as DocsPowerFlowCardPlusConfigurationRouteImport } from './routes/_docs/power-flow-card-plus/configuration'
+import { Route as DocsEnergyFlowCardPlusInstallationRouteImport } from './routes/_docs/energy-flow-card-plus/installation'
+import { Route as DocsEnergyFlowCardPlusExamplesRouteImport } from './routes/_docs/energy-flow-card-plus/examples'
+import { Route as DocsEnergyFlowCardPlusConfigurationRouteImport } from './routes/_docs/energy-flow-card-plus/configuration'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const DocsRoute = DocsRouteImport.update({
+  id: '/_docs',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DocsIndexRoute = DocsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DocsRoute,
+} as any)
+const DocsContributingRoute = DocsContributingRouteImport.update({
+  id: '/contributing',
+  path: '/contributing',
+  getParentRoute: () => DocsRoute,
+} as any)
+const DocsPowerFlowCardPlusIndexRoute =
+  DocsPowerFlowCardPlusIndexRouteImport.update({
+    id: '/power-flow-card-plus/',
+    path: '/power-flow-card-plus/',
+    getParentRoute: () => DocsRoute,
+  } as any)
+const DocsEnergyFlowCardPlusIndexRoute =
+  DocsEnergyFlowCardPlusIndexRouteImport.update({
+    id: '/energy-flow-card-plus/',
+    path: '/energy-flow-card-plus/',
+    getParentRoute: () => DocsRoute,
+  } as any)
+const DocsPowerFlowCardPlusInstallationRoute =
+  DocsPowerFlowCardPlusInstallationRouteImport.update({
+    id: '/power-flow-card-plus/installation',
+    path: '/power-flow-card-plus/installation',
+    getParentRoute: () => DocsRoute,
+  } as any)
+const DocsPowerFlowCardPlusExamplesRoute =
+  DocsPowerFlowCardPlusExamplesRouteImport.update({
+    id: '/power-flow-card-plus/examples',
+    path: '/power-flow-card-plus/examples',
+    getParentRoute: () => DocsRoute,
+  } as any)
+const DocsPowerFlowCardPlusConfigurationRoute =
+  DocsPowerFlowCardPlusConfigurationRouteImport.update({
+    id: '/power-flow-card-plus/configuration',
+    path: '/power-flow-card-plus/configuration',
+    getParentRoute: () => DocsRoute,
+  } as any)
+const DocsEnergyFlowCardPlusInstallationRoute =
+  DocsEnergyFlowCardPlusInstallationRouteImport.update({
+    id: '/energy-flow-card-plus/installation',
+    path: '/energy-flow-card-plus/installation',
+    getParentRoute: () => DocsRoute,
+  } as any)
+const DocsEnergyFlowCardPlusExamplesRoute =
+  DocsEnergyFlowCardPlusExamplesRouteImport.update({
+    id: '/energy-flow-card-plus/examples',
+    path: '/energy-flow-card-plus/examples',
+    getParentRoute: () => DocsRoute,
+  } as any)
+const DocsEnergyFlowCardPlusConfigurationRoute =
+  DocsEnergyFlowCardPlusConfigurationRouteImport.update({
+    id: '/energy-flow-card-plus/configuration',
+    path: '/energy-flow-card-plus/configuration',
+    getParentRoute: () => DocsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '/': typeof DocsIndexRoute
+  '/contributing': typeof DocsContributingRoute
+  '/energy-flow-card-plus/configuration': typeof DocsEnergyFlowCardPlusConfigurationRoute
+  '/energy-flow-card-plus/examples': typeof DocsEnergyFlowCardPlusExamplesRoute
+  '/energy-flow-card-plus/installation': typeof DocsEnergyFlowCardPlusInstallationRoute
+  '/power-flow-card-plus/configuration': typeof DocsPowerFlowCardPlusConfigurationRoute
+  '/power-flow-card-plus/examples': typeof DocsPowerFlowCardPlusExamplesRoute
+  '/power-flow-card-plus/installation': typeof DocsPowerFlowCardPlusInstallationRoute
+  '/energy-flow-card-plus/': typeof DocsEnergyFlowCardPlusIndexRoute
+  '/power-flow-card-plus/': typeof DocsPowerFlowCardPlusIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
+  '/contributing': typeof DocsContributingRoute
+  '/': typeof DocsIndexRoute
+  '/energy-flow-card-plus/configuration': typeof DocsEnergyFlowCardPlusConfigurationRoute
+  '/energy-flow-card-plus/examples': typeof DocsEnergyFlowCardPlusExamplesRoute
+  '/energy-flow-card-plus/installation': typeof DocsEnergyFlowCardPlusInstallationRoute
+  '/power-flow-card-plus/configuration': typeof DocsPowerFlowCardPlusConfigurationRoute
+  '/power-flow-card-plus/examples': typeof DocsPowerFlowCardPlusExamplesRoute
+  '/power-flow-card-plus/installation': typeof DocsPowerFlowCardPlusInstallationRoute
+  '/energy-flow-card-plus': typeof DocsEnergyFlowCardPlusIndexRoute
+  '/power-flow-card-plus': typeof DocsPowerFlowCardPlusIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
+  '/_docs': typeof DocsRouteWithChildren
+  '/_docs/contributing': typeof DocsContributingRoute
+  '/_docs/': typeof DocsIndexRoute
+  '/_docs/energy-flow-card-plus/configuration': typeof DocsEnergyFlowCardPlusConfigurationRoute
+  '/_docs/energy-flow-card-plus/examples': typeof DocsEnergyFlowCardPlusExamplesRoute
+  '/_docs/energy-flow-card-plus/installation': typeof DocsEnergyFlowCardPlusInstallationRoute
+  '/_docs/power-flow-card-plus/configuration': typeof DocsPowerFlowCardPlusConfigurationRoute
+  '/_docs/power-flow-card-plus/examples': typeof DocsPowerFlowCardPlusExamplesRoute
+  '/_docs/power-flow-card-plus/installation': typeof DocsPowerFlowCardPlusInstallationRoute
+  '/_docs/energy-flow-card-plus/': typeof DocsEnergyFlowCardPlusIndexRoute
+  '/_docs/power-flow-card-plus/': typeof DocsPowerFlowCardPlusIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/contributing'
+    | '/energy-flow-card-plus/configuration'
+    | '/energy-flow-card-plus/examples'
+    | '/energy-flow-card-plus/installation'
+    | '/power-flow-card-plus/configuration'
+    | '/power-flow-card-plus/examples'
+    | '/power-flow-card-plus/installation'
+    | '/energy-flow-card-plus/'
+    | '/power-flow-card-plus/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/contributing'
+    | '/'
+    | '/energy-flow-card-plus/configuration'
+    | '/energy-flow-card-plus/examples'
+    | '/energy-flow-card-plus/installation'
+    | '/power-flow-card-plus/configuration'
+    | '/power-flow-card-plus/examples'
+    | '/power-flow-card-plus/installation'
+    | '/energy-flow-card-plus'
+    | '/power-flow-card-plus'
+  id:
+    | '__root__'
+    | '/_docs'
+    | '/_docs/contributing'
+    | '/_docs/'
+    | '/_docs/energy-flow-card-plus/configuration'
+    | '/_docs/energy-flow-card-plus/examples'
+    | '/_docs/energy-flow-card-plus/installation'
+    | '/_docs/power-flow-card-plus/configuration'
+    | '/_docs/power-flow-card-plus/examples'
+    | '/_docs/power-flow-card-plus/installation'
+    | '/_docs/energy-flow-card-plus/'
+    | '/_docs/power-flow-card-plus/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
+  DocsRoute: typeof DocsRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
+    '/_docs': {
+      id: '/_docs'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof DocsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_docs/': {
+      id: '/_docs/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof DocsIndexRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/_docs/contributing': {
+      id: '/_docs/contributing'
+      path: '/contributing'
+      fullPath: '/contributing'
+      preLoaderRoute: typeof DocsContributingRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/_docs/power-flow-card-plus/': {
+      id: '/_docs/power-flow-card-plus/'
+      path: '/power-flow-card-plus'
+      fullPath: '/power-flow-card-plus/'
+      preLoaderRoute: typeof DocsPowerFlowCardPlusIndexRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/_docs/energy-flow-card-plus/': {
+      id: '/_docs/energy-flow-card-plus/'
+      path: '/energy-flow-card-plus'
+      fullPath: '/energy-flow-card-plus/'
+      preLoaderRoute: typeof DocsEnergyFlowCardPlusIndexRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/_docs/power-flow-card-plus/installation': {
+      id: '/_docs/power-flow-card-plus/installation'
+      path: '/power-flow-card-plus/installation'
+      fullPath: '/power-flow-card-plus/installation'
+      preLoaderRoute: typeof DocsPowerFlowCardPlusInstallationRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/_docs/power-flow-card-plus/examples': {
+      id: '/_docs/power-flow-card-plus/examples'
+      path: '/power-flow-card-plus/examples'
+      fullPath: '/power-flow-card-plus/examples'
+      preLoaderRoute: typeof DocsPowerFlowCardPlusExamplesRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/_docs/power-flow-card-plus/configuration': {
+      id: '/_docs/power-flow-card-plus/configuration'
+      path: '/power-flow-card-plus/configuration'
+      fullPath: '/power-flow-card-plus/configuration'
+      preLoaderRoute: typeof DocsPowerFlowCardPlusConfigurationRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/_docs/energy-flow-card-plus/installation': {
+      id: '/_docs/energy-flow-card-plus/installation'
+      path: '/energy-flow-card-plus/installation'
+      fullPath: '/energy-flow-card-plus/installation'
+      preLoaderRoute: typeof DocsEnergyFlowCardPlusInstallationRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/_docs/energy-flow-card-plus/examples': {
+      id: '/_docs/energy-flow-card-plus/examples'
+      path: '/energy-flow-card-plus/examples'
+      fullPath: '/energy-flow-card-plus/examples'
+      preLoaderRoute: typeof DocsEnergyFlowCardPlusExamplesRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/_docs/energy-flow-card-plus/configuration': {
+      id: '/_docs/energy-flow-card-plus/configuration'
+      path: '/energy-flow-card-plus/configuration'
+      fullPath: '/energy-flow-card-plus/configuration'
+      preLoaderRoute: typeof DocsEnergyFlowCardPlusConfigurationRouteImport
+      parentRoute: typeof DocsRoute
     }
   }
 }
 
+interface DocsRouteChildren {
+  DocsContributingRoute: typeof DocsContributingRoute
+  DocsIndexRoute: typeof DocsIndexRoute
+  DocsEnergyFlowCardPlusConfigurationRoute: typeof DocsEnergyFlowCardPlusConfigurationRoute
+  DocsEnergyFlowCardPlusExamplesRoute: typeof DocsEnergyFlowCardPlusExamplesRoute
+  DocsEnergyFlowCardPlusInstallationRoute: typeof DocsEnergyFlowCardPlusInstallationRoute
+  DocsPowerFlowCardPlusConfigurationRoute: typeof DocsPowerFlowCardPlusConfigurationRoute
+  DocsPowerFlowCardPlusExamplesRoute: typeof DocsPowerFlowCardPlusExamplesRoute
+  DocsPowerFlowCardPlusInstallationRoute: typeof DocsPowerFlowCardPlusInstallationRoute
+  DocsEnergyFlowCardPlusIndexRoute: typeof DocsEnergyFlowCardPlusIndexRoute
+  DocsPowerFlowCardPlusIndexRoute: typeof DocsPowerFlowCardPlusIndexRoute
+}
+
+const DocsRouteChildren: DocsRouteChildren = {
+  DocsContributingRoute: DocsContributingRoute,
+  DocsIndexRoute: DocsIndexRoute,
+  DocsEnergyFlowCardPlusConfigurationRoute:
+    DocsEnergyFlowCardPlusConfigurationRoute,
+  DocsEnergyFlowCardPlusExamplesRoute: DocsEnergyFlowCardPlusExamplesRoute,
+  DocsEnergyFlowCardPlusInstallationRoute:
+    DocsEnergyFlowCardPlusInstallationRoute,
+  DocsPowerFlowCardPlusConfigurationRoute:
+    DocsPowerFlowCardPlusConfigurationRoute,
+  DocsPowerFlowCardPlusExamplesRoute: DocsPowerFlowCardPlusExamplesRoute,
+  DocsPowerFlowCardPlusInstallationRoute:
+    DocsPowerFlowCardPlusInstallationRoute,
+  DocsEnergyFlowCardPlusIndexRoute: DocsEnergyFlowCardPlusIndexRoute,
+  DocsPowerFlowCardPlusIndexRoute: DocsPowerFlowCardPlusIndexRoute,
+}
+
+const DocsRouteWithChildren = DocsRoute._addFileChildren(DocsRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
+  DocsRoute: DocsRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
