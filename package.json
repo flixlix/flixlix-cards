@@ -25,7 +25,7 @@
     "eslint": "catalog:packages",
     "prettier": "catalog:",
     "prettier-plugin-embed": "catalog:packages",
-    "turbo": "^2.9.5"
+    "turbo": "^2.9.7"
   },
   "packageManager": "pnpm@10.33.0",
   "engines": {
@@ -39,6 +39,10 @@
     "onlyBuiltDependencies": [
       "esbuild",
       "lightningcss"
+    ],
+    "ignoredBuiltDependencies": [
+      "msw",
+      "unrs-resolver"
     ]
   }
 }
