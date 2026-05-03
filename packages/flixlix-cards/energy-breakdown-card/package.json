@@ -1,7 +1,7 @@
 {
   "name": "energy-breakdown-card",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "description": "An energy breakdown chart (donut or bar) for Home Assistant",
   "keywords": [
