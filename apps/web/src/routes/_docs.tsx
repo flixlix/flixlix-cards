@@ -26,6 +26,7 @@ export const Route = createFileRoute("/_docs")({
 const SECTION_LABELS: Record<string, string> = {
   "power-flow-card-plus": "Power Flow Card Plus",
   "energy-flow-card-plus": "Energy Flow Card Plus",
+  "energy-breakdown-card": "Energy Breakdown Card",
   contributing: "How to contribute",
   installation: "Installation",
   configuration: "Configuration",

@@ -6,7 +6,7 @@ export type SearchEntry = {
   to: string;
   /** Breadcrumb shown to the right of the title. */
   breadcrumb: string;
-  card?: "power" | "energy" | "general";
+  card?: "power" | "energy" | "breakdown" | "general";
   type: "page" | "section" | "option" | "example";
   /** Extra strings used for matching but not shown. */
   keywords?: string[];
@@ -14,6 +14,8 @@ export type SearchEntry = {
 
 const POWER = "Power Flow Card Plus";
 const ENERGY = "Energy Flow Card Plus";
+const BREAKDOWN = "Energy Breakdown Card";
+const BREAKDOWN_BASE = "/energy-breakdown-card" as const;
 
 const PAGES: SearchEntry[] = [
   {
@@ -257,6 +259,151 @@ function exampleEntries(
   return items;
 }
 
+function breakdownPages(): SearchEntry[] {
+  return [
+    {
+      title: "Overview",
+      description: `What ${BREAKDOWN} is and what it can do.`,
+      to: BREAKDOWN_BASE,
+      breadcrumb: BREAKDOWN,
+      card: "breakdown",
+      type: "page",
+      keywords: ["intro", "scope", "highlights", "donut", "bar", "chart"],
+    },
+    {
+      title: "Installation",
+      description: "HACS custom repository and manual installation instructions.",
+      to: `${BREAKDOWN_BASE}/installation`,
+      breadcrumb: BREAKDOWN,
+      card: "breakdown",
+      type: "page",
+      keywords: ["hacs", "custom repository", "install", "resource", "lovelace"],
+    },
+    {
+      title: "Configuration",
+      description: "Full reference of every option.",
+      to: `${BREAKDOWN_BASE}/configuration`,
+      breadcrumb: BREAKDOWN,
+      card: "breakdown",
+      type: "page",
+      keywords: ["yaml", "options", "reference"],
+    },
+    {
+      title: "Examples",
+      description: "Copy-pastable configs for common setups.",
+      to: `${BREAKDOWN_BASE}/examples`,
+      breadcrumb: BREAKDOWN,
+      card: "breakdown",
+      type: "page",
+      keywords: ["yaml", "snippet", "minimal"],
+    },
+  ];
+}
+
+function breakdownConfigSections(): SearchEntry[] {
+  const make = (
+    id: string,
+    title: string,
+    description: string,
+    keywords?: string[]
+  ): SearchEntry => ({
+    title,
+    description,
+    to: `${BREAKDOWN_BASE}/configuration#${id}`,
+    breadcrumb: `${BREAKDOWN} → Configuration`,
+    card: "breakdown",
+    type: "section",
+    keywords,
+  });
+  return [
+    make("card-options", "Card options", "Type, title, chart variant, and entities."),
+    make("display", "Legend & tooltip", "Toggle and position the legend, tooltip, total, icons."),
+    make("data", "Data shaping", "Sort, group, decimals, and unit handling.", [
+      "max_items",
+      "group_others",
+    ]),
+    make("appearance", "Chart appearance", "Donut/bar thickness and corner radius."),
+    make(
+      "energy-dashboard",
+      "Energy dashboard sync",
+      "Bind the card to the energy dashboard's selected period.",
+      ["energy_date_selection", "collection_key"]
+    ),
+    make("entity-options", "Entity options", "Per-entity name, color, icon, multiplier, actions."),
+    make("actions", "Actions", "tap_action, hold_action, double_tap_action."),
+  ];
+}
+
+function breakdownConfigOptions(): SearchEntry[] {
+  const make = (
+    name: string,
+    description: string,
+    sectionId = "card-options",
+    extraKeywords?: string[]
+  ): SearchEntry => ({
+    title: name,
+    description,
+    to: `${BREAKDOWN_BASE}/configuration#${sectionId}`,
+    breadcrumb: `${BREAKDOWN} → Configuration`,
+    card: "breakdown",
+    type: "option",
+    keywords: extraKeywords,
+  });
+  return [
+    make("type", "Card type identifier (required)."),
+    make("entities", "Array of energy sources to display (required).", "entity-options"),
+    make("title", "Optional card title."),
+    make("chart_type", "Visual variant: bar or donut.", "card-options", ["donut", "bar"]),
+    make("show_legend", "Show or hide the legend.", "display"),
+    make("legend_position", "bottom or right (donut only).", "display"),
+    make("show_tooltip", "Show tooltip on hover/tap.", "display"),
+    make("show_total", "Show total in donut center / bar header.", "display"),
+    make("show_legend_value", "Show formatted value in each legend row.", "display"),
+    make("show_legend_percentage", "Show percentage in each legend row.", "display"),
+    make("show_icons", "Show entity icons in the legend.", "display"),
+    make("sort", "Sort segments by value, descending.", "data"),
+    make("max_items", "Show only the top N largest sources.", "data"),
+    make("group_others", "Bundle remaining entities into an 'Other' segment.", "data"),
+    make("decimals", "Default decimals for formatted values.", "data"),
+    make("unit_of_measurement", "Fallback unit for entities without a unit.", "data"),
+    make("donut_thickness", "Donut ring thickness in px.", "appearance"),
+    make("bar_thickness", "Bar height in px.", "appearance"),
+    make("section_radius", "Corner radius for chart segments.", "appearance"),
+    make(
+      "energy_date_selection",
+      "Use statistics growth for the energy dashboard's selected period.",
+      "energy-dashboard"
+    ),
+    make("collection_key", "Bind to a specific energy collection.", "energy-dashboard"),
+    make("color", "Per-entity color override.", "entity-options"),
+    make("icon", "Per-entity MDI icon.", "entity-options"),
+    make("name", "Per-entity name override.", "entity-options"),
+    make("multiplier", "Multiply the raw value (e.g. Wh → kWh).", "entity-options"),
+    make("tap_action", "Action triggered on tap.", "actions"),
+    make("hold_action", "Action triggered on long press.", "actions"),
+    make("double_tap_action", "Action triggered on double tap.", "actions"),
+  ];
+}
+
+function breakdownExamples(): SearchEntry[] {
+  const make = (id: string, title: string, description: string): SearchEntry => ({
+    title,
+    description,
+    to: `${BREAKDOWN_BASE}/examples#${id}`,
+    breadcrumb: `${BREAKDOWN} → Examples`,
+    card: "breakdown",
+    type: "example",
+  });
+  return [
+    make("minimal", "Minimal (bar)", "Smallest config — just a list of entities."),
+    make("donut", "Donut with right legend", "Donut variant with custom colors."),
+    make("grouped-others", "Top sources with Other", "max_items + group_others."),
+    make("energy-dashboard", "Sync to energy dashboard period", "energy_date_selection: true."),
+    make("multi-dashboard", "Multiple energy dashboards", "Use collection_key to pick one."),
+    make("full-config", "Mix & match", "Reference config showing many options."),
+  ];
+}
+
 const CONTRIBUTING_SECTIONS: SearchEntry[] = [
   {
     title: "Prerequisites",
@@ -335,12 +482,16 @@ export const SEARCH_ENTRIES: SearchEntry[] = [
   ...PAGES,
   ...cardPages("power", "/power-flow-card-plus", POWER),
   ...cardPages("energy", "/energy-flow-card-plus", ENERGY),
+  ...breakdownPages(),
   ...configSections("power", "/power-flow-card-plus", POWER),
   ...configSections("energy", "/energy-flow-card-plus", ENERGY),
+  ...breakdownConfigSections(),
   ...configOptions("power", "/power-flow-card-plus", POWER),
   ...configOptions("energy", "/energy-flow-card-plus", ENERGY),
+  ...breakdownConfigOptions(),
   ...exampleEntries("power", "/power-flow-card-plus", POWER),
   ...exampleEntries("energy", "/energy-flow-card-plus", ENERGY),
+  ...breakdownExamples(),
   ...CONTRIBUTING_SECTIONS,
 ];
 
@@ -420,8 +571,10 @@ export const SUGGESTED_GROUPS: SuggestionGroup[] = [
       (e) => e.to === "/",
       (e) => e.to === "/power-flow-card-plus" && e.type === "page",
       (e) => e.to === "/energy-flow-card-plus" && e.type === "page",
+      (e) => e.to === "/energy-breakdown-card" && e.type === "page",
       (e) => e.to === "/power-flow-card-plus/installation",
       (e) => e.to === "/energy-flow-card-plus/installation",
+      (e) => e.to === "/energy-breakdown-card/installation",
     ]),
   },
   {

@@ -135,6 +135,7 @@ function ContributingPage() {
 │  ├─ flixlix-cards/
 │  │  ├─ power-flow-card-plus/
 │  │  └─ energy-flow-card-plus/
+│  │  └─ energy-breakdown-card/
 │  ├─ shared/                   # shared utilities & i18n
 │  ├─ ui/                       # shadcn-style UI primitives
 │  └─ tooling/                  # eslint, prettier, tsconfig presets

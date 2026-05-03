@@ -58,6 +58,16 @@ const SECTIONS: DocSection[] = [
       { label: "Examples", to: "/energy-flow-card-plus/examples" },
     ],
   },
+  {
+    label: "Energy Breakdown Card",
+    to: "/energy-breakdown-card",
+    items: [
+      { label: "Overview", to: "/energy-breakdown-card" },
+      { label: "Installation", to: "/energy-breakdown-card/installation" },
+      { label: "Configuration", to: "/energy-breakdown-card/configuration" },
+      { label: "Examples", to: "/energy-breakdown-card/examples" },
+    ],
+  },
 ];
 
 const SECTION_ICONS_FOR_LABEL: Record<string, React.ComponentType<{ className?: string }>> = {
