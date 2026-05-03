@@ -42,6 +42,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     <html lang="en" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        <script defer src="https://assets.onedollarstats.com/stonks.js"></script>
         <HeadContent />
       </head>
       <body className="font-sans antialiased wrap-anywhere selection:bg-orange-300/50">
