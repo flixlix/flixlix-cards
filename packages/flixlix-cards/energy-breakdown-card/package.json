@@ -1,0 +1,88 @@
+{
+  "name": "energy-breakdown-card",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "An energy breakdown chart (donut or bar) for Home Assistant",
+  "keywords": [
+    "home-assistant",
+    "homeassistant",
+    "hass",
+    "dashboard",
+    "custom-cards",
+    "energy",
+    "breakdown",
+    "donut",
+    "bar",
+    "mushroom"
+  ],
+  "main": "./dist/energy-breakdown-card.js",
+  "exports": {
+    ".": "./dist/energy-breakdown-card.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/flixlix/flixlix-cards.git"
+  },
+  "author": "flixlix",
+  "bugs": {
+    "url": "https://github.com/flixlix/flixlix-cards/issues"
+  },
+  "homepage": "https://github.com/flixlix/flixlix-cards#readme",
+  "scripts": {
+    "build": "pnpm dlx rollup -c",
+    "lint": "eslint \"src/**/*.{ts,tsx}\"",
+    "release": "pnpm build && pnpm changeset tag",
+    "clean": "rimraf dist node_modules",
+    "start": "rollup -wc",
+    "dev": "rollup -c --watch",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write . --ignore-path ../../../.prettierignore",
+    "format:check": "prettier --check . --ignore-path ../../../.prettierignore",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "precommit": "pnpm typecheck && pnpm format:check && pnpm test && pnpm lint"
+  },
+  "dependencies": {
+    "@flixlix-cards/shared": "workspace:*",
+    "@mdi/js": "catalog:packages",
+    "custom-card-helpers": "catalog:packages",
+    "home-assistant-js-websocket": "catalog:packages",
+    "lit": "catalog:packages",
+    "lit-element": "catalog:packages",
+    "lit-html": "catalog:packages",
+    "memoize-one": "catalog:packages",
+    "superstruct": "catalog:packages"
+  },
+  "devDependencies": {
+    "@babel/core": "catalog:packages",
+    "@babel/preset-env": "catalog:packages",
+    "@babel/preset-typescript": "catalog:packages",
+    "@flixlix-cards/bundler": "workspace:*",
+    "@flixlix-cards/eslint-config": "workspace:*",
+    "@flixlix-cards/prettier-config": "workspace:*",
+    "@flixlix-cards/testing": "workspace:*",
+    "@flixlix-cards/typescript-config": "workspace:*",
+    "@rollup/plugin-babel": "catalog:packages",
+    "@rollup/plugin-commonjs": "catalog:packages",
+    "@rollup/plugin-json": "catalog:packages",
+    "@rollup/plugin-node-resolve": "catalog:packages",
+    "@rollup/plugin-terser": "catalog:packages",
+    "@rollup/plugin-typescript": "catalog:packages",
+    "@types/node": "catalog:",
+    "@typescript-eslint/eslint-plugin": "catalog:packages",
+    "@typescript-eslint/parser": "catalog:packages",
+    "eslint": "catalog:packages",
+    "eslint-config-prettier": "catalog:packages",
+    "eslint-plugin-lit": "catalog:packages",
+    "eslint-plugin-wc": "catalog:packages",
+    "prettier": "catalog:",
+    "rollup": "catalog:packages",
+    "rollup-plugin-minify-html-literals": "catalog:packages",
+    "rollup-plugin-serve": "catalog:packages",
+    "typescript": "catalog:",
+    "vite-tsconfig-paths": "catalog:",
+    "vitest": "catalog:packages"
+  },
+  "packageManager": "pnpm@10.33.0"
+}

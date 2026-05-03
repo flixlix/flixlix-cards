@@ -20,12 +20,13 @@ function IndexPage() {
     <>
       <PageHeader
         eyebrow="flixlix-cards"
-        title="Beautiful flow cards for Home Assistant"
+        title="Beautiful energy cards for Home Assistant"
         description={
           <>
-            Customizable Power and Energy flow cards that visualize the live distribution between
-            grid, solar, battery, home, and individual devices in your dashboard. This site
-            documents how to install, configure, and contribute to each card.
+            Customizable Lovelace cards for visualizing the energy story in your home — animated
+            flow diagrams between grid, solar, battery and devices, plus a dedicated breakdown chart
+            for proportional consumption. This site documents how to install, configure, and
+            contribute to each card.
           </>
         }
         badges={[{ label: "HACS" }, { label: "Home Assistant" }, { label: "Open source" }]}
@@ -48,7 +49,7 @@ function IndexPage() {
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card className="overflow-hidden pt-0!">
           <div className="bg-muted/50 border-b">
             <video
