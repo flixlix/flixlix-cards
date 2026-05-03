@@ -1,5 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { ArrowRight, Github, Sparkles, Zap } from "lucide-react";
+import { ArrowRight, ChartPie, Github, Sparkles, Zap } from "lucide-react";
 
 import { PageHeader } from "@/components/docs/doc-primitives";
 import { Button } from "@flixlix-cards/ui/components/button";
@@ -119,6 +119,40 @@ function IndexPage() {
             </ul>
             <Button asChild size="sm" variant="outline" className="w-fit">
               <Link to="/energy-flow-card-plus">
+                Read the docs <ArrowRight className="size-3.5" />
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden pt-0!">
+          <div className="bg-muted/50 flex h-44 items-center justify-center border-b">
+            <img
+              src="/images/energy-breakdown-demo.png"
+              alt="Energy Breakdown Card"
+              className="h-full max-w-60 w-full object-contain"
+            />
+          </div>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ChartPie className="size-5" /> Energy Breakdown Card
+            </CardTitle>
+            <CardDescription>
+              Visualizes how your energy use is <strong>broken down</strong> across sources, as a
+              donut or stacked bar. Pairs well with the energy dashboard's selected period.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-muted-foreground space-y-3 text-sm leading-relaxed">
+            <ul className="list-disc space-y-1 pl-5">
+              <li>Donut and stacked-bar variants</li>
+              <li>Optional legend with values & percentages</li>
+              <li>
+                <code>group_others</code> + <code>max_items</code> to keep things tidy
+              </li>
+              <li>Custom HACS repository (not yet in the default index)</li>
+            </ul>
+            <Button asChild size="sm" variant="outline" className="w-fit">
+              <Link to="/energy-breakdown-card">
                 Read the docs <ArrowRight className="size-3.5" />
               </Link>
             </Button>
