@@ -12,9 +12,9 @@
     "./react": "./react.js"
   },
   "dependencies": {
-    "prettier-plugin-organize-imports": ">=4.1.0",
-    "prettier-plugin-tailwindcss": ">=0.6.11",
-    "prettier-plugin-embed": "catalog:packages"
+    "prettier-plugin-embed": "catalog:packages",
+    "prettier-plugin-organize-imports": "^4.3.0",
+    "prettier-plugin-tailwindcss": "^0.8.0"
   },
   "devDependencies": {
     "prettier": "catalog:"
