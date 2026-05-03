@@ -72,14 +72,14 @@ function IndexPage() {
               dashboards where you want to see what is flowing right now.
             </CardDescription>
           </CardHeader>
-          <CardContent className="text-muted-foreground space-y-3 text-sm leading-relaxed">
+          <CardContent className="text-muted-foreground flex flex-1 flex-col gap-y-3 text-sm leading-relaxed">
             <ul className="list-disc space-y-1 pl-5">
               <li>UI editor & YAML support</li>
               <li>Up to 4 individual devices</li>
               <li>Bidirectional grid &amp; battery flows</li>
               <li>Power outage handling and templates</li>
             </ul>
-            <Button asChild size="sm" variant="outline" className="w-fit">
+            <Button asChild size="sm" variant="outline" className="w-fit mt-auto">
               <Link to="/power-flow-card-plus">
                 Read the docs <ArrowRight className="size-3.5" />
               </Link>
@@ -109,7 +109,7 @@ function IndexPage() {
               dashboard period (today, week, custom range, etc.).
             </CardDescription>
           </CardHeader>
-          <CardContent className="text-muted-foreground space-y-3 text-sm leading-relaxed">
+          <CardContent className="text-muted-foreground flex flex-1 flex-col gap-y-3 text-sm leading-relaxed">
             <ul className="list-disc space-y-1 pl-5">
               <li>Binds to Home Assistant energy collections</li>
               <li>Same flexible config style as Power Flow</li>
@@ -118,7 +118,7 @@ function IndexPage() {
               </li>
               <li>Translatable labels in 14+ languages</li>
             </ul>
-            <Button asChild size="sm" variant="outline" className="w-fit">
+            <Button asChild size="sm" variant="outline" className="w-fit mt-auto">
               <Link to="/energy-flow-card-plus">
                 Read the docs <ArrowRight className="size-3.5" />
               </Link>
@@ -143,7 +143,7 @@ function IndexPage() {
               donut or stacked bar. Pairs well with the energy dashboard's selected period.
             </CardDescription>
           </CardHeader>
-          <CardContent className="text-muted-foreground space-y-3 text-sm leading-relaxed">
+          <CardContent className="text-muted-foreground flex flex-1 flex-col gap-y-3 text-sm leading-relaxed">
             <ul className="list-disc space-y-1 pl-5">
               <li>Donut and stacked-bar variants</li>
               <li>Optional legend with values & percentages</li>
@@ -152,7 +152,7 @@ function IndexPage() {
               </li>
               <li>Custom HACS repository (not yet in the default index)</li>
             </ul>
-            <Button asChild size="sm" variant="outline" className="w-fit">
+            <Button asChild size="sm" variant="outline" className="w-fit mt-auto">
               <Link to="/energy-breakdown-card">
                 Read the docs <ArrowRight className="size-3.5" />
               </Link>
