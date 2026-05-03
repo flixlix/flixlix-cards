@@ -9,9 +9,11 @@ This is a monorepo for all my Home Assistant cards, including their source code,
 
 - **Power Flow Card Plus** — [docs](https://cards.flixlix.com/power-flow-card-plus) · [README](packages/flixlix-cards/power-flow-card-plus/README.md)
 - **Energy Flow Card Plus** — [docs](https://cards.flixlix.com/energy-flow-card-plus) · [README](packages/flixlix-cards/energy-flow-card-plus/README.md)
+- **Energy Breakdown Card** - [docs](https://cards.flixlix.com/energy-breakdown-card) · [README](packages/flixlix-cards/energy-breakdown-card/README.md)
 
 ![demo_power_flow_card_plus](https://user-images.githubusercontent.com/61006057/227771568-78497ecc-e863-46f2-b29e-e15c7c20a154.gif)
 ![demo_energy_flow_card_plus](https://github.com/flixlix/energy-flow-card-plus/assets/61006057/d3650e8a-1c82-4993-9951-18c04fbdf4d6)
+![demo_breakdown_card](https://github.com/user-attachments/assets/c8fe8f63-9680-4507-bccd-8e792322c165)
 
 ## Issues and Feature Requests
 
