@@ -11,6 +11,10 @@ allowBuilds:
   msw: false
   unrs-resolver: false
 
+publicHoistPattern:
+  - "prettier-plugin-tailwindcss"
+  - "prettier-plugin-organize-imports"
+
 catalog:
   "@testing-library/dom": ^10.4.1
   "@types/node": ^22.19.17
