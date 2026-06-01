@@ -1,5 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { ArrowRight, ChartPie, Github, Sparkles, Zap } from "lucide-react";
+import { ArrowRight, ChartPie, Github, ListOrdered, Sparkles, Zap } from "lucide-react";
 
 import { PageHeader } from "@/components/docs/doc-primitives";
 import { Button } from "@flixlix-cards/ui/components/button";
@@ -154,6 +154,34 @@ function IndexPage() {
             </ul>
             <Button asChild size="sm" variant="outline" className="w-fit mt-auto">
               <Link to="/energy-breakdown-card">
+                Read the docs <ArrowRight className="size-3.5" />
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden pt-0!">
+          <div className="bg-muted/50 flex h-44 items-center justify-center border-b">
+            <ListOrdered className="size-20 text-gray-400 dark:text-gray-500" />
+          </div>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ListOrdered className="size-5" /> Sortable List Card
+            </CardTitle>
+            <CardDescription>
+              A generic <strong>drag-and-drop reorderable list</strong>. Saves the order via any
+              service — perfect for a HEMS load-priority list, room ordering, or any ranking.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-muted-foreground flex flex-1 flex-col gap-y-3 text-sm leading-relaxed">
+            <ul className="list-disc space-y-1 pl-5">
+              <li>Drag or use arrows to reorder</li>
+              <li>Persist via any service with placeholders</li>
+              <li>Entity-backed items (name, icon, state)</li>
+              <li>Custom HACS repository (not yet in the default index)</li>
+            </ul>
+            <Button asChild size="sm" variant="outline" className="w-fit mt-auto">
+              <Link to="/sortable-list-card">
                 Read the docs <ArrowRight className="size-3.5" />
               </Link>
             </Button>

@@ -1,0 +1,5 @@
+---
+"sortable-list-card": minor
+---
+
+Add Sortable List Card: a generic drag-and-drop reorderable list (TypeScript/Lit) with a full UI editor. Persists the order via any configurable service call (defaulting to `input_text.set_value`), supports CSV or JSON value formats, optional read-back entity, and entity-backed items (name/icon/state). A HEMS load-priority list is one supported use case.

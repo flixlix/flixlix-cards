@@ -68,6 +68,16 @@ const SECTIONS: DocSection[] = [
       { label: "Examples", to: "/energy-breakdown-card/examples" },
     ],
   },
+  {
+    label: "Sortable List Card",
+    to: "/sortable-list-card",
+    items: [
+      { label: "Overview", to: "/sortable-list-card" },
+      { label: "Installation", to: "/sortable-list-card/installation" },
+      { label: "Configuration", to: "/sortable-list-card/configuration" },
+      { label: "Examples", to: "/sortable-list-card/examples" },
+    ],
+  },
 ];
 
 const SECTION_ICONS_FOR_LABEL: Record<string, React.ComponentType<{ className?: string }>> = {

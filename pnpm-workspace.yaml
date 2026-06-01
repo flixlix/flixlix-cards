@@ -7,9 +7,9 @@ packages:
   - "packages/utils/*"
 
 allowBuilds:
-  esbuild: set this to true or false
-  msw: set this to true or false
-  unrs-resolver: set this to true or false
+  esbuild: false
+  msw: false
+  unrs-resolver: false
 
 catalog:
   "@testing-library/dom": ^10.4.1
