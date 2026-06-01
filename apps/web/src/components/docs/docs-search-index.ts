@@ -6,7 +6,7 @@ export type SearchEntry = {
   to: string;
   /** Breadcrumb shown to the right of the title. */
   breadcrumb: string;
-  card?: "power" | "energy" | "breakdown" | "general";
+  card?: "power" | "energy" | "breakdown" | "sortable" | "general";
   type: "page" | "section" | "option" | "example";
   /** Extra strings used for matching but not shown. */
   keywords?: string[];
@@ -16,6 +16,8 @@ const POWER = "Power Flow Card Plus";
 const ENERGY = "Energy Flow Card Plus";
 const BREAKDOWN = "Energy Breakdown Card";
 const BREAKDOWN_BASE = "/energy-breakdown-card" as const;
+const SORTABLE = "Sortable List Card";
+const SORTABLE_BASE = "/sortable-list-card" as const;
 
 const PAGES: SearchEntry[] = [
   {
@@ -404,6 +406,132 @@ function breakdownExamples(): SearchEntry[] {
   ];
 }
 
+function sortablePages(): SearchEntry[] {
+  return [
+    {
+      title: "Overview",
+      description: `What ${SORTABLE} is and what it can do.`,
+      to: SORTABLE_BASE,
+      breadcrumb: SORTABLE,
+      card: "sortable",
+      type: "page",
+      keywords: ["intro", "drag", "drop", "reorder", "sortable", "list", "hems", "priority"],
+    },
+    {
+      title: "Installation",
+      description: "HACS custom repository and manual installation instructions.",
+      to: `${SORTABLE_BASE}/installation`,
+      breadcrumb: SORTABLE,
+      card: "sortable",
+      type: "page",
+      keywords: ["hacs", "custom repository", "install", "resource", "lovelace", "input_text"],
+    },
+    {
+      title: "Configuration",
+      description: "Full reference of every option.",
+      to: `${SORTABLE_BASE}/configuration`,
+      breadcrumb: SORTABLE,
+      card: "sortable",
+      type: "page",
+      keywords: ["yaml", "options", "reference"],
+    },
+    {
+      title: "Examples",
+      description: "Copy-pastable configs, including the HEMS priority list.",
+      to: `${SORTABLE_BASE}/examples`,
+      breadcrumb: SORTABLE,
+      card: "sortable",
+      type: "page",
+      keywords: ["yaml", "snippet", "minimal", "hems"],
+    },
+  ];
+}
+
+function sortableConfigSections(): SearchEntry[] {
+  const make = (
+    id: string,
+    title: string,
+    description: string,
+    keywords?: string[]
+  ): SearchEntry => ({
+    title,
+    description,
+    to: `${SORTABLE_BASE}/configuration#${id}`,
+    breadcrumb: `${SORTABLE} → Configuration`,
+    card: "sortable",
+    type: "section",
+    keywords,
+  });
+  return [
+    make("card-options", "Card options", "Type, items, read-back entity, and value format.", [
+      "value_format",
+      "csv",
+      "json",
+    ]),
+    make("display", "Display", "Drag handle, arrow buttons, rank number, and entity state."),
+    make("save-action", "Save action", "Persist the order through any service call.", [
+      "service",
+      "placeholder",
+      "value",
+    ]),
+    make("item-options", "Item options", "Per-item key, entity, name, and icon."),
+  ];
+}
+
+function sortableConfigOptions(): SearchEntry[] {
+  const make = (
+    name: string,
+    description: string,
+    sectionId = "card-options",
+    extraKeywords?: string[]
+  ): SearchEntry => ({
+    title: name,
+    description,
+    to: `${SORTABLE_BASE}/configuration#${sectionId}`,
+    breadcrumb: `${SORTABLE} → Configuration`,
+    card: "sortable",
+    type: "option",
+    keywords: extraKeywords,
+  });
+  return [
+    make("type", "Card type identifier (required)."),
+    make("items", "The list rows (required).", "item-options"),
+    make("entity", "Entity whose state holds the current order (optional)."),
+    make("value_format", "Store the order as csv or json.", "card-options", ["csv", "json"]),
+    make("title", "Optional card title."),
+    make("show_handle", "Show the drag handle on each row.", "display"),
+    make("show_arrows", "Show the up/down arrow buttons.", "display"),
+    make("show_rank", "Show the position number on each row.", "display"),
+    make("show_state", "Show the entity state as secondary text.", "display"),
+    make("save_action", "Service called on every reorder.", "save-action", ["service", "script"]),
+    make("key", "Stable id stored in the order (defaults to entity).", "item-options"),
+    make("icon", "Per-item MDI icon override.", "item-options"),
+    make("name", "Per-item label override.", "item-options"),
+  ];
+}
+
+function sortableExamples(): SearchEntry[] {
+  const make = (id: string, title: string, description: string): SearchEntry => ({
+    title,
+    description,
+    to: `${SORTABLE_BASE}/examples#${id}`,
+    breadcrumb: `${SORTABLE} → Examples`,
+    card: "sortable",
+    type: "example",
+  });
+  return [
+    make("minimal", "Minimal (CSV input_text)", "Smallest config storing a CSV value."),
+    make("hems", "HEMS load priority", "Order battery, EV, heating for energy management."),
+    make("entity-backed", "Entity-backed rows + script", "Pull name/icon/state, save as JSON."),
+    make(
+      "custom-service",
+      "Write-only via a custom service",
+      "No entity, fire a service on change."
+    ),
+    make("bare", "Bare list", "Hide the handle, arrows, and rank."),
+  ];
+}
+
 const CONTRIBUTING_SECTIONS: SearchEntry[] = [
   {
     title: "Prerequisites",
@@ -483,15 +611,19 @@ export const SEARCH_ENTRIES: SearchEntry[] = [
   ...cardPages("power", "/power-flow-card-plus", POWER),
   ...cardPages("energy", "/energy-flow-card-plus", ENERGY),
   ...breakdownPages(),
+  ...sortablePages(),
   ...configSections("power", "/power-flow-card-plus", POWER),
   ...configSections("energy", "/energy-flow-card-plus", ENERGY),
   ...breakdownConfigSections(),
+  ...sortableConfigSections(),
   ...configOptions("power", "/power-flow-card-plus", POWER),
   ...configOptions("energy", "/energy-flow-card-plus", ENERGY),
   ...breakdownConfigOptions(),
+  ...sortableConfigOptions(),
   ...exampleEntries("power", "/power-flow-card-plus", POWER),
   ...exampleEntries("energy", "/energy-flow-card-plus", ENERGY),
   ...breakdownExamples(),
+  ...sortableExamples(),
   ...CONTRIBUTING_SECTIONS,
 ];
 
@@ -572,9 +704,11 @@ export const SUGGESTED_GROUPS: SuggestionGroup[] = [
       (e) => e.to === "/power-flow-card-plus" && e.type === "page",
       (e) => e.to === "/energy-flow-card-plus" && e.type === "page",
       (e) => e.to === "/energy-breakdown-card" && e.type === "page",
+      (e) => e.to === "/sortable-list-card" && e.type === "page",
       (e) => e.to === "/power-flow-card-plus/installation",
       (e) => e.to === "/energy-flow-card-plus/installation",
       (e) => e.to === "/energy-breakdown-card/installation",
+      (e) => e.to === "/sortable-list-card/installation",
     ]),
   },
   {
