@@ -1,7 +1,7 @@
 {
   "name": "sortable-list-card",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "A generic drag-and-drop reorderable list for Home Assistant that saves the order via any service",
   "keywords": [
