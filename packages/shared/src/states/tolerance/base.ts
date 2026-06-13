@@ -1,5 +1,5 @@
 export const isAboveTolerance = (value: number | null, tolerance: number): boolean =>
-  !!value && value >= tolerance;
+  value !== null && value !== 0 && Math.abs(value) >= tolerance;
 
 export const adjustZeroTolerance = (
   value: number | null,
