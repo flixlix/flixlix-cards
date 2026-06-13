@@ -10,6 +10,7 @@ import { dashboardLinkElement } from "@flixlix-cards/shared/components/misc/dash
 import { nonFossilElement } from "@flixlix-cards/shared/components/non-fossil";
 import { solarElement } from "@flixlix-cards/shared/components/solar";
 import { spacer } from "@flixlix-cards/shared/components/spacer";
+import { CIRCLE_CIRCUMFERENCE } from "@flixlix-cards/shared/const/circle";
 import { handleAction } from "@flixlix-cards/shared/ha/panels/lovelace/common/handle-action";
 import {
   subscribeRenderTemplate,
@@ -72,7 +73,6 @@ import { getEnergyEntityState } from "@flixlix-cards/shared/utils/get-energy-ent
 import { registerCustomCard } from "@flixlix-cards/shared/utils/register-custom-card";
 import { sortIndividualObjects } from "@flixlix-cards/shared/utils/sort-individual-objects";
 import { coerceNumber } from "@flixlix-cards/shared/utils/utils";
-import { CIRCLE_CIRCUMFERENCE } from "@flixlix-cards/shared/const/circle";
 import {
   type ActionConfig,
   type HomeAssistant,
