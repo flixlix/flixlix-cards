@@ -72,6 +72,7 @@ import { getEnergyEntityState } from "@flixlix-cards/shared/utils/get-energy-ent
 import { registerCustomCard } from "@flixlix-cards/shared/utils/register-custom-card";
 import { sortIndividualObjects } from "@flixlix-cards/shared/utils/sort-individual-objects";
 import { coerceNumber } from "@flixlix-cards/shared/utils/utils";
+import { CIRCLE_CIRCUMFERENCE } from "@flixlix-cards/shared/const/circle";
 import {
   type ActionConfig,
   type HomeAssistant,
@@ -81,8 +82,6 @@ import { type UnsubscribeFunc } from "home-assistant-js-websocket";
 import { html, LitElement, nothing, type PropertyValues, type TemplateResult } from "lit";
 import { customElement, property, query, state } from "lit/decorators.js";
 import packageJson from "../package.json" with { type: "json" };
-
-const CIRCLE_CIRCUMFERENCE = 238.76104;
 
 registerCustomCard({
   type: "energy-flow-card-plus",
