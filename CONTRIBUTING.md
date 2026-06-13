@@ -18,6 +18,7 @@ Each card is located in its own folder inside [`packages/flixlix-cards`](package
 - `power-flow-card-plus`
 - `energy-flow-card-plus`
 - `energy-breakdown-card`
+- `sortable-list-card`
 
 Each package contains its source code, changelogs, and relevant scripts.
 
@@ -51,17 +52,14 @@ Each package contains its source code, changelogs, and relevant scripts.
    ```
 
 5. **Add the built card to Home Assistant’s dashboard resources:**  
-   (Change the filename to match the card you’re developing.)
+   Each card’s dev server runs on its own port. Use the URL for the card you’re developing:
 
-   ```text
-   http://<your-ip>:5001/<card-filename>.js
-   ```
-
-   Example for Power Flow Card Plus:
-
-   ```text
-   http://<your-ip>:5001/power-flow-card-plus.js
-   ```
+   | Card | Dev server URL |
+   |------|----------------|
+   | Power Flow Card Plus | `http://<your-ip>:5001/power-flow-card-plus.js` |
+   | Energy Flow Card Plus | `http://<your-ip>:5003/energy-flow-card-plus.js` |
+   | Energy Breakdown Card | `http://<your-ip>:5004/energy-breakdown-card.js` |
+   | Sortable List Card | `http://<your-ip>:5005/sortable-list-card.js` |
 
 6. **Open Home Assistant:**
 
