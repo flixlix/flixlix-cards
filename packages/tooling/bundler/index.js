@@ -4,7 +4,7 @@ import json from "@rollup/plugin-json";
 import { nodeResolve } from "@rollup/plugin-node-resolve";
 import terser from "@rollup/plugin-terser";
 import typescript from "@rollup/plugin-typescript";
-import minifyHTML from "rollup-plugin-minify-html-literals";
+import minifyHTML from "rollup-plugin-html-literals";
 import serve from "rollup-plugin-serve";
 
 export function createCardConfig(options) {
@@ -19,9 +19,7 @@ export function createCardConfig(options) {
       ? minifyHTML
       : typeof minifyHTML?.default === "function"
         ? minifyHTML.default
-        : typeof minifyHTML?.minifyHTMLLiterals === "function"
-          ? minifyHTML.minifyHTMLLiterals
-          : null;
+        : null;
   const babelPlugin =
     typeof babel === "function"
       ? babel

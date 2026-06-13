@@ -18,7 +18,7 @@
     "@rollup/plugin-node-resolve": "catalog:packages",
     "@rollup/plugin-terser": "catalog:packages",
     "@rollup/plugin-typescript": "catalog:packages",
-    "rollup-plugin-minify-html-literals": "catalog:packages",
+    "rollup-plugin-html-literals": "catalog:packages",
     "rollup-plugin-serve": "catalog:packages"
   },
   "peerDependencies": {

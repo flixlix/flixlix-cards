@@ -6,6 +6,9 @@ packages:
   - "packages/flixlix-cards/shared/*"
   - "packages/utils/*"
 
+overrides:
+  esbuild: ^0.28.1
+
 allowBuilds:
   esbuild: false
   msw: false
@@ -32,7 +35,7 @@ catalog:
 catalogs:
   packages:
     "@babel/core": ^7.29.0
-    "@babel/preset-env": ^7.29.3
+    "@babel/preset-env": ^7.29.4
     "@babel/preset-typescript": ^7.28.5
     "@changesets/changelog-github": ^0.6.0
     "@changesets/cli": ^2.31.0
@@ -62,7 +65,7 @@ catalogs:
     memoize-one: ^6.0.0
     prettier-plugin-embed: ^0.5.1
     rollup: ^4.60.2
-    rollup-plugin-minify-html-literals: ^1.2.6
+    rollup-plugin-html-literals: ^2.0.1
     rollup-plugin-serve: ^1.1.1
     superstruct: ^1.0.4
     tailwind-merge: ^3.5.0
