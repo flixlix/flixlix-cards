@@ -1,7 +1,6 @@
 import localize from "@flixlix-cards/shared/i18n";
 import {
   type ConfigPage,
-  type LovelaceRowConfig,
   type PowerFlowCardPlusConfig,
 } from "@flixlix-cards/shared/types";
 import "@flixlix-cards/shared/ui-editor/components/individual-devices-editor";
@@ -12,12 +11,11 @@ import { nonFossilSchema } from "@flixlix-cards/shared/ui-editor/schema/fossil-f
 import { gridSchema } from "@flixlix-cards/shared/ui-editor/schema/grid";
 import { homeSchema } from "@flixlix-cards/shared/ui-editor/schema/home";
 import { solarSchema } from "@flixlix-cards/shared/ui-editor/schema/solar";
-import { loadHaForm } from "@flixlix-cards/shared/ui-editor/utils/load-ha-form";
-import { defaultValues } from "@flixlix-cards/shared/utils/get-default-config";
-import { fireEvent, type HomeAssistant, type LovelaceCardEditor } from "custom-card-helpers";
-import { LitElement, css, html, nothing } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
-import { assert } from "superstruct";
+import { BaseCardEditor } from "@flixlix-cards/shared/ui-editor/base-editor";
+import { fireEvent } from "custom-card-helpers";
+import { html, nothing, type TemplateResult } from "lit";
+import { customElement } from "lit/decorators.js";
+import { type Struct } from "superstruct";
 import { advancedOptionsSchema, cardConfigStruct, generalConfigSchema } from "./schema/_schema-all";
 
 const CONFIG_PAGES: {
@@ -62,28 +60,21 @@ const CONFIG_PAGES: {
 ];
 
 @customElement("energy-flow-card-plus-editor")
-export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardEditor {
-  @property({ attribute: false }) public hass!: HomeAssistant;
-  @state() private _config?: PowerFlowCardPlusConfig;
-  @state() private _configEntities?: LovelaceRowConfig[] = [];
-  @state() private _currentConfigPage: ConfigPage = null;
-
-  public async setConfig(config: PowerFlowCardPlusConfig): Promise<void> {
-    assert(config, cardConfigStruct);
-    this._config = config;
+export class PowerFlowCardPlusEditor extends BaseCardEditor<PowerFlowCardPlusConfig> {
+  protected get configStruct(): Struct<PowerFlowCardPlusConfig, any> {
+    return cardConfigStruct as unknown as Struct<PowerFlowCardPlusConfig, any>;
   }
 
-  connectedCallback(): void {
-    super.connectedCallback();
-    loadHaForm();
+  protected get configPages() {
+    return CONFIG_PAGES;
   }
 
-  private _editDetailElement(pageClicked: ConfigPage): void {
-    this._currentConfigPage = pageClicked;
+  protected get generalSchema() {
+    return generalConfigSchema;
   }
 
-  private _goBack(): void {
-    this._currentConfigPage = null;
+  protected advancedSchema(localizeFn: typeof localize, displayZeroLinesMode: string) {
+    return advancedOptionsSchema(localizeFn, displayZeroLinesMode);
   }
 
   private _hasLegacyFields(): boolean {
@@ -135,7 +126,7 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
     fireEvent(this, "config-changed", { config });
   }
 
-  private _renderLegacyFieldsAlert() {
+  private _renderLegacyFieldsAlert(): TemplateResult | typeof nothing {
     if (!this._hasLegacyFields()) return nothing;
     return html`
       <ha-alert class="legacy-fields-alert" alert-type="warning">
@@ -199,7 +190,7 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
     fireEvent(this, "config-changed", { config });
   }
 
-  private _renderLegacyIndividualFieldsAlert() {
+  private _renderLegacyIndividualFieldsAlert(): TemplateResult | typeof nothing {
     if (!this._hasLegacyIndividualFields()) return nothing;
     return html`
       <ha-alert class="legacy-fields-alert" alert-type="warning">
@@ -216,182 +207,11 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
     `;
   }
 
-  protected render() {
-    if (!this.hass || !this._config) {
-      return nothing;
-    }
-
-    const data = {
-      ...this._config,
-      display_zero_lines: {
-        mode: this._config.display_zero_lines?.mode ?? defaultValues.displayZeroLines.mode,
-        transparency:
-          this._config.display_zero_lines?.transparency ??
-          defaultValues.displayZeroLines.transparency,
-        grey_color:
-          this._config.display_zero_lines?.grey_color ?? defaultValues.displayZeroLines.grey_color,
-      },
-    };
-
-    if (this._currentConfigPage !== null) {
-      if (this._currentConfigPage === "individual") {
-        return html`
-          ${this._renderLegacyFieldsAlert()} ${this._renderLegacyIndividualFieldsAlert()}
-          <subpage-header @go-back=${this._goBack} page=${this._currentConfigPage}>
-          </subpage-header>
-          <individual-devices-editor
-            .hass=${this.hass}
-            .config=${this._config}
-            @config-changed=${this._valueChanged}
-          ></individual-devices-editor>
-        `;
-      }
-
-      const currentPage = this._currentConfigPage;
-      const schema =
-        currentPage === "advanced"
-          ? advancedOptionsSchema(
-              localize,
-              this._config.display_zero_lines?.mode ?? defaultValues.displayZeroLines.mode
-            )
-          : CONFIG_PAGES.find((page) => page.page === currentPage)?.schema;
-      const dataForForm = currentPage === "advanced" ? data : data.entities[currentPage];
-      return html`
-        ${this._renderLegacyFieldsAlert()} ${this._renderLegacyIndividualFieldsAlert()}
-        <subpage-header @go-back=${this._goBack} page=${this._currentConfigPage}> </subpage-header>
-        <ha-form
-          .hass=${this.hass}
-          .data=${dataForForm}
-          .schema=${schema}
-          .computeLabel=${this._computeLabelCallback}
-          @value-changed=${this._valueChanged}
-        ></ha-form>
-      `;
-    }
-
-    const renderLinkSubpage = (
-      page: ConfigPage,
-      fallbackIcon: string | undefined = "mdi:dots-horizontal-circle-outline"
-    ) => {
-      if (page === null) return nothing;
-      const getIconToUse = () => {
-        if (page === "individual" || page === "advanced") return fallbackIcon;
-        const entityConfig = this?._config?.entities[page] as { icon?: string } | undefined;
-        return entityConfig?.icon || fallbackIcon;
-      };
-      const icon = getIconToUse();
-      return html`
-        <link-subpage
-          path=${page}
-          header="${localize(`editor.${page}`)}"
-          @open-sub-element-editor=${() => this._editDetailElement(page)}
-          icon=${icon}
-        >
-        </link-subpage>
-      `;
-    };
-
-    const renderLinkSubPages = () => {
-      return CONFIG_PAGES.map((page) => renderLinkSubpage(page.page, page.icon));
-    };
-    return html`
-      <div class="card-config">
-        ${this._renderLegacyFieldsAlert()} ${this._renderLegacyIndividualFieldsAlert()}
-        <ha-form
-          .hass=${this.hass}
-          .data=${data}
-          .schema=${generalConfigSchema}
-          .computeLabel=${this._computeLabelCallback}
-          @value-changed=${this._valueChanged}
-        ></ha-form>
-        ${renderLinkSubPages()}
-      </div>
-    `;
-  }
-
-  private _valueChanged(ev: any): void {
-    let config = ev.detail.value || "";
-
-    if (!this._config || !this.hass) {
-      return;
-    }
-
-    if (
-      this._currentConfigPage !== null &&
-      this._currentConfigPage !== "advanced" &&
-      this._currentConfigPage !== "individual"
-    ) {
-      config = {
-        ...this._config,
-        entities: {
-          ...this._config.entities,
-          [this._currentConfigPage]: config,
-        },
-      };
-    }
-
-    fireEvent(this, "config-changed", { config });
-  }
-
-  private _computeLabelCallback = (schema: any) =>
-    this.hass!.localize(`ui.panel.lovelace.editor.card.generic.${schema?.name}`) ||
-    localize(`editor.${schema?.name}`) ||
-    schema?.label;
-
-  static get styles() {
-    return css`
-      ha-form {
-        width: 100%;
-      }
-
-      ha-icon-button {
-        align-self: center;
-      }
-
-      .entities-section * {
-        background-color: #f00;
-      }
-
-      .card-config {
-        display: flex;
-        flex-direction: column;
-        gap: 1.5rem;
-        margin-bottom: 10px;
-      }
-
-      .legacy-fields-alert {
-        margin-bottom: 8px;
-      }
-
-      .legacy-fields-alert-button {
-        border: none;
-        background: var(--warning-color);
-        border-radius: 99px;
-        color: var(--card-background-color);
-        cursor: pointer;
-        font: inherit;
-        padding: 4px 8px;
-      }
-
-      .config-header {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
-        width: 100%;
-      }
-
-      .config-header.sub-header {
-        margin-top: 24px;
-      }
-
-      ha-icon {
-        padding-bottom: 2px;
-        position: relative;
-        top: -4px;
-        right: 1px;
-      }
-    `;
+  protected _renderLegacyAlerts(): TemplateResult | typeof nothing {
+    const legacy = this._renderLegacyFieldsAlert();
+    const individual = this._renderLegacyIndividualFieldsAlert();
+    if (legacy === nothing && individual === nothing) return nothing;
+    return html`${legacy}${individual}`;
   }
 }
 
