@@ -1,9 +1,5 @@
-import localize from "@flixlix-cards/shared/i18n";
-import {
-  type ConfigPage,
-  type PowerFlowCardPlusConfig,
-  type LovelaceRowConfig,
-} from "@flixlix-cards/shared/types";
+import { type ConfigPage, type PowerFlowCardPlusConfig } from "@flixlix-cards/shared/types";
+import { BaseCardEditor } from "@flixlix-cards/shared/ui-editor/base-editor";
 import "@flixlix-cards/shared/ui-editor/components/individual-devices-editor";
 import "@flixlix-cards/shared/ui-editor/components/link-subpage";
 import "@flixlix-cards/shared/ui-editor/components/subpage-header";
@@ -12,11 +8,10 @@ import { nonFossilSchema } from "@flixlix-cards/shared/ui-editor/schema/fossil-f
 import { gridSchema } from "@flixlix-cards/shared/ui-editor/schema/grid";
 import { homeSchema } from "@flixlix-cards/shared/ui-editor/schema/home";
 import { solarSchema } from "@flixlix-cards/shared/ui-editor/schema/solar";
-import { BaseCardEditor } from "@flixlix-cards/shared/ui-editor/base-editor";
 import { fireEvent } from "custom-card-helpers";
 import { html, nothing, type TemplateResult } from "lit";
 import { customElement } from "lit/decorators.js";
-import { type Struct, assert } from "superstruct";
+import { type Struct } from "superstruct";
 import { advancedOptionsSchema, cardConfigStruct, generalConfigSchema } from "./schema/_schema-all";
 
 const CONFIG_PAGES: {
@@ -74,7 +69,7 @@ export class PowerFlowCardPlusEditor extends BaseCardEditor<PowerFlowCardPlusCon
     return generalConfigSchema;
   }
 
-  protected advancedSchema(localizeFn: typeof localize, displayZeroLinesMode: string) {
+  protected advancedSchema(localizeFn: (key: string) => string, displayZeroLinesMode: string) {
     return advancedOptionsSchema(localizeFn, displayZeroLinesMode);
   }
 

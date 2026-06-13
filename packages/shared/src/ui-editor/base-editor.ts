@@ -1,8 +1,5 @@
 import localize from "@flixlix-cards/shared/i18n";
-import {
-  type ConfigPage,
-  type LovelaceRowConfig,
-} from "@flixlix-cards/shared/types";
+import { type ConfigPage, type LovelaceRowConfig } from "@flixlix-cards/shared/types";
 import { loadHaForm } from "@flixlix-cards/shared/ui-editor/utils/load-ha-form";
 import { defaultValues } from "@flixlix-cards/shared/utils/get-default-config";
 import {
@@ -13,7 +10,7 @@ import {
 } from "custom-card-helpers";
 import { LitElement, css, html, nothing, type TemplateResult } from "lit";
 import { property, state } from "lit/decorators.js";
-import { type Struct, assert } from "superstruct";
+import { assert, type Struct } from "superstruct";
 
 /**
  * Abstract base class for flow-card UI editors.
@@ -50,11 +47,11 @@ export abstract class BaseCardEditor<TConfig extends LovelaceCardConfig>
   protected abstract get generalSchema(): any;
 
   /**
-   * Schema for the "advanced" subpage.  Receives `localize` and the current
-   * `display_zero_lines.mode` value so card-specific options can be built.
+   * Schema for the "advanced" subpage.  Receives a localize function and the
+   * current `display_zero_lines.mode` value so card-specific options can be built.
    */
   protected abstract advancedSchema(
-    localizeFn: typeof localize,
+    localizeFn: (key: string) => string,
     displayZeroLinesMode: string
   ): any;
 
@@ -150,9 +147,7 @@ export abstract class BaseCardEditor<TConfig extends LovelaceCardConfig>
       if (page === null) return nothing;
       const getIconToUse = () => {
         if (page === "individual" || page === "advanced") return fallbackIcon;
-        const entityConfig = (this._config as any)?.entities[page] as
-          | { icon?: string }
-          | undefined;
+        const entityConfig = (this._config as any)?.entities[page] as { icon?: string } | undefined;
         return entityConfig?.icon || fallbackIcon;
       };
       const icon = getIconToUse();
