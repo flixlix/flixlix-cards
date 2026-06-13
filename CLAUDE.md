@@ -92,7 +92,6 @@ pnpm settings (`publicHoistPattern`, `allowBuilds`, overrides) also live in `pnp
 - **Commits**: gitmoji + conventional — `fix: :bug: …`, `feat: :sparkles: …`, `docs: :memo: …`, `chore: :bookmark: …`
 - **Branches**: `fix/…`, `feat/…`, `docs/…`, `chore/…`
 - **Formatting/linting**: enforced via `pnpm precommit` (Prettier + ESLint); run before committing
-- **Card editors**: extend `BaseCardEditor` from `@flixlix-cards/shared` (see `packages/shared/`)
 
 ## Plans directory
 
