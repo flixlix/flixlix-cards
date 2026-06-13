@@ -1,4 +1,4 @@
-import { describe, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { SortableListCard } from "../src/sortable-list-card";
 import { type SortableListCardConfig } from "../src/types";
 import {
@@ -246,6 +246,22 @@ describe("sortable-list-card", () => {
     expect(callService).toHaveBeenCalledTimes(1);
   });
 
+  test("reordering without a live DOM never flags animating", () => {
+    const card = new SortableListCard();
+    card.hass = makeHass("battery,ev,heating");
+    card.setConfig({ ...baseConfig });
+    (card as any)._order = ["battery", "ev", "heating"];
+
+    // hasUpdated is false (never rendered), so the FLIP snapshot must no-op and
+    // leave animation state untouched while the reorder itself still happens.
+    (card as any)._move(0, 1);
+    (card as any)._moveTo(0, 3);
+
+    expect((card as any)._order).toEqual(["battery", "heating", "ev"]);
+    expect((card as any)._animating).toBe(false);
+    expect((card as any)._flipPrev).toBeNull();
+  });
+
   test("commits via a custom save_action service", () => {
     const callService = vi.fn();
     const card = new SortableListCard();
@@ -322,5 +338,143 @@ describe("sortable-list-card", () => {
 
     (card as any)._syncFromState();
     expect((card as any)._order).toEqual(["ev", "battery", "heating"]);
+  });
+});
+
+describe("sortable-list-card FLIP animations", () => {
+  let animations: { cancel: ReturnType<typeof vi.fn> }[];
+  let animateMock: ReturnType<typeof vi.fn>;
+  let originalAnimate: typeof HTMLElement.prototype.animate;
+  let rectSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    animations = [];
+    animateMock = vi.fn(() => {
+      const anim = { cancel: vi.fn(), finished: Promise.resolve() };
+      animations.push(anim);
+      return anim as unknown as Animation;
+    });
+    originalAnimate = HTMLElement.prototype.animate;
+    HTMLElement.prototype.animate = animateMock as unknown as typeof HTMLElement.prototype.animate;
+
+    // jsdom has no layout, so derive each row's top from its sibling index.
+    // Reordering then yields non-zero FLIP deltas for the rows that moved.
+    rectSpy = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (
+      this: HTMLElement
+    ) {
+      const parent = this.parentElement;
+      const idx = parent ? Array.prototype.indexOf.call(parent.children, this) : 0;
+      return { top: idx * 50, height: 50, bottom: idx * 50 + 50 } as DOMRect;
+    });
+
+    window.matchMedia = vi.fn().mockReturnValue({ matches: false }) as unknown as typeof matchMedia;
+  });
+
+  afterEach(() => {
+    HTMLElement.prototype.animate = originalAnimate;
+    rectSpy.mockRestore();
+    vi.useRealTimers();
+    delete (window as { matchMedia?: unknown }).matchMedia;
+  });
+
+  async function mount(): Promise<SortableListCard> {
+    const card = new SortableListCard();
+    card.hass = makeHass("battery,ev,heating");
+    card.setConfig({ ...baseConfig });
+    document.body.appendChild(card);
+    await card.updateComplete;
+    return card;
+  }
+
+  test("animates only the rows whose position changed", async () => {
+    const card = await mount();
+
+    (card as any)._move(0, 1);
+    await card.updateComplete;
+
+    expect((card as any)._order).toEqual(["ev", "battery", "heating"]);
+    // battery and ev swap; heating stays put, so only two rows animate.
+    expect(animateMock).toHaveBeenCalledTimes(2);
+    card.remove();
+  });
+
+  test("sets _animating during the move and clears it after the duration", async () => {
+    vi.useFakeTimers();
+    const card = await mount();
+
+    (card as any)._move(0, 1);
+    await card.updateComplete;
+    expect((card as any)._animating).toBe(true);
+
+    vi.advanceTimersByTime(200);
+    expect((card as any)._animating).toBe(false);
+    card.remove();
+  });
+
+  test("respects prefers-reduced-motion", async () => {
+    window.matchMedia = vi.fn().mockReturnValue({ matches: true }) as unknown as typeof matchMedia;
+    const card = await mount();
+
+    (card as any)._move(0, 1);
+    await card.updateComplete;
+
+    expect((card as any)._order).toEqual(["ev", "battery", "heating"]);
+    expect(animateMock).not.toHaveBeenCalled();
+    expect((card as any)._animating).toBe(false);
+    card.remove();
+  });
+
+  test("cancels in-flight slides before measuring the next move", async () => {
+    const card = await mount();
+
+    (card as any)._move(0, 1);
+    await card.updateComplete;
+    const firstBatch = animations.slice();
+    expect(firstBatch.length).toBe(2);
+
+    // A second move while the first slide is still "running" must cancel it,
+    // so deltas are measured from real layout instead of a transformed position.
+    (card as any)._move(0, 1);
+    await card.updateComplete;
+
+    firstBatch.forEach((anim) => expect(anim.cancel).toHaveBeenCalled());
+    card.remove();
+  });
+
+  test("disconnecting cancels any running slide animations", async () => {
+    const card = await mount();
+
+    (card as any)._move(0, 1);
+    await card.updateComplete;
+    const batch = animations.slice();
+    expect(batch.length).toBeGreaterThan(0);
+
+    card.remove();
+    batch.forEach((anim) => expect(anim.cancel).toHaveBeenCalled());
+  });
+
+  test("no drop indicator renders on positions adjacent to the dragged row", async () => {
+    const card = await mount();
+    const list = card.shadowRoot?.querySelector(".list");
+    const rowOf = (key: string) => list?.querySelector(`.row[data-key="${key}"]`);
+
+    (card as any)._dragKey = "battery";
+    (card as any)._dragging = true;
+
+    // Dropping right before itself (own index) is a no-op → no indicator.
+    (card as any)._dropPos = 0;
+    await card.updateComplete;
+    expect(rowOf("battery")?.classList.contains("drop-before")).toBe(false);
+
+    // Dropping right after itself (own index + 1) is also a no-op → no indicator.
+    (card as any)._dropPos = 1;
+    await card.updateComplete;
+    expect(rowOf("ev")?.classList.contains("drop-before")).toBe(false);
+
+    // A real target still shows the indicator.
+    (card as any)._dropPos = 2;
+    await card.updateComplete;
+    expect(rowOf("heating")?.classList.contains("drop-before")).toBe(true);
+    card.remove();
   });
 });

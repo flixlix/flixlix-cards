@@ -27,6 +27,7 @@ registerCustomCard({
 });
 
 const PENDING_TIMEOUT = 3000;
+const FLIP_DURATION = 180;
 
 @customElement("sortable-list-card")
 export class SortableListCard extends LitElement implements LovelaceCard {
@@ -35,10 +36,14 @@ export class SortableListCard extends LitElement implements LovelaceCard {
   @state() private _order: string[] = [];
   @state() private _dragging = false;
   @state() private _dropPos: number | null = null;
+  @state() private _animating = false;
 
   private _dragKey: string | null = null;
   private _pending: string | null = null;
   private _pendingTimer?: ReturnType<typeof setTimeout>;
+  private _flipPrev: Map<string, number> | null = null;
+  private _flipAnims: Animation[] = [];
+  private _animTimer?: ReturnType<typeof setTimeout>;
 
   public static async getConfigElement(): Promise<LovelaceCardEditor> {
     await import("./ui-editor/ui-editor");
@@ -80,6 +85,8 @@ export class SortableListCard extends LitElement implements LovelaceCard {
 
   public disconnectedCallback(): void {
     if (this._pendingTimer) clearTimeout(this._pendingTimer);
+    if (this._animTimer) clearTimeout(this._animTimer);
+    this._cancelFlip();
     super.disconnectedCallback();
   }
 
@@ -104,6 +111,7 @@ export class SortableListCard extends LitElement implements LovelaceCard {
     }
     const next = resolveOrder(this._config, cur);
     if (JSON.stringify(next) !== JSON.stringify(this._order)) {
+      this._snapshotPositions();
       this._order = next;
     }
   }
@@ -116,12 +124,73 @@ export class SortableListCard extends LitElement implements LovelaceCard {
     }
   }
 
+  private _cancelFlip(): void {
+    this._flipAnims.forEach((anim) => anim.cancel());
+    this._flipAnims = [];
+  }
+
+  private _snapshotPositions(): void {
+    if (!this.hasUpdated) return;
+    // Settle any in-flight slide first so we measure true layout positions,
+    // not transformed ones — keeps rapid successive moves from compounding.
+    this._cancelFlip();
+    const map = new Map<string, number>();
+    this.renderRoot.querySelectorAll<HTMLElement>(".row").forEach((row) => {
+      const key = row.dataset.key;
+      if (key) map.set(key, row.getBoundingClientRect().top);
+    });
+    this._flipPrev = map;
+    this._animating = true;
+  }
+
+  protected updated(changed: PropertyValues): void {
+    super.updated(changed);
+    if (changed.has("_order") && this._flipPrev) {
+      const animated = this._playFlip(this._flipPrev);
+      this._flipPrev = null;
+      if (animated) {
+        this._scheduleAnimationEnd();
+      } else {
+        this._animating = false;
+      }
+    }
+  }
+
+  private _playFlip(prev: Map<string, number>): boolean {
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return false;
+    let animated = false;
+    this.renderRoot.querySelectorAll<HTMLElement>(".row").forEach((row) => {
+      const key = row.dataset.key;
+      if (!key) return;
+      const prevTop = prev.get(key);
+      if (prevTop === undefined) return;
+      const delta = prevTop - row.getBoundingClientRect().top;
+      if (!delta) return;
+      animated = true;
+      const anim = row.animate(
+        [{ transform: `translateY(${delta}px)` }, { transform: "translateY(0)" }],
+        { duration: FLIP_DURATION, easing: "cubic-bezier(0.2, 0, 0, 1)" }
+      );
+      this._flipAnims.push(anim);
+    });
+    return animated;
+  }
+
+  private _scheduleAnimationEnd(): void {
+    if (this._animTimer) clearTimeout(this._animTimer);
+    this._animTimer = setTimeout(() => {
+      this._animating = false;
+      this._animTimer = undefined;
+    }, FLIP_DURATION);
+  }
+
   private _move(from: number, to: number): void {
     if (to < 0 || to >= this._order.length || from === to) return;
     const arr = this._order.slice();
     const [moved] = arr.splice(from, 1);
     if (moved === undefined) return;
     arr.splice(to, 0, moved);
+    this._snapshotPositions();
     this._order = arr;
     this._commit();
   }
@@ -138,6 +207,7 @@ export class SortableListCard extends LitElement implements LovelaceCard {
       return;
     }
     arr.splice(insert, 0, moved);
+    this._snapshotPositions();
     this._order = arr;
     this._commit();
   }
@@ -205,7 +275,9 @@ export class SortableListCard extends LitElement implements LovelaceCard {
         ${missingEntity
           ? html`<div class="warning">Entity <code>${missingEntity}</code> not found.</div>`
           : nothing}
-        <div class=${classMap({ list: true, dragging: this._dragging })}>
+        <div
+          class=${classMap({ list: true, dragging: this._dragging, animating: this._animating })}
+        >
           ${repeat(
             this._order,
             (key) => key,
@@ -228,8 +300,13 @@ export class SortableListCard extends LitElement implements LovelaceCard {
     const showArrows = this._config?.show_arrows !== false;
     const showRank = this._config?.show_rank !== false;
     const showState = this._config?.show_state === true && item?.entity;
-    const dropBefore = this._dropPos !== null && this._dropPos < total && this._dropPos === index;
-    const dropAfter = this._dropPos !== null && this._dropPos >= total && index === total - 1;
+    const dragIndex = this._dragKey !== null ? this._order.indexOf(this._dragKey) : -1;
+    const noopDrop =
+      dragIndex !== -1 && (this._dropPos === dragIndex || this._dropPos === dragIndex + 1);
+    const dropBefore =
+      !noopDrop && this._dropPos !== null && this._dropPos < total && this._dropPos === index;
+    const dropAfter =
+      !noopDrop && this._dropPos !== null && this._dropPos >= total && index === total - 1;
     return html`
       <div
         class=${classMap({
@@ -281,10 +358,6 @@ export class SortableListCard extends LitElement implements LovelaceCard {
       overflow: hidden;
     }
 
-    .list {
-      padding: 8px 0;
-    }
-
     .row {
       position: relative;
       display: flex;
@@ -305,7 +378,8 @@ export class SortableListCard extends LitElement implements LovelaceCard {
       background: var(--secondary-background-color);
     }
 
-    .list.dragging .row:hover {
+    .list.dragging .row:hover,
+    .list.animating .row:hover {
       background: transparent;
     }
 
