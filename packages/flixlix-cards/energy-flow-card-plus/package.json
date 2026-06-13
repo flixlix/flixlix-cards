@@ -81,7 +81,6 @@
     "prettier": "catalog:",
     "prettier-plugin-embed": "catalog:packages",
     "rollup": "catalog:packages",
-    "rollup-plugin-minify-html-literals": "catalog:packages",
     "rollup-plugin-serve": "catalog:packages",
     "typescript": "catalog:",
     "vite-tsconfig-paths": "catalog:",
