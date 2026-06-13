@@ -8,7 +8,7 @@ import {
 } from "@flixlix-cards/shared/types";
 import { fireEvent, type HASSDomEvent, type HomeAssistant } from "custom-card-helpers";
 import { css, type CSSResultGroup, html, LitElement, type TemplateResult } from "lit";
-import { property, state } from "lit-element";
+import { property, state } from "lit/decorators.js";
 import { individualDevicesSchema } from "../schema/_schema-all";
 import "./individual-row-editor";
 
