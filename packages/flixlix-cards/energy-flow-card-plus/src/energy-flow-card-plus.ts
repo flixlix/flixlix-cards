@@ -112,11 +112,22 @@ export class EnergyFlowCardPlus extends LitElement {
   private _energyCollectionKey?: string;
   private readonly wideEnoughForFourIndividuals = 359;
   private _resizeObserver?: ResizeObserver;
+  private _intersectionObserver?: IntersectionObserver;
+  private _animationsPaused = false;
   private _handleVisibilityChange = () => {
     if (typeof document !== "undefined" && document.visibilityState === "visible") {
       this.requestUpdate();
     }
   };
+
+  private _applyAnimationPauseState(): void {
+    const svgs = this.shadowRoot?.querySelectorAll<SVGSVGElement>("svg") ?? [];
+    svgs.forEach((svg) => {
+      if (typeof svg.pauseAnimations !== "function") return; // jsdom / old browsers
+      if (this._animationsPaused) svg.pauseAnimations();
+      else svg.unpauseAnimations();
+    });
+  }
 
   @query("#battery-grid-flow") batteryGridFlow?: SVGSVGElement;
   @query("#battery-home-flow") batteryToHomeFlow?: SVGSVGElement;
@@ -199,6 +210,15 @@ export class EnergyFlowCardPlus extends LitElement {
     if (typeof document !== "undefined") {
       document.addEventListener("visibilitychange", this._handleVisibilityChange);
     }
+    if (typeof IntersectionObserver !== "undefined") {
+      this._intersectionObserver = new IntersectionObserver((entries) => {
+        const entry = entries[0];
+        if (!entry) return;
+        this._animationsPaused = !entry.isIntersecting;
+        this._applyAnimationPauseState();
+      });
+      this._intersectionObserver.observe(this);
+    }
     this._tryConnectAll();
     this._ensureEnergyPeriodListener();
     this._ensureFossilDataSubscription();
@@ -208,6 +228,8 @@ export class EnergyFlowCardPlus extends LitElement {
   public disconnectedCallback() {
     this._resizeObserver?.disconnect();
     this._resizeObserver = undefined;
+    this._intersectionObserver?.disconnect();
+    this._intersectionObserver = undefined;
     if (typeof document !== "undefined") {
       document.removeEventListener("visibilitychange", this._handleVisibilityChange);
     }
@@ -690,6 +712,9 @@ export class EnergyFlowCardPlus extends LitElement {
     }
 
     this._tryConnectAll();
+    if (this._animationsPaused) {
+      this._applyAnimationPauseState();
+    }
   }
 
   protected willUpdate(changedProps: PropertyValues): void {
@@ -1148,7 +1173,7 @@ export class EnergyFlowCardPlus extends LitElement {
           if (Number.isFinite(nextTime)) {
             flowSVGElement.setCurrentTime(nextTime);
           }
-          flowSVGElement.unpauseAnimations();
+          if (!this._animationsPaused) flowSVGElement.unpauseAnimations();
         }
         this.previousDur[flowName] = Number.isFinite(nextDur)
           ? (nextDur as number)
