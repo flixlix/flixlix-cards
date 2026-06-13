@@ -1,7 +1,7 @@
 import { mdiChevronRight } from "@mdi/js";
 import { fireEvent } from "custom-card-helpers";
 import { css, type CSSResultGroup, html, LitElement, type TemplateResult } from "lit";
-import { property, query } from "lit-element";
+import { property, query } from "lit/decorators.js";
 
 export class LinkSubpage extends LitElement {
   @property({ type: String }) path!: string;
