@@ -1002,6 +1002,7 @@ export function ConfigurationPage({ cardKey }: { cardKey: CardKey }) {
   const sensorSuffix = cardKey === "power" ? "power" : "energy";
 
   const tocItems: TocItem[] = [
+    { id: "ui-editor", label: "UI editor" },
     { id: "card-options", label: "Card options" },
     { id: "actions", label: "Actions" },
     { id: "entities", label: "Entities" },
@@ -1040,6 +1041,28 @@ export function ConfigurationPage({ cardKey }: { cardKey: CardKey }) {
           The <Link to={`${v.basePath}/examples`}>Examples</Link> page has minimal configs you can
           paste straight into your dashboard. Come back here when you want to fine-tune.
         </Callout>
+
+        {/* UI editor section */}
+        <Section id="ui-editor" title="Using the UI editor">
+          <Prose>
+            <p>
+              The {v.title} ships a full-featured UI editor that covers every option on this page.
+              To open it, add the card to a dashboard and click the <strong>pencil icon</strong> to
+              enter edit mode — the editor opens directly in the Home Assistant sidebar. Each entity
+              (Grid, Solar, Battery, Individual devices, Advanced) has its own sub-page, so you
+              never need to touch YAML for day-to-day configuration.
+            </p>
+            <p>
+              YAML is still fully supported and remains the only way to reach a small number of
+              advanced options (marked <em>YAML editor only</em> in the tables below). Everything
+              else is reachable from the UI.
+            </p>
+          </Prose>
+          <Callout variant="info" title="Asset pending">
+            A screenshot of the UI editor dialog will be added here once captured from a live Home
+            Assistant instance. See plan 013 for the capture checklist.
+          </Callout>
+        </Section>
 
         {/* Quick navigation grid */}
         <div className="my-6 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
