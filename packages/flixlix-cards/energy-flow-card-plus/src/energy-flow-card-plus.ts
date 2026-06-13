@@ -10,6 +10,7 @@ import { dashboardLinkElement } from "@flixlix-cards/shared/components/misc/dash
 import { nonFossilElement } from "@flixlix-cards/shared/components/non-fossil";
 import { solarElement } from "@flixlix-cards/shared/components/solar";
 import { spacer } from "@flixlix-cards/shared/components/spacer";
+import { CIRCLE_CIRCUMFERENCE } from "@flixlix-cards/shared/const/circle";
 import { handleAction } from "@flixlix-cards/shared/ha/panels/lovelace/common/handle-action";
 import {
   subscribeRenderTemplate,
@@ -81,8 +82,6 @@ import { type UnsubscribeFunc } from "home-assistant-js-websocket";
 import { html, LitElement, nothing, type PropertyValues, type TemplateResult } from "lit";
 import { customElement, property, query, state } from "lit/decorators.js";
 import packageJson from "../package.json" with { type: "json" };
-
-const CIRCLE_CIRCUMFERENCE = 238.76104;
 
 registerCustomCard({
   type: "energy-flow-card-plus",

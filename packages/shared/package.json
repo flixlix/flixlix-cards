@@ -41,13 +41,11 @@
     "typescript": "catalog:",
     "vitest": "catalog:packages"
   },
-  "packageManager": "pnpm@10.33.0",
   "dependencies": {
     "@mdi/js": "catalog:packages",
     "lit-element": "catalog:packages",
     "lit-html": "catalog:packages",
     "memoize-one": "catalog:packages",
-    "sortable": "^2.0.0",
     "sortablejs": "^1.15.7",
     "superstruct": "catalog:packages",
     "tslib": "^2.8.1"
