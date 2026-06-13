@@ -61,7 +61,7 @@ export function PageTOC({ items, className }: { items: TocItem[]; className?: st
       <div className="text-muted-foreground mb-3 text-[11px] font-semibold uppercase tracking-wider">
         On this page
       </div>
-      <ul className="border-border space-y-0.5 border-l">
+      <ul className="space-y-0.5">
         {items.map((item) => {
           const active = activeId === item.id;
           const depth = item.depth ?? 1;
@@ -71,11 +71,11 @@ export function PageTOC({ items, className }: { items: TocItem[]; className?: st
                 href={`#${item.id}`}
                 onClick={(e) => jumpTo(e, item.id)}
                 className={cn(
-                  "-ml-px block border-l-2 py-1 transition-colors",
-                  depth === 1 ? "pl-3" : "pl-6",
+                  "block rounded-md py-1 pr-2 transition-colors",
+                  depth === 1 ? "pl-2.5" : "pl-5",
                   active
-                    ? "border-primary text-primary font-medium"
-                    : "text-muted-foreground hover:text-foreground border-transparent"
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 {item.label}

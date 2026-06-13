@@ -61,7 +61,7 @@ function OptionItem({ row }: { row: OptionRow }) {
   return (
     <div
       id={anchor}
-      className="hover:border-l-primary/60 group relative scroll-mt-24 border-l-2 border-transparent py-3.5 pl-4 pr-2 transition-colors"
+      className="hover:bg-accent/40 group relative scroll-mt-24 rounded-lg px-3 py-3.5 transition-colors"
     >
       <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
         <a

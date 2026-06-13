@@ -1,5 +1,5 @@
 import { Link, Outlet, createFileRoute, useRouterState } from "@tanstack/react-router";
-import { Github } from "lucide-react";
+import { Github, Heart } from "lucide-react";
 
 import { AppSidebar } from "@/components/app-sidebar";
 import { DocsSearch } from "@/components/docs/docs-search";
@@ -92,11 +92,29 @@ function DocsLayout() {
             </Button>
           </div>
         </header>
-        <main className="px-4 py-6 md:px-8 lg:px-12">
+        <main className="flex-1 px-4 py-6 md:px-8 lg:px-12">
           <div className="mx-auto w-full max-w-5xl xl:max-w-7xl">
             <Outlet />
           </div>
         </main>
+        <footer className="mt-auto border-t px-4 py-6 md:px-8 lg:px-12">
+          <div className="text-muted-foreground mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-3 text-xs xl:max-w-7xl">
+            <p className="inline-flex items-center gap-1">
+              Built with <Heart aria-label="love" className="size-3 fill-current text-rose-500" />{" "}
+              for the Home Assistant community
+            </p>
+            <p>
+              <a
+                href="https://github.com/flixlix"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-foreground hover:text-primary font-medium transition-colors"
+              >
+                @flixlix
+              </a>
+            </p>
+          </div>
+        </footer>
       </SidebarInset>
     </SidebarProvider>
   );

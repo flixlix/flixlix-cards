@@ -202,6 +202,43 @@ jobs:
             exit 0
           fi
 
+          # --- robustness helpers ---------------------------------------------
+          # Retry a (network) command a few times before giving up.
+          retry() {
+            local n=1 max="${RETRY_MAX:-3}" delay="${RETRY_DELAY:-5}"
+            until "$@"; do
+              if [ "$n" -ge "$max" ]; then return 1; fi
+              echo "::warning::Attempt $n/$max failed: $*. Retrying in ${delay}s..."
+              sleep "$delay"
+              n=$((n + 1))
+            done
+          }
+
+          # Fresh clone of the current dist repo (invoked via retry).
+          clone_dist() { rm -rf dist-repo && git clone "$DIST_REPO_URL" dist-repo 2>/dev/null; }
+
+          # Push the default branch + tags of the current dist repo (invoked via retry).
+          push_dist() { git push origin "$DEFAULT_BRANCH" --tags; }
+
+          # Create the GitHub release; tolerate one already created by a prior attempt.
+          create_release() {
+            if gh release create "$TAG_NAME" "${CLEAN_NAME}.js" \
+              --repo "flixlix/${CLEAN_NAME}" \
+              --title "$TAG_NAME" \
+              --notes "$NOTES" \
+              $PRERELEASE_FLAG; then
+              return 0
+            fi
+            if gh release view "$TAG_NAME" --repo "flixlix/${CLEAN_NAME}" >/dev/null 2>&1; then
+              echo "::notice::Release $TAG_NAME already exists, treating as success"
+              return 0
+            fi
+            return 1
+          }
+
+          # Records packages that failed so the step can exit non-zero at the end.
+          FAIL_LOG=$(mktemp)
+
           echo "::group::Packages to distribute"
           echo "$PUBLISHED_PACKAGES" | jq '.'
           echo "::endgroup::"
@@ -214,9 +251,10 @@ jobs:
             echo "::group::📦 $NAME@$VERSION"
 
             # Find package directory
-            PKG_DIR=$(find packages -name package.json -exec grep -l "\"name\": \"$NAME\"" {} + 2>/dev/null | head -1 | xargs dirname)
+            PKG_DIR=$(find packages -name package.json -exec grep -l "\"name\": \"$NAME\"" {} + 2>/dev/null | head -1 | xargs dirname 2>/dev/null || true)
             if [ -z "$PKG_DIR" ] || [ ! -d "$PKG_DIR" ]; then
               echo "::error::Could not find package directory for $NAME"
+              echo "$NAME" >> "$FAIL_LOG"
               echo "::endgroup::"
               continue
             fi
@@ -226,6 +264,7 @@ jobs:
             echo "Building..."
             if ! pnpm --filter "$NAME" build; then
               echo "::error::Build failed for $NAME"
+              echo "$NAME" >> "$FAIL_LOG"
               echo "::endgroup::"
               continue
             fi
@@ -233,16 +272,17 @@ jobs:
             BUILD_OUTPUT="${PKG_DIR}/dist/${CLEAN_NAME}.js"
             if [ ! -f "$BUILD_OUTPUT" ]; then
               echo "::error::Build output not found: $BUILD_OUTPUT"
+              echo "$NAME" >> "$FAIL_LOG"
               echo "::endgroup::"
               continue
             fi
 
             # Clone dist repo
             echo "Cloning dist repo..."
-            rm -rf dist-repo
             DIST_REPO_URL="https://x-access-token:${DIST_REPO_TOKEN}@github.com/flixlix/${CLEAN_NAME}.git"
-            if ! git clone "$DIST_REPO_URL" dist-repo 2>/dev/null; then
+            if ! retry clone_dist; then
               echo "::error::Failed to clone flixlix/${CLEAN_NAME}"
+              echo "$NAME" >> "$FAIL_LOG"
               echo "::endgroup::"
               continue
             fi
@@ -259,12 +299,14 @@ jobs:
             # Extract changelog
             NOTES="Release v${VERSION}"
             if [ -f "${PKG_DIR}/CHANGELOG.md" ]; then
-              EXTRACTED=$(sed -n "/^## ${VERSION}/,/^## /p" "${PKG_DIR}/CHANGELOG.md" | sed '1d;$d' | sed '/^$/d')
+              VER_RE=$(printf '%s' "$VERSION" | sed 's/\./\\./g')
+              EXTRACTED=$(sed -n "/^## ${VER_RE}\$/,/^## /p" "${PKG_DIR}/CHANGELOG.md" | sed '1d;$d' | sed '/^$/d')
               [ -n "$EXTRACTED" ] && NOTES="$EXTRACTED"
             fi
 
             # Commit and push
             cd dist-repo
+            DEFAULT_BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null || echo main)
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git add -A
@@ -284,8 +326,9 @@ jobs:
 
             git tag -a "$TAG_NAME" -m "Release ${TAG_NAME}"
 
-            if ! git push origin main --tags; then
-              echo "::error::Failed to push"
+            if ! retry push_dist; then
+              echo "::error::Failed to push $TAG_NAME to flixlix/${CLEAN_NAME}"
+              echo "$NAME" >> "$FAIL_LOG"
               cd ..
               rm -rf dist-repo
               echo "::endgroup::"
@@ -296,18 +339,22 @@ jobs:
             PRERELEASE_FLAG=""
             [[ "$VERSION" == *"-"* ]] && PRERELEASE_FLAG="--prerelease"
 
-            if ! gh release create "$TAG_NAME" "${CLEAN_NAME}.js" \
-              --repo "flixlix/${CLEAN_NAME}" \
-              --title "$TAG_NAME" \
-              --notes "$NOTES" \
-              $PRERELEASE_FLAG; then
-              echo "::error::Failed to create release"
+            if retry create_release; then
+              echo "::notice::✅ Released $NAME@$VERSION"
+            else
+              echo "::error::Failed to create release for $NAME@$VERSION"
+              echo "$NAME" >> "$FAIL_LOG"
             fi
 
             cd ..
             rm -rf dist-repo
-            echo "::notice::✅ Released $NAME@$VERSION"
             echo "::endgroup::"
           done
 
+          if [ -s "$FAIL_LOG" ]; then
+            echo "::error::Distribution failed for: $(tr '\n' ' ' < "$FAIL_LOG")"
+            rm -f "$FAIL_LOG"
+            exit 1
+          fi
+          rm -f "$FAIL_LOG"
           echo "🎉 Distribution complete!"

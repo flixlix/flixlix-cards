@@ -1,12 +1,12 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   BookOpen,
+  ChartPie,
   ChevronRight,
   GitPullRequest,
   HeartHandshake,
-  ListTree,
-  Package,
-  Wrench,
+  ListOrdered,
+  Sparkles,
   Zap,
 } from "lucide-react";
 import * as React from "react";
@@ -26,14 +26,19 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
+  SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   SidebarRail,
 } from "@flixlix-cards/ui/components/sidebar";
 
 type DocSection = {
   label: string;
   to: string;
+  icon: React.ComponentType<{ className?: string }>;
   items: { label: string; to: string }[];
 };
 
@@ -41,6 +46,7 @@ const SECTIONS: DocSection[] = [
   {
     label: "Power Flow Card Plus",
     to: "/power-flow-card-plus",
+    icon: Sparkles,
     items: [
       { label: "Overview", to: "/power-flow-card-plus" },
       { label: "Installation", to: "/power-flow-card-plus/installation" },
@@ -51,6 +57,7 @@ const SECTIONS: DocSection[] = [
   {
     label: "Energy Flow Card Plus",
     to: "/energy-flow-card-plus",
+    icon: Zap,
     items: [
       { label: "Overview", to: "/energy-flow-card-plus" },
       { label: "Installation", to: "/energy-flow-card-plus/installation" },
@@ -61,6 +68,7 @@ const SECTIONS: DocSection[] = [
   {
     label: "Energy Breakdown Card",
     to: "/energy-breakdown-card",
+    icon: ChartPie,
     items: [
       { label: "Overview", to: "/energy-breakdown-card" },
       { label: "Installation", to: "/energy-breakdown-card/installation" },
@@ -71,6 +79,7 @@ const SECTIONS: DocSection[] = [
   {
     label: "Sortable List Card",
     to: "/sortable-list-card",
+    icon: ListOrdered,
     items: [
       { label: "Overview", to: "/sortable-list-card" },
       { label: "Installation", to: "/sortable-list-card/installation" },
@@ -79,13 +88,6 @@ const SECTIONS: DocSection[] = [
     ],
   },
 ];
-
-const SECTION_ICONS_FOR_LABEL: Record<string, React.ComponentType<{ className?: string }>> = {
-  Overview: BookOpen,
-  Installation: Package,
-  Configuration: ListTree,
-  Examples: Wrench,
-};
 
 function isSectionActive(pathname: string, sectionTo: string): boolean {
   return pathname === sectionTo || pathname.startsWith(`${sectionTo}/`);
@@ -129,11 +131,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton asChild size="lg">
               <Link to="/">
-                <div className="bg-primary text-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                  <Zap className="size-4" />
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400 to-orange-600 text-white shadow-sm">
+                  <Zap className="size-4 fill-current" />
                 </div>
                 <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">flixlix-cards</span>
+                  <span className="font-display truncate font-bold tracking-tight">
+                    flixlix-cards
+                  </span>
                   <span className="text-muted-foreground truncate text-xs">Documentation</span>
                 </div>
               </Link>
@@ -142,13 +146,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
 
-      <SidebarContent className="gap-0 overflow-x-hidden">
+      <SidebarContent className="overflow-x-hidden">
         <SidebarGroup>
           <SidebarGroupLabel>Getting Started</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname === "/"}>
+                <SidebarMenuButton asChild isActive={pathname === "/"} tooltip="Introduction">
                   <Link to="/">
                     <BookOpen />
                     <span className="truncate">Introduction</span>
@@ -159,61 +163,70 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {SECTIONS.map((section) => {
-          const isOpen = openSections.has(section.to);
-          return (
-            <Collapsible
-              key={section.to}
-              title={section.label}
-              open={isOpen}
-              onOpenChange={(next) => setSectionOpen(section.to, next)}
-              className="group/collapsible"
-            >
-              <SidebarGroup>
-                <SidebarGroupLabel className="text-sidebar-foreground flex items-center text-sm">
-                  <span className="truncate">{section.label}</span>
-                  <CollapsibleTrigger
-                    aria-label={`Toggle ${section.label}`}
-                    className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-sidebar-ring ml-auto inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-md outline-none focus-visible:ring-2"
+        <SidebarGroup>
+          <SidebarGroupLabel>The Cards</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {SECTIONS.map((section) => {
+                const isOpen = openSections.has(section.to);
+                return (
+                  <Collapsible
+                    key={section.to}
+                    asChild
+                    open={isOpen}
+                    onOpenChange={(next) => setSectionOpen(section.to, next)}
+                    className="group/collapsible"
                   >
-                    <ChevronRight className="size-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
-                  </CollapsibleTrigger>
-                </SidebarGroupLabel>
-                <CollapsibleContent>
-                  <SidebarGroupContent>
-                    <SidebarMenu>
-                      {section.items.map((item) => {
-                        const Icon = SECTION_ICONS_FOR_LABEL[item.label] ?? BookOpen;
-                        const isActive = pathname === item.to;
-                        return (
-                          <SidebarMenuItem key={item.to}>
-                            <SidebarMenuButton
-                              asChild
-                              isActive={isActive}
-                              tooltip={`${section.label} – ${item.label}`}
-                            >
-                              <Link to={item.to}>
-                                <Icon />
-                                <span className="truncate">{item.label}</span>
-                              </Link>
-                            </SidebarMenuButton>
-                          </SidebarMenuItem>
-                        );
-                      })}
-                    </SidebarMenu>
-                  </SidebarGroupContent>
-                </CollapsibleContent>
-              </SidebarGroup>
-            </Collapsible>
-          );
-        })}
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        asChild
+                        tooltip={section.label}
+                        isActive={isSectionActive(pathname, section.to)}
+                      >
+                        <Link to={section.to}>
+                          <section.icon />
+                          <span className="truncate">{section.label}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                      <CollapsibleTrigger asChild>
+                        <SidebarMenuAction
+                          aria-label={`Toggle ${section.label}`}
+                          className="transition-transform duration-200 data-[state=open]:rotate-90"
+                        >
+                          <ChevronRight />
+                        </SidebarMenuAction>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <SidebarMenuSub className="border-none">
+                          {section.items.map((item) => (
+                            <SidebarMenuSubItem key={item.to}>
+                              <SidebarMenuSubButton asChild isActive={pathname === item.to}>
+                                <Link to={item.to}>
+                                  <span className="truncate">{item.label}</span>
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          ))}
+                        </SidebarMenuSub>
+                      </CollapsibleContent>
+                    </SidebarMenuItem>
+                  </Collapsible>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
         <SidebarGroup>
           <SidebarGroupLabel>Project</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname === "/contributing"}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === "/contributing"}
+                  tooltip="How to contribute"
+                >
                   <Link to="/contributing">
                     <HeartHandshake />
                     <span className="truncate">How to contribute</span>
@@ -238,10 +251,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarContent>
 
       <SidebarFooter>
-        <div className="flex items-center justify-between gap-2 px-1 pb-1 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:items-center">
-          <span className="text-muted-foreground truncate text-[11px] leading-tight group-data-[collapsible=icon]:hidden">
-            Theme
-          </span>
+        <div className="flex items-center justify-between gap-2 px-1 pb-1 group-data-[collapsible=icon]:hidden">
+          <span className="text-muted-foreground truncate text-[11px] leading-tight">Theme</span>
           <ThemeToggle />
         </div>
       </SidebarFooter>

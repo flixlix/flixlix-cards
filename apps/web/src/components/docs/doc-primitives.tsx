@@ -1,4 +1,4 @@
-import { Check, Copy } from "lucide-react";
+import { Check, Copy, Info, Lightbulb, TriangleAlert } from "lucide-react";
 import * as React from "react";
 
 import { cn } from "@flixlix-cards/cn";
@@ -17,13 +17,13 @@ export function PageHeader({
   badges?: { label: string; variant?: "default" | "secondary" | "outline" }[];
 }) {
   return (
-    <header className="mb-8 border-b pb-6">
+    <header className="mb-10">
       {eyebrow ? (
-        <div className="text-muted-foreground mb-2 text-xs font-medium uppercase tracking-wide">
+        <div className="text-primary mb-3 font-mono text-[11px] font-medium tracking-widest uppercase">
           {eyebrow}
         </div>
       ) : null}
-      <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">{title}</h1>
+      <h1 className="text-3xl font-bold tracking-tight text-balance md:text-4xl">{title}</h1>
       {description ? (
         <p className="text-muted-foreground mt-3 max-w-3xl text-base leading-relaxed">
           {description}
@@ -38,6 +38,7 @@ export function PageHeader({
           ))}
         </div>
       ) : null}
+      <div className="from-primary/70 via-primary/25 mt-6 h-px bg-linear-to-r via-40% to-transparent" />
     </header>
   );
 }
@@ -55,7 +56,21 @@ export function Section({
 }) {
   return (
     <section id={id} className="mb-12 scroll-mt-24">
-      <h2 className="border-border mb-2 text-xl font-semibold tracking-tight">{title}</h2>
+      <h2 className="mb-2 text-xl font-semibold tracking-tight">
+        {id ? (
+          <a href={`#${id}`} className="group/anchor">
+            {title}
+            <span
+              aria-hidden
+              className="text-primary/70 ml-1.5 text-base opacity-0 transition-opacity group-hover/anchor:opacity-100"
+            >
+              #
+            </span>
+          </a>
+        ) : (
+          title
+        )}
+      </h2>
       {description ? (
         <p className="text-muted-foreground mb-4 text-sm leading-relaxed">{description}</p>
       ) : null}
@@ -98,37 +113,32 @@ export function CodeBlock({
     window.setTimeout(() => setCopied(false), 1500);
   }
 
+  const copyButton = (
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      onClick={copy}
+      aria-label="Copy code"
+      className="h-6 px-2 text-stone-400 hover:bg-white/10 hover:text-stone-100"
+    >
+      {copied ? <Check className="size-3 text-emerald-400" /> : <Copy className="size-3" />}
+    </Button>
+  );
+
   return (
-    <div className="bg-muted/60 group relative my-3 overflow-hidden rounded-md border">
+    <div className="group relative my-3 overflow-hidden rounded-xl border border-stone-800 bg-stone-950 shadow-sm dark:border-white/10">
       {filename || language ? (
-        <div className="text-muted-foreground flex items-center justify-between border-b bg-muted px-3 py-1.5 text-[11px] font-medium uppercase tracking-wide">
-          <span>{filename ?? language}</span>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={copy}
-            aria-label="Copy code"
-            className="h-6 px-2"
-          >
-            {copied ? <Check className="size-3" /> : <Copy className="size-3" />}
-          </Button>
+        <div className="flex items-center justify-between border-b border-white/10 bg-white/5 py-1.5 pr-1.5 pl-3.5 font-mono text-[11px] font-medium text-stone-400">
+          <span className="inline-flex items-center gap-2">{filename ?? language}</span>
+          {copyButton}
         </div>
       ) : (
-        <div className="absolute right-2 top-2 opacity-0 transition group-hover:opacity-100">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={copy}
-            aria-label="Copy code"
-            className="h-6 px-2"
-          >
-            {copied ? <Check className="size-3" /> : <Copy className="size-3" />}
-          </Button>
+        <div className="absolute top-2 right-2 opacity-0 transition group-hover:opacity-100">
+          {copyButton}
         </div>
       )}
-      <pre className="overflow-x-auto p-4 text-xs leading-relaxed">
+      <pre className="overflow-x-auto p-4 text-xs leading-relaxed text-stone-200">
         <code>{code.trim()}</code>
       </pre>
     </div>
@@ -145,9 +155,9 @@ export type OptionRow = {
 
 export function OptionsTable({ rows }: { rows: OptionRow[] }) {
   return (
-    <div className="overflow-x-auto rounded-md border">
+    <div className="overflow-x-auto rounded-xl border">
       <table className="w-full text-sm">
-        <thead className="bg-muted/60 text-muted-foreground">
+        <thead className="bg-muted/60 text-muted-foreground font-mono text-[11px] tracking-wide uppercase">
           <tr>
             <th className="border-b px-3 py-2 text-left font-medium">Name</th>
             <th className="border-b px-3 py-2 text-left font-medium">Type</th>
@@ -158,7 +168,7 @@ export function OptionsTable({ rows }: { rows: OptionRow[] }) {
         <tbody>
           {rows.map((row) => (
             <tr key={row.name} className="even:bg-muted/30">
-              <td className="border-b px-3 py-2 align-top font-mono text-[12.5px] font-medium">
+              <td className="border-b px-3 py-2 align-top font-mono text-[12.5px] font-semibold text-amber-700 dark:text-amber-400">
                 {row.name}
                 {row.required ? (
                   <span className="text-destructive ml-1 text-[10px]" title="required">
@@ -192,15 +202,34 @@ export function Callout({
   title?: string;
   children: React.ReactNode;
 }) {
-  const colors: Record<string, string> = {
-    info: "bg-blue-400/7 text-blue-700 dark:text-blue-300",
-    warning: "bg-amber-400/7 text-amber-700 dark:text-amber-300",
-    tip: "bg-emerald-400/7 text-emerald-700 dark:text-emerald-300",
+  const styles: Record<
+    "info" | "warning" | "tip",
+    { classes: string; icon: React.ComponentType<{ className?: string }>; fallbackTitle: string }
+  > = {
+    info: {
+      classes: "bg-sky-400/8 text-sky-700 dark:text-sky-300",
+      icon: Info,
+      fallbackTitle: "Note",
+    },
+    warning: {
+      classes: "bg-amber-400/8 text-amber-700 dark:text-amber-300",
+      icon: TriangleAlert,
+      fallbackTitle: "Warning",
+    },
+    tip: {
+      classes: "bg-emerald-400/8 text-emerald-700 dark:text-emerald-300",
+      icon: Lightbulb,
+      fallbackTitle: "Tip",
+    },
   };
+  const s = styles[variant];
   return (
-    <div className={cn("my-3 rounded-md p-3 text-sm", colors[variant])}>
-      {title ? <div className="mb-1 font-semibold">{title}</div> : null}
-      <div className="text-foreground/90">{children}</div>
+    <div className={cn("my-4 flex gap-3 rounded-lg p-3.5 text-sm", s.classes)}>
+      <s.icon aria-hidden className="mt-0.5 size-4 shrink-0" />
+      <div className="min-w-0">
+        <div className="mb-1 font-semibold">{title ?? s.fallbackTitle}</div>
+        <div className="text-foreground/90">{children}</div>
+      </div>
     </div>
   );
 }
@@ -213,29 +242,37 @@ export function NextPageNav({
   next?: { label: string; to: string };
 }) {
   return (
-    <nav className="mt-12 flex items-center justify-between gap-3 border-t pt-6 text-sm">
-      <div>
-        {prev ? (
-          <a
-            href={prev.to}
-            className="hover:text-primary text-muted-foreground inline-flex flex-col gap-0.5 transition"
-          >
-            <span className="text-[11px] uppercase tracking-wide">Previous</span>
-            <span className="font-medium">← {prev.label}</span>
-          </a>
-        ) : null}
-      </div>
-      <div className="text-right">
-        {next ? (
-          <a
-            href={next.to}
-            className="hover:text-primary text-muted-foreground inline-flex flex-col gap-0.5 transition"
-          >
-            <span className="text-[11px] uppercase tracking-wide">Next</span>
-            <span className="font-medium">{next.label} →</span>
-          </a>
-        ) : null}
-      </div>
+    <nav className="mt-12 grid grid-cols-2 gap-3 text-sm">
+      {prev ? (
+        <a
+          href={prev.to}
+          className="group hover:border-primary/50 hover:bg-accent/40 rounded-xl border p-4 transition-colors"
+        >
+          <span className="text-muted-foreground font-mono text-[11px] tracking-wide uppercase">
+            ← Previous
+          </span>
+          <span className="group-hover:text-primary mt-1 block font-medium transition-colors">
+            {prev.label}
+          </span>
+        </a>
+      ) : (
+        <span />
+      )}
+      {next ? (
+        <a
+          href={next.to}
+          className="group hover:border-primary/50 hover:bg-accent/40 rounded-xl border p-4 text-right transition-colors"
+        >
+          <span className="text-muted-foreground font-mono text-[11px] tracking-wide uppercase">
+            Next →
+          </span>
+          <span className="group-hover:text-primary mt-1 block font-medium transition-colors">
+            {next.label}
+          </span>
+        </a>
+      ) : (
+        <span />
+      )}
     </nav>
   );
 }

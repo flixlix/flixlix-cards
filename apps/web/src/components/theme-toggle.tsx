@@ -1,9 +1,14 @@
 import { Airplay, Moon, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import {
+  applyThemeMode,
+  getThemeMode,
+  setThemeMode,
+  THEME_CHANGE_EVENT,
+  type ThemeMode,
+} from "#/lib/theme";
 import { cn } from "@flixlix-cards/cn";
-
-type ThemeMode = "light" | "dark" | "auto";
 
 const ITEM_BASE = "size-6 rounded-full p-1.5 transition-colors";
 const ITEM_ACTIVE = "bg-accent text-accent-foreground";
@@ -15,32 +20,17 @@ const MODES: { key: ThemeMode; label: string; Icon: typeof Sun }[] = [
   { key: "auto", label: "System", Icon: Airplay },
 ];
 
-function getInitialMode(): ThemeMode {
-  if (typeof window === "undefined") return "light";
-  const stored = window.localStorage.getItem("theme");
-  if (stored === "light" || stored === "dark" || stored === "auto") return stored;
-  return "light";
-}
-
-function applyThemeMode(mode: ThemeMode) {
-  if (typeof window === "undefined") return;
-  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-  const resolved = mode === "auto" ? (prefersDark ? "dark" : "light") : mode;
-  const root = document.documentElement;
-  root.classList.remove("light", "dark");
-  root.classList.add(resolved);
-  if (mode === "auto") root.removeAttribute("data-theme");
-  else root.setAttribute("data-theme", mode);
-  root.style.colorScheme = resolved;
-}
-
 export default function ThemeToggle({ className }: { className?: string }) {
   const [mode, setMode] = useState<ThemeMode>("light");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMode(getInitialMode());
+    setMode(getThemeMode());
     setMounted(true);
+    // Stay in sync when the theme is changed elsewhere (e.g. command menu).
+    const onThemeChange = (e: Event) => setMode((e as CustomEvent<ThemeMode>).detail);
+    window.addEventListener(THEME_CHANGE_EVENT, onThemeChange);
+    return () => window.removeEventListener(THEME_CHANGE_EVENT, onThemeChange);
   }, []);
 
   useEffect(() => {
@@ -53,8 +43,7 @@ export default function ThemeToggle({ className }: { className?: string }) {
 
   function selectMode(next: ThemeMode) {
     setMode(next);
-    applyThemeMode(next);
-    window.localStorage.setItem("theme", next);
+    setThemeMode(next);
   }
 
   const active = mounted ? mode : null;

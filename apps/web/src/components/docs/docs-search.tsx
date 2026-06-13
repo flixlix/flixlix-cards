@@ -1,8 +1,20 @@
 import { useRouter } from "@tanstack/react-router";
-import { CornerDownLeft, Hash, ListTree, Search, Sparkles, Wrench, X } from "lucide-react";
+import {
+  Airplay,
+  CornerDownLeft,
+  Hash,
+  ListTree,
+  Moon,
+  Search,
+  Sparkles,
+  Sun,
+  Wrench,
+  X,
+} from "lucide-react";
 import * as React from "react";
 import { createPortal } from "react-dom";
 
+import { setThemeMode } from "#/lib/theme";
 import { cn } from "@flixlix-cards/cn";
 
 import { searchDocs, SUGGESTED_GROUPS, type SearchEntry } from "./docs-search-index";
@@ -21,6 +33,52 @@ const TYPE_LABELS: Record<SearchEntry["type"], string> = {
   example: "Example",
 };
 
+type Command = {
+  id: string;
+  title: string;
+  description: string;
+  /** Extra words the command should match besides its title. */
+  keywords: string;
+  icon: React.ComponentType<{ className?: string }>;
+  perform: () => void;
+};
+
+const THEME_COMMANDS: Command[] = [
+  {
+    id: "theme-light",
+    title: "Light theme",
+    description: "Switch the docs to the light theme",
+    keywords: "theme light mode appearance color scheme",
+    icon: Sun,
+    perform: () => setThemeMode("light"),
+  },
+  {
+    id: "theme-dark",
+    title: "Dark theme",
+    description: "Switch the docs to the dark theme",
+    keywords: "theme dark mode appearance color scheme night",
+    icon: Moon,
+    perform: () => setThemeMode("dark"),
+  },
+  {
+    id: "theme-auto",
+    title: "System theme",
+    description: "Follow your operating system's appearance",
+    keywords: "theme system auto mode appearance color scheme",
+    icon: Airplay,
+    perform: () => setThemeMode("auto"),
+  },
+];
+
+function matchCommands(query: string): Command[] {
+  const tokens = query.toLowerCase().split(/\s+/).filter(Boolean);
+  if (tokens.length === 0) return THEME_COMMANDS;
+  return THEME_COMMANDS.filter((c) => {
+    const haystack = `${c.title} ${c.keywords}`.toLowerCase();
+    return tokens.every((t) => haystack.includes(t));
+  });
+}
+
 function highlight(text: string, query: string): React.ReactNode {
   if (!query) return text;
   const idx = text.toLowerCase().indexOf(query.toLowerCase());
@@ -36,7 +94,9 @@ function highlight(text: string, query: string): React.ReactNode {
   );
 }
 
-type Group = { label: string; entries: SearchEntry[] };
+type MenuItem = { kind: "doc"; entry: SearchEntry } | { kind: "command"; command: Command };
+
+type Group = { label: string; items: MenuItem[] };
 
 export function DocsSearch({ className }: { className?: string }) {
   const [open, setOpen] = React.useState(false);
@@ -104,9 +164,29 @@ function CommandMenu({ onClose }: { onClose: () => void }) {
 
   const groups: Group[] = React.useMemo(() => {
     const trimmed = query.trim();
-    if (!trimmed) return SUGGESTED_GROUPS.filter((g) => g.entries.length > 0);
+    const commandGroup = (commands: Command[]): Group[] =>
+      commands.length > 0
+        ? [
+            {
+              label: "Commands",
+              items: commands.map((command) => ({ kind: "command", command }) as MenuItem),
+            },
+          ]
+        : [];
+
+    if (!trimmed) {
+      return [
+        ...SUGGESTED_GROUPS.filter((g) => g.entries.length > 0).map((g) => ({
+          label: g.label,
+          items: g.entries.map((entry) => ({ kind: "doc", entry }) as MenuItem),
+        })),
+        ...commandGroup(THEME_COMMANDS),
+      ];
+    }
+
     const results = searchDocs(query, 24);
-    if (results.length === 0) return [];
+    const commands = commandGroup(matchCommands(trimmed));
+    if (results.length === 0) return commands;
     // group by type for a richer command-menu feel
     const order: SearchEntry["type"][] = ["page", "section", "option", "example"];
     const buckets = new Map<SearchEntry["type"], SearchEntry[]>();
@@ -115,15 +195,20 @@ function CommandMenu({ onClose }: { onClose: () => void }) {
       list.push(entry);
       buckets.set(entry.type, list);
     }
-    return order
-      .map((type) => ({
-        label: { page: "Pages", section: "Sections", option: "Options", example: "Examples" }[type],
-        entries: buckets.get(type) ?? [],
-      }))
-      .filter((g) => g.entries.length > 0);
+    return [
+      ...order
+        .map((type) => ({
+          label: { page: "Pages", section: "Sections", option: "Options", example: "Examples" }[
+            type
+          ],
+          items: (buckets.get(type) ?? []).map((entry) => ({ kind: "doc", entry }) as MenuItem),
+        }))
+        .filter((g) => g.items.length > 0),
+      ...commands,
+    ];
   }, [query]);
 
-  const flatEntries = React.useMemo(() => groups.flatMap((g) => g.entries), [groups]);
+  const flatEntries = React.useMemo(() => groups.flatMap((g) => g.items), [groups]);
 
   React.useEffect(() => setActiveIndex(0), [query]);
 
@@ -145,6 +230,15 @@ function CommandMenu({ onClose }: { onClose: () => void }) {
     onClose();
   }
 
+  function runItem(item: MenuItem) {
+    if (item.kind === "doc") {
+      navigateTo(item.entry);
+    } else {
+      item.command.perform();
+      onClose();
+    }
+  }
+
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Escape") {
       e.preventDefault();
@@ -158,10 +252,10 @@ function CommandMenu({ onClose }: { onClose: () => void }) {
         flatEntries.length === 0 ? 0 : (i - 1 + flatEntries.length) % flatEntries.length
       );
     } else if (e.key === "Enter") {
-      const entry = flatEntries[activeIndex];
-      if (entry) {
+      const item = flatEntries[activeIndex];
+      if (item) {
         e.preventDefault();
-        navigateTo(entry);
+        runItem(item);
       }
     }
   }
@@ -240,12 +334,19 @@ function CommandMenu({ onClose }: { onClose: () => void }) {
                   {group.label}
                 </div>
                 <ul className="flex flex-col">
-                  {group.entries.map((entry) => {
+                  {group.items.map((item) => {
                     const idx = runningIndex++;
-                    const Icon = TYPE_ICONS[entry.type];
                     const active = idx === activeIndex;
+                    const Icon =
+                      item.kind === "doc" ? TYPE_ICONS[item.entry.type] : item.command.icon;
+                    const title = item.kind === "doc" ? item.entry.title : item.command.title;
+                    const description =
+                      item.kind === "doc" ? item.entry.description : item.command.description;
+                    const typeLabel =
+                      item.kind === "doc" ? TYPE_LABELS[item.entry.type] : "Command";
+                    const key = item.kind === "doc" ? item.entry.to : item.command.id;
                     return (
-                      <li key={`${entry.to}-${idx}`}>
+                      <li key={`${key}-${idx}`}>
                         <button
                           type="button"
                           role="option"
@@ -253,7 +354,7 @@ function CommandMenu({ onClose }: { onClose: () => void }) {
                           id={`command-item-${idx}`}
                           data-index={idx}
                           onMouseEnter={() => setActiveIndex(idx)}
-                          onClick={() => navigateTo(entry)}
+                          onClick={() => runItem(item)}
                           className={cn(
                             "flex w-full items-start gap-3 rounded-md px-3 py-2 text-left text-sm transition",
                             active
@@ -265,20 +366,22 @@ function CommandMenu({ onClose }: { onClose: () => void }) {
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center justify-between gap-2">
                               <span className="truncate font-medium">
-                                {highlight(entry.title, query)}
+                                {highlight(title, query)}
                               </span>
                               <span className="text-muted-foreground shrink-0 text-[10px] uppercase tracking-wide">
-                                {TYPE_LABELS[entry.type]}
+                                {typeLabel}
                               </span>
                             </div>
-                            {entry.description ? (
+                            {description ? (
                               <div className="text-muted-foreground truncate text-xs">
-                                {highlight(entry.description, query)}
+                                {highlight(description, query)}
                               </div>
                             ) : null}
-                            <div className="text-muted-foreground/70 truncate text-[11px]">
-                              {entry.breadcrumb}
-                            </div>
+                            {item.kind === "doc" ? (
+                              <div className="text-muted-foreground/70 truncate text-[11px]">
+                                {item.entry.breadcrumb}
+                              </div>
+                            ) : null}
                           </div>
                           {active ? (
                             <CornerDownLeft className="text-muted-foreground mt-1 size-3.5 shrink-0" />
