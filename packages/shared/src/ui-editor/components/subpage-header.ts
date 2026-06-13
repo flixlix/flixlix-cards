@@ -3,7 +3,7 @@ import { type ConfigPage, type PowerFlowCardPlusConfig } from "@flixlix-cards/sh
 import { mdiArrowLeft } from "@mdi/js";
 import { fireEvent, type HomeAssistant } from "custom-card-helpers";
 import { css, type CSSResultGroup, html, LitElement, type TemplateResult } from "lit";
-import { property } from "lit-element";
+import { property } from "lit/decorators.js";
 
 declare global {
   interface HASSDomEvents {
