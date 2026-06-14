@@ -1,8 +1,26 @@
 import { type FlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { isEnergyCard } from "@flixlix-cards/shared/utils/is-energy-card";
-import { type HomeAssistant, formatNumber } from "custom-card-helpers";
+import { type HomeAssistant, formatNumber, numberFormatToLocale } from "custom-card-helpers";
 import { defaultValues } from "./get-default-config";
 import { isNumberValue, round } from "./utils";
+
+const numberFormatters = new Map<string, Intl.NumberFormat>();
+
+const formatDisplayNumber = (value: number, locale: HomeAssistant["locale"]): string => {
+  // "none" (and the no-Intl path) is cheap in formatNumber — delegate for exact parity.
+  if (!locale || locale.number_format === "none") return formatNumber(value, locale);
+  const key = `${locale.language}|${locale.number_format}`;
+  let formatter = numberFormatters.get(key);
+  if (!formatter) {
+    try {
+      formatter = new Intl.NumberFormat(numberFormatToLocale(locale), { maximumFractionDigits: 2 });
+    } catch {
+      formatter = new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 });
+    }
+    numberFormatters.set(key, formatter);
+  }
+  return formatter.format(value);
+};
 
 /**
  *
@@ -54,7 +72,7 @@ export const displayValue = (
 
   const transformValue = (v: number) => (!accept_negative ? Math.abs(v) : v);
 
-  const v = formatNumber(
+  const v = formatDisplayNumber(
     transformValue(
       isMega
         ? round(valueInNumber / 1000000, decimalsToRound ?? 2)
