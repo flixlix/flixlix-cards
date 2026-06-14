@@ -27,6 +27,10 @@ const oldFlowRate = (config: FlowCardPlusConfig, value: number, total: number): 
   return max - ratio * (max - min);
 };
 
+/** Animation durations below 0.1s precision are visually identical; rounding
+ *  keeps the <animateMotion dur> attribute stable across small power flickers. */
+const quantizeDuration = (seconds: number): number => Math.round(seconds * 10) / 10;
+
 export const computeFlowRate = (
   config: FlowCardPlusConfig,
   value: number,
@@ -37,9 +41,9 @@ export const computeFlowRate = (
     ? newFlowRate(config, value)
     : oldFlowRate(config, value, total);
   if (!Number.isFinite(result)) {
-    return config.max_flow_rate;
+    return quantizeDuration(config.max_flow_rate);
   }
-  return result;
+  return quantizeDuration(result);
 };
 
 export const computeIndividualFlowRate = (entry?: boolean | number, value?: number): number => {

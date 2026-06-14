@@ -60,7 +60,49 @@ describe("core utils", () => {
       use_new_flow_rate_model: false,
     } as unknown as FlowCardPlusConfig;
 
-    expect(computeFlowRate(config, 25, 100)).toBeCloseTo(7.75, 10);
+    expect(computeFlowRate(config, 25, 100)).toBeCloseTo(7.8, 10);
+  });
+
+  test("computeFlowRate quantizes: nearby inputs map to the same duration", () => {
+    const config = {
+      max_expected_power: 100,
+      min_expected_power: 0,
+      max_flow_rate: 10,
+      min_flow_rate: 1,
+      use_new_flow_rate_model: true,
+    } as unknown as FlowCardPlusConfig;
+
+    // 50 W and 50.4 W should both map to 5.5 (within 0.1s bucket)
+    expect(computeFlowRate(config, 50, 0)).toBe(5.5);
+    expect(computeFlowRate(config, 50.4, 0)).toBe(5.5);
+  });
+
+  test("computeFlowRate output is always on the 0.1s grid", () => {
+    const config = {
+      max_expected_power: 100,
+      min_expected_power: 0,
+      max_flow_rate: 10,
+      min_flow_rate: 1,
+      use_new_flow_rate_model: true,
+    } as unknown as FlowCardPlusConfig;
+
+    for (const input of [0, 10, 25, 33, 50, 66, 75, 90, 100]) {
+      const v = computeFlowRate(config, input, 0);
+      expect(Math.round(v * 10) / 10).toBe(v);
+    }
+  });
+
+  test("computeFlowRate quantizes the non-finite fallback (max_flow_rate)", () => {
+    // min_expected_power === max_expected_power causes division by zero → non-finite
+    const config = {
+      max_expected_power: 50,
+      min_expected_power: 50,
+      max_flow_rate: 6.66,
+      min_flow_rate: 1,
+      use_new_flow_rate_model: true,
+    } as unknown as FlowCardPlusConfig;
+
+    expect(computeFlowRate(config, 50, 0)).toBe(6.7);
   });
 
   test("computeIndividualFlowRate returns value when entry is not false and value is provided", () => {
