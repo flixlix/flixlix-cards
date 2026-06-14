@@ -1078,7 +1078,8 @@ export class PowerFlowCardPlus extends LitElement {
         if (Array.isArray(value)) {
           const individualKeys = ["left-top", "left-bottom", "right-top", "right-bottom"];
           value.forEach((template, index) => {
-            if (template) this._tryConnect(template, `${individualKeys[index]}Secondary`);
+            if (index < individualKeys.length && template)
+              this._tryConnect(template, `${individualKeys[index]}Secondary`);
           });
         } else {
           this._tryConnect(value, key);
@@ -1136,20 +1137,24 @@ export class PowerFlowCardPlus extends LitElement {
 
   private async _tryDisconnectAll() {
     const { entities } = this._config;
-    const templatesObj = {
+    const scalarTopics = {
       gridSecondary: entities.grid?.secondary_info?.template,
       solarSecondary: entities.solar?.secondary_info?.template,
       homeSecondary: entities.home?.secondary_info?.template,
-      individualSecondary: entities.individual?.map(
-        (individual) => individual.secondary_info?.template
-      ),
     };
 
-    for (const [key, value] of Object.entries(templatesObj)) {
+    for (const [key, value] of Object.entries(scalarTopics)) {
       if (value) {
         this._tryDisconnect(key);
       }
     }
+
+    const individualKeys = ["left-top", "left-bottom", "right-top", "right-bottom"];
+    entities.individual?.forEach((individual, index) => {
+      if (index < individualKeys.length && individual.secondary_info?.template) {
+        this._tryDisconnect(`${individualKeys[index]}Secondary`);
+      }
+    });
   }
 
   private async _tryDisconnect(topic: string): Promise<void> {

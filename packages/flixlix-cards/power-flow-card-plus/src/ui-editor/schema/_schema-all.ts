@@ -7,7 +7,18 @@ import { individualSchema } from "@flixlix-cards/shared/ui-editor/schema/individ
 import { solarSchema } from "@flixlix-cards/shared/ui-editor/schema/solar";
 import { mdiBatteryHigh, mdiHome, mdiLeaf, mdiTransmissionTower, mdiWeatherSunny } from "@mdi/js";
 import memoizeOne from "memoize-one";
-import { any, assign, boolean, integer, number, object, optional, string } from "superstruct";
+import {
+  any,
+  array,
+  assign,
+  boolean,
+  integer,
+  number,
+  object,
+  optional,
+  size,
+  string,
+} from "superstruct";
 
 const baseLovelaceCardConfig = object({
   type: string(),
@@ -53,7 +64,7 @@ export const cardConfigStruct = assign(
       solar: optional(any()),
       home: optional(any()),
       fossil_fuel_percentage: optional(any()),
-      individual: optional(any()),
+      individual: optional(size(array(any()), 0, 4)),
       individual1: optional(any()),
       individual2: optional(any()),
     }),
