@@ -37,6 +37,7 @@ interface mainConfigOptions {
   };
   sort_individual_devices?: boolean;
   allow_layout_break?: boolean;
+  force_battery_supply?: boolean;
   /* LEGACY - JUST TO AVOID ERRORS */
   w_threshold?: number;
   w_decimals?: number;

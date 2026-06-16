@@ -21,10 +21,10 @@ export const flowElement = (
   { battery, grid, individual, solar, newDur }: Flows
 ) => {
   return html`
-  ${flowSolarToHome(config, { battery, grid, individual, solar, newDur })}
-  ${flowSolarToGrid(config, { battery, grid, individual, solar, newDur })}
+  ${!config.force_battery_supply ? flowSolarToHome(config, { battery, grid, individual, solar, newDur }) : ""}
+  ${!config.force_battery_supply ? flowSolarToGrid(config, { battery, grid, individual, solar, newDur }) : ""}
   ${flowSolarToBattery(config, { battery, individual, solar, newDur })}
-  ${flowGridToHome(config, { battery, grid, individual, solar, newDur })}
+  ${!config.force_battery_supply ? flowGridToHome(config, { battery, grid, individual, solar, newDur }) : ""}
   ${flowBatteryToHome(config, { battery, grid, individual, newDur })}
   ${flowBatteryToGrid(config, { battery, grid, individual, newDur })}
 </div>`;
