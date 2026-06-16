@@ -59,6 +59,7 @@ export const cardConfigStruct = assign(
     }),
     sort_individual_devices: optional(boolean()),
     allow_layout_break: optional(boolean()),
+    force_battery_supply: optional(boolean()),
 
     /* LEGACY - JUST TO AVOID ERRORS */
     watt_threshold: optional(number()),
@@ -233,6 +234,11 @@ export const advancedOptionsSchema = memoizeOne((localize, displayZeroLinesMode:
       {
         name: "allow_layout_break",
         label: "Allow Layout Break",
+        selector: { boolean: {} },
+      },
+      {
+        name: "force_battery_supply",
+        label: "Force Battery Supply (DC-coupled)",
         selector: { boolean: {} },
       },
     ],
