@@ -2,7 +2,6 @@ import localize from "@flixlix-cards/shared/i18n";
 import {
   type EditSubElementEvent,
   type IndividualDeviceType,
-  type LovelaceRowConfig,
   type PowerFlowCardPlusConfig,
   type SubElementEditorConfig,
 } from "@flixlix-cards/shared/types";
@@ -29,7 +28,7 @@ export class IndividualDevicesEditor extends LitElement {
 
   @state() private _subElementEditorConfig?: SubElementEditorConfig;
 
-  @state() private _configEntities?: LovelaceRowConfig[];
+  @state() private _configEntities?: IndividualDeviceType[];
 
   protected render(): TemplateResult {
     if (!this.config || !this.hass) {

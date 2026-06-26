@@ -486,6 +486,11 @@ export const styles = css`
     stroke-width: 4;
     fill: var(--energy-grid-consumption-color);
   }
+  circle.individual-home {
+    stroke: var(--home-individual-color);
+    stroke-width: 4;
+    fill: var(--home-individual-color);
+  }
   .grid ha-icon:not(.small) {
     color: var(--icon-grid-color);
   }

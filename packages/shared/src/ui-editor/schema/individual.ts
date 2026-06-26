@@ -1,5 +1,11 @@
 import localize from "@flixlix-cards/shared/i18n";
-import { actionSchema, getBaseMainConfigSchema, secondaryInfoSchema } from "./_schema-base";
+import {
+  actionSchema,
+  getBaseMainConfigSchema,
+  getEntityCombinedSelectionSchema,
+  getEntitySeparatedSelectionSchema,
+  secondaryInfoSchema,
+} from "./_schema-base";
 
 const mainSchema = {
   ...getBaseMainConfigSchema(),
@@ -74,10 +80,8 @@ const mainSchema = {
 };
 
 export const individualSchema = [
-  {
-    name: "entity",
-    selector: { entity: {} },
-  },
+  getEntityCombinedSelectionSchema(),
+  getEntitySeparatedSelectionSchema(),
   mainSchema,
   {
     name: "color",
