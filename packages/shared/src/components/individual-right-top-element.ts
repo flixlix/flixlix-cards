@@ -32,11 +32,14 @@ export const individualRightTopElement = (
   const disableEntityClick = config.clickable_entities === false;
 
   const indexOfIndividual = config?.entities?.individual?.findIndex(
-    (e) => e.entity === individualObj.entity
+    (e) => e === individualObj.field
   );
   if (indexOfIndividual === -1 || indexOfIndividual === undefined) return spacer;
 
   const duration = newDur.individual[indexOfIndividual] || 1.66;
+  const individualAbsState = Math.abs(individualObj.state || 0);
+  const shouldShowDirection =
+    individualObj?.showDirection && individualAbsState > (individualObj.displayZeroTolerance ?? 0);
 
   const hasBottomRow = !!battery?.has || checkHasBottomIndividual(individualObjs);
 
@@ -79,18 +82,18 @@ export const individualRightTopElement = (
         ? html` <ha-icon id="individual-right-top-icon" .icon=${individualObj.icon}></ha-icon>`
         : nothing}
       ${individualObj?.field?.display_zero_state !== false ||
-      (individualObj.state || 0) > (individualObj.displayZeroTolerance ?? 0)
+      individualAbsState > (individualObj.displayZeroTolerance ?? 0)
         ? html` <span class="individual-top individual-right-top">
-            ${individualObj?.showDirection
+            ${shouldShowDirection
               ? html`<ha-icon
                   class="small"
-                  .icon=${individualObj.invertAnimation ? "mdi:arrow-down" : "mdi:arrow-up"}
+                  .icon=${individualObj.invertAnimation ? "mdi:arrow-up" : "mdi:arrow-down"}
                 ></ha-icon>`
               : nothing}${displayState}
           </span>`
         : nothing}
     </div>
-    ${showLine(config, individualObj.state || 0) && !config.entities.home?.hide
+    ${showLine(config, individualAbsState) && !config.entities.home?.hide
       ? html`
           <div class="right-individual-flow-container">
             <svg
@@ -101,15 +104,14 @@ export const individualRightTopElement = (
             >
               <path
                 id="individual-top-right-home"
-                class="${styleLine(individualObj.state || 0, config)}"
+                class="${styleLine(individualAbsState, config)}"
                 d="M${hasBottomRow ? 45 : 47},0 v15 c0,${hasBottomRow
                   ? "30 -10,30 -30,30"
                   : "35 -10,35 -30,35"} h-20"
                 vector-effect="non-scaling-stroke"
               />
               ${checkShouldShowDots(config) &&
-              individualObj.state &&
-              individualObj.state >= (individualObj.displayZeroTolerance ?? 0)
+              individualAbsState > (individualObj.displayZeroTolerance ?? 0)
                 ? svg`<circle r="1" class="individual-top" vector-effect="non-scaling-stroke">
                       <animateMotion
                         dur="${computeIndividualFlowRate(

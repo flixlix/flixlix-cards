@@ -18,7 +18,13 @@ type DynamicStylesInput = {
   grid: any;
   solar: any;
   entities: any;
-  individual: Array<{ has?: boolean; field?: IndividualDeviceType }>;
+  individual: Array<{
+    has?: boolean;
+    field?: IndividualDeviceType;
+    invertAnimation?: boolean;
+    state?: number | null;
+    displayZeroTolerance?: number;
+  }>;
   battery: any;
   homeSources: Record<string, { color: string }>;
   homeLargestSource: string;
@@ -275,8 +281,8 @@ export const allDynamicStyles = (main: HostWithStyle, input: DynamicStylesInput)
   }
 
   if (individual?.some((ind) => ind.has)) {
+    const colors = ["#d0cc5b", "#964cb5", "#b54c9d", "#5bd0cc"];
     const getStylesForIndividual = (field: IndividualDeviceType, index: number) => {
-      const colors = ["#d0cc5b", "#964cb5", "#b54c9d", "#5bd0cc"];
       const fieldNames = ["left-top", "left-bottom", "right-top", "right-bottom"];
 
       const fieldName = fieldNames[index] || "left-top";
@@ -317,5 +323,19 @@ export const allDynamicStyles = (main: HostWithStyle, input: DynamicStylesInput)
       if (!individualShown) continue;
       getStylesForIndividual(individualShown.field || {}, index);
     }
+    const homeIndividualIndex = individualsShown.findIndex(
+      (individualShown) =>
+        individualShown?.invertAnimation &&
+        Math.abs(individualShown.state || 0) > (individualShown.displayZeroTolerance ?? 0)
+    );
+    const homeIndividual = individualsShown[homeIndividualIndex];
+    let homeIndividualColor = homeIndividual?.field?.color;
+    if (typeof homeIndividualColor === "object") {
+      homeIndividualColor = convertColorListToHex(homeIndividualColor);
+    }
+    main.style.setProperty(
+      "--home-individual-color",
+      homeIndividualColor || colors[homeIndividualIndex] || "#d0cc5b"
+    );
   }
 };

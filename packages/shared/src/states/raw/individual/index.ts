@@ -20,17 +20,28 @@ export const getIndividualState = ({
   field: IndividualDeviceType;
 }) => {
   const energyCard = isEnergyCard(config);
-  const entity: string = field?.entity;
+  const entity = field?.entity;
 
   if (entity === undefined) return null;
 
   if (energyCard) {
-    return Math.abs(getEnergyEntityState(hass, energyGrowthMap, useDateSelection, entity));
+    if (typeof entity === "string") {
+      return Math.abs(getEnergyEntityState(hass, energyGrowthMap, useDateSelection, entity));
+    }
+
+    return Math.abs(
+      getEnergyEntityState(hass, energyGrowthMap, useDateSelection, entity.consumption)
+    );
   }
 
-  const individualStateWatts = getEntityStateWatts(hass, entity);
+  if (typeof entity === "string") {
+    return getEntityStateWatts(hass, entity);
+  }
 
-  return Math.abs(individualStateWatts);
+  const consumption = Math.abs(getEntityStateWatts(hass, entity.consumption));
+  const production = Math.abs(getEntityStateWatts(hass, entity.production));
+
+  return consumption - production;
 };
 
 export const getIndividualSecondaryState = (hass: HomeAssistant, field: IndividualDeviceType) => {

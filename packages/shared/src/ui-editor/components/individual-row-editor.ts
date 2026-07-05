@@ -1,8 +1,7 @@
 import localize from "@flixlix-cards/shared/i18n";
 import {
   type EditSubElementEvent,
-  type EntityConfig,
-  type LovelaceRowConfig,
+  type IndividualDeviceType,
   type PowerFlowCardPlusConfig,
 } from "@flixlix-cards/shared/types";
 import { fireEvent } from "@flixlix-cards/shared/ui-editor/utils/fire-event";
@@ -23,7 +22,7 @@ import { individualSchema } from "../schema/individual";
 declare global {
   interface HASSDomEvents {
     "entities-changed": {
-      entities: LovelaceRowConfig[];
+      entities: IndividualDeviceType[];
     };
     "edit-detail-element": EditSubElementEvent;
   }
@@ -33,18 +32,20 @@ declare global {
   }
 }
 
+type IndividualEditorRow = IndividualDeviceType & { type?: string };
+
 export class IndividualRowEditor extends LitElement {
   @property({ attribute: false }) protected hass?: HomeAssistant;
 
   @property({ attribute: false }) protected config?: PowerFlowCardPlusConfig;
 
-  @property({ attribute: false }) protected entities?: LovelaceRowConfig[];
+  @property({ attribute: false }) protected entities?: IndividualEditorRow[];
 
   @property() protected label?: string;
 
   @state() protected _indexBeingEdited: number = -1;
 
-  private _entityKeys = new WeakMap<LovelaceRowConfig, string>();
+  private _entityKeys = new WeakMap<IndividualEditorRow, string>();
 
   private _sortable?: SortableInstance;
 
@@ -62,7 +63,7 @@ export class IndividualRowEditor extends LitElement {
     this._indexBeingEdited = index;
   }
 
-  private _getKey(action: LovelaceRowConfig) {
+  private _getKey(action: IndividualEditorRow) {
     if (!this._entityKeys.has(action)) {
       this._entityKeys.set(action, Math.random().toString());
     }
@@ -130,7 +131,9 @@ export class IndividualRowEditor extends LitElement {
                       allow-custom-entity
                       hideClearIcon
                       .hass=${this.hass}
-                      .value=${(entityConf as EntityConfig).entity}
+                      .value=${typeof entityConf.entity === "string"
+                        ? entityConf.entity
+                        : entityConf.entity.consumption || entityConf.entity.production}
                       .index=${index}
                       @value-changed=${this._valueChanged}
                     ></ha-entity-picker>
@@ -284,7 +287,7 @@ export class IndividualRowEditor extends LitElement {
       subElementConfig: {
         index,
         type: "row",
-        elementConfig: this.entities![index],
+        elementConfig: this.entities![index] as any,
       },
     });
   }

@@ -75,7 +75,7 @@ export type GridPowerOutage = {
 };
 
 export type IndividualDeviceType = BaseConfigEntity & {
-  entity: string;
+  entity: string | ComboEntity;
   color?: string;
   color_icon?: boolean;
   inverted_animation?: boolean;
@@ -120,6 +120,10 @@ export type HomeSources = {
     color: string;
   };
   gridNonFossil: {
+    value: number;
+    color: string;
+  };
+  individual?: {
     value: number;
     color: string;
   };
