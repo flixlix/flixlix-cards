@@ -161,7 +161,7 @@ At least one of _grid_, _battery_, or _solar_ is required. All entites (except _
 | ---------------------- | :------- | -------------------------------------------------------------------------------- |
 | grid                   | `object` | Check [Grid Configuration](#grid-configuration) for more information.            |
 | solar                  | `object` | Check [Solar Configuration](#solar-configuration) for more information.          |
-| battery                | `object` | Check [Battery Configuration](#battery-configuration) for more information.      |
+| battery                | `object` or `array` | Check [Battery Configuration](#battery-configuration) for more information.      |
 | individual             | `array`  | Check [Individual Devices](#individual-configuration) for more information.      |
 | home                   | `object` | Check [Home Configuration](#home-configuration) for more information.            |
 | fossil_fuel_percentage | `object` | Check [Fossil Fuel Percentage](#fossil-fuel-configuration) for more information. |
@@ -199,6 +199,8 @@ At least one of _grid_, _battery_, or _solar_ is required. All entites (except _
 | invert_state       | `boolean` | `false`              | If set to true the direction as well as the values will be inverted, meaning a negative value will be shown as production and a negative value will be shown as 0. |
 
 #### Battery Configuration
+
+`entities.battery` accepts a single battery object (legacy) or an array of up to 3 battery objects. Each battery is shown as its own circle with SoC and power in/out. Charge and discharge values are summed for solar/grid/home flow distribution.
 
 | Name                             | Type                                                           | Default                                                | Description                                                                                                                                                                                                                                                                                                                                                                                   |
 | -------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

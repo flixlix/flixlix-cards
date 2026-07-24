@@ -1194,7 +1194,11 @@ entities:
             rows={[
               { name: "grid", type: "object", description: "See Grid below." },
               { name: "solar", type: "object", description: "See Solar below." },
-              { name: "battery", type: "object", description: "See Battery below." },
+              {
+                name: "battery",
+                type: "object | array",
+                description: "One battery object, or up to 3 battery objects. See Battery below.",
+              },
               {
                 name: "individual",
                 type: "array",
@@ -1258,17 +1262,22 @@ entities:
           title="Battery"
           icon={Battery}
           accent="pink"
+          description="Accepts a single battery object or an array of up to 3 batteries. Each battery is shown as its own circle; charge/discharge totals are aggregated for solar/grid/home flows."
           example={{
             language: "yaml",
             code: `entities:
   battery:
-    entity:
-      consumption: sensor.battery_consumption
-      production: sensor.battery_production
-    state_of_charge: sensor.battery_soc
-    state_of_charge_decimals: 0
-    display_state: one_way
-    color_circle: color_dynamically`,
+    - name: House
+      entity:
+        consumption: sensor.battery_consumption
+        production: sensor.battery_production
+      state_of_charge: sensor.battery_soc
+      display_state: one_way
+      color_circle: color_dynamically
+    - name: EcoFlow
+      entity: sensor.ecoflow_power
+      state_of_charge: sensor.ecoflow_soc
+      invert_state: true`,
           }}
         >
           <OptionList rows={BATTERY_OPTIONS} />

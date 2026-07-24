@@ -206,6 +206,16 @@ export const styles = css`
     height: 110px;
     justify-content: flex-end;
   }
+  .batteries {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 8px;
+  }
+  .batteries .circle-container.battery {
+    width: var(--size-circle-entity);
+  }
   .spacer {
     width: var(--size-circle-entity);
   }
