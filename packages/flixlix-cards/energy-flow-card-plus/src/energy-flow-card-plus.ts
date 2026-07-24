@@ -139,6 +139,7 @@ export class EnergyFlowCardPlus extends LitElement {
         battery: any;
         batteries: any[];
         primaryBattery: any;
+        hasBatteryUi: boolean;
         home: any;
         nonFossil: any;
         individualObjs: IndividualObject[];
@@ -528,6 +529,7 @@ export class EnergyFlowCardPlus extends LitElement {
       solar,
       battery,
       batteries,
+      hasBatteryUi,
       home,
       nonFossil,
       individualObjs,
@@ -633,9 +635,9 @@ export class EnergyFlowCardPlus extends LitElement {
               : spacer}
             ${checkHasRightIndividual(individualObjs) ? spacer : nothing}
           </div>
-          ${battery.has || checkHasBottomIndividual(individualObjs)
+          ${hasBatteryUi || checkHasBottomIndividual(individualObjs)
             ? html`<div class="row">
-                ${spacer} ${battery.has ? batteriesElement(this, this._config, batteries) : spacer}
+                ${spacer} ${hasBatteryUi ? batteriesElement(this, this._config, batteries) : spacer}
                 ${individualFieldLeftBottom
                   ? individualLeftBottomElement(this, this._config, {
                       displayState: getIndividualDisplayState(
@@ -880,10 +882,12 @@ export class EnergyFlowCardPlus extends LitElement {
       }
       return batteryObject;
     });
+    const distributionBatteries = batteries.filter((item) => item.role !== "satellite");
     const battery = createAggregateBatteryObject({
-      batteries,
+      batteries: distributionBatteries.length > 0 ? distributionBatteries : batteries,
       fallbackName: batteryFallbackName,
     });
+    const hasBatteryUi = batteries.some((item) => item.has);
     const home = {
       entity: entities.home?.entity,
       has: entities?.home?.entity !== undefined,
@@ -1219,6 +1223,7 @@ export class EnergyFlowCardPlus extends LitElement {
       battery,
       batteries,
       primaryBattery,
+      hasBatteryUi,
       home,
       nonFossil,
       individualObjs: visibleIndividualObjects,

@@ -10,6 +10,9 @@ export const hasBatteryEntity = (battery: Battery | undefined): boolean => {
   return battery.entity !== undefined && battery.entity !== "";
 };
 
+export const isSatelliteBattery = (battery: Battery | undefined): boolean =>
+  battery?.role === "satellite";
+
 export const toBatteryList = (battery?: BatteryField): Battery[] => {
   if (!battery) return [];
   return (Array.isArray(battery) ? battery : [battery]).slice(0, MAX_VISIBLE_BATTERIES);
@@ -21,11 +24,24 @@ export const normalizeBatteries = (battery?: BatteryField): Battery[] => {
   return list.filter(hasBatteryEntity).slice(0, MAX_VISIBLE_BATTERIES);
 };
 
+export const getDistributionBatteries = (battery?: BatteryField): Battery[] => {
+  const all = normalizeBatteries(battery);
+  const primaries = all.filter((item) => !isSatelliteBattery(item));
+  return primaries.length > 0 ? primaries : all;
+};
+
+export const getSatelliteBatteries = (battery?: BatteryField): Battery[] => {
+  const all = normalizeBatteries(battery);
+  const primaries = all.filter((item) => !isSatelliteBattery(item));
+  if (primaries.length === 0) return [];
+  return all.filter(isSatelliteBattery);
+};
+
 export const getPrimaryBattery = (battery?: BatteryField): Battery | undefined =>
-  normalizeBatteries(battery)[0];
+  getDistributionBatteries(battery)[0];
 
 export const getBatteryDisplayZeroTolerance = (battery?: BatteryField): number =>
-  Math.max(0, ...normalizeBatteries(battery).map((item) => item.display_zero_tolerance ?? 0));
+  Math.max(0, ...getDistributionBatteries(battery).map((item) => item.display_zero_tolerance ?? 0));
 
 export const serializeBatteries = (batteries: Battery[]): BatteryField | undefined => {
   if (batteries.length === 0) return undefined;

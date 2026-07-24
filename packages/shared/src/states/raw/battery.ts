@@ -7,9 +7,10 @@ import {
   computeFieldName,
 } from "@flixlix-cards/shared/utils/compute-field-attributes";
 import {
+  getDistributionBatteries,
   getPrimaryBattery,
   hasBatteryEntity,
-  normalizeBatteries,
+  isSatelliteBattery,
 } from "@flixlix-cards/shared/utils/normalize-batteries";
 import { type ActionConfig, type HomeAssistant } from "custom-card-helpers";
 
@@ -17,6 +18,7 @@ export type BatteryObject = {
   config: Battery;
   entity: Battery["entity"] | undefined;
   has: boolean;
+  role: "primary" | "satellite";
   mainEntity: string | undefined;
   name: string;
   icon: string;
@@ -89,13 +91,13 @@ export const getBatteryStateOfCharge = (hass: HomeAssistant, config: FlowCardPlu
   getBatteryConfigStateOfCharge(hass, getPrimaryBattery(config.entities.battery));
 
 export const getBatteryInState = (hass: HomeAssistant, config: FlowCardPlusConfig) => {
-  const batteries = normalizeBatteries(config.entities.battery);
+  const batteries = getDistributionBatteries(config.entities.battery);
   if (batteries.length === 0) return null;
   return batteries.reduce((sum, battery) => sum + (getBatteryConfigInState(hass, battery) ?? 0), 0);
 };
 
 export const getBatteryOutState = (hass: HomeAssistant, config: FlowCardPlusConfig) => {
-  const batteries = normalizeBatteries(config.entities.battery);
+  const batteries = getDistributionBatteries(config.entities.battery);
   if (batteries.length === 0) return null;
   return batteries.reduce(
     (sum, battery) => sum + (getBatteryConfigOutState(hass, battery) ?? 0),
@@ -121,6 +123,7 @@ export const createBatteryObject = ({
     config: batteryConfig,
     entity: batteryConfig.entity,
     has,
+    role: isSatelliteBattery(batteryConfig) ? "satellite" : "primary",
     mainEntity:
       typeof batteryConfig.entity === "object"
         ? batteryConfig.entity.consumption
@@ -183,6 +186,7 @@ export const createAggregateBatteryObject = ({
       config: { entity: "" },
       entity: undefined,
       has: false,
+      role: "primary",
       mainEntity: undefined,
       name: fallbackName,
       icon: "mdi:battery",
@@ -209,6 +213,7 @@ export const createAggregateBatteryObject = ({
 
   return {
     ...primary,
+    role: "primary",
     has: batteries.some((battery) => battery.has),
     state: {
       toBattery: batteries.reduce((sum, battery) => sum + (battery.state.toBattery ?? 0), 0),

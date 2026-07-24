@@ -63,6 +63,8 @@ export interface EnergyFlowCardPlusConfig extends LovelaceCardConfig, mainConfig
 
 export type IndividualField = IndividualDeviceType[];
 
+export type BatteryRole = "primary" | "satellite";
+
 export interface Battery extends BaseConfigEntity {
   state_of_charge?: string;
   state_of_charge_unit?: string;
@@ -74,6 +76,7 @@ export interface Battery extends BaseConfigEntity {
   color_circle?: "color_dynamically" | "production" | "consumption";
   color_value?: boolean;
   color?: ComboEntity;
+  role?: BatteryRole;
 }
 
 export type BatteryField = Battery | Battery[];

@@ -12,6 +12,8 @@
     "allow_layout_break": "Zezwól na łamanie układu",
     "base_decimals": "Miejsca po przecinku dla podstawy",
     "battery": "Bateria",
+    "battery_role_primary": "Główna (w grafie)",
+    "battery_role_satellite": "Satelita (tylko wyświetlanie)",
     "calculate_flow_rate": "Oblicz wskaźnik przepływu",
     "circle_animation": "Animacja okręgu",
     "clickable_entities": "Klikalne jednostki",

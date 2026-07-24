@@ -2,7 +2,9 @@ import { describe, expect, test } from "vitest";
 
 import {
   getBatteryDisplayZeroTolerance,
+  getDistributionBatteries,
   getPrimaryBattery,
+  getSatelliteBatteries,
   hasBatteryEntity,
   MAX_VISIBLE_BATTERIES,
   normalizeBatteries,
@@ -62,5 +64,29 @@ describe("normalize-batteries", () => {
       { entity: "sensor.a" },
       { entity: "sensor.b" },
     ]);
+  });
+
+  test("splits primary and satellite roles for distribution", () => {
+    const batteries = [
+      { entity: "sensor.main", role: "primary" as const },
+      { entity: "sensor.plug", role: "satellite" as const },
+      { entity: "sensor.garage", role: "satellite" as const },
+    ];
+    expect(getDistributionBatteries(batteries).map((b) => b.entity)).toEqual(["sensor.main"]);
+    expect(getSatelliteBatteries(batteries).map((b) => b.entity)).toEqual([
+      "sensor.plug",
+      "sensor.garage",
+    ]);
+    expect(getPrimaryBattery(batteries)?.entity).toBe("sensor.main");
+    expect(getBatteryDisplayZeroTolerance(batteries)).toBe(0);
+  });
+
+  test("falls back to all batteries when every pack is marked satellite", () => {
+    const batteries = [
+      { entity: "sensor.a", role: "satellite" as const },
+      { entity: "sensor.b", role: "satellite" as const },
+    ];
+    expect(getDistributionBatteries(batteries)).toHaveLength(2);
+    expect(getSatelliteBatteries(batteries)).toHaveLength(0);
   });
 });

@@ -722,6 +722,13 @@ const BATTERY_OPTIONS: OptionRow[] = [
     default: "false",
     description: "Invert sign convention.",
   },
+  {
+    name: "role",
+    type: '"primary" | "satellite"',
+    default: "primary",
+    description:
+      "primary participates in solar/grid/home flows. satellite is display-only (dashed circle below) and excluded from distribution.",
+  },
 ];
 
 const HOME_OPTIONS: OptionRow[] = [
@@ -1262,22 +1269,28 @@ entities:
           title="Battery"
           icon={Battery}
           accent="pink"
-          description="Accepts a single battery object or an array of up to 3 batteries. Each battery is shown as its own circle; charge/discharge totals are aggregated for solar/grid/home flows."
+          description="Accepts a single battery object or an array of up to 3 batteries. Primary packs participate in solar/grid/home flows; satellite packs are display-only below the primary."
           example={{
             language: "yaml",
             code: `entities:
   battery:
-    - name: House
+    - name: Main
+      role: primary
       entity:
         consumption: sensor.battery_consumption
         production: sensor.battery_production
       state_of_charge: sensor.battery_soc
       display_state: one_way
-      color_circle: color_dynamically
-    - name: EcoFlow
-      entity: sensor.ecoflow_power
-      state_of_charge: sensor.ecoflow_soc
-      invert_state: true`,
+    - name: Plug-in
+      role: satellite
+      entity: sensor.plug_batt_power
+      state_of_charge: sensor.plug_batt_soc
+    - name: Garage
+      role: satellite
+      entity:
+        consumption: sensor.garage_out
+        production: sensor.garage_in
+      state_of_charge: sensor.garage_soc`,
           }}
         >
           <OptionList rows={BATTERY_OPTIONS} />

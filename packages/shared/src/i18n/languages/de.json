@@ -12,6 +12,8 @@
     "allow_layout_break": "Layoutumbruch zulassen",
     "base_decimals": "Dezimalstellen für Basis",
     "battery": "Batterie",
+    "battery_role_primary": "Primär (im Flussdiagramm)",
+    "battery_role_satellite": "Satellit (nur Anzeige)",
     "calculate_flow_rate": "Flussrate berechnen",
     "circle_animation": "Kreisanimation",
     "clickable_entities": "Klickbare Entitäten",

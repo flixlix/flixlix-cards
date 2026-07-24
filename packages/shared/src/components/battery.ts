@@ -27,9 +27,11 @@ export const batteryElement = (
   {
     battery,
     batteryConfig,
+    variant = "primary",
   }: {
     battery: BatteryObject;
     batteryConfig: Battery;
+    variant?: "primary" | "satellite";
   }
 ) => {
   const disableEntityClick = config.clickable_entities === false;
@@ -41,8 +43,10 @@ export const batteryElement = (
     circleStyles.push(`--energy-battery-out-color: ${battery.color.fromBattery}`);
   }
   const circleStyle = circleStyles.join("; ");
+  const containerClass =
+    variant === "satellite" ? "circle-container battery satellite" : "circle-container battery";
 
-  return html`<div class="circle-container battery" style=${circleStyle || nothing}>
+  return html`<div class=${containerClass} style=${circleStyle || nothing}>
     <div
       class="circle ${disableEntityClick ? "pointer-events-none" : ""}"
       @click=${(e: MouseEvent) => {
@@ -201,10 +205,11 @@ export const batteryElement = (
   </div>`;
 };
 
-export const batteriesElement = (
+const renderBatteryGroup = (
   main: CardMainContext,
   config: FlowCardPlusConfig,
-  batteries: BatteryObject[]
+  batteries: BatteryObject[],
+  variant: "primary" | "satellite"
 ) => {
   const visible = batteries.filter((battery) => battery.has);
   const first = visible[0];
@@ -213,14 +218,43 @@ export const batteriesElement = (
     return batteryElement(main, config, {
       battery: first,
       batteryConfig: first.config,
+      variant,
     });
   }
-  return html`<div class="batteries">
+  return html`<div class=${variant === "satellite" ? "batteries satellites" : "batteries"}>
     ${visible.map((battery) =>
       batteryElement(main, config, {
         battery,
         batteryConfig: battery.config,
+        variant,
       })
     )}
+  </div>`;
+};
+
+export const batteriesElement = (
+  main: CardMainContext,
+  config: FlowCardPlusConfig,
+  batteries: BatteryObject[]
+) => {
+  const primaries = batteries.filter((battery) => battery.role !== "satellite");
+  const satellites = batteries.filter((battery) => battery.role === "satellite");
+  const visiblePrimaries = primaries.filter((battery) => battery.has);
+  const visibleSatellites = satellites.filter((battery) => battery.has);
+
+  if (visiblePrimaries.length === 0 && visibleSatellites.length === 0) return nothing;
+
+  if (visiblePrimaries.length === 0) {
+    return renderBatteryGroup(main, config, satellites, "primary");
+  }
+
+  const primaryBlock = renderBatteryGroup(main, config, primaries, "primary");
+  if (visibleSatellites.length === 0) return primaryBlock;
+
+  return html`<div class="battery-stack">
+    ${primaryBlock}
+    <div class="battery-satellites">
+      ${renderBatteryGroup(main, config, satellites, "satellite")}
+    </div>
   </div>`;
 };

@@ -12,6 +12,8 @@
     "allow_layout_break": "Autoriser la rupture de mise en page",
     "base_decimals": "Décimales de base",
     "battery": "Batterie",
+    "battery_role_primary": "Principale (dans le graphe)",
+    "battery_role_satellite": "Satellite (affichage seul)",
     "calculate_flow_rate": "Calculer le débit",
     "circle_animation": "Animation de cercle",
     "clickable_entities": "Entités cliquables",

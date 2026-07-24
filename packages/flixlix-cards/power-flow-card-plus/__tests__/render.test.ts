@@ -228,4 +228,55 @@ describe("_computeRenderData", () => {
     expect(data.batteries[0].state.toBattery).toBe(300);
     expect(data.batteries[1].state.toBattery).toBe(200);
   });
+
+  test("case 7: satellite batteries are visible but excluded from distribution", () => {
+    const config = {
+      type: "custom:power-flow-card-plus",
+      entities: {
+        grid: { entity: "sensor.grid" },
+        solar: { entity: "sensor.solar" },
+        battery: [
+          {
+            entity: "sensor.main",
+            name: "Main",
+            role: "primary",
+            state_of_charge: "sensor.main_soc",
+          },
+          {
+            entity: "sensor.plug",
+            name: "Plug-in",
+            role: "satellite",
+            state_of_charge: "sensor.plug_soc",
+          },
+        ],
+      },
+    } as PowerFlowCardPlusConfig;
+    const hass = makeHass({
+      "sensor.grid": "100",
+      "sensor.solar": "800",
+      "sensor.main": "-500",
+      "sensor.plug": "-250",
+      "sensor.main_soc": "76",
+      "sensor.plug_soc": "38",
+    });
+    const card = makeCard(config, hass);
+    const data = card._computeRenderData() as ReturnType<typeof card._computeRenderData> & {
+      batteries: Array<{
+        has: boolean;
+        name: string;
+        role: string;
+        state: { toBattery: number | null };
+      }>;
+      hasBatteryUi: boolean;
+    };
+
+    expect(data.batteries).toHaveLength(2);
+    expect(data.batteries[0].role).toBe("primary");
+    expect(data.batteries[1].role).toBe("satellite");
+    expect(data.batteries[1].has).toBe(true);
+    expect(data.hasBatteryUi).toBe(true);
+    expect(data.battery.state.toBattery).toBe(500);
+    expect(data.batteries[0].state.toBattery).toBe(500);
+    expect(data.batteries[1].state.toBattery).toBe(250);
+  });
 });

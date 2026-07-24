@@ -47,6 +47,26 @@ describe("battery aggregation", () => {
     expect(getBatteryOutState(hass, config)).toBe(400);
   });
 
+  test("excludes satellite batteries from distribution totals", () => {
+    const hass = makeHass({
+      "sensor.main": "-400",
+      "sensor.plug": "-200",
+      "sensor.garage": "100",
+    });
+    const config = {
+      entities: {
+        battery: [
+          { entity: "sensor.main", role: "primary" },
+          { entity: "sensor.plug", role: "satellite" },
+          { entity: "sensor.garage", role: "satellite" },
+        ],
+      },
+    } as FlowCardPlusConfig;
+
+    expect(getBatteryInState(hass, config)).toBe(400);
+    expect(getBatteryOutState(hass, config)).toBe(0);
+  });
+
   test("respects invert_state per battery", () => {
     const hass = makeHass({
       "sensor.batt1": "-200",
