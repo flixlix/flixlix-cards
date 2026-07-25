@@ -12,6 +12,8 @@
     "allow_layout_break": "Разрешить разрыв макета",
     "base_decimals": "Десятичные базовые",
     "battery": "Батарея",
+    "battery_role_primary": "Основная (в схеме)",
+    "battery_role_satellite": "Спутник (только отображение)",
     "calculate_flow_rate": "Рассчитать скорость потока",
     "circle_animation": "Анимация круга",
     "clickable_entities": "Кликабельные сущности",

@@ -12,6 +12,8 @@
     "allow_layout_break": "Tillåt layoutbrytning",
     "base_decimals": "Decimaler för bas",
     "battery": "Batteri",
+    "battery_role_primary": "Primär (i flödesgrafen)",
+    "battery_role_satellite": "Satellit (endast visning)",
     "calculate_flow_rate": "Beräkna flöde",
     "circle_animation": "Cirkelanimation",
     "clickable_entities": "Klickbara entiteter",

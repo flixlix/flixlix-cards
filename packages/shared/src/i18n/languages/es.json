@@ -12,6 +12,8 @@
     "allow_layout_break": "Permitir salto de diseño",
     "base_decimals": "Decimales de base",
     "battery": "Batería",
+    "battery_role_primary": "Principal (en el grafo)",
+    "battery_role_satellite": "Satélite (solo visualización)",
     "calculate_flow_rate": "Calcular Tasa de Flujo",
     "circle_animation": "Animación de Círculo",
     "clickable_entities": "Entidades Clicables",

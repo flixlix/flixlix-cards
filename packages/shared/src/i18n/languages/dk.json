@@ -12,6 +12,8 @@
     "allow_layout_break": "Tillad layout-brud",
     "base_decimals": "Decimaler for basis",
     "battery": "Batteri",
+    "battery_role_primary": "Primær (i flowgrafen)",
+    "battery_role_satellite": "Satellit (kun visning)",
     "calculate_flow_rate": "Beregn Hastighed",
     "circle_animation": "Cirkel Animation",
     "clickable_entities": "Klikbare enheder",

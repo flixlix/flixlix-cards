@@ -12,6 +12,8 @@
     "allow_layout_break": "Lay-out doorbreken toestaan",
     "base_decimals": "Decimalen voor basis",
     "battery": "Batterij",
+    "battery_role_primary": "Primair (in stroomdiagram)",
+    "battery_role_satellite": "Satelliet (alleen weergave)",
     "calculate_flow_rate": "Stroomsnelheid Berekenen",
     "circle_animation": "Cirkel Animatie",
     "clickable_entities": "Klikbare Entiteiten",

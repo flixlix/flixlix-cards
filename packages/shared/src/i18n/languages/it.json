@@ -12,6 +12,8 @@
     "allow_layout_break": "Consenti interruzione del layout",
     "base_decimals": "Decimali di base",
     "battery": "Batteria",
+    "battery_role_primary": "Primaria (nel grafico)",
+    "battery_role_satellite": "Satellite (solo visualizzazione)",
     "calculate_flow_rate": "Calcola Tasso di Flusso",
     "circle_animation": "Animazione Cerchio",
     "clickable_entities": "Entità Cliccabili",

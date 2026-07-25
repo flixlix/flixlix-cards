@@ -1,3 +1,4 @@
+import { getPrimaryBattery } from "@flixlix-cards/shared/utils/normalize-batteries";
 import { computeColor } from "./colors";
 import { convertColorListToHex } from "./convert-color";
 
@@ -138,7 +139,8 @@ export const allDynamicStyles = (main: HostWithStyle, input: DynamicStylesInput)
     }
     main.style.setProperty("--energy-battery-in-color", battery.color.toBattery || "#a280db");
   }
-  battery.color.icon_type = entities.battery?.color_icon;
+  const primaryBattery = getPrimaryBattery(entities.battery);
+  battery.color.icon_type = primaryBattery?.color_icon;
   main.style.setProperty(
     "--icon-battery-color",
     battery.color.icon_type === "consumption"
@@ -151,7 +153,7 @@ export const allDynamicStyles = (main: HostWithStyle, input: DynamicStylesInput)
             : "var(--energy-battery-in-color)"
           : "var(--primary-text-color)"
   );
-  const batteryStateOfChargeColorType = entities.battery?.color_state_of_charge_value;
+  const batteryStateOfChargeColorType = primaryBattery?.color_state_of_charge_value;
   main.style.setProperty(
     "--text-battery-state-of-charge-color",
     batteryStateOfChargeColorType === "consumption"
@@ -176,7 +178,7 @@ export const allDynamicStyles = (main: HostWithStyle, input: DynamicStylesInput)
             : "var(--energy-battery-in-color)"
           : "var(--energy-battery-in-color)"
   );
-  if (entities.battery?.color_value === false) {
+  if (primaryBattery?.color_value === false) {
     main.style.setProperty("--text-battery-in-color", "var(--primary-text-color)");
     main.style.setProperty("--text-battery-out-color", "var(--primary-text-color)");
   } else {
