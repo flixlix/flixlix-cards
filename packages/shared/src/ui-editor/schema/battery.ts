@@ -5,6 +5,7 @@ import {
   getBaseMainConfigSchema,
   getEntityCombinedSelectionSchema,
   getEntitySeparatedSelectionSchema,
+  secondaryInfoSchema,
 } from "./_schema-base";
 
 const mainSchema = {
@@ -95,6 +96,12 @@ export const batterySchema = [
     name: "",
     type: "expandable",
     schema: stateOfChargeSchema,
+  },
+  {
+    title: localize("editor.secondary_info"),
+    name: "secondary_info",
+    type: "expandable",
+    schema: secondaryInfoSchema,
   },
   mainSchema,
   customColorsSchema,

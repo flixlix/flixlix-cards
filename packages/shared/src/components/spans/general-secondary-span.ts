@@ -9,7 +9,7 @@ import { type HomeAssistant } from "custom-card-helpers";
 import { nothing } from "lit";
 import { baseSecondarySpan } from "./base-secondary-span";
 
-type SecondaryKey = "grid" | "solar" | "home" | "nonFossilFuel";
+type SecondaryKey = "battery" | "grid" | "solar" | "home" | "nonFossilFuel";
 
 export const generalSecondarySpan = (
   hass: HomeAssistant,

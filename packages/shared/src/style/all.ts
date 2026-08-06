@@ -165,6 +165,14 @@ export const allDynamicStyles = (main: HostWithStyle, input: DynamicStylesInput)
           : "var(--primary-text-color)"
   );
   main.style.setProperty(
+    "--secondary-text-battery-color",
+    entities.battery?.secondary_info?.color_value
+      ? battery.state.fromBattery >= battery.state.toBattery
+        ? "var(--energy-battery-out-color)"
+        : "var(--energy-battery-in-color)"
+      : "var(--primary-text-color)"
+  );
+  main.style.setProperty(
     "--circle-battery-color",
     battery.color.circle_type === "consumption"
       ? "var(--energy-battery-in-color)"
