@@ -65,6 +65,12 @@ declare function computeRenderDataShape(): {
   };
   battery: {
     has: boolean | string;
+    secondary: {
+      entity?: string;
+      has: boolean;
+      state: string | number | null;
+      unit?: string;
+    };
     state: {
       fromBattery: number | null;
       toBattery: number | null;
@@ -193,5 +199,33 @@ describe("_computeRenderData", () => {
     expect(Number.isNaN(data.grid.state.toBattery)).toBe(false);
     expect(Number.isNaN(data.grid.state.toHome)).toBe(false);
     expect(Number.isNaN(data.solar.state.total)).toBe(false);
+  });
+
+  test("case 6: battery secondary info exposes its configured entity state", () => {
+    const config = {
+      type: "custom:power-flow-card-plus",
+      entities: {
+        battery: {
+          entity: "sensor.battery",
+          secondary_info: {
+            entity: "sensor.battery_voltage",
+            unit_of_measurement: "V",
+          },
+        },
+      },
+    } as PowerFlowCardPlusConfig;
+    const hass = makeHass({
+      "sensor.battery": "500",
+      "sensor.battery_voltage": "240",
+    });
+    const card = makeCard(config, hass);
+    const data = card._computeRenderData();
+
+    expect(data.battery.secondary).toMatchObject({
+      entity: "sensor.battery_voltage",
+      has: true,
+      state: 240,
+      unit: "V",
+    });
   });
 });

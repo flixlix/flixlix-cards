@@ -17,7 +17,10 @@ import {
   type RenderTemplateResult,
 } from "@flixlix-cards/shared/ha/template/ha-websocket";
 import localize from "@flixlix-cards/shared/i18n";
-import { getBatteryStateOfCharge } from "@flixlix-cards/shared/states/raw/battery";
+import {
+  getBatterySecondaryState,
+  getBatteryStateOfCharge,
+} from "@flixlix-cards/shared/states/raw/battery";
 import { getGridSecondaryState } from "@flixlix-cards/shared/states/raw/grid";
 import { getHomeSecondaryState } from "@flixlix-cards/shared/states/raw/home";
 import {
@@ -623,7 +626,9 @@ export class EnergyFlowCardPlus extends LitElement {
           ${battery.has || checkHasBottomIndividual(individualObjs)
             ? html`<div class="row">
                 ${spacer}
-                ${battery.has ? batteryElement(this, this._config, { battery, entities }) : spacer}
+                ${battery.has
+                  ? batteryElement(this, this._config, { battery, entities, templatesObj })
+                  : spacer}
                 ${individualFieldLeftBottom
                   ? individualLeftBottomElement(this, this._config, {
                       displayState: getIndividualDisplayState(
@@ -856,6 +861,20 @@ export class EnergyFlowCardPlus extends LitElement {
         unit: entities?.battery?.state_of_charge_unit ?? "%",
         unit_white_space: entities?.battery?.state_of_charge_unit_white_space ?? true,
         decimals: entities?.battery?.state_of_charge_decimals || 0,
+      },
+      secondary: {
+        entity: entities.battery?.secondary_info?.entity,
+        decimals: entities.battery?.secondary_info?.decimals,
+        template: entities.battery?.secondary_info?.template,
+        has: entities.battery?.secondary_info?.entity !== undefined,
+        state: getBatterySecondaryState(this.hass, this._config),
+        icon: entities.battery?.secondary_info?.icon,
+        unit: entities.battery?.secondary_info?.unit_of_measurement,
+        unit_white_space: entities.battery?.secondary_info?.unit_white_space,
+        accept_negative: entities.battery?.secondary_info?.accept_negative || false,
+        tap_action: entities.battery?.secondary_info?.tap_action,
+        hold_action: entities.battery?.secondary_info?.hold_action,
+        double_tap_action: entities.battery?.secondary_info?.double_tap_action,
       },
       state: {
         toBattery:
@@ -1180,6 +1199,7 @@ export class EnergyFlowCardPlus extends LitElement {
     );
     const individualKeys = ["left-top", "left-bottom", "right-top", "right-bottom"];
     const templatesObj: TemplatesObj = {
+      batterySecondary: this._templateResults.batterySecondary?.result,
       gridSecondary: this._templateResults.gridSecondary?.result,
       solarSecondary: this._templateResults.solarSecondary?.result,
       homeSecondary: this._templateResults.homeSecondary?.result,
@@ -1261,6 +1281,7 @@ export class EnergyFlowCardPlus extends LitElement {
   private _tryConnectAll() {
     const { entities } = this._config;
     const templatesObj = {
+      batterySecondary: entities.battery?.secondary_info?.template,
       gridSecondary: entities.grid?.secondary_info?.template,
       solarSecondary: entities.solar?.secondary_info?.template,
       homeSecondary: entities.home?.secondary_info?.template,
@@ -1334,6 +1355,7 @@ export class EnergyFlowCardPlus extends LitElement {
   private async _tryDisconnectAll() {
     const { entities } = this._config;
     const templatesObj = {
+      batterySecondary: entities.battery?.secondary_info?.template,
       gridSecondary: entities.grid?.secondary_info?.template,
       solarSecondary: entities.solar?.secondary_info?.template,
       homeSecondary: entities.home?.secondary_info?.template,

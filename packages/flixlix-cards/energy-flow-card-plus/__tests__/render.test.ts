@@ -61,6 +61,12 @@ function makeCard(config: EnergyFlowCardPlusConfig, hass: ReturnType<typeof make
       };
       battery: {
         has: boolean | string;
+        secondary: {
+          entity?: string;
+          has: boolean;
+          state: string | number | null;
+          unit?: string;
+        };
         state: {
           fromBattery: number | null;
           toBattery: number | null;
@@ -198,5 +204,34 @@ describe("_computeRenderData (energy card)", () => {
     expect(Number.isNaN(data.grid.state.toHome)).toBe(false);
     expect(Number.isNaN(data.solar.state.total)).toBe(false);
     expect(Number.isNaN(data.solar.state.toHome)).toBe(false);
+  });
+
+  test("case 4: battery secondary info exposes its configured entity state", () => {
+    const config = {
+      type: "custom:energy-flow-card-plus",
+      energy_date_selection: false,
+      entities: {
+        battery: {
+          entity: "sensor.battery_energy",
+          secondary_info: {
+            entity: "sensor.battery_temperature",
+            unit_of_measurement: "°C",
+          },
+        },
+      },
+    } as EnergyFlowCardPlusConfig;
+    const hass = makeHass({
+      "sensor.battery_energy": "500",
+      "sensor.battery_temperature": "21.5",
+    });
+    const card = makeCard(config, hass);
+    const data = card._computeRenderData();
+
+    expect(data.battery.secondary).toMatchObject({
+      entity: "sensor.battery_temperature",
+      has: true,
+      state: 21.5,
+      unit: "°C",
+    });
   });
 });

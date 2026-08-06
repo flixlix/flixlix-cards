@@ -2,9 +2,11 @@ import {
   type CardMainContext,
   type ConfigEntities,
   type FlowCardPlusConfig,
+  type TemplatesObj,
 } from "@flixlix-cards/shared/types";
 import { displayValue } from "@flixlix-cards/shared/utils/display-value";
 import { html, nothing } from "lit";
+import { generalSecondarySpan } from "./spans/general-secondary-span";
 
 export const batteryElement = (
   main: CardMainContext,
@@ -12,9 +14,11 @@ export const batteryElement = (
   {
     battery,
     entities,
+    templatesObj,
   }: {
     battery: any;
     entities: ConfigEntities;
+    templatesObj: TemplatesObj;
   }
 ) => {
   const disableEntityClick = config.clickable_entities === false;
@@ -95,6 +99,7 @@ export const batteryElement = (
             })}
           </span>`
         : nothing}
+      ${generalSecondarySpan(main.hass, main, config, templatesObj, battery, "battery")}
       ${battery.icon !== " "
         ? html` <ha-icon
             id="battery-icon"

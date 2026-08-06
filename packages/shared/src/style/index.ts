@@ -34,6 +34,7 @@ export const styles = css`
     --battery-grid-line: var(--energy-grid-return-color, #8353d1);
     --secondary-text-solar-color: var(--primary-text-color);
     --secondary-text-grid-color: var(--primary-text-color);
+    --secondary-text-battery-color: var(--primary-text-color);
     --secondary-text-home-color: var(--primary-text-color);
     --secondary-text-non-fossil-color: var(--primary-text-color);
     --lines-svg-not-flat-line-height: 106%;
@@ -451,6 +452,15 @@ export const styles = css`
     color: var(--icon-battery-color);
   }
 
+  .battery .circle:has(span.secondary-info) {
+    gap: 0;
+  }
+
+  .battery .circle:has(span.secondary-info) #battery-icon {
+    --mdc-icon-size: 20px;
+    padding-bottom: 0;
+  }
+
   path.return,
   circle.return,
   circle.battery-to-grid {
@@ -575,6 +585,10 @@ export const styles = css`
 
   .home span.secondary-info {
     color: var(--secondary-text-home-color);
+  }
+
+  .battery span.secondary-info {
+    color: var(--secondary-text-battery-color);
   }
 
   #battery-state-of-charge-text {

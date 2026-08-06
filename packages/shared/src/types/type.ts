@@ -99,6 +99,7 @@ export type EntityType =
   | "fossil_fuel_percentage";
 
 export type TemplatesObj = {
+  batterySecondary: string | undefined;
   gridSecondary: string | undefined;
   solarSecondary: string | undefined;
   homeSecondary: string | undefined;
