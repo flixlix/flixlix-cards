@@ -116,6 +116,11 @@ describe("core utils", () => {
     expect(computeIndividualFlowRate(3.3, undefined)).toBe(3.3);
   });
 
+  test("computeIndividualFlowRate prefers a numeric entry over the computed value", () => {
+    expect(computeIndividualFlowRate(10, 2.5)).toBe(10);
+    expect(computeIndividualFlowRate(0, 2.5)).toBe(0);
+  });
+
   test("computeIndividualFlowRate returns default when entry is false", () => {
     expect(computeIndividualFlowRate(false, 2.5)).toBe(1.66);
   });

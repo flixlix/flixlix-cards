@@ -45,7 +45,7 @@ export const individualLeftBottomElement = (
               ? svg`<circle r="1.75" class="individual-bottom" vector-effect="non-scaling-stroke">
                     <animateMotion
                       dur="${computeIndividualFlowRate(
-                        individualObj.field?.calculate_flow_rate !== false,
+                        individualObj.field?.calculate_flow_rate,
                         duration
                       )}s"
                       repeatCount="indefinite"

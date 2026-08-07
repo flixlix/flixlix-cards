@@ -62,11 +62,11 @@ export const computeFlowRate = (
 };
 
 export const computeIndividualFlowRate = (entry?: boolean | number, value?: number): number => {
-  if (entry !== false && value) {
-    return value;
-  }
   if (typeof entry === "number") {
     return entry;
+  }
+  if (entry !== false && value) {
+    return value;
   }
   return 1.66;
 };
