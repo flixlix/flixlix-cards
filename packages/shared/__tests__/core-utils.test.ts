@@ -37,7 +37,20 @@ describe("core utils", () => {
     expect(computeFlowRate(config, 101, 0)).toBe(1);
   });
 
-  test("computeFlowRate (new model) maps min/max linearly", () => {
+  test("computeFlowRate (new model) clamps below min_expected_power", () => {
+    const config = {
+      max_expected_power: 100,
+      min_expected_power: 20,
+      max_flow_rate: 10,
+      min_flow_rate: 1,
+      use_new_flow_rate_model: true,
+    } as unknown as FlowCardPlusConfig;
+
+    expect(computeFlowRate(config, 0, 0)).toBe(10);
+    expect(computeFlowRate(config, 20, 0)).toBe(10);
+  });
+
+  test("computeFlowRate (new model) preserves the min/max endpoints", () => {
     const config = {
       max_expected_power: 100,
       min_expected_power: 0,
@@ -48,7 +61,39 @@ describe("core utils", () => {
 
     expect(computeFlowRate(config, 0, 0)).toBe(10);
     expect(computeFlowRate(config, 100, 0)).toBe(1);
-    expect(computeFlowRate(config, 50, 0)).toBeCloseTo(5.5, 10);
+  });
+
+  test("computeFlowRate (new model) maps dot speed linearly, not duration", () => {
+    const config = {
+      max_expected_power: 100,
+      min_expected_power: 0,
+      max_flow_rate: 10,
+      min_flow_rate: 1,
+      use_new_flow_rate_model: true,
+    } as unknown as FlowCardPlusConfig;
+
+    // Speed is 1 / duration, so the midpoint sits halfway between 1/10 and 1/1.
+    expect(computeFlowRate(config, 50, 0)).toBeCloseTo(1 / 0.55, 10);
+
+    const speedAt = (value: number) => 1 / computeFlowRate(config, value, 0);
+    const slowest = speedAt(0);
+    const fastest = speedAt(100);
+    for (const fraction of [0.1, 0.25, 0.5, 0.75, 0.9]) {
+      expect(speedAt(fraction * 100)).toBeCloseTo(slowest + fraction * (fastest - slowest), 10);
+    }
+  });
+
+  test("computeFlowRate (new model) survives a zeroed min_flow_rate", () => {
+    const config = {
+      max_expected_power: 100,
+      min_expected_power: 0,
+      max_flow_rate: 10,
+      min_flow_rate: 0,
+      use_new_flow_rate_model: true,
+    } as unknown as FlowCardPlusConfig;
+
+    expect(computeFlowRate(config, 50, 0)).toBeGreaterThan(0);
+    expect(Number.isFinite(computeFlowRate(config, 50, 0))).toBe(true);
   });
 
   test("computeFlowRate (old model) uses total when provided", () => {
