@@ -87,6 +87,7 @@ export type IndividualDeviceType = BaseConfigEntity & {
   use_metadata?: boolean;
   decimals?: number;
   show_direction?: boolean;
+  accept_negative?: boolean;
 };
 
 export type EntityType =

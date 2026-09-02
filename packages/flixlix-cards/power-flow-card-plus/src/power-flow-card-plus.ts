@@ -385,6 +385,7 @@ export class PowerFlowCardPlus extends LitElement {
         decimals: field?.decimals,
         unit: field?.unit,
         unitWhiteSpace: field?.unit_white_space,
+        accept_negative: field?.accept_negative,
       });
     };
 

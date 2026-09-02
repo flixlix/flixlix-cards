@@ -55,6 +55,11 @@ const mainSchema = {
       selector: { boolean: {} },
     },
     {
+      name: "accept_negative",
+      label: "Accept Negative",
+      selector: { boolean: {} },
+    },
+    {
       name: "show_direction",
       label: "Show Direction",
       selector: { boolean: {} },
