@@ -14,7 +14,14 @@ const atLeastVersion = (hass: HomeAssistant, major: number, minor: number): bool
  * structured items between 2025.11 and 2026.3 - so feature detection is not
  * enough and the version has to be checked.
  */
-const supportsEntityNames = (hass: HomeAssistant): boolean => atLeastVersion(hass, 2026, 4);
+const hasEntityNameHelper = (hass: HomeAssistant | undefined): boolean =>
+  typeof (hass as { formatEntityName?: unknown } | undefined)?.formatEntityName === "function";
+
+// A hass can report a recent version without carrying the helper (a test harness,
+// or a hass that has not finished initialising), and calling it then throws - so
+// the version gate alone is not enough.
+const supportsEntityNames = (hass: HomeAssistant): boolean =>
+  hasEntityNameHelper(hass) && atLeastVersion(hass, 2026, 4);
 
 /**
  * The `entity_name` selector, which lets users compose a name out of registry
