@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 
+import { formatNumber } from "custom-card-helpers";
 import { adjustZeroTolerance } from "../src/states/tolerance/base";
 import { type FlowCardPlusConfig } from "../src/types";
 import { computeFlowRate, computeIndividualFlowRate } from "../src/utils/compute-flow-rate";
@@ -118,5 +119,52 @@ describe("core utils", () => {
     } as unknown as FlowCardPlusConfig;
     expect(displayValue(hass, config, -500, { accept_negative: false })).toBe(`500${thinSpace}W`);
     expect(displayValue(hass, config, -500, { accept_negative: true })).toBe(`-500${thinSpace}W`);
+  });
+
+  test("displayValue formatter parity — decimal_comma (de) — kilo path, cache-hit exercised", () => {
+    const locale = { language: "de", number_format: "decimal_comma", time_format: "24" } as any;
+    const hass = { locale } as any;
+    const config = {
+      type: "power-flow-card-plus",
+      kilo_decimals: 1,
+      base_decimals: 0,
+      kilo_threshold: 1000,
+    } as unknown as FlowCardPlusConfig;
+    // value=1234.5 → kilo path → rounded value = 1.2 (1 decimal)
+    const expected = `${formatNumber(1.2, locale)}${thinSpace}kW`;
+    // call twice to exercise cache hit
+    expect(displayValue(hass, config, 1234.5, {})).toBe(expected);
+    expect(displayValue(hass, config, 1234.5, {})).toBe(expected);
+  });
+
+  test("displayValue formatter parity — comma_decimal (en) — kilo path, cache-hit exercised", () => {
+    const locale = { language: "en", number_format: "comma_decimal", time_format: "12" } as any;
+    const hass = { locale } as any;
+    const config = {
+      type: "power-flow-card-plus",
+      kilo_decimals: 2,
+      base_decimals: 0,
+      kilo_threshold: 1000,
+    } as unknown as FlowCardPlusConfig;
+    // value=2500 → kilo path → rounded value = 2.5 (2 decimals)
+    const expected = `${formatNumber(2.5, locale)}${thinSpace}kW`;
+    // call twice to exercise cache hit
+    expect(displayValue(hass, config, 2500, {})).toBe(expected);
+    expect(displayValue(hass, config, 2500, {})).toBe(expected);
+  });
+
+  test("displayValue formatter parity — number_format none — delegates directly (no Intl)", () => {
+    const locale = { language: "en", number_format: "none", time_format: "12" } as any;
+    const hass = { locale } as any;
+    const config = {
+      type: "power-flow-card-plus",
+      kilo_decimals: 1,
+      base_decimals: 0,
+      kilo_threshold: 1000,
+    } as unknown as FlowCardPlusConfig;
+    // value=1500 → kilo path → rounded value = 1.5 (1 decimal)
+    const expected = `${formatNumber(1.5, locale)}${thinSpace}kW`;
+    expect(displayValue(hass, config, 1500, {})).toBe(expected);
+    expect(displayValue(hass, config, 1500, {})).toBe(expected);
   });
 });

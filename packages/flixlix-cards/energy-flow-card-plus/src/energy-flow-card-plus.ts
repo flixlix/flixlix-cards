@@ -111,6 +111,7 @@ export class EnergyFlowCardPlus extends LitElement {
   private _energyCollectionKey?: string;
   private readonly wideEnoughForFourIndividuals = 359;
   private _resizeObserver?: ResizeObserver;
+  private _resizeObservedElement?: HTMLElement;
   private _handleVisibilityChange = () => {
     if (typeof document !== "undefined" && document.visibilityState === "visible") {
       this.requestUpdate();
@@ -207,6 +208,7 @@ export class EnergyFlowCardPlus extends LitElement {
   public disconnectedCallback() {
     this._resizeObserver?.disconnect();
     this._resizeObserver = undefined;
+    this._resizeObservedElement = undefined;
     if (typeof document !== "undefined") {
       document.removeEventListener("visibilitychange", this._handleVisibilityChange);
     }
@@ -670,7 +672,7 @@ export class EnergyFlowCardPlus extends LitElement {
     }
 
     const elem = this.shadowRoot?.querySelector("#energy-flow-card-plus") as HTMLElement | null;
-    if (elem) {
+    if (elem && this._resizeObservedElement !== elem) {
       if (!this._resizeObserver) {
         this._resizeObserver = new ResizeObserver((entries) => {
           const entry = entries[0];
@@ -681,11 +683,9 @@ export class EnergyFlowCardPlus extends LitElement {
           }
         });
       }
+      if (this._resizeObservedElement) this._resizeObserver.unobserve(this._resizeObservedElement);
       this._resizeObserver.observe(elem);
-      const width = Math.round(elem.getBoundingClientRect().width);
-      if (width !== this._width) {
-        this._width = width;
-      }
+      this._resizeObservedElement = elem;
     }
 
     this._tryConnectAll();
