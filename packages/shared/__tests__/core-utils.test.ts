@@ -1,11 +1,45 @@
-import { describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
 
 import { adjustZeroTolerance } from "../src/states/tolerance/base";
 import { type FlowCardPlusConfig } from "../src/types";
+import { checkShouldShowDots } from "../src/utils/check-should-show-dots";
 import { computeFlowRate, computeIndividualFlowRate } from "../src/utils/compute-flow-rate";
 import { displayValue } from "../src/utils/display-value";
 
 const thinSpace = `\u2009`;
+
+describe("checkShouldShowDots - prefers-reduced-motion", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  test("returns false when matchMedia reports prefers-reduced-motion: reduce", () => {
+    vi.stubGlobal("window", {
+      matchMedia: () => ({ matches: true }),
+    });
+    expect(checkShouldShowDots({} as FlowCardPlusConfig)).toBe(false);
+  });
+
+  test("returns true when disable_dots is false (explicit opt-in overrides reduced-motion)", () => {
+    vi.stubGlobal("window", {
+      matchMedia: () => ({ matches: true }),
+    });
+    expect(checkShouldShowDots({ disable_dots: false } as unknown as FlowCardPlusConfig)).toBe(
+      true
+    );
+  });
+
+  test("returns true when matchMedia reports no reduced-motion preference", () => {
+    vi.stubGlobal("window", {
+      matchMedia: () => ({ matches: false }),
+    });
+    expect(checkShouldShowDots({} as FlowCardPlusConfig)).toBe(true);
+  });
+
+  test("returns true in node env (no window stub)", () => {
+    expect(checkShouldShowDots({} as FlowCardPlusConfig)).toBe(true);
+  });
+});
 
 describe("core utils", () => {
   test("adjustZeroTolerance returns 0 for null/zero values", () => {
