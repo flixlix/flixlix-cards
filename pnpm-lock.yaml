@@ -846,12 +846,6 @@ importers:
       lit:
         specifier: catalog:packages
         version: 3.3.2
-      lit-element:
-        specifier: catalog:packages
-        version: 2.5.1
-      lit-html:
-        specifier: catalog:packages
-        version: 2.8.0
       memoize-one:
         specifier: catalog:packages
         version: 6.0.0

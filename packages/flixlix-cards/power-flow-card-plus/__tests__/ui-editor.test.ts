@@ -94,4 +94,22 @@ describe("power flow ui editor", () => {
     const config = configChanged.mock.calls[0]?.[0]?.detail?.config;
     expect(config.entities.grid).toEqual({ entity: "sensor.new_grid" });
   });
+
+  test("_editDetailElement sets _currentConfigPage and _goBack resets it", () => {
+    const editor = new PowerFlowCardPlusEditor();
+
+    (editor as any)._editDetailElement("grid");
+    expect((editor as any)._currentConfigPage).toBe("grid");
+
+    (editor as any)._goBack();
+    expect((editor as any)._currentConfigPage).toBeNull();
+  });
+
+  test("setConfig rejects invalid config", async () => {
+    const editor = new PowerFlowCardPlusEditor();
+
+    await expect(
+      editor.setConfig({ type: "custom:power-flow-card-plus" } as any)
+    ).rejects.toThrow();
+  });
 });

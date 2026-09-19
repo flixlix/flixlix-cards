@@ -44,8 +44,6 @@
   },
   "dependencies": {
     "@mdi/js": "catalog:packages",
-    "lit-element": "catalog:packages",
-    "lit-html": "catalog:packages",
     "memoize-one": "catalog:packages",
     "sortablejs": "^1.15.7",
     "superstruct": "catalog:packages",
