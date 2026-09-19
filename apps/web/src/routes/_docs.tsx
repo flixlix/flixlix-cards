@@ -103,7 +103,15 @@ function DocsLayout() {
               Built with <Heart aria-label="love" className="size-3 fill-current text-rose-500" />{" "}
               for the Home Assistant community
             </p>
-            <p>
+            <p className="inline-flex flex-wrap items-center gap-x-3 gap-y-1">
+              <a
+                href="https://github.com/flixlix/flixlix-cards/blob/main/LICENSE"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-foreground hover:text-primary font-medium transition-colors"
+              >
+                MIT License
+              </a>
               <a
                 href="https://github.com/flixlix"
                 target="_blank"

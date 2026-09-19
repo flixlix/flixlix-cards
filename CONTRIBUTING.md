@@ -92,3 +92,7 @@ This monorepo uses [Changesets](https://github.com/changesets/changesets) to man
 If you have questions, get stuck, or need clarification:
 - Check the card’s own README for usage details or quirks.
 - Feel free to create an issue on GitHub describing your problem or question.
+
+## License
+
+This project is released under the [MIT License](LICENSE).

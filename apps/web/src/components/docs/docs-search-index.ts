@@ -36,7 +36,7 @@ const PAGES: SearchEntry[] = [
     breadcrumb: "Project",
     card: "general",
     type: "page",
-    keywords: ["pull request", "issue", "fork", "monorepo", "pnpm", "changeset"],
+    keywords: ["pull request", "issue", "fork", "monorepo", "pnpm", "changeset", "license", "mit"],
   },
 ];
 
@@ -603,6 +603,15 @@ const CONTRIBUTING_SECTIONS: SearchEntry[] = [
     card: "general",
     type: "section",
     keywords: ["conventional commits", "github"],
+  },
+  {
+    title: "License",
+    description: "flixlix-cards is released under the MIT License.",
+    to: "/contributing#license",
+    breadcrumb: "How to contribute",
+    card: "general",
+    type: "section",
+    keywords: ["mit", "licence", "open source", "copyright"],
   },
 ];
 

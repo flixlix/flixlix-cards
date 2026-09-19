@@ -119,3 +119,7 @@ input_text:
     max: 255
     initial: battery,ev,heating
 ```
+
+## License
+
+This card is released under the [MIT License](LICENSE).
