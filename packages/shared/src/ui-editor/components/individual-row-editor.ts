@@ -156,6 +156,7 @@ export class IndividualRowEditor extends LitElement {
       <ha-entity-picker
         class="add-entity"
         .hass=${this.hass}
+        ?disabled=${(this.entities?.length ?? 0) >= 4}
         @value-changed=${this._addEntity}
       ></ha-entity-picker>
     `;
@@ -224,6 +225,9 @@ export class IndividualRowEditor extends LitElement {
   private async _addEntity(ev: CustomEvent): Promise<void> {
     const value = ev.detail.value;
     if (value === "") {
+      return;
+    }
+    if ((this.entities?.length ?? 0) >= 4) {
       return;
     }
 
