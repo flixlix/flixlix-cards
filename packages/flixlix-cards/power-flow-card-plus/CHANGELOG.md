@@ -1,5 +1,11 @@
 # power-flow-card-plus
 
+## 0.3.8
+
+### Patch Changes
+
+- [#296](https://github.com/flixlix/flixlix-cards/pull/296) [`f8bed9e`](https://github.com/flixlix/flixlix-cards/commit/f8bed9ed8f3b87eaefe019444bd6b37a98856966) Thanks [@flixlix](https://github.com/flixlix)! - Fix: individual devices with negative readings are no longer hidden when display_zero is off
+
 ## 0.3.7
 
 ### Patch Changes
