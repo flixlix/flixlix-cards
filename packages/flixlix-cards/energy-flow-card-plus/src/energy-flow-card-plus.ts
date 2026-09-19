@@ -53,6 +53,7 @@ import {
   type TemplatesObj,
 } from "@flixlix-cards/shared/types";
 import { checkShouldShowDots } from "@flixlix-cards/shared/utils/check-should-show-dots";
+import { collectConfigEntityIds } from "@flixlix-cards/shared/utils/collect-config-entity-ids";
 import { computeEnergyDistribution } from "@flixlix-cards/shared/utils/compute-energy-distribution";
 import {
   computeFieldIcon,
@@ -70,6 +71,7 @@ import {
 import { displayValue } from "@flixlix-cards/shared/utils/display-value";
 import { defaultValues, getDefaultConfig } from "@flixlix-cards/shared/utils/get-default-config";
 import { getEnergyEntityState } from "@flixlix-cards/shared/utils/get-energy-entity-state";
+import { hasRelevantStatesChanged } from "@flixlix-cards/shared/utils/has-relevant-states-changed";
 import { registerCustomCard } from "@flixlix-cards/shared/utils/register-custom-card";
 import { sortIndividualObjects } from "@flixlix-cards/shared/utils/sort-individual-objects";
 import { coerceNumber } from "@flixlix-cards/shared/utils/utils";
@@ -703,8 +705,15 @@ export class EnergyFlowCardPlus extends LitElement {
     if (changedProps.has("_config")) {
       void this._refreshEnergyData();
     }
+    const hassChanged =
+      changedProps.has("hass") &&
+      hasRelevantStatesChanged(
+        changedProps.get("hass"),
+        this.hass,
+        collectConfigEntityIds(this._config.entities)
+      );
     if (
-      changedProps.has("hass") ||
+      hassChanged ||
       changedProps.has("_config") ||
       changedProps.has("_templateResults") ||
       changedProps.has("_width") ||
