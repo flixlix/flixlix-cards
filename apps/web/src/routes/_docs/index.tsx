@@ -163,7 +163,7 @@ function IndexPage() {
         <div className="relative grid items-center gap-x-10 gap-y-8 p-8 md:p-12 lg:grid-cols-[1fr_minmax(0,26rem)]">
           <div>
             <p className="border-primary/30 bg-primary/10 text-primary inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-mono text-[11px] font-medium tracking-wide">
-              <Zap className="size-3" /> Open source · HACS · Home Assistant
+              <Zap className="size-3" /> Open source · MIT · HACS · Home Assistant
             </p>
             <h1 className="mt-5 max-w-xl text-4xl font-bold tracking-tight text-balance md:text-5xl">
               See your home's energy{" "}

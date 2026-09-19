@@ -20,6 +20,7 @@
     "url": "git+https://github.com/flixlix/energy-flow-card-plus.git"
   },
   "author": "flixlix",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/flixlix/energy-flow-card-plus/issues"
   },

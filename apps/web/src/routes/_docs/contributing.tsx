@@ -317,6 +317,22 @@ git push -u origin feat/grid-color-toggle`}
         </div>
       </Section>
 
+      <Section id="license" title="License">
+        <Prose>
+          <p>
+            flixlix-cards is released under the{" "}
+            <a
+              href="https://github.com/flixlix/flixlix-cards/blob/main/LICENSE"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              MIT License
+            </a>
+            . You are free to use, fork, modify, and redistribute the cards, including through HACS.
+          </p>
+        </Prose>
+      </Section>
+
       <Section id="thanks" title="Thanks!">
         <Prose>
           <p className="flex items-center gap-2">

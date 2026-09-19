@@ -2,6 +2,7 @@
   "name": "@flixlix-cards/shared",
   "version": "0.0.5",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "exports": {
     "./i18n": "./src/i18n/index.ts",

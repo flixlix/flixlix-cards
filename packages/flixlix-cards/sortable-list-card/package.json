@@ -25,6 +25,7 @@
     "url": "git+https://github.com/flixlix/flixlix-cards.git"
   },
   "author": "flixlix",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/flixlix/flixlix-cards/issues"
   },

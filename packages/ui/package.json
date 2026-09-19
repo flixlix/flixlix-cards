@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "type": "module",
   "private": true,
+  "license": "MIT",
   "scripts": {
     "lint": "eslint . --max-warnings 0",
     "clean": "rimraf dist node_modules",

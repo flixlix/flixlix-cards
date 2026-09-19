@@ -2,6 +2,7 @@
   "name": "@flixlix-cards/bundler",
   "version": "0.0.3",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "exports": {
     ".": "./index.js"

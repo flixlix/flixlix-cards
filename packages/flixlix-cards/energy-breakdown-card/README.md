@@ -130,3 +130,7 @@ The card uses HA's CSS custom properties so it picks up your theme automatically
 - `--primary-text-color`, `--secondary-text-color`
 - `--secondary-background-color`, `--divider-color`
 - Energy palette: `--energy-solar-color`, `--energy-grid-consumption-color`, `--energy-battery-out-color`, `--energy-non-fossil-color`, `--energy-gas-color`, `--energy-water-color`
+
+## License
+
+This card is released under the [MIT License](LICENSE).

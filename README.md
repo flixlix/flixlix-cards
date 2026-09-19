@@ -24,3 +24,7 @@ When submitting, simply select the relevant card so I can assist you more effici
 ## Contributing
 
 Contributions are welcome! Check out the [CONTRIBUTING.md](CONTRIBUTING.md) file for more information, or read the [How to contribute](https://cards.flixlix.com/contributing) guide on the docs site.
+
+## License
+
+This project is released under the [MIT License](LICENSE). You are free to use, fork, modify, and redistribute the cards, including through HACS.
