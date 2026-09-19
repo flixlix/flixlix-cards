@@ -22,6 +22,7 @@ const fallbackIndividualObject: IndividualObject = {
   unit_white_space: false,
   invertAnimation: false,
   showDirection: false,
+  accept_negative: false,
   secondary: {
     entity: null,
     template: null,
@@ -52,6 +53,7 @@ export type IndividualObject = {
   decimals?: number;
   invertAnimation: boolean;
   showDirection: boolean;
+  accept_negative: boolean;
   secondary: {
     entity: string | null;
     template: string | null;
@@ -89,6 +91,7 @@ export const getIndividualObject = ({
   const displayZero = field?.display_zero || false;
   const displayZeroTolerance = field?.display_zero_tolerance || 0;
   const has = hasIndividualObject(displayZero, state, displayZeroTolerance);
+  const acceptNegative = field?.accept_negative || false;
   const isStateNegative = state && state < 0;
   const userConfiguredInvertAnimation = field?.inverted_animation || false;
   const invertAnimation = isStateNegative
@@ -117,6 +120,7 @@ export const getIndividualObject = ({
     decimals: field?.decimals,
     invertAnimation,
     showDirection: field?.show_direction || false,
+    accept_negative: acceptNegative,
     secondary: {
       entity: field?.secondary_info?.entity || null,
       template: field?.secondary_info?.template || null,

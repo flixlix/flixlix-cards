@@ -24,13 +24,16 @@ export const getIndividualState = ({
 
   if (entity === undefined) return null;
 
+  const acceptNegative = field?.accept_negative || false;
+  const transformSign = (v: number) => (acceptNegative ? v : Math.abs(v));
+
   if (energyCard) {
-    return Math.abs(getEnergyEntityState(hass, energyGrowthMap, useDateSelection, entity));
+    return transformSign(getEnergyEntityState(hass, energyGrowthMap, useDateSelection, entity));
   }
 
   const individualStateWatts = getEntityStateWatts(hass, entity);
 
-  return Math.abs(individualStateWatts);
+  return transformSign(individualStateWatts);
 };
 
 export const getIndividualSecondaryState = (hass: HomeAssistant, field: IndividualDeviceType) => {
