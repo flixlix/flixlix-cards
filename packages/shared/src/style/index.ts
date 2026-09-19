@@ -588,6 +588,21 @@ export const styles = css`
     }
   }
 
+  .flow-dot {
+    animation-name: flow-dot-travel;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+  }
+
+  @keyframes flow-dot-travel {
+    from {
+      offset-distance: 0%;
+    }
+    to {
+      offset-distance: 100%;
+    }
+  }
+
   .card-actions {
     display: flex;
     justify-content: space-between;

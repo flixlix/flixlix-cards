@@ -13,15 +13,14 @@ import { type Flows } from "./index";
 const gridToHomeDot = (
   config: FlowCardPlusConfig,
   grid: Flows["grid"],
-  newDur: Flows["newDur"]
+  newDur: Flows["newDur"],
+  pathD: string
 ) => {
   if (!checkShouldShowDots(config) || !grid.state.toHome) return nothing;
 
-  return svg`<circle r="1" class="grid" vector-effect="non-scaling-stroke">
-      <animateMotion dur="${newDur.gridToHome}s" repeatCount="indefinite" calcMode="paced">
-        <mpath xlink:href="#grid" />
-      </animateMotion>
-    </circle>`;
+  return svg`<circle r="1" class="grid flow-dot"
+    style="offset-path: path('${pathD}'); animation-duration: ${newDur.gridToHome}s;"
+    vector-effect="non-scaling-stroke"></circle>`;
 };
 
 export const flowGridToHome = (
@@ -31,6 +30,8 @@ export const flowGridToHome = (
   const shouldShow =
     grid.has && showLine(config, grid.state.fromGrid) && !config.entities.home?.hide;
   if (!shouldShow) return nothing;
+
+  const gridToHomePathD = `M0,${battery.has ? 50 : solar.has ? 56 : 53} H100`;
 
   return html`<div
     class="lines ${classMap({
@@ -49,10 +50,10 @@ export const flowGridToHome = (
       <path
         class="grid ${styleLine(grid.state.toHome || 0, config)}"
         id="grid"
-        d="M0,${battery.has ? 50 : solar.has ? 56 : 53} H100"
+        d="${gridToHomePathD}"
         vector-effect="non-scaling-stroke"
       ></path>
-      ${gridToHomeDot(config, grid, newDur)}
+      ${gridToHomeDot(config, grid, newDur, gridToHomePathD)}
     </svg>
   </div>`;
 };
