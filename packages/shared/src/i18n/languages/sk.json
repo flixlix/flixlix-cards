@@ -12,6 +12,8 @@
     "allow_layout_break": "Povoliť zalomenie rozloženia",
     "base_decimals": "Desatinné miesta pre základ",
     "battery": "Batéria",
+    "battery_role_primary": "Hlavná (v grafe)",
+    "battery_role_satellite": "Satelit (iba zobrazenie)",
     "calculate_flow_rate": "Počítať prietok",
     "circle_animation": "Kruhová animácia",
     "clickable_entities": "Entity, na ktoré sa dá kliknúť",

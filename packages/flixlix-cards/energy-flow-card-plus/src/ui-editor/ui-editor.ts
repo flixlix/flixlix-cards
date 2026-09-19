@@ -4,16 +4,17 @@ import {
   type LovelaceRowConfig,
   type PowerFlowCardPlusConfig,
 } from "@flixlix-cards/shared/types";
+import "@flixlix-cards/shared/ui-editor/components/battery-devices-editor";
 import "@flixlix-cards/shared/ui-editor/components/individual-devices-editor";
 import "@flixlix-cards/shared/ui-editor/components/link-subpage";
 import "@flixlix-cards/shared/ui-editor/components/subpage-header";
-import { batterySchema } from "@flixlix-cards/shared/ui-editor/schema/battery";
 import { nonFossilSchema } from "@flixlix-cards/shared/ui-editor/schema/fossil-fuel-percentage";
 import { gridSchema } from "@flixlix-cards/shared/ui-editor/schema/grid";
 import { homeSchema } from "@flixlix-cards/shared/ui-editor/schema/home";
 import { solarSchema } from "@flixlix-cards/shared/ui-editor/schema/solar";
 import { loadHaForm } from "@flixlix-cards/shared/ui-editor/utils/load-ha-form";
 import { defaultValues } from "@flixlix-cards/shared/utils/get-default-config";
+import { getPrimaryBattery } from "@flixlix-cards/shared/utils/normalize-batteries";
 import { fireEvent, type HomeAssistant, type LovelaceCardEditor } from "custom-card-helpers";
 import { LitElement, css, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
@@ -38,7 +39,6 @@ const CONFIG_PAGES: {
   {
     page: "battery",
     icon: "mdi:battery-high",
-    schema: batterySchema,
   },
   {
     page: "fossil_fuel_percentage",
@@ -247,6 +247,19 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
         `;
       }
 
+      if (this._currentConfigPage === "battery") {
+        return html`
+          ${this._renderLegacyFieldsAlert()} ${this._renderLegacyIndividualFieldsAlert()}
+          <subpage-header @go-back=${this._goBack} page=${this._currentConfigPage}>
+          </subpage-header>
+          <battery-devices-editor
+            .hass=${this.hass}
+            .config=${this._config}
+            @config-changed=${this._valueChanged}
+          ></battery-devices-editor>
+        `;
+      }
+
       const currentPage = this._currentConfigPage;
       const schema =
         currentPage === "advanced"
@@ -276,6 +289,9 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
       if (page === null) return nothing;
       const getIconToUse = () => {
         if (page === "individual" || page === "advanced") return fallbackIcon;
+        if (page === "battery") {
+          return getPrimaryBattery(this?._config?.entities.battery)?.icon || fallbackIcon;
+        }
         const entityConfig = this?._config?.entities[page] as { icon?: string } | undefined;
         return entityConfig?.icon || fallbackIcon;
       };
@@ -310,16 +326,17 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
   }
 
   private _valueChanged(ev: any): void {
-    let config = ev.detail.value || "";
+    let config = ev.detail.value ?? ev.detail.config;
 
-    if (!this._config || !this.hass) {
+    if (!this._config || !this.hass || !config) {
       return;
     }
 
     if (
       this._currentConfigPage !== null &&
       this._currentConfigPage !== "advanced" &&
-      this._currentConfigPage !== "individual"
+      this._currentConfigPage !== "individual" &&
+      this._currentConfigPage !== "battery"
     ) {
       config = {
         ...this._config,
@@ -329,6 +346,8 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
         },
       };
     }
+
+    this._config = config;
 
     fireEvent(this, "config-changed", { config });
   }

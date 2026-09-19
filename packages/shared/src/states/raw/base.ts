@@ -8,7 +8,7 @@ import { type HomeAssistant } from "custom-card-helpers";
 
 type BaseEntityField = Exclude<
   keyof FlowCardPlusConfig["entities"],
-  "individual" | "individual1" | "individual2"
+  "individual" | "individual1" | "individual2" | "battery"
 >;
 
 export const getSecondaryState = (

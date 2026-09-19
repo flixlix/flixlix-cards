@@ -13,6 +13,22 @@ const mainSchema = {
   schema: [
     ...getBaseMainConfigSchema("battery").schema,
     {
+      name: "role",
+      label: "Role",
+      helper:
+        "Primary participates in solar/grid/home flows. Satellite is display-only below the main battery.",
+      selector: {
+        select: {
+          mode: "dropdown",
+          options: [
+            { value: "primary", label: localize("editor.battery_role_primary") },
+            { value: "satellite", label: localize("editor.battery_role_satellite") },
+          ],
+        },
+      },
+      default: "primary",
+    },
+    {
       name: "invert_state",
       label: "Invert State",
       selector: { boolean: {} },

@@ -12,6 +12,8 @@
     "allow_layout_break": "लेआउट तोड़ने की अनुमति दें",
     "base_decimals": "बेस दशमलव",
     "battery": "बैटरी",
+    "battery_role_primary": "प्राथमिक (फ्लो ग्राफ़ में)",
+    "battery_role_satellite": "सैटेलाइट (केवल प्रदर्शन)",
     "calculate_flow_rate": "प्रवाह दर की गणना करें",
     "circle_animation": "सर्कल एनिमेशन",
     "clickable_entities": "क्लिक करने योग्य इकाइयाँ",

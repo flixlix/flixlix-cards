@@ -1,0 +1,529 @@
+<!doctype html><html><head><meta charset='utf-8'><link href='https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap' rel='stylesheet'><style>
+      :root {
+        --ha-card-bg: #fff;
+        --ha-card-border: rgba(0, 0, 0, 0.12);
+        --primary-text: #212121;
+        --secondary-text: #727272;
+        --page-bg: #f0f2f5;
+        --solar: #ff9800;
+        --grid-in: #488fc2;
+        --grid-out: #8353d1;
+        --battery-in: #a280db;
+        --battery-out: #4db6ac;
+        --home: #488fc2;
+        --page-ink: #1a1d21;
+        --accent: #2f6fed;
+        --code-bg: #161b22;
+        --code-fg: #e6edf3;
+        --code-muted: #8b949e;
+        --code-key: #7ee787;
+        --code-str: #a5d6ff;
+        --code-num: #ffa657;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Roboto, system-ui, sans-serif;
+        background:
+          radial-gradient(1200px 600px at 10% -10%, #dce7ff 0%, transparent 55%),
+          radial-gradient(900px 500px at 100% 0%, #ffe8cc 0%, transparent 50%),
+          var(--page-bg);
+        color: var(--page-ink);
+        padding: 40px 24px 80px;
+      }
+
+      .page {
+        max-width: 1180px;
+        margin: 0 auto;
+      }
+
+      header.page-header {
+        margin-bottom: 36px;
+      }
+
+      header.page-header h1 {
+        margin: 0 0 8px;
+        font-size: 2rem;
+        letter-spacing: -0.03em;
+        font-weight: 700;
+      }
+
+      header.page-header p {
+        margin: 0;
+        max-width: 62ch;
+        color: #4a5560;
+        line-height: 1.5;
+      }
+
+      .prototype {
+        display: grid;
+        grid-template-columns: minmax(320px, 420px) 1fr;
+        gap: 28px;
+        align-items: start;
+        margin-bottom: 48px;
+        padding: 28px;
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        border-radius: 20px;
+        box-shadow: 0 18px 40px rgba(22, 36, 64, 0.06);
+      }
+
+      @media (max-width: 900px) {
+        .prototype {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .meta h2 {
+        margin: 0 0 6px;
+        font-size: 1.25rem;
+        letter-spacing: -0.02em;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--accent);
+        background: #e8efff;
+        border-radius: 999px;
+        padding: 4px 10px;
+        margin-bottom: 10px;
+      }
+
+      .badge.alt {
+        color: #8a5a00;
+        background: #fff1d6;
+      }
+
+      .badge.shipped {
+        color: #0b6b3a;
+        background: #dff7ea;
+      }
+
+      .meta p {
+        margin: 0 0 16px;
+        color: #556070;
+        line-height: 1.45;
+        font-size: 0.95rem;
+      }
+
+      .meta ul {
+        margin: 0 0 18px;
+        padding-left: 1.1rem;
+        color: #44505c;
+        font-size: 0.9rem;
+        line-height: 1.45;
+      }
+
+      pre.yaml {
+        margin: 0;
+        background: var(--code-bg);
+        color: var(--code-fg);
+        border-radius: 14px;
+        padding: 16px 18px;
+        font-family: "IBM Plex Mono", ui-monospace, monospace;
+        font-size: 12px;
+        line-height: 1.55;
+        overflow: auto;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+      }
+
+      .k {
+        color: var(--code-key);
+      }
+      .s {
+        color: var(--code-str);
+      }
+      .c {
+        color: var(--code-muted);
+      }
+      .n {
+        color: var(--code-num);
+      }
+
+      /* Card chrome */
+      .ha-card {
+        background: var(--ha-card-bg);
+        border-radius: 12px;
+        border: 1px solid var(--ha-card-border);
+        box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.12),
+          0 1px 5px 0 rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+        width: 100%;
+        max-width: 420px;
+      }
+
+      .ha-card-header {
+        padding: 16px 16px 0;
+        font-size: 1.1rem;
+        font-weight: 500;
+        color: var(--primary-text);
+      }
+
+      .card-content {
+        position: relative;
+        padding: 16px 8px 20px;
+        --size-circle: 80px;
+      }
+
+      .row {
+        display: flex;
+        justify-content: center;
+        align-items: flex-end;
+        gap: 0;
+        min-height: 110px;
+        position: relative;
+        z-index: 2;
+      }
+
+      .row.mid {
+        min-height: 100px;
+        margin: 8px 0;
+      }
+
+      .row.bottom {
+        min-height: 120px;
+        align-items: flex-end;
+      }
+
+      .spacer {
+        width: var(--size-circle);
+        flex: 0 0 var(--size-circle);
+      }
+
+      .circle-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: var(--size-circle);
+        flex: 0 0 var(--size-circle);
+      }
+
+      .circle {
+        width: var(--size-circle);
+        height: var(--size-circle);
+        border-radius: 50%;
+        border: 2px solid;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        font-size: 12px;
+        line-height: 1.05;
+        gap: 2px;
+        background: #fff;
+        position: relative;
+      }
+
+      .circle .icon {
+        width: 22px;
+        height: 22px;
+        display: block;
+      }
+
+      .circle .soc {
+        font-weight: 500;
+        font-size: 12px;
+      }
+
+      .circle .flow {
+        display: flex;
+        align-items: center;
+        gap: 1px;
+        font-size: 11px;
+        font-weight: 500;
+      }
+
+      .circle .flow svg {
+        width: 12px;
+        height: 12px;
+      }
+
+      .label {
+        margin-top: 6px;
+        font-size: 12px;
+        color: var(--secondary-text);
+        text-align: center;
+        max-width: 96px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .solar .circle {
+        border-color: var(--solar);
+        color: var(--solar);
+      }
+      .solar .label {
+        color: var(--primary-text);
+      }
+
+      .grid .circle {
+        border-color: var(--grid-in);
+      }
+      .grid .flow.in {
+        color: var(--grid-in);
+      }
+      .grid .flow.out {
+        color: var(--grid-out);
+      }
+
+      .home .circle {
+        border-color: var(--home);
+      }
+      .home .value {
+        font-weight: 500;
+        color: var(--primary-text);
+      }
+
+      .battery .circle {
+        border-color: var(--battery-in);
+      }
+      .battery .soc {
+        color: var(--primary-text);
+      }
+      .battery .icon {
+        color: var(--battery-in);
+        fill: currentColor;
+      }
+      .battery .flow.in {
+        color: var(--battery-in);
+      }
+      .battery .flow.out {
+        color: var(--battery-out);
+      }
+
+      .batteries {
+        display: flex;
+        flex-direction: row;
+        align-items: flex-end;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      .batteries.compact {
+        gap: 6px;
+      }
+
+      .batteries.compact .circle-container {
+        width: 72px;
+        flex-basis: 72px;
+      }
+
+      .batteries.compact .circle {
+        width: 72px;
+        height: 72px;
+      }
+
+      .batteries.tiny .circle-container {
+        width: 64px;
+        flex-basis: 64px;
+      }
+
+      .batteries.tiny .circle {
+        width: 64px;
+        height: 64px;
+        font-size: 11px;
+      }
+
+      .lines {
+        position: absolute;
+        inset: 40px 40px 50px;
+        z-index: 1;
+        pointer-events: none;
+      }
+
+      .lines path {
+        fill: none;
+        stroke-width: 1.5;
+        opacity: 0.9;
+      }
+
+      .lines .solar-home {
+        stroke: var(--solar);
+      }
+      .lines .solar-battery {
+        stroke: var(--battery-in);
+      }
+      .lines .grid-home {
+        stroke: var(--grid-in);
+      }
+      .lines .battery-home {
+        stroke: var(--battery-out);
+      }
+      .lines .battery-grid {
+        stroke: var(--grid-out);
+      }
+
+      .dot {
+        fill: currentColor;
+      }
+
+      .range-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 10px;
+        color: var(--secondary-text);
+        background: #f3f4f6;
+        border-radius: 999px;
+        padding: 2px 7px;
+        margin-top: 2px;
+      }
+
+      .satellite-row {
+        display: flex;
+        justify-content: center;
+        gap: 14px;
+        margin-top: -4px;
+        position: relative;
+        z-index: 2;
+      }
+
+      .satellite .circle {
+        width: 56px;
+        height: 56px;
+        border-style: dashed;
+      }
+
+      .satellite .circle-container {
+        width: 56px;
+        flex-basis: 56px;
+      }
+
+      .note {
+        font-size: 12px;
+        color: #6b7280;
+        margin-top: 10px;
+      }
+    </style>
+<style>body{margin:0;padding:20px;background:#f0f2f5}.prototype{margin:0}</style></head><body><section class="prototype" id="proto-b">
+        <div class="preview">
+          <div class="ha-card">
+            <div class="ha-card-header">3-pack home</div>
+            <div class="card-content">
+              <svg class="lines" viewBox="0 0 340 260" preserveAspectRatio="none">
+                <path class="solar-home" d="M170 28 C170 90, 250 90, 250 130" />
+                <path class="solar-battery" d="M170 28 C170 120, 170 150, 170 195" />
+                <path class="grid-home" d="M90 130 C140 130, 200 130, 250 130" />
+                <path class="battery-home" d="M170 195 C190 195, 230 165, 250 140" />
+                <path class="battery-grid" d="M170 195 C130 195, 100 165, 90 140" />
+              </svg>
+              <div class="row">
+                <div class="spacer"></div>
+                <div class="circle-container solar">
+                  <div class="circle">
+                    <svg class="icon" viewBox="0 0 24 24">
+                      <path
+                        fill="currentColor"
+                        d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0-5h2v3h-2M4.9 5.5l1.4-1.4 2.1 2.1-1.4 1.4M1 13v-2h3v2m16 0v-2h3v2m-3.5-6.5 2.1-2.1 1.4 1.4-2.1 2.1M11 22v-3h2v3"
+                      />
+                    </svg>
+                    <div class="flow" style="color: var(--solar)">6.0 kW</div>
+                  </div>
+                  <span class="label">Solar</span>
+                </div>
+                <div class="spacer"></div>
+              </div>
+              <div class="row mid">
+                <div class="circle-container grid">
+                  <div class="circle">
+                    <svg class="icon" viewBox="0 0 24 24" style="color: var(--grid-out)">
+                      <path
+                        fill="currentColor"
+                        d="M12 3L2 12h3v8h6v-6h2v6h6v-8h3L12 3z"
+                      />
+                    </svg>
+                    <div class="flow out">
+                      <svg viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M13 20h-2V8l-5 5-1.4-1.4L12 3.2l7.4 8.4L18 13l-5-5v12z" />
+                      </svg>
+                      0.8 kW
+                    </div>
+                  </div>
+                  <span class="label">Grid</span>
+                </div>
+                <div class="spacer"></div>
+                <div class="circle-container home">
+                  <div class="circle">
+                    <svg class="icon" viewBox="0 0 24 24" style="color: var(--home)">
+                      <path fill="currentColor" d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8h5z" />
+                    </svg>
+                    <div class="value">1.9 kW</div>
+                  </div>
+                  <span class="label">Home</span>
+                </div>
+              </div>
+              <div class="row bottom">
+                <div class="batteries compact" style="margin: 0 auto">
+                  <div class="circle-container battery">
+                    <div class="circle">
+                      <div class="soc">91%</div>
+                      <svg class="icon" viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M16 20H8V6h8v14zM16.67 4H15V2H9v2H7.33C6.6 4 6 4.6 6 5.33v15.34C6 21.4 6.6 22 7.33 22h9.34c.73 0 1.33-.6 1.33-1.33V5.33C18 4.6 17.4 4 16.67 4z" />
+                      </svg>
+                      <div class="flow in">1.2 kW</div>
+                    </div>
+                    <span class="label">Powerwall</span>
+                  </div>
+                  <div class="circle-container battery">
+                    <div class="circle">
+                      <div class="soc">67%</div>
+                      <svg class="icon" viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M16 20H8V6h8v14zM16.67 4H15V2H9v2H7.33C6.6 4 6 4.6 6 5.33v15.34C6 21.4 6.6 22 7.33 22h9.34c.73 0 1.33-.6 1.33-1.33V5.33C18 4.6 17.4 4 16.67 4z" />
+                      </svg>
+                      <div class="flow in">0.9 kW</div>
+                    </div>
+                    <span class="label">Anker X1</span>
+                  </div>
+                  <div class="circle-container battery">
+                    <div class="circle" style="border-color: var(--battery-out)">
+                      <div class="soc">28%</div>
+                      <svg class="icon" viewBox="0 0 24 24" style="color: var(--battery-out)">
+                        <path fill="currentColor" d="M16 20H8V6h8v14zM16.67 4H15V2H9v2H7.33C6.6 4 6 4.6 6 5.33v15.34C6 21.4 6.6 22 7.33 22h9.34c.73 0 1.33-.6 1.33-1.33V5.33C18 4.6 17.4 4 16.67 4z" />
+                      </svg>
+                      <div class="flow out">0.4 kW</div>
+                    </div>
+                    <span class="label">Solix E10</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="meta">
+          <div class="badge">Layout stress test</div>
+          <h2>B — Three packs, slightly denser circles</h2>
+          <p>
+            Same config model as A, at the max of three. Circles shrink a few pixels so labels and
+            dual-state values still fit on a phone-width card.
+          </p>
+          <ul>
+            <li>Hard cap at 3 keeps the classic topology readable</li>
+            <li>Same aggregation rules as A</li>
+            <li>Names become the main way to tell packs apart</li>
+          </ul>
+          <pre class="yaml"><span class="k">battery</span>:
+  - <span class="k">name</span>: <span class="s">Powerwall</span>
+    <span class="k">entity</span>: <span class="s">sensor.pw_power</span>
+    <span class="k">state_of_charge</span>: <span class="s">sensor.pw_soc</span>
+  - <span class="k">name</span>: <span class="s">Anker X1</span>
+    <span class="k">entity</span>:
+      <span class="k">consumption</span>: <span class="s">sensor.x1_discharge</span>
+      <span class="k">production</span>: <span class="s">sensor.x1_charge</span>
+    <span class="k">state_of_charge</span>: <span class="s">sensor.x1_soc</span>
+  - <span class="k">name</span>: <span class="s">Solix E10</span>
+    <span class="k">entity</span>: <span class="s">sensor.e10_power</span>
+    <span class="k">state_of_charge</span>: <span class="s">sensor.e10_soc</span></pre>
+        </div>
+      </section></body></html>

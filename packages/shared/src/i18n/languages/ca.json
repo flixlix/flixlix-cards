@@ -12,6 +12,8 @@
     "allow_layout_break": "Permet trencar el disseny",
     "base_decimals": "Decimals de base",
     "battery": "Bateria",
+    "battery_role_primary": "Principal (al graf)",
+    "battery_role_satellite": "Satèl·lit (només visualització)",
     "calculate_flow_rate": "Calcula la Relació de Fluxe",
     "circle_animation": "Animació Circular",
     "clickable_entities": "Entitats cliquejables",

@@ -206,6 +206,43 @@ export const styles = css`
     height: 110px;
     justify-content: flex-end;
   }
+  .batteries {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 8px;
+  }
+  .batteries .circle-container.battery {
+    width: var(--size-circle-entity);
+  }
+  .battery-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+  }
+  .battery-satellites {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 14px;
+    margin-top: 6px;
+  }
+  .circle-container.battery.satellite {
+    width: 56px;
+    height: auto;
+  }
+  .circle-container.battery.satellite .circle {
+    width: 56px;
+    height: 56px;
+    border-style: dashed;
+    font-size: 11px;
+  }
+  .circle-container.battery.satellite .label {
+    max-width: 72px;
+  }
   .spacer {
     width: var(--size-circle-entity);
   }

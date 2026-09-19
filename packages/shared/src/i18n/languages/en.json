@@ -12,6 +12,8 @@
     "allow_layout_break": "Allow Layout Break",
     "base_decimals": "Base Decimals",
     "battery": "Battery",
+    "battery_role_primary": "Primary (in flow graph)",
+    "battery_role_satellite": "Satellite (display only)",
     "calculate_flow_rate": "Calculate Flow Rate",
     "circle_animation": "Circle Animation",
     "clickable_entities": "Clickable Entities",

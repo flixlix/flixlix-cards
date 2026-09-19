@@ -194,4 +194,89 @@ describe("_computeRenderData", () => {
     expect(Number.isNaN(data.grid.state.toHome)).toBe(false);
     expect(Number.isNaN(data.solar.state.total)).toBe(false);
   });
+
+  test("case 6: multiple batteries aggregate charge/discharge for distribution", () => {
+    const config = {
+      type: "custom:power-flow-card-plus",
+      entities: {
+        grid: { entity: "sensor.grid" },
+        solar: { entity: "sensor.solar" },
+        battery: [
+          { entity: "sensor.battery_a", name: "House", state_of_charge: "sensor.soc_a" },
+          { entity: "sensor.battery_b", name: "EcoFlow", state_of_charge: "sensor.soc_b" },
+        ],
+      },
+    } as PowerFlowCardPlusConfig;
+    const hass = makeHass({
+      "sensor.grid": "200",
+      "sensor.solar": "1000",
+      "sensor.battery_a": "-300",
+      "sensor.battery_b": "-200",
+      "sensor.soc_a": "80",
+      "sensor.soc_b": "45",
+    });
+    const card = makeCard(config, hass);
+    const data = card._computeRenderData() as typeof data & {
+      batteries: Array<{ has: boolean; name: string; state: { toBattery: number | null } }>;
+    };
+
+    expect(data.batteries).toHaveLength(2);
+    expect(data.batteries[0].name).toBe("House");
+    expect(data.batteries[1].name).toBe("EcoFlow");
+    expect(data.battery.has).toBeTruthy();
+    expect(data.battery.state.toBattery).toBe(500);
+    expect(data.batteries[0].state.toBattery).toBe(300);
+    expect(data.batteries[1].state.toBattery).toBe(200);
+  });
+
+  test("case 7: satellite batteries are visible but excluded from distribution", () => {
+    const config = {
+      type: "custom:power-flow-card-plus",
+      entities: {
+        grid: { entity: "sensor.grid" },
+        solar: { entity: "sensor.solar" },
+        battery: [
+          {
+            entity: "sensor.main",
+            name: "Main",
+            role: "primary",
+            state_of_charge: "sensor.main_soc",
+          },
+          {
+            entity: "sensor.plug",
+            name: "Plug-in",
+            role: "satellite",
+            state_of_charge: "sensor.plug_soc",
+          },
+        ],
+      },
+    } as PowerFlowCardPlusConfig;
+    const hass = makeHass({
+      "sensor.grid": "100",
+      "sensor.solar": "800",
+      "sensor.main": "-500",
+      "sensor.plug": "-250",
+      "sensor.main_soc": "76",
+      "sensor.plug_soc": "38",
+    });
+    const card = makeCard(config, hass);
+    const data = card._computeRenderData() as ReturnType<typeof card._computeRenderData> & {
+      batteries: Array<{
+        has: boolean;
+        name: string;
+        role: string;
+        state: { toBattery: number | null };
+      }>;
+      hasBatteryUi: boolean;
+    };
+
+    expect(data.batteries).toHaveLength(2);
+    expect(data.batteries[0].role).toBe("primary");
+    expect(data.batteries[1].role).toBe("satellite");
+    expect(data.batteries[1].has).toBe(true);
+    expect(data.hasBatteryUi).toBe(true);
+    expect(data.battery.state.toBattery).toBe(500);
+    expect(data.batteries[0].state.toBattery).toBe(500);
+    expect(data.batteries[1].state.toBattery).toBe(250);
+  });
 });

@@ -12,6 +12,8 @@
     "allow_layout_break": "Salli asettelun rivitys",
     "base_decimals": "Whien desimaalit",
     "battery": "Akku",
+    "battery_role_primary": "Ensisijainen (kaaviossa)",
+    "battery_role_satellite": "Satelliitti (vain näyttö)",
     "calculate_flow_rate": "Laske virtausnopeus",
     "circle_animation": "Ympyräanimaatio",
     "clickable_entities": "Napautettavat kohteet",

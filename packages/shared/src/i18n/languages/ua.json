@@ -12,6 +12,8 @@
     "allow_layout_break": "Дозволити розрив макета",
     "base_decimals": "Десяткові знаки для бази",
     "battery": "Акумулятор",
+    "battery_role_primary": "Основна (у схемі)",
+    "battery_role_satellite": "Супутник (лише відображення)",
     "calculate_flow_rate": "Розраховувати швидкість потоку",
     "circle_animation": "Анімація кола",
     "clickable_entities": "Клікабельні сутності",
