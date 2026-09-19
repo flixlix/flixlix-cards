@@ -1,5 +1,12 @@
 # @flixlix-cards/web
 
+## 1.1.1
+
+### Patch Changes
+
+- Updated dependencies [[`f8bed9e`](https://github.com/flixlix/flixlix-cards/commit/f8bed9ed8f3b87eaefe019444bd6b37a98856966)]:
+  - power-flow-card-plus@0.3.8
+
 ## 1.1.0
 
 ### Minor Changes

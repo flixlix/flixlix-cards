@@ -1,5 +1,13 @@
 # energy-flow-card-plus
 
+## 0.2.4
+
+### Patch Changes
+
+- [#296](https://github.com/flixlix/flixlix-cards/pull/296) [`f8bed9e`](https://github.com/flixlix/flixlix-cards/commit/f8bed9ed8f3b87eaefe019444bd6b37a98856966) Thanks [@flixlix](https://github.com/flixlix)! - Fix: individual devices with negative readings are no longer hidden when display_zero is off
+
+- [#304](https://github.com/flixlix/flixlix-cards/pull/304) [`71dffc6`](https://github.com/flixlix/flixlix-cards/commit/71dffc6a4d96d0805121b92d9aa1a152de138dc6) Thanks [@flixlix](https://github.com/flixlix)! - Internal: use shared circle constant
+
 ## 0.2.3
 
 ### Patch Changes
