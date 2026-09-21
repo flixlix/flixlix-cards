@@ -84,14 +84,17 @@ export const getIndividualObject = ({
   field: IndividualDeviceType | undefined;
 }): IndividualObject => {
   if (!field || !field?.entity) return fallbackIndividualObject;
-  const entity = field.entity;
+  const entity =
+    typeof field.entity === "string"
+      ? field.entity
+      : field.entity.consumption || field.entity.production || "";
   const state = getIndividualState({ hass, config, energyGrowthMap, useDateSelection, field });
   const displayZero = field?.display_zero || false;
   const displayZeroTolerance = field?.display_zero_tolerance || 0;
   const has = hasIndividualObject(displayZero, state, displayZeroTolerance);
-  const isStateNegative = state && state < 0;
+  const isStatePositive = state && state > 0;
   const userConfiguredInvertAnimation = field?.inverted_animation || false;
-  const invertAnimation = isStateNegative
+  const invertAnimation = isStatePositive
     ? !userConfiguredInvertAnimation
     : userConfiguredInvertAnimation;
 

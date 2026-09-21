@@ -28,20 +28,22 @@ export const individualLeftBottomElement = (
   if (!individualObj) return spacer;
   const disableEntityClick = config.clickable_entities === false;
   const indexOfIndividual =
-    config?.entities?.individual?.findIndex((e) => e.entity === individualObj.entity) || 0;
+    config?.entities?.individual?.findIndex((e) => e === individualObj.field) || 0;
   const duration = newDur.individual[indexOfIndividual] || 0;
+  const individualAbsState = Math.abs(individualObj.state || 0);
+  const shouldShowDirection =
+    individualObj?.showDirection && individualAbsState > (individualObj.displayZeroTolerance ?? 0);
   return html`<div class="circle-container individual-bottom bottom">
-    ${showLine(config, individualObj?.state || 0) && !config.entities.home?.hide
+    ${showLine(config, individualAbsState) && !config.entities.home?.hide
       ? html`
           <svg width="80" height="30">
             <path
               d="M40 40 v-40"
               id="individual-bottom"
-              class="${styleLine(individualObj?.state || 0, config)}"
+              class="${styleLine(individualAbsState, config)}"
             />
             ${checkShouldShowDots(config) &&
-            individualObj?.state &&
-            individualObj.state >= (individualObj.displayZeroTolerance ?? 0)
+            individualAbsState > (individualObj.displayZeroTolerance ?? 0)
               ? svg`<circle r="1.75" class="individual-bottom" vector-effect="non-scaling-stroke">
                     <animateMotion
                       dur="${computeIndividualFlowRate(
@@ -97,9 +99,9 @@ export const individualLeftBottomElement = (
         ? html` <ha-icon id="individual-left-bottom-icon" .icon=${individualObj?.icon}></ha-icon>`
         : nothing}
       ${individualObj?.field?.display_zero_state !== false ||
-      (individualObj?.state || 0) > (individualObj.displayZeroTolerance ?? 0)
+      individualAbsState > (individualObj.displayZeroTolerance ?? 0)
         ? html` <span class="individual-bottom individual-left-bottom"
-            >${individualObj?.showDirection
+            >${shouldShowDirection
               ? html`<ha-icon
                   class="small"
                   .icon=${individualObj?.invertAnimation ? "mdi:arrow-up" : "mdi:arrow-down"}

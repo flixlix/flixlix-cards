@@ -5,6 +5,8 @@ import { describe, expect, test } from "vitest";
 import { type PowerFlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { PowerFlowCardPlus } from "../src/power-flow-card-plus";
 
+const thinSpace = `\u2009`;
+
 // jsdom does not provide ResizeObserver; stub it so the card's `updated` hook doesn't throw
 (globalThis as any).ResizeObserver = class {
   observe() {}
@@ -72,7 +74,10 @@ declare function computeRenderDataShape(): {
       toHome: number | null;
     };
   };
-  individualObjs: Array<{ has: boolean; state: number | null }>;
+  individualObjs: Array<{ has: boolean; invertAnimation: boolean; state: number | null }>;
+  homeGridCircumference: number;
+  homeIndividualCircumference: number;
+  homeUsageToDisplay: string;
 };
 
 describe("render", () => {
@@ -154,7 +159,7 @@ describe("_computeRenderData", () => {
     expect(data.grid.state.toBattery).toBe(0);
   });
 
-  test("case 4: negative individual entity stays visible (Plan 001 regression guard)", () => {
+  test("case 4: positive individual entity becomes home flow", () => {
     const config = {
       type: "custom:power-flow-card-plus",
       entities: {
@@ -162,17 +167,70 @@ describe("_computeRenderData", () => {
         individual: [{ entity: "sensor.device" }],
       },
     } as PowerFlowCardPlusConfig;
-    // Individual state is negative; getIndividualState applies Math.abs so state === 50
-    const hass = makeHass({ "sensor.grid": "100", "sensor.device": "-50" });
+    const hass = makeHass({ "sensor.grid": "100", "sensor.device": "50" });
     const card = makeCard(config, hass);
     const data = card._computeRenderData();
 
     expect(data.individualObjs).toHaveLength(1);
     const individual = data.individualObjs[0];
-    // has === true: the device is visible even with a negative raw state
     expect(individual.has).toBe(true);
-    // getIndividualState returns Math.abs of the raw value
     expect(individual.state).toBe(50);
+    expect(individual.invertAnimation).toBe(true);
+  });
+
+  test("case 4b: separated individual entities use production as negative flow", () => {
+    const config = {
+      type: "custom:power-flow-card-plus",
+      entities: {
+        grid: { entity: "sensor.grid" },
+        individual: [
+          {
+            entity: {
+              consumption: "sensor.ecoflow_consumption",
+              production: "sensor.ecoflow_production",
+            },
+          },
+        ],
+      },
+    } as PowerFlowCardPlusConfig;
+    const hass = makeHass({
+      "sensor.grid": "100",
+      "sensor.ecoflow_consumption": "0",
+      "sensor.ecoflow_production": "250",
+    });
+    const card = makeCard(config, hass);
+    const data = card._computeRenderData();
+
+    expect(data.individualObjs).toHaveLength(1);
+    const individual = data.individualObjs[0];
+    expect(individual.has).toBe(true);
+    expect(individual.state).toBe(-250);
+    expect(individual.invertAnimation).toBe(false);
+  });
+
+  test("case 4c: discharging individual flow is added to home usage", () => {
+    const config = {
+      type: "custom:power-flow-card-plus",
+      entities: {
+        grid: { entity: "sensor.grid" },
+        home: { entity: "sensor.home", subtract_individual: true },
+        individual: [
+          {
+            entity: "sensor.stream_ultra",
+          },
+        ],
+      },
+    } as PowerFlowCardPlusConfig;
+    const hass = makeHass({
+      "sensor.grid": "3",
+      "sensor.home": "0",
+      "sensor.stream_ultra": "104",
+    });
+    const card = makeCard(config, hass);
+    const data = card._computeRenderData();
+
+    expect(data.homeUsageToDisplay).toBe(`107${thinSpace}W`);
+    expect(data.homeIndividualCircumference).toBeGreaterThan(data.homeGridCircumference);
   });
 
   test("case 5: unavailable entity — no NaN in grid state fields", () => {

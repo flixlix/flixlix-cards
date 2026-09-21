@@ -19,6 +19,7 @@ interface Home {
   homeSolarCircumference: number;
   CIRCLE_CIRCUMFERENCE: number;
   homeBatteryCircumference: number;
+  homeIndividualCircumference?: number;
   homeNonFossilCircumference: number;
   homeGridCircumference: number;
   individual: IndividualObject[];
@@ -35,6 +36,7 @@ export const homeElement = (
     homeSolarCircumference,
     CIRCLE_CIRCUMFERENCE,
     homeBatteryCircumference,
+    homeIndividualCircumference,
     homeNonFossilCircumference,
     homeGridCircumference,
     individual,
@@ -117,6 +119,22 @@ export const homeElement = (
                   homeNonFossilCircumference}"
                   stroke-dashoffset="-${CIRCLE_CIRCUMFERENCE -
                   homeNonFossilCircumference -
+                  (homeBatteryCircumference || 0) -
+                  (homeSolarCircumference || 0)}"
+                  shape-rendering="geometricPrecision"
+                />`
+            : nothing}
+          ${homeIndividualCircumference
+            ? svg`<circle
+                  class="individual-home"
+                  cx="40"
+                  cy="40"
+                  r="38"
+                  stroke-dasharray="${homeIndividualCircumference} ${CIRCLE_CIRCUMFERENCE -
+                  homeIndividualCircumference}"
+                  stroke-dashoffset="-${CIRCLE_CIRCUMFERENCE -
+                  homeIndividualCircumference -
+                  (homeNonFossilCircumference || 0) -
                   (homeBatteryCircumference || 0) -
                   (homeSolarCircumference || 0)}"
                   shape-rendering="geometricPrecision"

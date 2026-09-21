@@ -123,6 +123,7 @@ export class PowerFlowCardPlus extends LitElement {
         newDur: NewDur;
         templatesObj: TemplatesObj;
         homeBatteryCircumference: number;
+        homeIndividualCircumference: number;
         homeSolarCircumference: number;
         homeNonFossilCircumference: number;
         homeGridCircumference: number;
@@ -369,6 +370,7 @@ export class PowerFlowCardPlus extends LitElement {
       newDur,
       templatesObj,
       homeBatteryCircumference,
+      homeIndividualCircumference,
       homeGridCircumference,
       homeNonFossilCircumference,
       homeSolarCircumference,
@@ -457,6 +459,7 @@ export class PowerFlowCardPlus extends LitElement {
                   grid,
                   home,
                   homeBatteryCircumference,
+                  homeIndividualCircumference,
                   homeGridCircumference,
                   homeNonFossilCircumference,
                   homeSolarCircumference,
@@ -827,34 +830,50 @@ export class PowerFlowCardPlus extends LitElement {
       nonFossil.state.power = 0;
     }
     const totalIndividualConsumption =
-      individualObjs?.reduce((a, b) => a + (b.has ? b.state || 0 : 0), 0) || 0;
+      individualObjs?.reduce(
+        (a, b) => a + (b.has && !b.invertAnimation ? Math.abs(b.state || 0) : 0),
+        0
+      ) || 0;
+    const totalIndividualToHome =
+      individualObjs?.reduce(
+        (a, b) => a + (b.has && b.invertAnimation ? Math.abs(b.state || 0) : 0),
+        0
+      ) || 0;
+    const totalIndividualFlow = totalIndividualConsumption + totalIndividualToHome;
     const totalHomeConsumption = Math.max(
       (grid.state.toHome ?? 0) + (solar.state.toHome ?? 0) + (battery.state.toHome ?? 0),
       0
     );
+    const totalHomeSourceConsumption = totalHomeConsumption + totalIndividualToHome;
     const homeBatteryCircumference = battery.state.toHome
-      ? CIRCLE_CIRCUMFERENCE * (battery.state.toHome / totalHomeConsumption)
+      ? CIRCLE_CIRCUMFERENCE * (battery.state.toHome / totalHomeSourceConsumption)
       : 0;
     const homeSolarCircumference = solar.state.toHome
-      ? CIRCLE_CIRCUMFERENCE * (solar.state.toHome / totalHomeConsumption)
+      ? CIRCLE_CIRCUMFERENCE * (solar.state.toHome / totalHomeSourceConsumption)
+      : 0;
+    const homeIndividualCircumference = totalIndividualToHome
+      ? CIRCLE_CIRCUMFERENCE * (totalIndividualToHome / totalHomeSourceConsumption)
       : 0;
     const homeNonFossilCircumference = nonFossil.state.power
-      ? CIRCLE_CIRCUMFERENCE * (nonFossil.state.power / totalHomeConsumption)
+      ? CIRCLE_CIRCUMFERENCE * (nonFossil.state.power / totalHomeSourceConsumption)
       : 0;
     const homeGridCircumference =
       CIRCLE_CIRCUMFERENCE *
-      ((totalHomeConsumption -
+      ((totalHomeSourceConsumption -
         (nonFossil.state.power ?? 0) -
         (battery.state.toHome ?? 0) -
-        (solar.state.toHome ?? 0)) /
-        totalHomeConsumption);
+        (solar.state.toHome ?? 0) -
+        totalIndividualToHome) /
+        totalHomeSourceConsumption);
     const homeUsageToDisplay =
       entities.home?.override_state && entities.home.entity
         ? entities.home?.subtract_individual
           ? displayValue(
               this.hass,
               this._config,
-              getEntityStateWatts(this.hass, entities.home.entity) - totalIndividualConsumption,
+              getEntityStateWatts(this.hass, entities.home.entity) -
+                totalIndividualConsumption +
+                totalIndividualToHome,
               {
                 unit: entities.home?.unit_of_measurement,
                 unitWhiteSpace: entities.home?.unit_white_space,
@@ -873,7 +892,7 @@ export class PowerFlowCardPlus extends LitElement {
           ? displayValue(
               this.hass,
               this._config,
-              totalHomeConsumption - totalIndividualConsumption || 0,
+              totalHomeConsumption - totalIndividualConsumption + totalIndividualToHome || 0,
               {
                 unit: entities.home?.unit_of_measurement,
                 unitWhiteSpace: entities.home?.unit_white_space,
@@ -921,7 +940,7 @@ export class PowerFlowCardPlus extends LitElement {
       solarToHome: computeFlowRate(this._config, solar.state.toHome ?? 0, totalLines),
       individual:
         individualObjs?.map((individual) =>
-          computeFlowRate(this._config, individual.state ?? 0, totalIndividualConsumption)
+          computeFlowRate(this._config, Math.abs(individual.state ?? 0), totalIndividualFlow)
         ) || [],
       nonFossil: computeFlowRate(this._config, nonFossil.state.power ?? 0, totalLines),
     };
@@ -976,10 +995,14 @@ export class PowerFlowCardPlus extends LitElement {
         value: homeNonFossilCircumference,
         color: "var(--energy-non-fossil-color)",
       },
+      individual: {
+        value: homeIndividualCircumference,
+        color: "var(--home-individual-color)",
+      },
     };
-    const homeSourceKeys = Object.keys(homeSources) as (keyof HomeSources)[];
+    const homeSourceKeys = Object.keys(homeSources) as Array<keyof typeof homeSources>;
     const homeLargestSource = homeSourceKeys.reduce((a, b) =>
-      homeSources[a].value > homeSources[b].value ? a : b
+      homeSources[a]!.value > homeSources[b]!.value ? a : b
     );
     const individualKeys = ["left-top", "left-bottom", "right-top", "right-bottom"];
     const templatesObj: TemplatesObj = {
@@ -1049,6 +1072,7 @@ export class PowerFlowCardPlus extends LitElement {
       newDur,
       templatesObj,
       homeBatteryCircumference,
+      homeIndividualCircumference,
       homeSolarCircumference,
       homeNonFossilCircumference,
       homeGridCircumference,
