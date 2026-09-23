@@ -306,6 +306,40 @@ export const styles = css`
     width: var(--dot-size);
     fill: var(--individual-left-top-color);
   }
+  circle.individual-left-top-motion-dot {
+    animation-name: individual-left-top-motion;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    animation-direction: reverse;
+  }
+  circle.individual-left-top-motion-dot.forward {
+    animation-direction: normal;
+  }
+  @keyframes individual-left-top-motion {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(50px);
+    }
+  }
+  circle.individual-left-bottom-motion-dot {
+    animation-name: individual-left-bottom-motion;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    animation-direction: reverse;
+  }
+  circle.individual-left-bottom-motion-dot.forward {
+    animation-direction: normal;
+  }
+  @keyframes individual-left-bottom-motion {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(-40px);
+    }
+  }
   circle.individual-bottom {
     stroke-width: 4;
     width: var(--dot-size);

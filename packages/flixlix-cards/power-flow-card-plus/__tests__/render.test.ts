@@ -91,6 +91,54 @@ describe("render", () => {
     const rendered = (card as unknown as { render: () => unknown }).render();
     expect(rendered).toBeTruthy();
   });
+
+  test("animates the first two individuals with CSS instead of SVG animateMotion", async () => {
+    const config = {
+      type: "custom:power-flow-card-plus",
+      entities: {
+        grid: { entity: "sensor.grid" },
+        individual: [
+          { entity: "sensor.gas", inverted_animation: true },
+          { entity: "sensor.water", inverted_animation: true },
+        ],
+      },
+    } as PowerFlowCardPlusConfig;
+    const card = new PowerFlowCardPlus();
+    card.setConfig(config);
+    card.hass = makeHass({
+      "sensor.grid": "100",
+      "sensor.gas": "20",
+      "sensor.water": "10",
+    });
+    document.body.append(card);
+    await card.updateComplete;
+
+    const visiblePath = card.shadowRoot?.querySelector("#individual-top");
+    const individualSvg = visiblePath?.closest("svg");
+    const motionDot = individualSvg?.querySelector(".individual-left-top-motion-dot");
+    expect(visiblePath?.getAttribute("d")).toBe("M40 -10 v50");
+    expect(motionDot?.getAttribute("cx")).toBe("40");
+    expect(motionDot?.getAttribute("cy")).toBe("-10");
+    expect(motionDot?.getAttribute("style")).toContain("animation-duration:");
+    expect(motionDot?.classList.contains("forward")).toBe(true);
+    expect(individualSvg?.querySelector("animateMotion")).toBeNull();
+    expect(individualSvg?.querySelector("mpath")).toBeNull();
+
+    const visibleBottomPath = card.shadowRoot?.querySelector("#individual-bottom");
+    const bottomIndividualSvg = visibleBottomPath?.closest("svg");
+    const bottomMotionDot = bottomIndividualSvg?.querySelector(
+      ".individual-left-bottom-motion-dot"
+    );
+    expect(visibleBottomPath?.getAttribute("d")).toBe("M40 40 v-40");
+    expect(bottomMotionDot?.getAttribute("cx")).toBe("40");
+    expect(bottomMotionDot?.getAttribute("cy")).toBe("40");
+    expect(bottomMotionDot?.getAttribute("style")).toContain("animation-duration:");
+    expect(bottomMotionDot?.classList.contains("forward")).toBe(true);
+    expect(bottomIndividualSvg?.querySelector("animateMotion")).toBeNull();
+    expect(bottomIndividualSvg?.querySelector("mpath")).toBeNull();
+
+    card.remove();
+  });
 });
 
 describe("_computeRenderData", () => {

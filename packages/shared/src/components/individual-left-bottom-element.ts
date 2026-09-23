@@ -30,32 +30,32 @@ export const individualLeftBottomElement = (
   const indexOfIndividual =
     config?.entities?.individual?.findIndex((e) => e.entity === individualObj.entity) || 0;
   const duration = newDur.individual[indexOfIndividual] || 0;
+  const motionPath = "M40 40 v-40";
+  const animationDuration = computeIndividualFlowRate(
+    individualObj.field?.calculate_flow_rate !== false,
+    duration
+  );
+  const animationDirectionClass = individualObj.invertAnimation ? "forward" : "reverse";
   return html`<div class="circle-container individual-bottom bottom">
     ${showLine(config, individualObj?.state || 0) && !config.entities.home?.hide
       ? html`
           <svg width="80" height="30">
             <path
-              d="M40 40 v-40"
+              d=${motionPath}
               id="individual-bottom"
               class="${styleLine(individualObj?.state || 0, config)}"
             />
             ${checkShouldShowDots(config) &&
             individualObj?.state &&
             individualObj.state >= (individualObj.displayZeroTolerance ?? 0)
-              ? svg`<circle r="1.75" class="individual-bottom" vector-effect="non-scaling-stroke">
-                    <animateMotion
-                      dur="${computeIndividualFlowRate(
-                        individualObj.field?.calculate_flow_rate !== false,
-                        duration
-                      )}s"
-                      repeatCount="indefinite"
-                      calcMode="paced"
-                      keyPoints="${individualObj.invertAnimation ? "0;1" : "1;0"}"
-                      keyTimes="0;1"
-                    >
-                      <mpath xlink:href="#individual-bottom" />
-                    </animateMotion>
-                  </circle>`
+              ? svg`<circle
+                    cx="40"
+                    cy="40"
+                    r="1.75"
+                    class="individual-bottom individual-left-bottom-motion-dot ${animationDirectionClass}"
+                    vector-effect="non-scaling-stroke"
+                    style="${`animation-duration: ${animationDuration}s`}"
+                  ></circle>`
               : nothing}
           </svg>
         `
