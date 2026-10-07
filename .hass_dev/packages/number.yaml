@@ -23,6 +23,12 @@ input_number:
     min: 0
     max: 100
     step: 0.5
+  battery_soc_secondary:
+    name: Secondary Battery State of Charge
+    initial: 42
+    min: 0
+    max: 100
+    step: 0.5
   battery_power_combined:
     name: Battery Power Combined
     initial: 40
@@ -39,6 +45,12 @@ input_number:
     name: Battery Power Export
     initial: 60
     min: 0
+    max: 100
+    step: 0.5
+  battery_power_secondary:
+    name: Secondary Battery Power
+    initial: -25
+    min: -100
     max: 100
     step: 0.5
   solar_power:

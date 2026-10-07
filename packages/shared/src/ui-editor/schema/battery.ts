@@ -33,6 +33,12 @@ const mainSchema = {
       label: "Use Metadata",
       selector: { boolean: {} },
     },
+    {
+      name: "capacity",
+      label: "Capacity (kWh)",
+      helper: "Optional. Used to weight state of charge when multiple batteries are configured.",
+      selector: { number: { mode: "box", min: 0, step: 0.1 } },
+    },
   ],
 };
 

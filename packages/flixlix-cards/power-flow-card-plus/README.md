@@ -399,6 +399,32 @@ This should give you something like this:
 
 ![demo_grid_solar_bat-2](https://user-images.githubusercontent.com/61006057/232319141-06ac61c7-daed-461e-9fdb-5ce84606bde6.gif)
 
+### Multiple Batteries
+
+`entities.battery` also accepts an array. The diagram keeps a single battery node for flow lines (aggregated totals). Individual batteries are listed under that node with their own name, SOC, and power in/out.
+
+```yaml
+type: custom:power-flow-card-plus
+entities:
+  grid:
+    entity: sensor.grid_power
+  solar:
+    entity: sensor.solar_power
+  battery:
+    - name: Powerwall
+      entity: sensor.powerwall_power
+      state_of_charge: sensor.powerwall_soc
+      capacity: 13.5
+    - name: Ecoflow
+      entity:
+        consumption: sensor.ecoflow_discharge
+        production: sensor.ecoflow_charge
+      state_of_charge: sensor.ecoflow_soc
+      capacity: 2
+```
+
+Optional `capacity` (kWh) weights the aggregated SOC when batteries differ in size.
+
 ### Mix & Match Config aka "Full Config"
 
 > This Configuration is a little bit random, it's just here to demonstrate the capabilities of this card.

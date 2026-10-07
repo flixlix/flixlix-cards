@@ -194,4 +194,58 @@ describe("_computeRenderData", () => {
     expect(Number.isNaN(data.grid.state.toHome)).toBe(false);
     expect(Number.isNaN(data.solar.state.total)).toBe(false);
   });
+
+  test("case 6: multiple batteries aggregate power and keep per-battery values", () => {
+    const config = {
+      type: "custom:power-flow-card-plus",
+      entities: {
+        grid: { entity: "sensor.grid" },
+        solar: { entity: "sensor.solar" },
+        battery: [
+          {
+            name: "Powerwall",
+            entity: "sensor.battery_a",
+            state_of_charge: "sensor.battery_a_soc",
+            capacity: 13.5,
+          },
+          {
+            name: "Ecoflow",
+            entity: "sensor.battery_b",
+            state_of_charge: "sensor.battery_b_soc",
+            capacity: 2,
+          },
+        ],
+      },
+    } as PowerFlowCardPlusConfig;
+    const hass = makeHass({
+      "sensor.grid": "200",
+      "sensor.solar": "1000",
+      "sensor.battery_a": "300",
+      "sensor.battery_b": "-100",
+      "sensor.battery_a_soc": "80",
+      "sensor.battery_b_soc": "40",
+    });
+    const card = makeCard(config, hass);
+    const data = card._computeRenderData() as ReturnType<typeof computeRenderDataShape> & {
+      batteries: Array<{
+        has: boolean;
+        name: string;
+        state: { fromBattery: number; toBattery: number };
+        state_of_charge: { state: number | null };
+      }>;
+    };
+
+    expect(data.batteries).toHaveLength(2);
+    expect(data.batteries[0].name).toBe("Powerwall");
+    expect(data.batteries[0].state.fromBattery).toBe(300);
+    expect(data.batteries[0].state.toBattery).toBe(0);
+    expect(data.batteries[0].state_of_charge.state).toBe(80);
+    expect(data.batteries[1].name).toBe("Ecoflow");
+    expect(data.batteries[1].state.fromBattery).toBe(0);
+    expect(data.batteries[1].state.toBattery).toBe(100);
+    expect(data.batteries[1].state_of_charge.state).toBe(40);
+    expect(data.battery.has).toBe(true);
+    expect(data.battery.state.fromBattery).toBe(300);
+    expect(data.battery.state.toBattery).toBe(100);
+  });
 });
