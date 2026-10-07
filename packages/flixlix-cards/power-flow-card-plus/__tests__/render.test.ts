@@ -73,6 +73,7 @@ declare function computeRenderDataShape(): {
     };
   };
   individualObjs: Array<{ has: boolean; state: number | null }>;
+  nonFossil: { has: boolean; hasPercentage: boolean; state: { power: number | null } };
 };
 
 describe("render", () => {
@@ -193,5 +194,57 @@ describe("_computeRenderData", () => {
     expect(Number.isNaN(data.grid.state.toBattery)).toBe(false);
     expect(Number.isNaN(data.grid.state.toHome)).toBe(false);
     expect(Number.isNaN(data.solar.state.total)).toBe(false);
+  });
+
+  test("case 6: grid below tolerance hides non-fossil", () => {
+    const config = {
+      type: "custom:power-flow-card-plus",
+      entities: {
+        grid: { entity: "sensor.grid", display_zero_tolerance: 20 } as any,
+        fossil_fuel_percentage: { entity: "sensor.fossil" },
+      },
+    } as PowerFlowCardPlusConfig;
+    // 12W is below the 20W tolerance
+    const hass = makeHass({ "sensor.grid": "12", "sensor.fossil": "40" });
+    const card = makeCard(config, hass);
+    const data = card._computeRenderData();
+
+    expect(data.grid.state.fromGrid).toBe(0);
+    expect(data.nonFossil.has).toBe(false);
+    expect(data.nonFossil.hasPercentage).toBe(false);
+  });
+
+  test("case 7: grid below tolerance keeps non-fossil when display_zero is true", () => {
+    const config = {
+      type: "custom:power-flow-card-plus",
+      entities: {
+        grid: { entity: "sensor.grid", display_zero_tolerance: 20 } as any,
+        fossil_fuel_percentage: { entity: "sensor.fossil", display_zero: true },
+      },
+    } as PowerFlowCardPlusConfig;
+    const hass = makeHass({ "sensor.grid": "12", "sensor.fossil": "40" });
+    const card = makeCard(config, hass);
+    const data = card._computeRenderData();
+
+    expect(data.nonFossil.has).toBe(true);
+    expect(data.nonFossil.hasPercentage).toBe(true);
+  });
+
+  test("case 8: grid above tolerance shows non-fossil", () => {
+    const config = {
+      type: "custom:power-flow-card-plus",
+      entities: {
+        grid: { entity: "sensor.grid", display_zero_tolerance: 20 } as any,
+        fossil_fuel_percentage: { entity: "sensor.fossil" },
+      },
+    } as PowerFlowCardPlusConfig;
+    const hass = makeHass({ "sensor.grid": "500", "sensor.fossil": "40" });
+    const card = makeCard(config, hass);
+    const data = card._computeRenderData();
+
+    expect(data.nonFossil.has).toBe(true);
+    expect(data.nonFossil.hasPercentage).toBe(true);
+    // 500 * (1 - 40 / 100)
+    expect(data.nonFossil.state.power).toBeCloseTo(300);
   });
 });

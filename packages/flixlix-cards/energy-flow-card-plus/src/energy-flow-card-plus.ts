@@ -981,6 +981,11 @@ export class EnergyFlowCardPlus extends LitElement {
     if (grid.state.fromGrid === 0) {
       grid.state.toHome = 0;
       grid.state.toBattery = 0;
+      // non-fossil visibility was computed from the raw grid state; hide it when tolerance zeroed the grid
+      if (entities.fossil_fuel_percentage?.display_zero !== true) {
+        nonFossil.has = false;
+        nonFossil.hasPercentage = false;
+      }
     }
     if (solar.state.total === 0) {
       solar.state.toGrid = 0;
