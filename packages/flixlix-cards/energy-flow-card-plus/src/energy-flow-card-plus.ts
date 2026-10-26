@@ -164,6 +164,7 @@ export class EnergyFlowCardPlus extends LitElement {
 
     this._config = {
       ...config,
+      sort_individual_devices: config.sort_individual_devices ?? true,
       min_flow_rate: coerceNumber(config.min_flow_rate, defaultValues.minFlowRate),
       max_flow_rate: coerceNumber(config.max_flow_rate, defaultValues.maxFlowRate),
       base_decimals: coerceNumber(config.base_decimals, defaultValues.baseDecimals),
