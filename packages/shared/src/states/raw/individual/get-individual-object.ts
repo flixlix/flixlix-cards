@@ -5,7 +5,11 @@ import {
 } from "@flixlix-cards/shared/utils/compute-field-attributes";
 import { convertColorListToHex } from "@flixlix-cards/shared/utils/convert-color";
 import { type ActionConfig, type HomeAssistant } from "custom-card-helpers";
-import { getIndividualSecondaryState, getIndividualState } from ".";
+import {
+  getIndividualSecondaryFlowState,
+  getIndividualSecondaryState,
+  getIndividualState,
+} from ".";
 import { hasIndividualObject } from "./has-individual-object";
 
 const fallbackIndividualObject: IndividualObject = {
@@ -13,6 +17,7 @@ const fallbackIndividualObject: IndividualObject = {
   entity: "",
   has: false,
   state: null,
+  flowState: null,
   displayZero: false,
   displayZeroTolerance: 0,
   icon: "",
@@ -42,6 +47,8 @@ export type IndividualObject = {
   entity: string;
   has: boolean;
   state: number | null;
+  /** state + secondary power when secondary_info.affects_flow, otherwise equal to state */
+  flowState: number | null;
   displayZero: boolean;
   displayZeroTolerance: number;
   icon: string;
@@ -88,7 +95,15 @@ export const getIndividualObject = ({
   const state = getIndividualState({ hass, config, energyGrowthMap, useDateSelection, field });
   const displayZero = field?.display_zero || false;
   const displayZeroTolerance = field?.display_zero_tolerance || 0;
-  const has = hasIndividualObject(displayZero, state, displayZeroTolerance);
+  const secondaryFlow = getIndividualSecondaryFlowState({
+    hass,
+    config,
+    energyGrowthMap,
+    useDateSelection,
+    field,
+  });
+  const flowState = secondaryFlow ? (state ?? 0) + secondaryFlow : state;
+  const has = hasIndividualObject(displayZero, flowState, displayZeroTolerance);
   const isStateNegative = state && state < 0;
   const userConfiguredInvertAnimation = field?.inverted_animation || false;
   const invertAnimation = isStateNegative
@@ -107,6 +122,7 @@ export const getIndividualObject = ({
     entity,
     has,
     state,
+    flowState,
     displayZero,
     displayZeroTolerance,
     icon: computeFieldIcon(hass, field, "mdi:flash"),
