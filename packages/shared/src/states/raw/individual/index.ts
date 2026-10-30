@@ -43,3 +43,29 @@ export const getIndividualSecondaryState = (hass: HomeAssistant, field: Individu
 
   return secondaryState;
 };
+
+/**
+ * Power of the secondary_info entity, used only when secondary_info.affects_flow is true.
+ * Returns 0 when not enabled or not numeric.
+ */
+export const getIndividualSecondaryFlowState = ({
+  hass,
+  config,
+  energyGrowthMap,
+  useDateSelection,
+  field,
+}: {
+  hass: HomeAssistant;
+  config: FlowCardPlusConfig;
+  energyGrowthMap?: Record<string, number>;
+  useDateSelection?: boolean;
+  field: IndividualDeviceType;
+}): number => {
+  const secEntity = field?.secondary_info?.entity;
+  if (field?.secondary_info?.affects_flow !== true || typeof secEntity !== "string") return 0;
+  if (!isNumberValue(getEntityStateObj(hass, secEntity)?.state)) return 0;
+  const value = isEnergyCard(config)
+    ? getEnergyEntityState(hass, energyGrowthMap, useDateSelection, secEntity)
+    : getEntityStateWatts(hass, secEntity);
+  return Number.isFinite(value) ? Math.abs(value) : 0;
+};
