@@ -18,6 +18,7 @@ const fallbackIndividualObject: IndividualObject = {
   has: false,
   state: null,
   flowState: null,
+  isIdle: true,
   displayZero: false,
   displayZeroTolerance: 0,
   icon: "",
@@ -49,6 +50,8 @@ export type IndividualObject = {
   state: number | null;
   /** state + secondary power when secondary_info.affects_flow, otherwise equal to state */
   flowState: number | null;
+  /** true when flowState is not above displayZeroTolerance */
+  isIdle: boolean;
   displayZero: boolean;
   displayZeroTolerance: number;
   icon: string;
@@ -104,6 +107,19 @@ export const getIndividualObject = ({
   });
   const flowState = secondaryFlow ? (state ?? 0) + secondaryFlow : state;
   const has = hasIndividualObject(displayZero, flowState, displayZeroTolerance);
+  const isIdle = !((flowState ?? 0) > displayZeroTolerance);
+  const defaultName = computeFieldName(hass, field, "Individual");
+  const computeActiveName = (): string => {
+    const labels = field?.name_active;
+    if (!labels) return defaultName;
+    const threshold = labels.threshold ?? 10;
+    const mainActive = (state ?? 0) > threshold;
+    const secondaryActive = (flowState ?? 0) - (state ?? 0) > threshold;
+    if (mainActive && secondaryActive) return labels.both ?? defaultName;
+    if (mainActive) return labels.main ?? defaultName;
+    if (secondaryActive) return labels.secondary ?? defaultName;
+    return defaultName;
+  };
   const isStateNegative = state && state < 0;
   const userConfiguredInvertAnimation = field?.inverted_animation || false;
   const invertAnimation = isStateNegative
@@ -123,10 +139,11 @@ export const getIndividualObject = ({
     has,
     state,
     flowState,
+    isIdle,
     displayZero,
     displayZeroTolerance,
     icon: computeFieldIcon(hass, field, "mdi:flash"),
-    name: computeFieldName(hass, field, "Individual"),
+    name: computeActiveName(),
     color,
     unit: field?.unit_of_measurement,
     unit_white_space: field?.unit_white_space !== false,
