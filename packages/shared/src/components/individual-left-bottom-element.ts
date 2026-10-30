@@ -31,17 +31,17 @@ export const individualLeftBottomElement = (
     config?.entities?.individual?.findIndex((e) => e.entity === individualObj.entity) || 0;
   const duration = newDur.individual[indexOfIndividual] || 0;
   return html`<div class="circle-container individual-bottom bottom">
-    ${showLine(config, individualObj?.state || 0) && !config.entities.home?.hide
+    ${showLine(config, individualObj?.flowState || 0) && !config.entities.home?.hide
       ? html`
           <svg width="80" height="30">
             <path
               d="M40 40 v-40"
               id="individual-bottom"
-              class="${styleLine(individualObj?.state || 0, config)}"
+              class="${styleLine(individualObj?.flowState || 0, config)}"
             />
             ${checkShouldShowDots(config) &&
-            individualObj?.state &&
-            individualObj.state >= (individualObj.displayZeroTolerance ?? 0)
+            individualObj?.flowState &&
+            individualObj.flowState >= (individualObj.displayZeroTolerance ?? 0)
               ? svg`<circle r="1.75" class="individual-bottom" vector-effect="non-scaling-stroke">
                     <animateMotion
                       dur="${computeIndividualFlowRate(
