@@ -89,6 +89,21 @@ export type IndividualDeviceType = BaseConfigEntity & {
   use_metadata?: boolean;
   decimals?: number;
   show_direction?: boolean;
+  /**
+   * Label shown depending on which entity is drawing power.
+   * "secondary" and "both" require secondary_info.affects_flow.
+   */
+  name_active?: {
+    main?: string;
+    secondary?: string;
+    both?: string;
+    /** Power (W) above which an entity counts as active. Default 10. */
+    threshold?: number;
+  };
+  /** Text shown instead of the value when the device (and an affects_flow secondary) is idle. */
+  zero_label?: string;
+  /** Multiplies the flow animation speed of this device (e.g. 2 = twice as fast). Default 1. */
+  flow_speed?: number;
 };
 
 export type EntityType =
