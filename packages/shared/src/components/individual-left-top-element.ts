@@ -80,17 +80,17 @@ export const individualLeftTopElement = (
           </span>`
         : nothing}
     </div>
-    ${showLine(config, individualObj.state || 0) && !config.entities.home?.hide
+    ${showLine(config, individualObj.flowState || 0) && !config.entities.home?.hide
       ? html`
           <svg width="80" height="30">
             <path
               d="M40 -10 v50"
               id="individual-top"
-              class="${styleLine(individualObj.state || 0, config)}"
+              class="${styleLine(individualObj.flowState || 0, config)}"
             />
             ${checkShouldShowDots(config) &&
-            individualObj.state &&
-            individualObj.state >= (individualObj.displayZeroTolerance ?? 0)
+            individualObj.flowState &&
+            individualObj.flowState >= (individualObj.displayZeroTolerance ?? 0)
               ? svg`<circle r="1.75" class="individual-top" vector-effect="non-scaling-stroke">
                     <animateMotion
                       dur="${computeIndividualFlowRate(
