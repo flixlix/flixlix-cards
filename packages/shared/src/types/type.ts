@@ -49,6 +49,8 @@ export type SecondaryInfoType = {
   template?: string;
   accept_negative?: boolean;
   decimals?: number;
+  /** Individual only: add secondary entity power to the flow (line + animation). Default false. */
+  affects_flow?: boolean;
 } & ActionConfigSet;
 
 export interface BaseConfigEntity extends ActionConfigSet {
