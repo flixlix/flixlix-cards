@@ -9,6 +9,9 @@ export const getIndividualDisplayState = (
   individualObj?: IndividualObject
 ) => {
   if (!individualObj) return "";
+  if (individualObj.field?.zero_label && individualObj.isIdle) {
+    return individualObj.field.zero_label;
+  }
   if (individualObj?.state === undefined) return "";
 
   return displayValue(hass, config, individualObj?.state, {
