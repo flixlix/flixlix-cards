@@ -78,7 +78,8 @@ export const individualRightTopElement = (
       ${individualObj.icon !== " "
         ? html` <ha-icon id="individual-right-top-icon" .icon=${individualObj.icon}></ha-icon>`
         : nothing}
-      ${individualObj?.field?.display_zero_state !== false ||
+      ${(individualObj?.field?.zero_label && individualObj.isIdle) ||
+      individualObj?.field?.display_zero_state !== false ||
       (individualObj.state || 0) > (individualObj.displayZeroTolerance ?? 0)
         ? html` <span class="individual-top individual-right-top">
             ${individualObj?.showDirection
