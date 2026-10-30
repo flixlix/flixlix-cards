@@ -96,7 +96,8 @@ export const individualLeftBottomElement = (
       ${individualObj?.icon !== " "
         ? html` <ha-icon id="individual-left-bottom-icon" .icon=${individualObj?.icon}></ha-icon>`
         : nothing}
-      ${individualObj?.field?.display_zero_state !== false ||
+      ${(individualObj?.field?.zero_label && individualObj.isIdle) ||
+      individualObj?.field?.display_zero_state !== false ||
       (individualObj?.state || 0) > (individualObj.displayZeroTolerance ?? 0)
         ? html` <span class="individual-bottom individual-left-bottom"
             >${individualObj?.showDirection
