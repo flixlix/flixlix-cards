@@ -237,6 +237,9 @@ The Individual fields must be an array of objects. Each object must follow the f
 | display_zero_state     | `boolean` | `true`                                         | If set to `true`, the state will be shown even if it is `0`. If set to `false`, the state will be hidden if it is `0`.                                                               |
 | color_value            | `boolean` | `false`                                        | If set to `true`, state text color will match the circle's color. If set to `false`, state text color will be the primary text color.                                                |
 | decimals               | `number`  | `0`                                            | Number of decimals to show in the corresponding state.                                                                                                                               |
+| name_active            | `object`  | `undefined`                                    | Label depending on which entity draws power: `main`, `secondary`, `both`, `threshold` (W, default `10`). `secondary`/`both` need `secondary_info.affects_flow`.                      |
+| zero_label             | `string`  | `undefined`                                    | Text shown instead of the value when the device (and an `affects_flow` secondary) is idle, also with `display_zero_state: false`.                                                    |
+| flow_speed             | `number`  | `1`                                            | Multiplies this device's flow animation speed (e.g. `2` = twice as fast), capped at `min_flow_rate`.                                                                                 |
 
 #### Home Configuration
 
