@@ -87,7 +87,7 @@ export const individualRightBottomElement = (
         : nothing}
     </div>
     <span class="label">${individualObj.name}</span>
-    ${showLine(config, individualObj.state || 0) && !config.entities.home?.hide
+    ${showLine(config, individualObj.flowState || 0) && !config.entities.home?.hide
       ? html`
           <div class="right-individual-flow-container">
             <svg
@@ -98,13 +98,13 @@ export const individualRightBottomElement = (
             >
               <path
                 id="individual-bottom-right-home"
-                class="${styleLine(individualObj.state || 0, config)}"
+                class="${styleLine(individualObj.flowState || 0, config)}"
                 d="M45,100 v-15 c0,-30 -10,-30 -30,-30 h-20"
                 vector-effect="non-scaling-stroke"
               />
               ${checkShouldShowDots(config) &&
-              individualObj.state &&
-              individualObj.state >= (individualObj.displayZeroTolerance ?? 0)
+              individualObj.flowState &&
+              individualObj.flowState >= (individualObj.displayZeroTolerance ?? 0)
                 ? svg`<circle r="1" class="individual-bottom" vector-effect="non-scaling-stroke">
                       <animateMotion
                         dur="${computeIndividualFlowRate(
