@@ -1110,10 +1110,13 @@ export class EnergyFlowCardPlus extends LitElement {
       solarToHome: computeFlowRate(this._config, solar.state.toHome ?? 0, totalLines),
       individual:
         individualObjs?.map((individual) =>
-          computeFlowRate(
-            this._config,
-            individual.flowState ?? individual.state ?? 0,
-            totalIndividualConsumption
+          Math.max(
+            this._config.min_flow_rate ?? 0,
+            computeFlowRate(
+              this._config,
+              individual.flowState ?? individual.state ?? 0,
+              totalIndividualConsumption
+            ) / (individual.field?.flow_speed || 1)
           )
         ) || [],
       nonFossil: computeFlowRate(this._config, nonFossil.state.power ?? 0, totalLines),
