@@ -1018,7 +1018,10 @@ export class EnergyFlowCardPlus extends LitElement {
       nonFossil.state.power = 0;
     }
     const totalIndividualConsumption =
-      individualObjs?.reduce((a, b) => a + (b.has ? b.state || 0 : 0), 0) || 0;
+      individualObjs?.reduce(
+        (a, b) => a + (b.has ? (b.flowState ?? b.state) || 0 : 0),
+        0
+      ) || 0;
     const totalHomeConsumption = Math.max(
       (grid.state.toHome ?? 0) + (solar.state.toHome ?? 0) + (battery.state.toHome ?? 0),
       0
@@ -1107,7 +1110,11 @@ export class EnergyFlowCardPlus extends LitElement {
       solarToHome: computeFlowRate(this._config, solar.state.toHome ?? 0, totalLines),
       individual:
         individualObjs?.map((individual) =>
-          computeFlowRate(this._config, individual.state ?? 0, totalIndividualConsumption)
+          computeFlowRate(
+            this._config,
+            individual.flowState ?? individual.state ?? 0,
+            totalIndividualConsumption
+          )
         ) || [],
       nonFossil: computeFlowRate(this._config, nonFossil.state.power ?? 0, totalLines),
     };
