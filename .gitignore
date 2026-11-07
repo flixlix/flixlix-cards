@@ -59,3 +59,6 @@ custom-elements.json
 
 ## browser tests
 .vitest/
+# Screenshot baselines come from the Playwright Docker image only (`pnpm test:visual`).
+**/__screenshots__/**/*-darwin.png
+**/__screenshots__/**/*-win32.png

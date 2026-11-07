@@ -11,6 +11,8 @@
     "format:check": "vp fmt --check",
     "typecheck": "vp run -r --cache typecheck",
     "test": "vp run --cache --filter './packages/**' test",
+    "test:visual": "sh scripts/test-visual.sh",
+    "test:visual:update": "sh scripts/test-visual.sh --update",
     "clean": "vp run -r clean && rm -rf node_modules",
     "changeset": "changeset",
     "version-packages": "changeset version",
