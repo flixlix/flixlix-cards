@@ -181,17 +181,15 @@ const batteryOrGridMainConfigSchema = [
   },
 ] as const;
 
-export function getBaseMainConfigSchema(field?: string) {
-  const result: any = {
+const nameAndIconSchema = [
+  { name: "name", selector: { text: {} } },
+  { name: "icon", selector: { icon: {} } },
+] as const;
+
+export function getBaseMainConfigSchema(field?: "battery" | "grid") {
+  return {
     type: "grid",
     column_min_width: "200px",
-    schema: [
-      { name: "name", selector: { text: {} } },
-      { name: "icon", selector: { icon: {} } },
-    ],
-  };
-  if (field === "battery" || field === "grid") {
-    result.schema.push(...batteryOrGridMainConfigSchema);
-  }
-  return result;
+    schema: field ? [...nameAndIconSchema, ...batteryOrGridMainConfigSchema] : nameAndIconSchema,
+  } as const;
 }

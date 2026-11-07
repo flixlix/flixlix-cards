@@ -1,7 +1,7 @@
 import { mdiChevronRight } from "@mdi/js";
 import { fireEvent } from "custom-card-helpers";
 import { css, type CSSResultGroup, html, LitElement, type TemplateResult } from "lit";
-import { property, query } from "lit/decorators.js";
+import { property } from "lit/decorators.js";
 
 export class LinkSubpage extends LitElement {
   @property({ type: String }) path!: string;
@@ -16,16 +16,12 @@ export class LinkSubpage extends LitElement {
 
   @property() secondary?: string;
 
-  @query(".container") private _container!: HTMLDivElement;
-
   protected render(): TemplateResult {
     return html`
       <div
         class="link-subpage"
         @click=${this._openSubElementPage}
         @keydown=${this._openSubElementPage}
-        @focus=${this._focusChanged}
-        @blur=${this._focusChanged}
         role="button"
       >
         <ha-icon icon=${this.icon} class="summary-icon"></ha-icon>
@@ -40,13 +36,9 @@ export class LinkSubpage extends LitElement {
     `;
   }
 
-  private _focusChanged(ev: FocusEvent) {
-    this.shadowRoot!.querySelector(".top")!.classList.toggle("focused", ev.type === "focus");
-  }
-
-  private _openSubElementPage(): void {
+  private _openSubElementPage = (): void => {
     fireEvent(this, "open-sub-element-editor", { open: true });
-  }
+  };
 
   static get styles(): CSSResultGroup {
     return css`
@@ -109,10 +101,6 @@ export class LinkSubpage extends LitElement {
       }
     `;
   }
-}
-
-if (!customElements.get("link-subpage")) {
-  customElements.define("link-subpage", LinkSubpage);
 }
 
 declare global {

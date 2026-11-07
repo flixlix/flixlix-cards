@@ -1,12 +1,9 @@
-import type SortableCore from "./sortable";
-import type { SortableInstance } from "./sortable";
+import type Sortable from "sortablejs";
 
-let loaded: typeof SortableCore;
+// The default sortablejs build already mounts the AutoScroll and OnSpill plugins.
+let loaded: typeof Sortable | undefined;
 
-export type { SortableInstance };
-export const loadSortable = async (): Promise<typeof SortableCore> => {
-  if (!loaded) {
-    loaded = (await import("./sortable")).default;
-  }
-  return loaded;
-};
+export type SortableInstance = Sortable;
+
+export const loadSortable = async (): Promise<typeof Sortable> =>
+  (loaded ??= (await import("sortablejs")).default);

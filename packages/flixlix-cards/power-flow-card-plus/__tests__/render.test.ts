@@ -2,34 +2,44 @@
 
 import { describe, expect, test } from "vite-plus/test";
 
+import { type HomeAssistant, NumberFormat, TimeFormat } from "custom-card-helpers";
+import { type Connection } from "home-assistant-js-websocket";
+
 import { type PowerFlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { PowerFlowCardPlus } from "../src/power-flow-card-plus";
 
 // jsdom does not provide ResizeObserver; stub it so the card's `updated` hook doesn't throw
-(globalThis as any).ResizeObserver = class {
+globalThis.ResizeObserver = class {
   observe() {}
   disconnect() {}
   unobserve() {}
 };
 
-type HassState = { state: string; attributes: Record<string, unknown> };
-
-function makeHass(states: Record<string, string> = {}) {
-  const hassStates: Record<string, HassState> = {};
+function makeHass(states: Record<string, string> = {}): HomeAssistant {
+  const hassStates: HomeAssistant["states"] = {};
   for (const [entityId, state] of Object.entries(states)) {
     hassStates[entityId] = {
+      entity_id: entityId,
       state,
       attributes: { friendly_name: entityId, unit_of_measurement: "W" },
+      last_changed: "",
+      last_updated: "",
+      context: { id: "", user_id: null, parent_id: null },
     };
   }
-  return {
+  const hass: Partial<HomeAssistant> = {
     localize: (key: string) => key,
-    locale: { language: "en", number_format: "comma_decimal" },
+    locale: {
+      language: "en",
+      number_format: NumberFormat.comma_decimal,
+      time_format: TimeFormat.language,
+    },
     states: hassStates,
-    config: {},
-    user: { name: "test" },
-    connection: {},
-  } as any;
+    config: {} as HomeAssistant["config"],
+    user: { name: "test" } as HomeAssistant["user"],
+    connection: {} as Connection,
+  };
+  return hass as HomeAssistant;
 }
 
 function makeCard(config: PowerFlowCardPlusConfig, hass: ReturnType<typeof makeHass>) {
@@ -140,7 +150,7 @@ describe("_computeRenderData", () => {
     const config = {
       type: "custom:power-flow-card-plus",
       entities: {
-        grid: { entity: "sensor.grid", display_zero_tolerance: 5 } as any,
+        grid: { entity: "sensor.grid", display_zero_tolerance: 5 },
       },
     } as PowerFlowCardPlusConfig;
     // 3W is below the 5W tolerance

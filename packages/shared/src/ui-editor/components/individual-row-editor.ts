@@ -1,11 +1,14 @@
 import localize from "@flixlix-cards/shared/i18n";
+import { fireEvent } from "@flixlix-cards/shared/ha/common/dom/fire-event";
 import {
-  type EditSubElementEvent,
-  type EntityConfig,
-  type LovelaceRowConfig,
+  type IndividualDeviceType,
   type PowerFlowCardPlusConfig,
 } from "@flixlix-cards/shared/types";
-import { fireEvent } from "@flixlix-cards/shared/ui-editor/utils/fire-event";
+import {
+  computeEditorLabel,
+  type HaFormLabelSchema,
+  type ValueChangedEvent,
+} from "@flixlix-cards/shared/ui-editor/ha-form";
 import { loadHaForm } from "@flixlix-cards/shared/ui-editor/utils/load-ha-form";
 import { sortableStyles } from "@flixlix-cards/shared/ui-editor/utils/sortable-styles";
 import {
@@ -23,13 +26,8 @@ import { individualSchema } from "../schema/individual";
 declare global {
   interface HASSDomEvents {
     "entities-changed": {
-      entities: LovelaceRowConfig[];
+      entities: IndividualDeviceType[];
     };
-    "edit-detail-element": EditSubElementEvent;
-  }
-
-  interface HassEvent {
-    "edit-detail-element": EditSubElementEvent;
   }
 }
 
@@ -38,15 +36,18 @@ export class IndividualRowEditor extends LitElement {
 
   @property({ attribute: false }) protected config?: PowerFlowCardPlusConfig;
 
-  @property({ attribute: false }) protected entities?: LovelaceRowConfig[];
+  @property({ attribute: false }) protected entities?: IndividualDeviceType[];
 
   @property() protected label?: string;
 
   @state() protected _indexBeingEdited: number = -1;
 
-  private _entityKeys = new WeakMap<LovelaceRowConfig, string>();
+  private _entityKeys = new WeakMap<IndividualDeviceType, string>();
 
   private _sortable?: SortableInstance;
+
+  /** Keeps the dragged row's DOM slot so lit's `repeat` can reorder from the original position. */
+  private _dragPlaceholder?: Comment;
 
   public connectedCallback(): void {
     super.connectedCallback();
@@ -58,20 +59,18 @@ export class IndividualRowEditor extends LitElement {
     this._destroySortable();
   }
 
-  private _editRowElement(index: number): void {
-    this._indexBeingEdited = index;
-  }
-
-  private _getKey(action: LovelaceRowConfig) {
-    if (!this._entityKeys.has(action)) {
-      this._entityKeys.set(action, Math.random().toString());
+  private _getKey(entity: IndividualDeviceType): string {
+    let key = this._entityKeys.get(entity);
+    if (key === undefined) {
+      key = Math.random().toString();
+      this._entityKeys.set(entity, key);
     }
-
-    return this._entityKeys.get(action)!;
+    return key;
   }
 
   protected render() {
-    if (!this.entities || !this.hass) {
+    const hass = this.hass;
+    if (!this.entities || !hass) {
       return html` <p>No entities configured.</p> `;
     }
 
@@ -82,14 +81,14 @@ export class IndividualRowEditor extends LitElement {
             ${this._indexBeingEdited + 1} / ${this.entities.length} ${localize("editor.individual")}
           </h4>
           <ha-icon-button
-            .label=${this.hass.localize("ui.components.entity.entity-picker.clear")}
+            .label=${hass.localize("ui.components.entity.entity-picker.clear")}
             .path=${mdiClose}
             class="remove-icon"
             @click=${() => (this._indexBeingEdited = -1)}
           ></ha-icon-button>
         </div>
         <ha-form
-          .hass=${this.hass}
+          .hass=${hass}
           .data=${this.entities[this._indexBeingEdited]}
           .schema=${individualSchema}
           .computeLabel=${this._computeLabelCallback}
@@ -108,48 +107,25 @@ export class IndividualRowEditor extends LitElement {
               <div class="handle">
                 <ha-svg-icon .path=${mdiDrag}></ha-svg-icon>
               </div>
-              ${
-                entityConf.type
-                  ? html`
-                      <div class="special-row">
-                        <div>
-                          <span>
-                            ${this.hass!.localize(
-                              `ui.panel.lovelace.editor.card.entities.entity_row.${entityConf.type}`
-                            )}
-                          </span>
-                          <span class="secondary"
-                            >${this.hass!.localize(
-                              "ui.panel.lovelace.editor.card.entities.edit_special_row"
-                            )}</span
-                          >
-                        </div>
-                      </div>
-                    `
-                  : html`
-                      <ha-entity-picker
-                        allow-custom-entity
-                        hideClearIcon
-                        .hass=${this.hass}
-                        .value=${(entityConf as EntityConfig).entity}
-                        .index=${index}
-                        @value-changed=${this._valueChanged}
-                      ></ha-entity-picker>
-                    `
-              }
+              <ha-entity-picker
+                allow-custom-entity
+                hideClearIcon
+                .hass=${hass}
+                .value=${entityConf.entity}
+                @value-changed=${(ev: ValueChangedEvent<string | undefined>) =>
+                  this._valueChanged(index, ev.detail.value)}
+              ></ha-entity-picker>
               <ha-icon-button
-                .label=${this.hass!.localize("ui.components.entity.entity-picker.clear")}
+                .label=${hass.localize("ui.components.entity.entity-picker.clear")}
                 .path=${mdiClose}
                 class="remove-icon"
-                .index=${index}
-                @click=${this._removeRow}
+                @click=${() => this._removeRow(index)}
               ></ha-icon-button>
               <ha-icon-button
-                .label=${this.hass!.localize("ui.components.entity.entity-picker.edit")}
+                .label=${hass.localize("ui.components.entity.entity-picker.edit")}
                 .path=${mdiPencil}
                 class="edit-icon"
-                .index=${index}
-                @click=${() => this._editRowElement(index)}
+                @click=${() => (this._indexBeingEdited = index)}
               ></ha-icon-button>
             </div>
           `
@@ -157,28 +133,20 @@ export class IndividualRowEditor extends LitElement {
       </div>
       <ha-entity-picker
         class="add-entity"
-        .hass=${this.hass}
+        .hass=${hass}
         @value-changed=${this._addEntity}
       ></ha-entity-picker>
     `;
   }
 
-  private _configChanged(ev: any): void {
-    const newRowConfig = ev.detail.value || "";
-
+  private _configChanged = (ev: ValueChangedEvent<IndividualDeviceType>): void => {
     if (!this.config || !this.hass) {
       return;
     }
 
-    if (!Array.isArray(this.config.entities.individual)) {
-      this.config.entities.individual = [];
-    }
-    const individualConfig = [...this.config.entities.individual];
-    if (!individualConfig) {
-      return;
-    }
-
-    individualConfig[this._indexBeingEdited] = newRowConfig;
+    const current = this.config.entities.individual;
+    const individualConfig = Array.isArray(current) ? [...current] : [];
+    individualConfig[this._indexBeingEdited] = ev.detail.value;
 
     const config = {
       ...this.config,
@@ -189,32 +157,33 @@ export class IndividualRowEditor extends LitElement {
     };
 
     fireEvent(this, "config-changed", { config });
-  }
+  };
 
   protected firstUpdated(): void {
-    this._createSortable();
+    void this._createSortable();
   }
 
-  private _computeLabelCallback = (schema: any) =>
-    this.hass!.localize(`ui.panel.lovelace.editor.card.generic.${schema?.name}`) ||
-    localize(`editor.${schema?.name}`);
+  private _computeLabelCallback = (schema: HaFormLabelSchema) =>
+    computeEditorLabel(this.hass, schema);
 
   private async _createSortable() {
     const Sortable = await loadSortable();
-    this._sortable = new Sortable(this.shadowRoot!.querySelector(".entities"), {
+    const list = this.shadowRoot?.querySelector<HTMLElement>(".entities");
+    if (!list) {
+      return;
+    }
+    this._sortable = new Sortable(list, {
       animation: 150,
       fallbackClass: "sortable-fallback",
       handle: ".handle",
       onChoose: (evt: SortableEvent) => {
-        (evt.item as any).placeholder = document.createComment("sort-placeholder");
-        evt.item.after((evt.item as any).placeholder);
+        this._dragPlaceholder = document.createComment("sort-placeholder");
+        evt.item.after(this._dragPlaceholder);
       },
       onEnd: (evt: SortableEvent) => {
         // put back in original location
-        if ((evt.item as any).placeholder) {
-          (evt.item as any).placeholder.replaceWith(evt.item);
-          delete (evt.item as any).placeholder;
-        }
+        this._dragPlaceholder?.replaceWith(evt.item);
+        this._dragPlaceholder = undefined;
         this._rowMoved(evt);
       },
     });
@@ -225,28 +194,29 @@ export class IndividualRowEditor extends LitElement {
     this._sortable = undefined;
   }
 
-  private async _addEntity(ev: CustomEvent): Promise<void> {
+  private _addEntity = (ev: ValueChangedEvent<string>): void => {
     const value = ev.detail.value;
-    if (value === "") {
+    if (value === "" || !this.entities) {
       return;
     }
 
-    const newConfigEntities = this.entities!.concat({
-      entity: value as string,
-    });
-    (ev.target as any).value = "";
+    const newConfigEntities = this.entities.concat({ entity: value });
+    const picker = ev.target;
+    if (picker instanceof HTMLElement && "value" in picker) {
+      picker.value = "";
+    }
     fireEvent(this, "entities-changed", { entities: newConfigEntities });
-  }
+  };
 
   private _rowMoved(ev: SortableEvent): void {
-    if (ev.oldIndex === ev.newIndex) {
+    if (ev.oldIndex === ev.newIndex || !this.entities) {
       return;
     }
-    if (ev.oldIndex == null || ev.newIndex == null) {
+    if (ev.oldIndex === undefined || ev.newIndex === undefined) {
       return;
     }
 
-    const newEntities = this.entities!.concat();
+    const newEntities = this.entities.concat();
     const [movedEntity] = newEntities.splice(ev.oldIndex, 1);
     if (!movedEntity) {
       return;
@@ -256,41 +226,29 @@ export class IndividualRowEditor extends LitElement {
     fireEvent(this, "entities-changed", { entities: newEntities });
   }
 
-  private _removeRow(ev: CustomEvent): void {
-    const index = (ev.currentTarget as any).index;
-    const newConfigEntities = this.entities!.concat();
-
+  private _removeRow(index: number): void {
+    if (!this.entities) {
+      return;
+    }
+    const newConfigEntities = this.entities.concat();
     newConfigEntities.splice(index, 1);
 
     fireEvent(this, "entities-changed", { entities: newConfigEntities });
   }
 
-  private _valueChanged(ev: CustomEvent): void {
-    const value = ev.detail.value;
-    const index = (ev.target as any).index;
-    const newConfigEntities = this.entities!.concat();
+  private _valueChanged(index: number, value: string | undefined): void {
+    if (!this.entities) {
+      return;
+    }
+    const newConfigEntities = this.entities.concat();
 
     if (value === "" || value === undefined) {
       newConfigEntities.splice(index, 1);
     } else {
-      newConfigEntities[index] = {
-        ...newConfigEntities[index],
-        entity: value!,
-      };
+      newConfigEntities[index] = { ...newConfigEntities[index], entity: value };
     }
 
     fireEvent(this, "entities-changed", { entities: newConfigEntities });
-  }
-
-  private _editRow(ev: CustomEvent): void {
-    const index = (ev.currentTarget as any).index;
-    fireEvent(this, "edit-detail-element", {
-      subElementConfig: {
-        index,
-        type: "row",
-        elementConfig: this.entities![index],
-      },
-    });
   }
 
   static get styles(): CSSResultGroup {
@@ -338,37 +296,14 @@ export class IndividualRowEditor extends LitElement {
           min-width: 0px;
         }
 
-        .special-row {
-          height: 60px;
-          font-size: 16px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          flex-grow: 1;
-        }
-
-        .special-row div {
-          display: flex;
-          flex-direction: column;
-        }
-
         .remove-icon,
         .edit-icon {
           --mdc-icon-button-size: 36px;
           color: var(--secondary-text-color);
         }
-
-        .secondary {
-          font-size: 12px;
-          color: var(--secondary-text-color);
-        }
       `,
     ];
   }
-}
-
-if (!customElements.get("individual-row-editor")) {
-  customElements.define("individual-row-editor", IndividualRowEditor);
 }
 
 declare global {

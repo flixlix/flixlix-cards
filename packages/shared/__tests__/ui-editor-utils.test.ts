@@ -4,7 +4,7 @@ import { fireEvent } from "../src/ha/common/dom/fire-event";
 import { loadHaForm } from "../src/ui-editor/utils/load-ha-form";
 import { loadSortable } from "../src/ui-editor/utils/sortable.ondemand";
 
-vi.mock("../src/ui-editor/utils/sortable", () => ({
+vi.mock("sortablejs", () => ({
   default: {
     mount: vi.fn(),
   },

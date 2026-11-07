@@ -1,3 +1,4 @@
+import localize from "@flixlix-cards/shared/i18n";
 import memoizeOne from "memoize-one";
 
 const greyColorSchema = {
@@ -37,7 +38,7 @@ const displayZeroLinesOptionsSchema = (mode: string) => {
   }
 };
 
-export const displayZeroLinesSchema = memoizeOne((localize, mode: string) => [
+export const displayZeroLinesSchema = memoizeOne((mode: string) => [
   {
     name: "display_zero_lines",
     type: "grid",

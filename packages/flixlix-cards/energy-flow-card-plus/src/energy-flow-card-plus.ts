@@ -47,9 +47,13 @@ import { allDynamicStyles, styles } from "@flixlix-cards/shared/style";
 import {
   type ActionConfigSet,
   type EnergyFlowCardPlusConfig,
+  type BatteryObject,
   type GridObject,
+  type HomeObject,
   type HomeSources,
   type NewDur,
+  type NonFossilObject,
+  type SolarObject,
   type TemplatesObj,
 } from "@flixlix-cards/shared/types";
 import { checkShouldShowDots } from "@flixlix-cards/shared/utils/check-should-show-dots";
@@ -83,6 +87,33 @@ import { html, LitElement, nothing, type PropertyValues, type TemplateResult } f
 import { customElement, property, query, state } from "lit/decorators.js";
 import packageJson from "../package.json" with { type: "json" };
 
+type CardRenderData = {
+  entities: EnergyFlowCardPlusConfig["entities"];
+  grid: GridObject;
+  solar: SolarObject;
+  battery: BatteryObject;
+  home: HomeObject;
+  nonFossil: NonFossilObject;
+  individualObjs: IndividualObject[];
+  newDur: NewDur;
+  templatesObj: TemplatesObj;
+  homeBatteryCircumference: number;
+  homeSolarCircumference: number;
+  homeNonFossilCircumference: number;
+  homeGridCircumference: number;
+  homeUsageToDisplay: string;
+  sortedIndividualObjects: IndividualObject[];
+  individualFieldLeftTop?: IndividualObject;
+  individualFieldLeftBottom?: IndividualObject;
+  individualFieldRightTop?: IndividualObject;
+  individualFieldRightBottom?: IndividualObject;
+};
+
+const gridIconTypes = ["color_dynamically", "no_color", "production", "consumption"] as const;
+const toGridIconType = (colorIcon: unknown) => gridIconTypes.find((type) => type === colorIcon);
+
+const individualSecondaryTopic = (index: number) => `individual${index}Secondary`;
+
 registerCustomCard({
   type: "energy-flow-card-plus",
   name: "Energy Flow Card Plus",
@@ -94,10 +125,10 @@ registerCustomCard({
 @customElement("energy-flow-card-plus")
 export class EnergyFlowCardPlus extends LitElement {
   @property({ attribute: false }) public hass!: HomeAssistant;
-  @state() private _config = {} as EnergyFlowCardPlusConfig;
+  @state() private _config!: EnergyFlowCardPlusConfig;
 
   @state() private _templateResults: Partial<Record<string, RenderTemplateResult>> = {};
-  @state() private _unsubRenderTemplates?: Map<string, Promise<UnsubscribeFunc>> = new Map();
+  private readonly _unsubRenderTemplates = new Map<string, Promise<UnsubscribeFunc>>();
   @state() private _width = 0;
   @state() private _energyWindow: EnergyPeriodWindow | null = null;
   @state() private _energyGrowthMap: Record<string, number> = {};
@@ -123,32 +154,10 @@ export class EnergyFlowCardPlus extends LitElement {
   @query("#solar-battery-flow") solarToBatteryFlow?: SVGSVGElement;
   @query("#solar-grid-flow") solarToGridFlow?: SVGSVGElement;
   @query("#solar-home-flow") solarToHomeFlow?: SVGSVGElement;
-  private _renderData?:
-    | {
-        entities: EnergyFlowCardPlusConfig["entities"];
-        grid: GridObject;
-        solar: any;
-        battery: any;
-        home: any;
-        nonFossil: any;
-        individualObjs: IndividualObject[];
-        newDur: NewDur;
-        templatesObj: TemplatesObj;
-        homeBatteryCircumference: number;
-        homeSolarCircumference: number;
-        homeNonFossilCircumference: number;
-        homeGridCircumference: number;
-        homeUsageToDisplay: string;
-        sortedIndividualObjects: IndividualObject[];
-        individualFieldLeftTop?: IndividualObject;
-        individualFieldLeftBottom?: IndividualObject;
-        individualFieldRightTop?: IndividualObject;
-        individualFieldRightBottom?: IndividualObject;
-      }
-    | undefined;
+  private _renderData?: CardRenderData;
 
   setConfig(config: EnergyFlowCardPlusConfig): void {
-    if ((config.entities as any).individual1 || (config.entities as any).individual2) {
+    if (config.entities?.individual1 || config.entities?.individual2) {
       throw new Error(
         "You are using an outdated configuration. Please update your configuration to the latest version. The individual1 and individual2 properties are now just a single individual array property. The easiest way to do this is to remove the individual1 and individual2 properties and replace them in the UI Editor."
       );
@@ -393,8 +402,8 @@ export class EnergyFlowCardPlus extends LitElement {
     event.stopPropagation();
     const normalizedConfig = this._normalizeActionConfig(config);
     const hasAnyAction = !!(
-      normalizedConfig?.tap_action ||
-      normalizedConfig?.hold_action ||
+      normalizedConfig?.tap_action ??
+      normalizedConfig?.hold_action ??
       normalizedConfig?.double_tap_action
     );
 
@@ -413,7 +422,7 @@ export class EnergyFlowCardPlus extends LitElement {
       return;
     }
 
-    handleAction(
+    void handleAction(
       event.target,
       this.hass,
       {
@@ -432,7 +441,7 @@ export class EnergyFlowCardPlus extends LitElement {
     entityId?: string
   ): void {
     event.stopPropagation();
-    const target = event.currentTarget as HTMLElement | null;
+    const target = event.currentTarget instanceof HTMLElement ? event.currentTarget : null;
     const normalizedConfig = this._normalizeActionConfig(config);
     if (!target) {
       return;
@@ -471,7 +480,7 @@ export class EnergyFlowCardPlus extends LitElement {
     config?: ActionConfig | ActionConfigSet,
     entityId?: string
   ): void {
-    const target = event.currentTarget as HTMLElement | null;
+    const target = event.currentTarget instanceof HTMLElement ? event.currentTarget : null;
     const normalizedConfig = this._normalizeActionConfig(config);
     if (!target) {
       return;
@@ -497,7 +506,7 @@ export class EnergyFlowCardPlus extends LitElement {
     config?: ActionConfig | ActionConfigSet,
     entityId?: string
   ): void {
-    const target = event.currentTarget as HTMLElement | null;
+    const target = event.currentTarget instanceof HTMLElement ? event.currentTarget : null;
     const normalizedConfig = this._normalizeActionConfig(config);
     if (!target || !normalizedConfig?.hold_action) {
       return;
@@ -521,7 +530,7 @@ export class EnergyFlowCardPlus extends LitElement {
   }
 
   public onEntityPointerUp(event: PointerEvent): void {
-    const target = event.currentTarget as HTMLElement | null;
+    const target = event.currentTarget instanceof HTMLElement ? event.currentTarget : null;
     if (!target) {
       return;
     }
@@ -573,14 +582,14 @@ export class EnergyFlowCardPlus extends LitElement {
       <ha-card
         .header=${this._config.title}
         class=${this._config.full_size ? "full-size" : ""}
-        style=${this._config.style_ha_card ? this._config.style_ha_card : ""}
+        style=${this._config.style_ha_card ?? ""}
       >
         <div
           class="card-content ${this._config.full_size ? "full-size" : ""} ${
             this._config.no_labels ? "no-labels" : ""
           }"
           id="energy-flow-card-plus"
-          style=${this._config.style_card_content ? this._config.style_card_content : ""}
+          style=${this._config.style_card_content ?? ""}
         >
           ${
             solar.has ||
@@ -725,20 +734,18 @@ export class EnergyFlowCardPlus extends LitElement {
       return;
     }
 
-    const elem = this.shadowRoot?.querySelector("#energy-flow-card-plus") as HTMLElement | null;
+    const elem = this.shadowRoot?.querySelector<HTMLElement>("#energy-flow-card-plus");
     if (elem) {
-      if (!this._resizeObserver) {
-        this._resizeObserver = new ResizeObserver((entries) => {
-          const entry = entries[0];
-          if (!entry) {
-            return;
-          }
-          const width = Math.round(entry.contentRect.width);
-          if (width !== this._width) {
-            this._width = width;
-          }
-        });
-      }
+      this._resizeObserver ??= new ResizeObserver((entries) => {
+        const entry = entries[0];
+        if (!entry) {
+          return;
+        }
+        const width = Math.round(entry.contentRect.width);
+        if (width !== this._width) {
+          this._width = width;
+        }
+      });
       this._resizeObserver.observe(elem);
       const width = Math.round(elem.getBoundingClientRect().width);
       if (width !== this._width) {
@@ -779,7 +786,7 @@ export class EnergyFlowCardPlus extends LitElement {
     }
   }
 
-  private _computeRenderData() {
+  private _computeRenderData(): CardRenderData {
     const { entities, energy_date_selection } = this._config;
     const useDateSelection = energy_date_selection !== false;
     const initialNumericState = null as null | number;
@@ -808,7 +815,9 @@ export class EnergyFlowCardPlus extends LitElement {
         isOutage:
           (entities.grid && this.hass.states[entities.grid.power_outage?.entity]?.state) ===
           (entities.grid?.power_outage?.state_alert ?? "on"),
-        icon: entities.grid?.power_outage?.icon_alert || "mdi:transmission-tower-off",
+        icon: entities.grid?.power_outage?.icon_alert?.length
+          ? entities.grid.power_outage.icon_alert
+          : "mdi:transmission-tower-off",
         name: entities.grid?.power_outage?.label_alert ?? html`Power<br />Outage`,
         entityGenerator: entities.grid?.power_outage?.entity_generator,
       },
@@ -825,12 +834,7 @@ export class EnergyFlowCardPlus extends LitElement {
       color: {
         fromGrid: entities.grid?.color?.consumption,
         toGrid: entities.grid?.color?.production,
-        icon_type: entities.grid?.color_icon as
-          | "color_dynamically"
-          | "no_color"
-          | "production"
-          | "consumption"
-          | undefined,
+        icon_type: toGridIconType(entities.grid?.color_icon),
         circle_type: entities.grid?.color_circle,
       },
       tap_action: entities.grid?.tap_action,
@@ -845,7 +849,7 @@ export class EnergyFlowCardPlus extends LitElement {
         icon: entities.grid?.secondary_info?.icon,
         unit: entities.grid?.secondary_info?.unit_of_measurement,
         unit_white_space: entities.grid?.secondary_info?.unit_white_space,
-        accept_negative: entities.grid?.secondary_info?.accept_negative || false,
+        accept_negative: entities.grid?.secondary_info?.accept_negative ?? false,
         color: {
           type: entities.grid?.secondary_info?.color_value,
         },
@@ -858,7 +862,7 @@ export class EnergyFlowCardPlus extends LitElement {
     const solarTotal = getEnergyEntityStateLocal(entities.solar?.entity);
     const isProducingSolar = (solarTotal ?? 0) > 0;
     const displayZero = entities.solar?.display_zero !== false || isProducingSolar;
-    const solar = {
+    const solar: SolarObject = {
       entity: entities.solar?.entity,
       has: hasSolarEntity && displayZero,
       state: {
@@ -881,7 +885,7 @@ export class EnergyFlowCardPlus extends LitElement {
         decimals: entities.solar?.secondary_info?.decimals,
         template: entities.solar?.secondary_info?.template,
         has: entities.solar?.secondary_info?.entity !== undefined,
-        accept_negative: entities.solar?.secondary_info?.accept_negative || false,
+        accept_negative: entities.solar?.secondary_info?.accept_negative ?? false,
         state: getSolarSecondaryState(this.hass, this._config),
         icon: entities.solar?.secondary_info?.icon,
         unit: entities.solar?.secondary_info?.unit_of_measurement,
@@ -900,7 +904,7 @@ export class EnergyFlowCardPlus extends LitElement {
       }
       return entities.battery?.entity !== undefined;
     };
-    const battery = {
+    const battery: BatteryObject = {
       entity: entities.battery?.entity,
       has: checkIfHasBattery(),
       mainEntity:
@@ -917,7 +921,7 @@ export class EnergyFlowCardPlus extends LitElement {
         state: getBatteryStateOfCharge(this.hass, this._config),
         unit: entities?.battery?.state_of_charge_unit ?? "%",
         unit_white_space: entities?.battery?.state_of_charge_unit_white_space ?? true,
-        decimals: entities?.battery?.state_of_charge_decimals || 0,
+        decimals: entities?.battery?.state_of_charge_decimals ?? 0,
       },
       state: {
         toBattery:
@@ -937,11 +941,11 @@ export class EnergyFlowCardPlus extends LitElement {
       color: {
         fromBattery: entities.battery?.color?.consumption,
         toBattery: entities.battery?.color?.production,
-        icon_type: undefined as string | boolean | undefined,
+        icon_type: undefined,
         circle_type: entities.battery?.color_circle,
       },
     };
-    const home = {
+    const home: HomeObject = {
       entity: entities.home?.entity,
       has: entities?.home?.entity !== undefined,
       state: initialNumericState,
@@ -955,7 +959,7 @@ export class EnergyFlowCardPlus extends LitElement {
         template: entities.home?.secondary_info?.template,
         has: entities.home?.secondary_info?.entity !== undefined,
         state: getHomeSecondaryState(this.hass, this._config),
-        accept_negative: entities.home?.secondary_info?.accept_negative || false,
+        accept_negative: entities.home?.secondary_info?.accept_negative ?? false,
         unit: entities.home?.secondary_info?.unit_of_measurement,
         unit_white_space: entities.home?.secondary_info?.unit_white_space,
         icon: entities.home?.secondary_info?.icon,
@@ -974,12 +978,12 @@ export class EnergyFlowCardPlus extends LitElement {
           useDateSelection: useDateSelection,
           field: individual,
         });
-        if (!obj.unit) {
+        if (obj.unit === undefined || obj.unit === "") {
           obj.unit = "Wh";
         }
         return obj;
-      }) || [];
-    const nonFossil = {
+      }) ?? [];
+    const nonFossil: NonFossilObject = {
       entity: entities.fossil_fuel_percentage?.entity,
       name: computeFieldName(
         this.hass,
@@ -1003,7 +1007,7 @@ export class EnergyFlowCardPlus extends LitElement {
         template: entities.fossil_fuel_percentage?.secondary_info?.template,
         has: entities.fossil_fuel_percentage?.secondary_info?.entity !== undefined,
         state: getNonFossilSecondaryState(this.hass, this._config),
-        accept_negative: entities.fossil_fuel_percentage?.secondary_info?.accept_negative || false,
+        accept_negative: entities.fossil_fuel_percentage?.secondary_info?.accept_negative ?? false,
         icon: entities.fossil_fuel_percentage?.secondary_info?.icon,
         unit: entities.fossil_fuel_percentage?.secondary_info?.unit_of_measurement,
         unit_white_space: entities.fossil_fuel_percentage?.secondary_info?.unit_white_space,
@@ -1081,8 +1085,10 @@ export class EnergyFlowCardPlus extends LitElement {
       nonFossil.hasPercentage = false;
       nonFossil.state.power = 0;
     }
-    const totalIndividualConsumption =
-      individualObjs?.reduce((a, b) => a + (b.has ? b.state || 0 : 0), 0) || 0;
+    const totalIndividualConsumption = individualObjs.reduce(
+      (a, b) => a + (b.has ? (b.state ?? 0) : 0),
+      0
+    );
     const totalHomeConsumption = Math.max(
       (grid.state.toHome ?? 0) + (solar.state.toHome ?? 0) + (battery.state.toHome ?? 0),
       0
@@ -1194,19 +1200,18 @@ export class EnergyFlowCardPlus extends LitElement {
         "solarToHome",
       ];
       flowNames.forEach((flowName) => {
-        const flowSVGElement = this[`${flowName}Flow`] as SVGSVGElement;
+        const flowSVGElement = this[`${flowName}Flow`];
         const prevDur = this.previousDur[flowName];
         const nextDur = newDur[flowName];
         if (
           flowSVGElement &&
+          prevDur !== undefined &&
           Number.isFinite(prevDur) &&
           Number.isFinite(nextDur) &&
-          (prevDur ?? 0) > 0 &&
+          prevDur > 0 &&
           prevDur !== nextDur
         ) {
-          const safePrevDur = prevDur as number;
-          const safeNextDur = nextDur;
-          const scale = safeNextDur / safePrevDur;
+          const scale = nextDur / prevDur;
           const currentTime = flowSVGElement.getCurrentTime();
           const nextTime = currentTime * scale;
           flowSVGElement.pauseAnimations();
@@ -1240,11 +1245,10 @@ export class EnergyFlowCardPlus extends LitElement {
         color: "var(--energy-non-fossil-color)",
       },
     };
-    const homeSourceKeys = Object.keys(homeSources) as (keyof HomeSources)[];
+    const homeSourceKeys: (keyof HomeSources)[] = ["battery", "solar", "grid", "gridNonFossil"];
     const homeLargestSource = homeSourceKeys.reduce((a, b) =>
       homeSources[a].value > homeSources[b].value ? a : b
     );
-    const individualKeys = ["left-top", "left-bottom", "right-top", "right-bottom"];
     const templatesObj: TemplatesObj = {
       gridSecondary: this._templateResults.gridSecondary?.result,
       solarSecondary: this._templateResults.solarSecondary?.result,
@@ -1252,8 +1256,8 @@ export class EnergyFlowCardPlus extends LitElement {
       nonFossilFuelSecondary: this._templateResults.nonFossilFuelSecondary?.result,
       individual:
         individualObjs?.map(
-          (_, index) => this._templateResults[`${individualKeys[index]}Secondary`]?.result
-        ) || [],
+          (_, index) => this._templateResults[individualSecondaryTopic(index)]?.result
+        ) ?? [],
     };
 
     const isCardWideEnough = this._width > 420;
@@ -1294,7 +1298,7 @@ export class EnergyFlowCardPlus extends LitElement {
       entities,
       homeLargestSource,
       homeSources,
-      individual: sortedIndividualObjects as any,
+      individual: sortedIndividualObjects,
       nonFossil,
       isCardWideEnough,
     });
@@ -1322,29 +1326,23 @@ export class EnergyFlowCardPlus extends LitElement {
   }
 
   private _tryConnectAll() {
+    if (!this.isConnected) {
+      return;
+    }
     const { entities } = this._config;
-    const templatesObj = {
-      gridSecondary: entities.grid?.secondary_info?.template,
-      solarSecondary: entities.solar?.secondary_info?.template,
-      homeSecondary: entities.home?.secondary_info?.template,
-      individualSecondary: entities.individual?.map(
-        (individual) => individual.secondary_info?.template
-      ),
-      nonFossilFuelSecondary: entities.fossil_fuel_percentage?.secondary_info?.template,
-    };
-
-    for (const [key, value] of Object.entries(templatesObj)) {
-      if (value) {
-        if (Array.isArray(value)) {
-          const individualKeys = ["left-top", "left-bottom", "right-top", "right-bottom"];
-          value.forEach((template, index) => {
-            if (template) {
-              this._tryConnect(template, `${individualKeys[index]}Secondary`);
-            }
-          });
-        } else {
-          this._tryConnect(value, key);
-        }
+    const templates: [topic: string, template: string | undefined][] = [
+      ["gridSecondary", entities.grid?.secondary_info?.template],
+      ["solarSecondary", entities.solar?.secondary_info?.template],
+      ["homeSecondary", entities.home?.secondary_info?.template],
+      ["nonFossilFuelSecondary", entities.fossil_fuel_percentage?.secondary_info?.template],
+      ...(entities.individual ?? []).map((individual, index): [string, string | undefined] => [
+        individualSecondaryTopic(index),
+        individual.secondary_info?.template,
+      ]),
+    ];
+    for (const [topic, template] of templates) {
+      if (template) {
+        void this._tryConnect(template, topic);
       }
     }
   }
@@ -1353,7 +1351,7 @@ export class EnergyFlowCardPlus extends LitElement {
     if (
       !this.hass ||
       !this._config ||
-      this._unsubRenderTemplates?.get(topic) !== undefined ||
+      this._unsubRenderTemplates.get(topic) !== undefined ||
       inputTemplate === ""
     ) {
       return;
@@ -1370,7 +1368,7 @@ export class EnergyFlowCardPlus extends LitElement {
       const sub = subscribeRenderTemplate(
         this.hass.connection,
         (result) => {
-          this._templateResults[topic] = result;
+          this._templateResults = { ...this._templateResults, [topic]: result };
         },
         {
           template: inputTemplate,
@@ -1382,7 +1380,7 @@ export class EnergyFlowCardPlus extends LitElement {
           strict: true,
         }
       );
-      this._unsubRenderTemplates?.set(topic, sub);
+      this._unsubRenderTemplates.set(topic, sub);
       await sub;
     } catch {
       this._templateResults = {
@@ -1392,30 +1390,18 @@ export class EnergyFlowCardPlus extends LitElement {
           listeners: { all: false, domains: [], entities: [], time: false },
         },
       };
-      this._unsubRenderTemplates?.delete(topic);
+      this._unsubRenderTemplates.delete(topic);
     }
   }
 
-  private async _tryDisconnectAll() {
-    const { entities } = this._config;
-    const templatesObj = {
-      gridSecondary: entities.grid?.secondary_info?.template,
-      solarSecondary: entities.solar?.secondary_info?.template,
-      homeSecondary: entities.home?.secondary_info?.template,
-      individualSecondary: entities.individual?.map(
-        (individual) => individual.secondary_info?.template
-      ),
-    };
-
-    for (const [key, value] of Object.entries(templatesObj)) {
-      if (value) {
-        this._tryDisconnect(key);
-      }
+  private _tryDisconnectAll() {
+    for (const topic of this._unsubRenderTemplates.keys()) {
+      void this._tryDisconnect(topic);
     }
   }
 
   private async _tryDisconnect(topic: string): Promise<void> {
-    const unsubRenderTemplate = this._unsubRenderTemplates?.get(topic);
+    const unsubRenderTemplate = this._unsubRenderTemplates.get(topic);
     if (!unsubRenderTemplate) {
       return;
     }
@@ -1423,9 +1409,10 @@ export class EnergyFlowCardPlus extends LitElement {
     try {
       const unsub = await unsubRenderTemplate;
       unsub();
-      this._unsubRenderTemplates?.delete(topic);
-    } catch (err: any) {
-      if (err.code === "not_found" || err.code === "template_error") {
+      this._unsubRenderTemplates.delete(topic);
+    } catch (err) {
+      const code = typeof err === "object" && err !== null && "code" in err ? err.code : undefined;
+      if (code === "not_found" || code === "template_error") {
         // If we get here, the connection was probably already closed. Ignore.
       } else {
         throw err;
@@ -1433,5 +1420,5 @@ export class EnergyFlowCardPlus extends LitElement {
     }
   }
 
-  static styles = styles as any;
+  static styles = styles;
 }

@@ -1,11 +1,5 @@
-import { batterySchema } from "@flixlix-cards/shared/ui-editor/schema/battery";
+import localize from "@flixlix-cards/shared/i18n";
 import { displayZeroLinesSchema } from "@flixlix-cards/shared/ui-editor/schema/display-zero-lines";
-import { nonFossilSchema } from "@flixlix-cards/shared/ui-editor/schema/fossil-fuel-percentage";
-import { gridSchema } from "@flixlix-cards/shared/ui-editor/schema/grid";
-import { homeSchema } from "@flixlix-cards/shared/ui-editor/schema/home";
-import { individualSchema } from "@flixlix-cards/shared/ui-editor/schema/individual";
-import { solarSchema } from "@flixlix-cards/shared/ui-editor/schema/solar";
-import { mdiBatteryHigh, mdiHome, mdiLeaf, mdiTransmissionTower, mdiWeatherSunny } from "@mdi/js";
 import memoizeOne from "memoize-one";
 import { any, assign, boolean, integer, number, object, optional, string } from "superstruct";
 
@@ -75,74 +69,7 @@ export const generalConfigSchema = [
   },
 ] as const;
 
-export const entitiesSchema = memoizeOne((localize) => [
-  {
-    name: "entities",
-    type: "grid",
-    column_min_width: "400px",
-    schema: [
-      {
-        title: localize("editor.grid"),
-        name: "grid",
-        type: "expandable",
-        iconPath: mdiTransmissionTower,
-        schema: gridSchema,
-      },
-      {
-        title: localize("editor.solar"),
-        name: "solar",
-        type: "expandable",
-        iconPath: mdiWeatherSunny,
-        schema: solarSchema,
-      },
-      {
-        title: localize("editor.battery"),
-        name: "battery",
-        type: "expandable",
-        iconPath: mdiBatteryHigh,
-        schema: batterySchema,
-      },
-      {
-        title: localize("editor.fossil_fuel_percentage"),
-        name: "fossil_fuel_percentage",
-        type: "expandable",
-        iconPath: mdiLeaf,
-        schema: nonFossilSchema,
-      },
-      {
-        title: localize("editor.home"),
-        name: "home",
-        type: "expandable",
-        iconPath: mdiHome,
-        schema: homeSchema,
-      },
-    ],
-  },
-]);
-
-export const individualDevicesSchema = memoizeOne((localize) => [
-  {
-    name: "entities",
-    type: "grid",
-    column_min_width: "400px",
-    schema: [
-      {
-        title: `${localize("editor.individual")} 1`,
-        name: "individual1",
-        type: "expandable",
-        schema: individualSchema,
-      },
-      {
-        title: `${localize("editor.individual")} 2`,
-        name: "individual2",
-        type: "expandable",
-        schema: individualSchema,
-      },
-    ],
-  },
-]);
-
-export const advancedOptionsSchema = memoizeOne((localize, displayZeroLinesMode: string) => [
+export const advancedOptionsSchema = memoizeOne((displayZeroLinesMode: string) => [
   {
     type: "grid",
     column_min_width: "200px",
@@ -240,6 +167,6 @@ export const advancedOptionsSchema = memoizeOne((localize, displayZeroLinesMode:
   {
     type: "expandable",
     title: localize("editor.display_zero_lines"),
-    schema: [...displayZeroLinesSchema(localize, displayZeroLinesMode)],
+    schema: [...displayZeroLinesSchema(displayZeroLinesMode)],
   },
 ]);

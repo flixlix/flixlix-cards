@@ -2,35 +2,45 @@
 
 import { describe, expect, test } from "vite-plus/test";
 
+import { type HomeAssistant, NumberFormat, TimeFormat } from "custom-card-helpers";
+import { type Connection } from "home-assistant-js-websocket";
+
 import { type EnergyFlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { EnergyFlowCardPlus } from "../src/energy-flow-card-plus";
 
 // jsdom does not provide ResizeObserver; stub it so the card's `updated` hook doesn't throw
-(globalThis as any).ResizeObserver = class {
+globalThis.ResizeObserver = class {
   observe() {}
   disconnect() {}
   unobserve() {}
 };
 
-type HassState = { state: string; attributes: Record<string, unknown> };
-
-function makeHass(states: Record<string, string> = {}) {
-  const hassStates: Record<string, HassState> = {};
+function makeHass(states: Record<string, string> = {}): HomeAssistant {
+  const hassStates: HomeAssistant["states"] = {};
   for (const [entityId, state] of Object.entries(states)) {
     hassStates[entityId] = {
+      entity_id: entityId,
       state,
       attributes: { friendly_name: entityId, unit_of_measurement: "Wh" },
+      last_changed: "",
+      last_updated: "",
+      context: { id: "", user_id: null, parent_id: null },
     };
   }
-  return {
+  const hass: Partial<HomeAssistant> = {
     localize: (key: string) => key,
-    locale: { language: "en", number_format: "comma_decimal" },
+    locale: {
+      language: "en",
+      number_format: NumberFormat.comma_decimal,
+      time_format: TimeFormat.language,
+    },
     states: hassStates,
-    config: {},
-    user: { name: "test" },
-    connection: {},
-    callWS: async () => ({}),
-  } as any;
+    config: {} as HomeAssistant["config"],
+    user: { name: "test" } as HomeAssistant["user"],
+    connection: {} as Connection,
+    callWS: <T>() => Promise.resolve({} as T),
+  };
+  return hass as HomeAssistant;
 }
 
 function makeCard(config: EnergyFlowCardPlusConfig, hass: ReturnType<typeof makeHass>) {
@@ -74,15 +84,7 @@ function makeCard(config: EnergyFlowCardPlusConfig, hass: ReturnType<typeof make
 }
 
 describe("render", () => {
-  const hass = {
-    localize: (key: string) => key,
-    states: {},
-    locale: {},
-    config: {},
-    user: { name: "test" },
-    connection: {},
-    callWS: async () => ({}),
-  } as any;
+  const hass = makeHass();
 
   test("renders correctly", () => {
     const config = {
@@ -109,7 +111,7 @@ describe("render", () => {
     const card = new EnergyFlowCardPlus();
     card.hass = hass;
     card.setConfig(config);
-    const rendered = (card as unknown as { render: () => any }).render();
+    const rendered = card["render"]();
     expect(rendered).toBeTruthy();
   });
 
@@ -122,21 +124,25 @@ describe("render", () => {
     const card = new EnergyFlowCardPlus();
     card.hass = hass;
     card.setConfig(config);
-    expect((card as any)._energyCollectionKey).toBe("energy_living_room");
+    expect(card["_energyCollectionKey"]).toBe("energy_living_room");
   });
+});
+
+const readingHassStates = (config: EnergyFlowCardPlusConfig): EnergyFlowCardPlusConfig => ({
+  ...config,
+  energy_date_selection: false,
 });
 
 describe("_computeRenderData (energy card)", () => {
   test("case 1: basic grid + solar split with known totals", () => {
     // energy_date_selection: false → reads directly from hass.states (no growthMap needed)
-    const config = {
+    const config = readingHassStates({
       type: "custom:energy-flow-card-plus",
-      energy_date_selection: false,
       entities: {
         grid: { entity: "sensor.grid_energy" },
         solar: { entity: "sensor.solar_energy" },
       },
-    } as EnergyFlowCardPlusConfig;
+    } as EnergyFlowCardPlusConfig);
     const hass = makeHass({
       "sensor.grid_energy": "300",
       "sensor.solar_energy": "700",
@@ -156,13 +162,12 @@ describe("_computeRenderData (energy card)", () => {
   });
 
   test("case 2: tolerance zeroing via adjustZeroTolerance — grid below tolerance is zeroed", () => {
-    const config = {
+    const config = readingHassStates({
       type: "custom:energy-flow-card-plus",
-      energy_date_selection: false,
       entities: {
-        grid: { entity: "sensor.grid_energy", display_zero_tolerance: 10 } as any,
+        grid: { entity: "sensor.grid_energy", display_zero_tolerance: 10 },
       },
-    } as EnergyFlowCardPlusConfig;
+    } as EnergyFlowCardPlusConfig);
     // 7Wh is below the 10Wh tolerance
     const hass = makeHass({ "sensor.grid_energy": "7" });
     const card = makeCard(config, hass);
@@ -175,14 +180,13 @@ describe("_computeRenderData (energy card)", () => {
   });
 
   test("case 3: no-NaN guarantee — unavailable entity produces only numeric output", () => {
-    const config = {
+    const config = readingHassStates({
       type: "custom:energy-flow-card-plus",
-      energy_date_selection: false,
       entities: {
         grid: { entity: "sensor.grid_energy" },
         solar: { entity: "sensor.solar_energy" },
       },
-    } as EnergyFlowCardPlusConfig;
+    } as EnergyFlowCardPlusConfig);
     // Neither entity has a numeric state; growthMap not involved (energy_date_selection: false)
     // getEntityState returns null → getEntityStateWh returns 0
     const hass = makeHass({

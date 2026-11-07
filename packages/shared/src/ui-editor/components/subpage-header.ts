@@ -31,9 +31,9 @@ export class SubpageHeader extends LitElement {
     `;
   }
 
-  private _goBack(): void {
+  private _goBack = (): void => {
     fireEvent(this, "go-back");
-  }
+  };
 
   static get styles(): CSSResultGroup {
     return css`
@@ -50,10 +50,6 @@ export class SubpageHeader extends LitElement {
       }
     `;
   }
-}
-
-if (!customElements.get("subpage-header")) {
-  customElements.define("subpage-header", SubpageHeader);
 }
 
 declare global {

@@ -1,17 +1,27 @@
-export const loadHaForm = async () => {
+declare global {
+  interface Window {
+    loadCardHelpers?: () => Promise<unknown>;
+  }
+}
+
+type LovelaceCardClass = CustomElementConstructor & { getConfigElement?: () => unknown };
+
+/** HA only registers `ha-form` and `ha-entity-picker` once some card's editor has been loaded. */
+function loadConfigElementOf(cardTag: string): void {
+  const card: LovelaceCardClass | undefined = customElements.get(cardTag);
+  card?.getConfigElement?.();
+}
+
+export const loadHaForm = async (): Promise<void> => {
   if (!customElements.get("ha-form")) {
-    (customElements.get("hui-button-card") as any)?.getConfigElement();
+    loadConfigElementOf("hui-button-card");
   }
   if (!customElements.get("ha-entity-picker")) {
-    (customElements.get("hui-entities-card") as any)?.getConfigElement();
+    loadConfigElementOf("hui-entities-card");
   }
   if (customElements.get("ha-form")) {
     return;
   }
 
-  const helpers = await (window as any).loadCardHelpers?.();
-
-  if (!helpers) {
-    return;
-  }
+  await window.loadCardHelpers?.();
 };
