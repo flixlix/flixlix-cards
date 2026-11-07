@@ -1,50 +1,23 @@
-import { type IndividualObject } from "@flixlix-cards/shared/states/raw/individual/get-individual-object";
-import {
-  type BatteryObject,
-  type CardMainContext,
-  type FlowCardPlusConfig,
-  type NewDur,
-  type TemplatesObj,
-} from "@flixlix-cards/shared/types";
-import { checkShouldShowDots } from "@flixlix-cards/shared/utils/check-should-show-dots";
-import { computeIndividualFlowRate } from "@flixlix-cards/shared/utils/compute-flow-rate";
-import { checkHasBottomIndividual } from "@flixlix-cards/shared/utils/compute-individual-position";
-import { showLine } from "@flixlix-cards/shared/utils/show-line";
-import { styleLine } from "@flixlix-cards/shared/utils/style-line";
+import { type IndividualSlot } from "@flixlix-cards/shared/card-state";
+import { type CardMainContext, type FlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { html, nothing, svg } from "lit";
 import { spacer } from "./spacer";
 import { individualSecondarySpan } from "./spans/individual-secondary-span";
 
-interface TopIndividual {
-  newDur: NewDur;
-  templatesObj: TemplatesObj;
-  individualObj?: IndividualObject;
-  displayState: string;
-  battery: BatteryObject;
-  individualObjs: IndividualObject[];
-}
-
 export const individualRightTopElement = (
   main: CardMainContext,
   config: FlowCardPlusConfig,
-  { individualObj, templatesObj, displayState, newDur, battery, individualObjs }: TopIndividual
+  {
+    slot,
+    animate,
+    hasBottomRow,
+  }: { slot: IndividualSlot | undefined; animate: boolean; hasBottomRow: boolean }
 ) => {
-  if (!individualObj) {
+  if (!slot) {
     return spacer;
   }
+  const individualObj = slot.node;
   const disableEntityClick = !config.clickable_entities;
-
-  const indexOfIndividual = config?.entities?.individual?.findIndex(
-    (e) => e.entity === individualObj.entity
-  );
-  if (indexOfIndividual === -1 || indexOfIndividual === undefined) {
-    return spacer;
-  }
-
-  const flowDuration = newDur.individual[indexOfIndividual];
-  const duration = flowDuration === undefined || flowDuration === 0 ? 1.66 : flowDuration;
-
-  const hasBottomRow = !!battery?.has || checkHasBottomIndividual(individualObjs);
 
   return html`<div class="circle-container individual-top individual-right individual-right-top">
     <span class="label">${individualObj.name}</span>
@@ -72,15 +45,7 @@ export const individualRightTopElement = (
       }}
     >
       <ha-ripple .disabled=${disableEntityClick}></ha-ripple>
-      ${individualSecondarySpan(
-        main.hass,
-        main,
-        config,
-        templatesObj,
-        individualObj,
-        indexOfIndividual,
-        "right-top"
-      )}
+      ${individualSecondarySpan(main, individualObj, "right-top")}
       ${
         individualObj.icon !== " "
           ? html` <ha-icon id="individual-right-top-icon" .icon=${individualObj.icon}></ha-icon>`
@@ -97,13 +62,13 @@ export const individualRightTopElement = (
                       .icon=${individualObj.invertAnimation ? "mdi:arrow-down" : "mdi:arrow-up"}
                     ></ha-icon>`
                   : nothing
-              }${displayState}
+              }${individualObj.displayState}
             </span>`
           : nothing
       }
     </div>
     ${
-      showLine(config, individualObj.state ?? 0) && !config.entities.home?.hide
+      slot.flow.visible
         ? html`
             <div class="right-individual-flow-container">
               <svg
@@ -114,22 +79,19 @@ export const individualRightTopElement = (
               >
                 <path
                   id="individual-top-right-home"
-                  class="${styleLine(individualObj.state ?? 0, config)}"
+                  class="${slot.flow.lineClass}"
                   d="M${hasBottomRow ? 45 : 47},0 v15 c0,${
                     hasBottomRow ? "30 -10,30 -30,30" : "35 -10,35 -30,35"
                   } h-20"
                   vector-effect="non-scaling-stroke"
                 />
                 ${
-                  checkShouldShowDots(config) &&
+                  animate &&
                   individualObj.state &&
                   individualObj.state >= (individualObj.displayZeroTolerance ?? 0)
                     ? svg`<circle r="1" class="individual-top" vector-effect="non-scaling-stroke">
                       <animateMotion
-                        dur="${computeIndividualFlowRate(
-                          individualObj?.field?.calculate_flow_rate,
-                          duration
-                        )}s"
+                        dur="${slot.flow.durationSeconds}s"
                         repeatCount="indefinite"
                         calcMode="paced"
                         keyPoints="${individualObj.invertAnimation ? "0;1" : "1;0"}"

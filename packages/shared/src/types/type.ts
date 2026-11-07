@@ -1,4 +1,4 @@
-import { type ActionConfig, type HomeAssistant } from "custom-card-helpers";
+import { type ActionConfig } from "custom-card-helpers";
 import { type TemplateResult } from "lit";
 
 export type ActionConfigSet = {
@@ -8,7 +8,6 @@ export type ActionConfigSet = {
 };
 
 export interface CardMainContext {
-  hass: HomeAssistant;
   openDetails: (
     event: { stopPropagation: () => void; key?: string; target: HTMLElement },
     config?: ActionConfig | ActionConfigSet,
@@ -106,36 +105,6 @@ export type TemplatesObj = {
   nonFossilFuelSecondary: string | undefined;
 };
 
-export type HomeSources = {
-  battery: {
-    value: number;
-    color: string;
-  };
-  solar: {
-    value: number;
-    color: string;
-  };
-  grid: {
-    value: number;
-    color: string;
-  };
-  gridNonFossil: {
-    value: number;
-    color: string;
-  };
-};
-
-export type NewDur = {
-  batteryGrid: number;
-  batteryToHome: number;
-  gridToHome: number;
-  solarToBattery: number;
-  solarToGrid: number;
-  solarToHome: number;
-  individual: number[];
-  nonFossil: number;
-};
-
 export type ColorValue = string | number[];
 
 type CircleColorType = "color_dynamically" | "production" | "consumption" | "no_color";
@@ -152,6 +121,11 @@ export type SecondaryInfoObject = ActionConfigSet & {
   unit?: string;
   unit_white_space?: boolean;
   accept_negative?: boolean;
+  /** The formatted state. */
+  text: string;
+  /** The rendered secondary-info template, when one is configured. */
+  templateResult: string | undefined;
+  show: boolean;
 };
 
 export type GridObject = ActionConfigSet & {
@@ -164,6 +138,7 @@ export type GridObject = ActionConfigSet & {
     toBattery: NodeState;
     toHome: NodeState;
   };
+  display: { fromGrid: string; toGrid: string };
   powerOutage: {
     has: boolean;
     isOutage: boolean;
@@ -196,6 +171,8 @@ export type SolarObject = ActionConfigSet & {
     toGrid: NodeState;
     toBattery: NodeState;
   };
+  /** The formatted production, or undefined when it is hidden. */
+  display: string | undefined;
   icon: string;
   name: string;
   secondary: SecondaryInfoObject;
@@ -203,8 +180,7 @@ export type SolarObject = ActionConfigSet & {
 
 export type BatteryObject = ActionConfigSet & {
   entity: string | ComboEntity | undefined;
-  /** Truthy when a battery entity is configured; may be the configured entity id. */
-  has: boolean | string;
+  has: boolean;
   mainEntity: string | undefined;
   name: string;
   icon: string;
@@ -220,6 +196,7 @@ export type BatteryObject = ActionConfigSet & {
     toGrid: NodeState;
     toHome: NodeState;
   };
+  display: { toBattery: string; fromBattery: string; stateOfCharge: string };
   color: {
     fromBattery?: ColorValue;
     toBattery?: ColorValue;
@@ -246,10 +223,34 @@ export type NonFossilObject = ActionConfigSet & {
   state: {
     power: NodeState;
   };
+  display: string;
   color?: ColorValue;
   color_value?: boolean;
   secondary: SecondaryInfoObject & {
     color_value?: SecondaryInfoType["color_value"];
+  };
+};
+
+export type IndividualObject = {
+  field: IndividualDeviceType | undefined;
+  entity: string;
+  has: boolean;
+  state: number | null;
+  displayZero: boolean;
+  displayZeroTolerance: number;
+  icon: string;
+  name: string;
+  color: string | null;
+  invertAnimation: boolean;
+  showDirection: boolean;
+  /** The formatted state. */
+  displayState: string;
+  secondary: ActionConfigSet & {
+    entity: string | undefined;
+    icon: string | undefined;
+    text: string | undefined;
+    templateResult: string | undefined;
+    show: boolean;
   };
 };
 

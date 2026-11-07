@@ -2,10 +2,8 @@ import {
   type BatteryObject,
   type CardMainContext,
   type ComboEntity,
-  type ConfigEntities,
   type FlowCardPlusConfig,
 } from "@flixlix-cards/shared/types";
-import { displayValue } from "@flixlix-cards/shared/utils/display-value";
 import { nonEmpty } from "@flixlix-cards/shared/utils/utils";
 import { html, nothing } from "lit";
 
@@ -15,14 +13,9 @@ const batteryEntityId = (battery: BatteryObject, direction: keyof ComboEntity) =
 export const batteryElement = (
   main: CardMainContext,
   config: FlowCardPlusConfig,
-  {
-    battery,
-    entities,
-  }: {
-    battery: BatteryObject;
-    entities: ConfigEntities;
-  }
+  battery: BatteryObject
 ) => {
+  const { entities } = config;
   const disableEntityClick = !config.clickable_entities;
   const circleTarget = () =>
     nonEmpty(entities.battery?.state_of_charge) ?? batteryEntityId(battery, "production");
@@ -80,12 +73,7 @@ export const batteryElement = (
               }}
               id="battery-state-of-charge-text"
             >
-              ${displayValue(main.hass, config, battery.state_of_charge.state, {
-                unit: battery.state_of_charge.unit,
-                unitWhiteSpace: battery.state_of_charge.unit_white_space,
-                decimals: battery.state_of_charge.decimals,
-                accept_negative: true,
-              })}
+              ${battery.display.stateOfCharge}
             </span>`
           : nothing
       }
@@ -153,7 +141,7 @@ export const batteryElement = (
               }}
             >
               <ha-icon class="small" .icon=${"mdi:arrow-down"}></ha-icon>
-              ${displayValue(main.hass, config, battery.state.toBattery, {})}</span
+              ${battery.display.toBattery}</span
             >`
           : nothing
       }
@@ -194,7 +182,7 @@ export const batteryElement = (
               }}
             >
               <ha-icon class="small" .icon=${"mdi:arrow-up"}></ha-icon>
-              ${displayValue(main.hass, config, battery.state.fromBattery, {})}</span
+              ${battery.display.fromBattery}</span
             >`
           : nothing
       }

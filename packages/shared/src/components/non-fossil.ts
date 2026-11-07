@@ -1,36 +1,19 @@
+import { type Flow } from "@flixlix-cards/shared/card-state";
 import { spacer } from "@flixlix-cards/shared/components/spacer";
-import { type FossilEnergyConsumption } from "@flixlix-cards/shared/states/utils/energy-period";
 import {
   type CardMainContext,
-  type ConfigEntities,
   type FlowCardPlusConfig,
-  type GridObject,
   type NonFossilObject,
-  type NewDur,
-  type TemplatesObj,
 } from "@flixlix-cards/shared/types";
-import { checkShouldShowDots } from "@flixlix-cards/shared/utils/check-should-show-dots";
-import { computeIndividualFlowRate } from "@flixlix-cards/shared/utils/compute-flow-rate";
-import { displayNonFossilState } from "@flixlix-cards/shared/utils/display-non-fossil-state";
-import { showLine } from "@flixlix-cards/shared/utils/show-line";
-import { styleLine } from "@flixlix-cards/shared/utils/style-line";
 import { html, nothing, svg, type TemplateResult } from "lit";
 import { generalSecondarySpan } from "./spans/general-secondary-span";
-
-interface NonFossil {
-  newDur: NewDur;
-  templatesObj: TemplatesObj;
-  entities: ConfigEntities;
-  nonFossil: NonFossilObject;
-  grid: GridObject;
-  fossilEnergyConsumption?: FossilEnergyConsumption;
-}
 
 export const nonFossilElement = (
   main: CardMainContext,
   config: FlowCardPlusConfig,
-  { nonFossil, entities, templatesObj, grid, newDur, fossilEnergyConsumption }: NonFossil
+  { nonFossil, flow, animate }: { nonFossil: NonFossilObject; flow: Flow; animate: boolean }
 ): TemplateResult => {
+  const { entities } = config;
   const disableEntityClick = !config.clickable_entities;
   if (!nonFossil.hasPercentage) {
     return spacer;
@@ -78,7 +61,7 @@ export const nonFossilElement = (
       }}
     >
       <ha-ripple .disabled=${disableEntityClick}></ha-ripple>
-      ${generalSecondarySpan(main.hass, main, config, templatesObj, nonFossil, "nonFossilFuel")}
+      ${generalSecondarySpan(main, nonFossil.secondary, "nonFossilFuel")}
       ${
         nonFossil.icon !== " "
           ? html` <ha-icon id="low-carbon-icon" .icon=${nonFossil.icon}></ha-icon>`
@@ -88,37 +71,20 @@ export const nonFossilElement = (
         entities.fossil_fuel_percentage?.display_zero_state !== false ||
         (nonFossil.state.power ?? 0) >
           (entities.fossil_fuel_percentage?.display_zero_tolerance ?? 0)
-          ? html`
-              <span class="low-carbon"
-                >${displayNonFossilState(
-                  main.hass,
-                  config,
-                  nonFossil.entity,
-                  grid.state.fromGrid ?? 0,
-                  fossilEnergyConsumption
-                )}</span
-              >
-            `
+          ? html` <span class="low-carbon">${nonFossil.display}</span> `
           : nothing
       }
     </div>
     ${
-      showLine(config, nonFossil.state.power ?? 0)
+      flow.visible
         ? html`
             <svg width="80" height="30">
-              <path
-                d="M40 -10 v40"
-                class="low-carbon ${styleLine(nonFossil.state.power ?? 0, config)}"
-                id="low-carbon"
-              />
+              <path d="M40 -10 v40" class="low-carbon ${flow.lineClass}" id="low-carbon" />
               ${
-                checkShouldShowDots(config) && nonFossil.has && (nonFossil.state.power ?? 0) > 0
+                animate && nonFossil.has && (nonFossil.state.power ?? 0) > 0
                   ? svg`<circle r="1.75" class="low-carbon" vector-effect="non-scaling-stroke">
                     <animateMotion
-                      dur="${computeIndividualFlowRate(
-                        entities.fossil_fuel_percentage?.calculate_flow_rate,
-                        newDur.nonFossil
-                      )}s"
+                      dur="${flow.durationSeconds}s"
                       repeatCount="indefinite"
                       calcMode="paced"
                     >

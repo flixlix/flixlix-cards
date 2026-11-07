@@ -1,48 +1,25 @@
-import { type FlowCardPlusConfig } from "@flixlix-cards/shared/types";
-import { checkShouldShowDots } from "@flixlix-cards/shared/utils/check-should-show-dots";
-import {
-  checkHasBottomIndividual,
-  checkHasRightIndividual,
-} from "@flixlix-cards/shared/utils/compute-individual-position";
-import { showLine } from "@flixlix-cards/shared/utils/show-line";
-import { styleLine } from "@flixlix-cards/shared/utils/style-line";
 import { html, nothing, svg } from "lit";
 import { classMap } from "lit/directives/class-map.js";
 import { type Flows } from "./index";
 
-const solarToHomeDot = (
-  config: FlowCardPlusConfig,
-  solar: Flows["solar"],
-  newDur: Flows["newDur"]
-) => {
-  if (!checkShouldShowDots(config) || !solar.state.toHome) {
+const solarToHomeDot = (animate: boolean, solar: Flows["solar"], flows: Flows["flows"]) => {
+  if (!animate || !solar.state.toHome) {
     return nothing;
   }
 
   return svg`<circle r="1" class="solar" vector-effect="non-scaling-stroke">
-      <animateMotion dur="${newDur.solarToHome}s" repeatCount="indefinite" calcMode="paced">
+      <animateMotion dur="${flows.solarToHome.durationSeconds}s" repeatCount="indefinite" calcMode="paced">
         <mpath xlink:href="#solar" />
       </animateMotion>
     </circle>`;
 };
 
-export const flowSolarToHome = (
-  config: FlowCardPlusConfig,
-  { battery, grid, individual, solar, newDur }: Flows
-) => {
-  const shouldShow =
-    solar.has && showLine(config, solar.state.toHome ?? 0) && !config.entities.home?.hide;
-  if (!shouldShow) {
+export const flowSolarToHome = ({ battery, grid, solar, lineClasses, animate, flows }: Flows) => {
+  if (!flows.solarToHome.visible) {
     return nothing;
   }
 
-  return html`<div
-    class="lines ${classMap({
-      high: battery.has || checkHasBottomIndividual(individual),
-      "individual1-individual2": !battery.has && individual.every((i) => i?.has),
-      "multi-individual": checkHasRightIndividual(individual),
-    })}"
-  >
+  return html`<div class="lines ${classMap(lineClasses)}">
     <svg
       viewBox="0 0 100 100"
       xmlns="http://www.w3.org/2000/svg"
@@ -51,13 +28,13 @@ export const flowSolarToHome = (
     >
       <path
         id="solar"
-        class="solar ${styleLine(solar.state.toHome ?? 0, config)}"
+        class="solar ${flows.solarToHome.lineClass}"
         d="M${battery.has ? 55 : 53},0 v${grid.has ? 15 : 17} c0,${
           battery.has ? "30 10,30 30,30" : "35 10,35 30,35"
         } h25"
         vector-effect="non-scaling-stroke"
       ></path>
-      ${solarToHomeDot(config, solar, newDur)}
+      ${solarToHomeDot(animate, solar, flows)}
     </svg>
   </div>`;
 };

@@ -1,44 +1,19 @@
-import { type IndividualObject } from "@flixlix-cards/shared/states/raw/individual/get-individual-object";
-import {
-  type CardMainContext,
-  type FlowCardPlusConfig,
-  type NewDur,
-  type TemplatesObj,
-} from "@flixlix-cards/shared/types";
-import { checkShouldShowDots } from "@flixlix-cards/shared/utils/check-should-show-dots";
-import { computeIndividualFlowRate } from "@flixlix-cards/shared/utils/compute-flow-rate";
-import { showLine } from "@flixlix-cards/shared/utils/show-line";
-import { styleLine } from "@flixlix-cards/shared/utils/style-line";
+import { type IndividualSlot } from "@flixlix-cards/shared/card-state";
+import { type CardMainContext, type FlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { html, nothing, svg } from "lit";
 import { spacer } from "./spacer";
 import { individualSecondarySpan } from "./spans/individual-secondary-span";
 
-interface TopIndividual {
-  newDur: NewDur;
-  templatesObj: TemplatesObj;
-  individualObj?: IndividualObject;
-  displayState: string;
-}
-
 export const individualRightBottomElement = (
   main: CardMainContext,
   config: FlowCardPlusConfig,
-  { individualObj, templatesObj, displayState, newDur }: TopIndividual
+  { slot, animate }: { slot: IndividualSlot | undefined; animate: boolean }
 ) => {
-  if (!individualObj) {
+  if (!slot) {
     return spacer;
   }
+  const individualObj = slot.node;
   const disableEntityClick = !config.clickable_entities;
-
-  const indexOfIndividual = config?.entities?.individual?.findIndex(
-    (e) => e.entity === individualObj.entity
-  );
-  if (indexOfIndividual === -1 || indexOfIndividual === undefined) {
-    return spacer;
-  }
-
-  const flowDuration = newDur.individual[indexOfIndividual];
-  const duration = flowDuration === undefined || flowDuration === 0 ? 1.66 : flowDuration;
 
   return html`<div
     class="circle-container individual-bottom individual-right individual-right-bottom"
@@ -67,15 +42,7 @@ export const individualRightBottomElement = (
       }}
     >
       <ha-ripple .disabled=${disableEntityClick}></ha-ripple>
-      ${individualSecondarySpan(
-        main.hass,
-        main,
-        config,
-        templatesObj,
-        individualObj,
-        indexOfIndividual,
-        "right-bottom"
-      )}
+      ${individualSecondarySpan(main, individualObj, "right-bottom")}
       ${
         individualObj.icon !== " "
           ? html` <ha-icon id="individual-right-bottom-icon" .icon=${individualObj.icon}></ha-icon>`
@@ -92,14 +59,14 @@ export const individualRightBottomElement = (
                       .icon=${individualObj.invertAnimation ? "mdi:arrow-down" : "mdi:arrow-up"}
                     ></ha-icon>`
                   : nothing
-              }${displayState}
+              }${individualObj.displayState}
             </span>`
           : nothing
       }
     </div>
     <span class="label">${individualObj.name}</span>
     ${
-      showLine(config, individualObj.state ?? 0) && !config.entities.home?.hide
+      slot.flow.visible
         ? html`
             <div class="right-individual-flow-container">
               <svg
@@ -110,20 +77,17 @@ export const individualRightBottomElement = (
               >
                 <path
                   id="individual-bottom-right-home"
-                  class="${styleLine(individualObj.state ?? 0, config)}"
+                  class="${slot.flow.lineClass}"
                   d="M45,100 v-15 c0,-30 -10,-30 -30,-30 h-20"
                   vector-effect="non-scaling-stroke"
                 />
                 ${
-                  checkShouldShowDots(config) &&
+                  animate &&
                   individualObj.state &&
                   individualObj.state >= (individualObj.displayZeroTolerance ?? 0)
                     ? svg`<circle r="1" class="individual-bottom" vector-effect="non-scaling-stroke">
                       <animateMotion
-                        dur="${computeIndividualFlowRate(
-                          individualObj?.field?.calculate_flow_rate,
-                          duration
-                        )}s"
+                        dur="${slot.flow.durationSeconds}s"
                         repeatCount="indefinite"
                         calcMode="paced"
                         keyPoints="${individualObj.invertAnimation ? "0;1" : "1;0"}"

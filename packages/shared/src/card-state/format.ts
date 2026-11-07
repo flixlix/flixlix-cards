@@ -1,39 +1,36 @@
 import { type FlowCardPlusConfig } from "@flixlix-cards/shared/types";
-import { isEnergyCard } from "@flixlix-cards/shared/utils/is-energy-card";
+import { defaultValues } from "@flixlix-cards/shared/utils/get-default-config";
+import { isNumberValue, nonEmpty, round } from "@flixlix-cards/shared/utils/utils";
 import { type HomeAssistant, formatNumber } from "custom-card-helpers";
-import { defaultValues } from "./get-default-config";
-import { isNumberValue, nonEmpty, round } from "./utils";
+import { type UnitFamily } from "./types";
 
-/**
- *
- * @param hass The Home Assistant instance
- * @param config The Power Flow Card Plus configuration
- * @param value The value to display
- * @param options Different options to display the value
- * @returns value with unit, localized and rounded to the correct number of decimals
- */
-export const displayValue = (
+export type Formatter = (value: number | string | null, options?: FormatOptions) => string;
+
+type FormatOptions = {
+  unit?: string;
+  unitWhiteSpace?: boolean;
+  decimals?: number;
+  accept_negative?: boolean;
+};
+
+/** Formats a value localized, rounded and scaled to k/M units of the reading's unit family. */
+export const formatter =
+  (hass: HomeAssistant, config: FlowCardPlusConfig, family: UnitFamily): Formatter =>
+  (value, options = {}) =>
+    displayValue(hass, config, family, value, options);
+
+const displayValue = (
   hass: HomeAssistant,
   config: FlowCardPlusConfig,
+  family: UnitFamily,
   value: number | string | null,
-  {
-    unit,
-    unitWhiteSpace,
-    decimals,
-    accept_negative,
-  }: {
-    unit?: string;
-    unitWhiteSpace?: boolean;
-    decimals?: number;
-    accept_negative?: boolean;
-  }
+  { unit, unitWhiteSpace, decimals, accept_negative }: FormatOptions
 ): string => {
   const thinSpace = `\u2009`;
   const whiteSpace = unitWhiteSpace === false ? "" : thinSpace;
-  const energyCard = isEnergyCard(config);
-  const baseUnit = energyCard ? "Wh" : "W";
-  const kiloUnit = energyCard ? "kWh" : "kW";
-  const megaUnit = energyCard ? "MWh" : "MW";
+  const baseUnit = family === "energy" ? "Wh" : "W";
+  const kiloUnit = `k${baseUnit}`;
+  const megaUnit = `M${baseUnit}`;
 
   if (value === null || value === undefined || value === "") {
     return `0${whiteSpace}${unit ?? baseUnit}`;

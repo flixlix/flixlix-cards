@@ -1,12 +1,9 @@
 import {
   type CardMainContext,
   type ComboEntity,
-  type ConfigEntities,
   type FlowCardPlusConfig,
   type GridObject,
-  type TemplatesObj,
 } from "@flixlix-cards/shared/types";
-import { displayValue } from "@flixlix-cards/shared/utils/display-value";
 import { html, nothing } from "lit";
 import { generalSecondarySpan } from "./spans/general-secondary-span";
 
@@ -16,12 +13,9 @@ const gridEntityId = (grid: GridObject, direction: keyof ComboEntity) =>
 export const gridElement = (
   main: CardMainContext,
   config: FlowCardPlusConfig,
-  {
-    entities,
-    grid,
-    templatesObj,
-  }: { entities: ConfigEntities; grid: GridObject; templatesObj: TemplatesObj }
+  grid: GridObject
 ) => {
+  const { entities } = config;
   const disableEntityClick = !config.clickable_entities;
   const circleTarget = () => {
     const outageTarget = grid.powerOutage.entityGenerator ?? entities.grid?.power_outage?.entity;
@@ -58,7 +52,7 @@ export const gridElement = (
       }}
     >
       <ha-ripple .disabled=${disableEntityClick}></ha-ripple>
-      ${generalSecondarySpan(main.hass, main, config, templatesObj, grid, "grid")}
+      ${generalSecondarySpan(main, grid.secondary, "grid")}
       ${grid.icon !== " " ? html` <ha-icon id="grid-icon" .icon=${grid.icon}></ha-icon>` : nothing}
       ${
         (entities.grid?.display_state === "two_way" ||
@@ -98,7 +92,7 @@ export const gridElement = (
             >
               <ha-icon class="small" .icon=${"mdi:arrow-left"}></ha-icon>
 
-              ${displayValue(main.hass, config, grid.state.toGrid, {})}
+              ${grid.display.toGrid}
             </span>`
           : nothing
       }
@@ -139,7 +133,7 @@ export const gridElement = (
               }}
             >
               <ha-icon class="small" .icon=${"mdi:arrow-right"}></ha-icon>
-              ${displayValue(main.hass, config, grid.state.fromGrid, {})}
+              ${grid.display.fromGrid}
             </span>`
           : nothing
       }

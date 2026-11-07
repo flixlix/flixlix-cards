@@ -40,44 +40,20 @@ function makeHass(states: Record<string, string> = {}): HomeAssistant {
   return hass as HomeAssistant;
 }
 
-function makeCard(config: EnergyFlowCardPlusConfig, hass: ReturnType<typeof makeHass>) {
+const thinSpace = "\u2009";
+
+/** Renders the card and waits for its energy period data to load. */
+async function renderCard(config: EnergyFlowCardPlusConfig, hass: HomeAssistant) {
   const card = new EnergyFlowCardPlus();
   card.hass = hass;
   card.setConfig(config);
-  card.connectedCallback();
-  return card as unknown as {
-    render: () => unknown;
-    _computeRenderData: () => {
-      grid: {
-        has: boolean;
-        state: {
-          fromGrid: number | null;
-          toGrid: number | null;
-          toBattery: number | null;
-          toHome: number | null;
-        };
-      };
-      solar: {
-        has: boolean;
-        state: {
-          total: number | null;
-          toHome: number | null;
-          toGrid: number | null;
-          toBattery: number | null;
-        };
-      };
-      battery: {
-        has: boolean | string;
-        state: {
-          fromBattery: number | null;
-          toBattery: number | null;
-          toGrid: number | null;
-          toHome: number | null;
-        };
-      };
-      individualObjs: Array<{ has: boolean; state: number | null }>;
-    };
-  };
+  document.body.append(card);
+  await vi.waitFor(() => {
+    expect(card.shadowRoot?.querySelector("#energy-flow-card-plus")).not.toBeNull();
+  });
+  const root = card.shadowRoot!;
+  const text = (selector: string) => root.querySelector(selector)?.textContent?.trim();
+  return { root, text };
 }
 
 describe("render", () => {
@@ -130,75 +106,49 @@ const readingHassStates = (config: EnergyFlowCardPlusConfig): EnergyFlowCardPlus
   energy_date_selection: false,
 });
 
-describe("_computeRenderData (energy card)", () => {
-  test("case 1: basic grid + solar split with known totals", () => {
-    // energy_date_selection: false → reads directly from hass.states (no growthMap needed)
-    const config = readingHassStates({
-      type: "custom:energy-flow-card-plus",
-      entities: {
-        grid: { entity: "sensor.grid_energy" },
-        solar: { entity: "sensor.solar_energy" },
-      },
-    } as EnergyFlowCardPlusConfig);
-    const hass = makeHass({
-      "sensor.grid_energy": "300",
-      "sensor.solar_energy": "700",
-    });
-    const card = makeCard(config, hass);
-    const data = card._computeRenderData();
+describe("rendered values", () => {
+  test("grid and solar energy add up on the home", async () => {
+    const { text } = await renderCard(
+      readingHassStates({
+        type: "custom:energy-flow-card-plus",
+        entities: {
+          grid: { entity: "sensor.grid_energy" },
+          solar: { entity: "sensor.solar_energy" },
+        },
+      } as EnergyFlowCardPlusConfig),
+      makeHass({ "sensor.grid_energy": "300", "sensor.solar_energy": "700" })
+    );
 
-    // Grid string entity → fromGrid uses getEnergyEntityStateLocal(entity), toGrid = 0
-    expect(data.grid.state.fromGrid).toBe(300);
-    expect(data.grid.state.toGrid).toBe(0);
-    // Solar total
-    expect(data.solar.state.total).toBe(700);
-    // Solar covers home: toHome = total - toGrid - toBattery = 700 - 0 - 0 = 700
-    expect(data.solar.state.toHome).toBe(700);
-    // Grid toHome = max(fromGrid - toBattery, 0) = max(300 - 0, 0) = 300
-    expect(data.grid.state.toHome).toBe(300);
+    expect(text(".grid .consumption")).toBe(`300${thinSpace}Wh`);
+    expect(text(".solar .solar")).toBe(`700${thinSpace}Wh`);
+    expect(text("#home-circle")).toContain(`1${thinSpace}kWh`);
   });
 
-  test("case 2: tolerance zeroing via adjustZeroTolerance — grid below tolerance is zeroed", () => {
-    const config = readingHassStates({
-      type: "custom:energy-flow-card-plus",
-      entities: {
-        grid: { entity: "sensor.grid_energy", display_zero_tolerance: 10 },
-      },
-    } as EnergyFlowCardPlusConfig);
-    // 7Wh is below the 10Wh tolerance
-    const hass = makeHass({ "sensor.grid_energy": "7" });
-    const card = makeCard(config, hass);
-    const data = card._computeRenderData();
+  test("grid below its zero tolerance shows as 0", async () => {
+    const { text } = await renderCard(
+      readingHassStates({
+        type: "custom:energy-flow-card-plus",
+        entities: { grid: { entity: "sensor.grid_energy", display_zero_tolerance: 10 } },
+      } as EnergyFlowCardPlusConfig),
+      makeHass({ "sensor.grid_energy": "7" })
+    );
 
-    expect(data.grid.state.fromGrid).toBe(0);
-    // Dependency rule: fromGrid === 0 → toHome and toBattery also 0
-    expect(data.grid.state.toHome).toBe(0);
-    expect(data.grid.state.toBattery).toBe(0);
+    expect(text(".grid .consumption")).toBe(`0${thinSpace}Wh`);
   });
 
-  test("case 3: no-NaN guarantee — unavailable entity produces only numeric output", () => {
-    const config = readingHassStates({
-      type: "custom:energy-flow-card-plus",
-      entities: {
-        grid: { entity: "sensor.grid_energy" },
-        solar: { entity: "sensor.solar_energy" },
-      },
-    } as EnergyFlowCardPlusConfig);
-    // Neither entity has a numeric state; growthMap not involved (energy_date_selection: false)
-    // getEntityState returns null → getEntityStateWh returns 0
-    const hass = makeHass({
-      "sensor.grid_energy": "unavailable",
-      "sensor.solar_energy": "unavailable",
-    });
-    const card = makeCard(config, hass);
-    const data = card._computeRenderData();
+  test("unavailable entities render without NaN", async () => {
+    const { root } = await renderCard(
+      readingHassStates({
+        type: "custom:energy-flow-card-plus",
+        entities: {
+          grid: { entity: "sensor.grid_energy" },
+          solar: { entity: "sensor.solar_energy" },
+        },
+      } as EnergyFlowCardPlusConfig),
+      makeHass({ "sensor.grid_energy": "unavailable", "sensor.solar_energy": "unavailable" })
+    );
 
-    expect(Number.isNaN(data.grid.state.fromGrid)).toBe(false);
-    expect(Number.isNaN(data.grid.state.toGrid)).toBe(false);
-    expect(Number.isNaN(data.grid.state.toBattery)).toBe(false);
-    expect(Number.isNaN(data.grid.state.toHome)).toBe(false);
-    expect(Number.isNaN(data.solar.state.total)).toBe(false);
-    expect(Number.isNaN(data.solar.state.toHome)).toBe(false);
+    expect(root.innerHTML).not.toContain("NaN");
   });
 });
 

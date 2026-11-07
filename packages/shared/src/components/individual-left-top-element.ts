@@ -1,41 +1,19 @@
-import { type IndividualObject } from "@flixlix-cards/shared/states/raw/individual/get-individual-object";
-import {
-  type CardMainContext,
-  type FlowCardPlusConfig,
-  type NewDur,
-  type TemplatesObj,
-} from "@flixlix-cards/shared/types";
-import { checkShouldShowDots } from "@flixlix-cards/shared/utils/check-should-show-dots";
-import { computeIndividualFlowRate } from "@flixlix-cards/shared/utils/compute-flow-rate";
-import { showLine } from "@flixlix-cards/shared/utils/show-line";
-import { styleLine } from "@flixlix-cards/shared/utils/style-line";
+import { type IndividualSlot } from "@flixlix-cards/shared/card-state";
+import { type CardMainContext, type FlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { html, nothing, svg } from "lit";
 import { spacer } from "./spacer";
 import { individualSecondarySpan } from "./spans/individual-secondary-span";
 
-interface TopIndividual {
-  newDur: NewDur;
-  templatesObj: TemplatesObj;
-  individualObj?: IndividualObject;
-  displayState: string;
-}
-
 export const individualLeftTopElement = (
   main: CardMainContext,
   config: FlowCardPlusConfig,
-  { individualObj, templatesObj, displayState, newDur }: TopIndividual
+  { slot, animate }: { slot: IndividualSlot | undefined; animate: boolean }
 ) => {
-  if (!individualObj) {
+  if (!slot) {
     return spacer;
   }
+  const individualObj = slot.node;
   const disableEntityClick = !config.clickable_entities;
-  const indexOfIndividual = config.entities.individual?.findIndex(
-    (e) => e.entity === individualObj.entity
-  );
-  if (indexOfIndividual === -1 || indexOfIndividual === undefined) {
-    return spacer;
-  }
-  const duration = newDur.individual[indexOfIndividual] ?? 0;
   return html`<div class="circle-container individual-top">
     <span class="label">${individualObj.name}</span>
     <div
@@ -62,15 +40,7 @@ export const individualLeftTopElement = (
       }}
     >
       <ha-ripple .disabled=${disableEntityClick}></ha-ripple>
-      ${individualSecondarySpan(
-        main.hass,
-        main,
-        config,
-        templatesObj,
-        individualObj,
-        indexOfIndividual,
-        "left-top"
-      )}
+      ${individualSecondarySpan(main, individualObj, "left-top")}
       ${
         individualObj.icon !== " "
           ? html` <ha-icon id="individual-left-top-icon" .icon=${individualObj.icon}></ha-icon>`
@@ -87,30 +57,23 @@ export const individualLeftTopElement = (
                       .icon=${individualObj.invertAnimation ? "mdi:arrow-down" : "mdi:arrow-up"}
                     ></ha-icon>`
                   : nothing
-              }${displayState}
+              }${individualObj.displayState}
             </span>`
           : nothing
       }
     </div>
     ${
-      showLine(config, individualObj.state ?? 0) && !config.entities.home?.hide
+      slot.flow.visible
         ? html`
             <svg width="80" height="30">
-              <path
-                d="M40 -10 v50"
-                id="individual-top"
-                class="${styleLine(individualObj.state ?? 0, config)}"
-              />
+              <path d="M40 -10 v50" id="individual-top" class="${slot.flow.lineClass}" />
               ${
-                checkShouldShowDots(config) &&
+                animate &&
                 individualObj.state &&
                 individualObj.state >= (individualObj.displayZeroTolerance ?? 0)
                   ? svg`<circle r="1.75" class="individual-top" vector-effect="non-scaling-stroke">
                     <animateMotion
-                      dur="${computeIndividualFlowRate(
-                        individualObj?.field?.calculate_flow_rate,
-                        duration
-                      )}s"
+                      dur="${slot.flow.durationSeconds}s"
                       repeatCount="indefinite"
                       calcMode="paced"
                       keyPoints="${individualObj.invertAnimation ? "0;1" : "1;0"}"

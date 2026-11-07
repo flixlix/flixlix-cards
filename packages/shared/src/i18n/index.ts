@@ -55,12 +55,15 @@ function getTranslatedString(key: string, lang: string): string | undefined {
   return typeof node === "string" ? node : undefined;
 }
 
-export function setupCustomlocalize(key: string) {
-  const lang = (nonEmpty(localStorage.getItem("selectedLanguage")) ?? "en")
-    .replace(/['"]+/g, "")
-    .replace("-", "_");
+/** Translates `key` into `language` (e.g. "pt-BR"), falling back to English and then the key. */
+export function translate(key: string, language: string) {
+  const lang = language.replace(/['"]+/g, "").replace("-", "_");
 
   return nonEmpty(getTranslatedString(key, lang)) ?? getTranslatedString(key, defaultLang) ?? key;
+}
+
+export function setupCustomlocalize(key: string) {
+  return translate(key, nonEmpty(localStorage.getItem("selectedLanguage")) ?? defaultLang);
 }
 
 export default setupCustomlocalize;

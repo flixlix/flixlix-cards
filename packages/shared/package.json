@@ -5,6 +5,7 @@
   "license": "MIT",
   "type": "module",
   "exports": {
+    "./card-state": "./src/card-state/index.ts",
     "./i18n": "./src/i18n/index.ts",
     "./style": "./src/style/index.ts",
     "./types": "./src/types/index.ts",

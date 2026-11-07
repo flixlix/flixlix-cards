@@ -1,59 +1,17 @@
-import { getEntityStateWatts } from "@flixlix-cards/shared/states/utils/get-entity-state-watts";
 import {
   type CardMainContext,
-  type ConfigEntities,
   type FlowCardPlusConfig,
   type SolarObject,
-  type TemplatesObj,
 } from "@flixlix-cards/shared/types";
-import { displayValue } from "@flixlix-cards/shared/utils/display-value";
-import { isNumberValue } from "@flixlix-cards/shared/utils/utils";
 import { html, nothing } from "lit";
 import { generalSecondarySpan } from "./spans/general-secondary-span";
 
 export const solarElement = (
   main: CardMainContext,
   config: FlowCardPlusConfig,
-  {
-    entities,
-    solar,
-    templatesObj,
-  }: {
-    entities: ConfigEntities;
-    solar: SolarObject;
-    templatesObj: TemplatesObj;
-  }
+  solar: SolarObject
 ) => {
   const disableEntityClick = !config.clickable_entities;
-  const templateResult = templatesObj.solarSecondary;
-  const shouldShowSecondary = () => {
-    if (templateResult) {
-      return true;
-    }
-    if (config.entities.solar?.secondary_info?.display_zero === true) {
-      return true;
-    }
-    if (!solar?.secondary?.state) {
-      return false;
-    }
-    if (!isNumberValue(solar?.secondary?.state)) {
-      return true;
-    }
-
-    const toleranceSet = config.entities.solar?.secondary_info?.display_zero_tolerance ?? 0;
-    return (
-      Number(solar.secondary.state) >= toleranceSet ||
-      config.entities.solar?.secondary_info?.accept_negative === true
-    );
-  };
-  const sumTotalConfig = entities.solar?.secondary_info?.sum_total;
-  const secondaryEntity = config.entities.solar?.secondary_info?.entity;
-  const secondarySolarStateWatts = secondaryEntity
-    ? Math.max(getEntityStateWatts(main.hass, secondaryEntity), 0)
-    : 0;
-  const bottomSolarState = sumTotalConfig
-    ? (solar.state.total ?? 0) - secondarySolarStateWatts
-    : solar.state.total;
   return html`<div class="circle-container solar">
     <span class="label">${solar.name}</span>
     <div
@@ -80,22 +38,14 @@ export const solarElement = (
       }}
     >
       <ha-ripple .disabled=${disableEntityClick}></ha-ripple>
-      ${
-        shouldShowSecondary()
-          ? generalSecondarySpan(main.hass, main, config, templatesObj, solar, "solar")
-          : nothing
-      }
+      ${generalSecondarySpan(main, solar.secondary, "solar")}
       ${
         solar.icon !== " "
           ? html` <ha-icon id="solar-icon" .icon=${solar.icon}></ha-icon>`
           : nothing
       }
       ${
-        entities.solar?.display_zero_state !== false || (bottomSolarState ?? 0) > 0
-          ? html` <span class="solar">
-              ${displayValue(main.hass, config, bottomSolarState, {})}
-            </span>`
-          : nothing
+        solar.display === undefined ? nothing : html` <span class="solar"> ${solar.display} </span>`
       }
     </div>
   </div>`;

@@ -1,48 +1,19 @@
-import { type IndividualObject } from "@flixlix-cards/shared/states/raw/individual/get-individual-object";
+import { type HomeRing } from "@flixlix-cards/shared/card-state";
+import { CIRCLE_CIRCUMFERENCE } from "@flixlix-cards/shared/const/circle";
 import {
   type CardMainContext,
-  type ConfigEntities,
   type FlowCardPlusConfig,
-  type GridObject,
   type HomeObject,
-  type NewDur,
-  type TemplatesObj,
 } from "@flixlix-cards/shared/types";
 import { html, nothing, svg } from "lit";
 import { generalSecondarySpan } from "./spans/general-secondary-span";
 
-interface Home {
-  home: HomeObject;
-  entities: ConfigEntities;
-  templatesObj: TemplatesObj;
-  grid: GridObject;
-  newDur: NewDur;
-  homeUsageToDisplay: string;
-  homeSolarCircumference: number;
-  CIRCLE_CIRCUMFERENCE: number;
-  homeBatteryCircumference: number;
-  homeNonFossilCircumference: number;
-  homeGridCircumference: number;
-  individual: IndividualObject[];
-}
-
 export const homeElement = (
   main: CardMainContext,
   config: FlowCardPlusConfig,
-  {
-    home,
-    entities,
-    templatesObj,
-    homeUsageToDisplay,
-    homeSolarCircumference,
-    CIRCLE_CIRCUMFERENCE,
-    homeBatteryCircumference,
-    homeNonFossilCircumference,
-    homeGridCircumference,
-    individual,
-  }: Home
+  { home, ring, showLabel }: { home: HomeObject; ring: HomeRing; showLabel: boolean }
 ) => {
-  const showHomeLabel = individual.filter((i) => i.has).length <= 1;
+  const { entities } = config;
   const isHomeEntityDefined = entities.home?.entity !== undefined;
   const noActionSet = new Set(["none", undefined]);
   const staticAction =
@@ -79,82 +50,54 @@ export const homeElement = (
         }}
       >
         <ha-ripple .disabled=${disableEntityClick}></ha-ripple>
-        ${generalSecondarySpan(main.hass, main, config, templatesObj, home, "home")}
+        ${generalSecondarySpan(main, home.secondary, "home")}
         ${home.icon !== " " ? html`<ha-icon id="home-icon" .icon=${home.icon}></ha-icon>` : nothing}
-        ${homeUsageToDisplay}
+        ${ring.usageText}
         <svg class="home-circle-sections">
+          <circle
+            class="solar"
+            cx="40"
+            cy="40"
+            r="38"
+            stroke-dasharray="${ring.solar} ${CIRCLE_CIRCUMFERENCE - ring.solar}"
+            shape-rendering="geometricPrecision"
+            stroke-dashoffset="-${CIRCLE_CIRCUMFERENCE - ring.solar}"
+          />
           ${
-            homeSolarCircumference !== undefined
-              ? svg`<circle
-                  class="solar"
-                  cx="40"
-                  cy="40"
-                  r="38"
-                  stroke-dasharray="${homeSolarCircumference} ${
-                    CIRCLE_CIRCUMFERENCE - homeSolarCircumference
-                  }"
-                  shape-rendering="geometricPrecision"
-                  stroke-dashoffset="-${CIRCLE_CIRCUMFERENCE - homeSolarCircumference}"
-                />`
-              : nothing
-          }
-          ${
-            homeBatteryCircumference
+            ring.battery
               ? svg`<circle
                   class="battery"
                   cx="40"
                   cy="40"
                   r="38"
-                  stroke-dasharray="${homeBatteryCircumference} ${
-                    CIRCLE_CIRCUMFERENCE - homeBatteryCircumference
-                  }"
-                  stroke-dashoffset="-${
-                    CIRCLE_CIRCUMFERENCE - homeBatteryCircumference - (homeSolarCircumference || 0)
-                  }"
-                  shape-rendering="geometricPrecision"
-                />`
-              : nothing
-          }
-          ${
-            homeNonFossilCircumference !== undefined
-              ? svg`<circle
-                  class="low-carbon"
-                  cx="40"
-                  cy="40"
-                  r="38"
-                  stroke-dasharray="${homeNonFossilCircumference} ${
-                    CIRCLE_CIRCUMFERENCE - homeNonFossilCircumference
-                  }"
-                  stroke-dashoffset="-${
-                    CIRCLE_CIRCUMFERENCE -
-                    homeNonFossilCircumference -
-                    (homeBatteryCircumference || 0) -
-                    (homeSolarCircumference || 0)
-                  }"
+                  stroke-dasharray="${ring.battery} ${CIRCLE_CIRCUMFERENCE - ring.battery}"
+                  stroke-dashoffset="-${CIRCLE_CIRCUMFERENCE - ring.battery - ring.solar}"
                   shape-rendering="geometricPrecision"
                 />`
               : nothing
           }
           <circle
+            class="low-carbon"
+            cx="40"
+            cy="40"
+            r="38"
+            stroke-dasharray="${ring.nonFossil} ${CIRCLE_CIRCUMFERENCE - ring.nonFossil}"
+            stroke-dashoffset="-${CIRCLE_CIRCUMFERENCE - ring.nonFossil - ring.battery - ring.solar}"
+            shape-rendering="geometricPrecision"
+          />
+          <circle
             class="grid"
             cx="40"
             cy="40"
             r="38"
-            stroke-dasharray="${
-              homeGridCircumference ??
-              CIRCLE_CIRCUMFERENCE - homeSolarCircumference - (homeBatteryCircumference || 0)
-            } ${
-              homeGridCircumference !== undefined
-                ? CIRCLE_CIRCUMFERENCE - homeGridCircumference
-                : homeSolarCircumference + (homeBatteryCircumference || 0)
-            }"
+            stroke-dasharray="${ring.grid} ${CIRCLE_CIRCUMFERENCE - ring.grid}"
             stroke-dashoffset="0"
             shape-rendering="geometricPrecision"
           />
         </svg>
       </div>
       ${
-        !showHomeLabel
+        !showLabel
           ? html`<span class="label"></span>`
           : html`<span class="label">${home.name}</span>`
       }

@@ -1,7 +1,5 @@
 import { css } from "lit";
 
-export { allDynamicStyles } from "./all";
-export { computeColor } from "./colors";
 export { convertColorListToHex } from "./convert-color";
 
 export const styles = css`
