@@ -121,9 +121,9 @@ function ContributingPage() {
       <Section id="repo-layout" title="2. Repository layout">
         <Prose>
           <p>
-            <code>flixlix-cards</code> is a Turborepo + pnpm monorepo. Each card is its own package
-            in <code>packages/flixlix-cards</code>. The docs site you're reading right now lives in{" "}
-            <code>apps/web</code>.
+            <code>flixlix-cards</code> is a pnpm monorepo driven by Vite+ (<code>vp run</code>).
+            Each card is its own package in <code>packages/flixlix-cards</code>. The docs site
+            you're reading right now lives in <code>apps/web</code>.
           </p>
         </Prose>
         <CodeBlock
@@ -138,10 +138,9 @@ function ContributingPage() {
 │  │  └─ energy-breakdown-card/
 │  ├─ shared/                   # shared utilities & i18n
 │  ├─ ui/                       # shadcn-style UI primitives
-│  ├─ utils/                    # tiny helpers (cn)
 │  └─ tooling/                  # bundler, lint rules, test & tsconfig presets
 ├─ pnpm-workspace.yaml
-└─ turbo.json`}
+└─ vite.config.ts             # lint, format and task config`}
         />
       </Section>
 

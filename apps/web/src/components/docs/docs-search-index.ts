@@ -633,7 +633,7 @@ const CONTRIBUTING_SECTIONS: SearchEntry[] = [
     breadcrumb: "How to contribute",
     card: "general",
     type: "section",
-    keywords: ["turborepo", "workspace"],
+    keywords: ["vite+", "vp run", "workspace"],
   },
   {
     title: "Local setup",

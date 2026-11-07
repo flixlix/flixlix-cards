@@ -22,7 +22,7 @@
     "lit": "catalog:packages"
   },
   "scripts": {
-    "clean": "rimraf dist node_modules .turbo",
+    "clean": "rimraf dist node_modules",
     "typecheck": "tsc --noEmit",
     "test": "vp test run --coverage",
     "test:watch": "vp test"

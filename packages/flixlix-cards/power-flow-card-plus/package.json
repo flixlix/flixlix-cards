@@ -26,7 +26,7 @@
   },
   "homepage": "https://github.com/flixlix/power-flow-card-plus#readme",
   "scripts": {
-    "build": "pnpm dlx rollup -c",
+    "build": "rollup -c",
     "release": "pnpm build && pnpm changeset tag",
     "clean": "rimraf dist node_modules",
     "start": "rollup -wc",

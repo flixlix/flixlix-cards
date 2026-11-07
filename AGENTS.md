@@ -4,7 +4,7 @@ Home Assistant Lovelace cards (Lit + TypeScript), pnpm monorepo, Vite+ toolchain
 
 - Cards: `packages/flixlix-cards/*`. Shared states, calculations, components and types: `packages/shared`.
 - Standards: [`CODING_STANDARDS.md`](CODING_STANDARDS.md). Contributor workflow: [`CONTRIBUTING.md`](CONTRIBUTING.md).
-- Lint/format/test config: root `vite.config.ts`. Custom rules: one file per rule in `packages/tooling/lint-rules/rules/`, each with a `<rule>.test.js` of RuleTester cases, registered in `plugin.js`.
+- Lint/format/test config and tasks: root `vite.config.ts`; workspace scripts run through `vp run` (no Turborepo). Custom rules: one file per rule in `packages/tooling/lint-rules/rules/`, each with a `<rule>.test.js` of RuleTester cases, registered in `plugin.js`.
 - Vite+ docs ship locally at `node_modules/vite-plus/docs`.
 
 ## Before handing back

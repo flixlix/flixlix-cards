@@ -141,7 +141,6 @@ export default defineConfig({
       "**/dist",
       "**/node_modules",
       ".pnpm-store",
-      ".turbo",
       "*.log",
       ".output",
       "routeTree.gen.ts",

@@ -1,6 +1,5 @@
 .DS_Store
 node_modules
-.turbo
 *.log
 .next
 dist
@@ -10,7 +9,6 @@ dist-ssr
 .cache
 server/dist
 public/dist
-.turbo
 
 
 ## editors
