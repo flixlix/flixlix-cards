@@ -115,6 +115,7 @@ export default defineConfig({
         files: ["packages/shared/src/card-state/**"],
         excludeFiles: ["**/*.test.ts"],
         rules: {
+          "flixlix/no-mutation": "error",
           "no-param-reassign": ["error", { props: true }],
           "max-lines-per-function": [
             "error",
