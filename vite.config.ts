@@ -60,6 +60,7 @@ export default defineConfig({
       "flixlix/no-index-fallback": "error",
       "flixlix/no-identity-arithmetic": "error",
       "flixlix/no-reactive-mutation": "error",
+      "flixlix/no-card-type-sniffing": "error",
       "vite-plus/prefer-vite-plus-imports": "error",
     },
     overrides: [
@@ -89,6 +90,28 @@ export default defineConfig({
           "typescript/no-unsafe-call": "off",
           "typescript/no-unsafe-argument": "off",
           "typescript/no-unsafe-return": "off",
+        },
+      },
+      {
+        // Cards render; calculations belong in shared/card-state.
+        files: ["packages/flixlix-cards/*-flow-card-plus/src/**"],
+        rules: {
+          "max-lines": ["error", { max: 450, skipBlankLines: true, skipComments: true }],
+          "max-lines-per-function": [
+            "error",
+            { max: 120, skipBlankLines: true, skipComments: true },
+          ],
+        },
+      },
+      {
+        files: ["packages/shared/src/card-state/**"],
+        excludeFiles: ["**/*.test.ts"],
+        rules: {
+          "no-param-reassign": ["error", { props: true }],
+          "max-lines-per-function": [
+            "error",
+            { max: 80, skipBlankLines: true, skipComments: true },
+          ],
         },
       },
       {
