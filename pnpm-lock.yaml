@@ -61,6 +61,10 @@ catalogs:
       specifier: ^7.4.47
       version: 7.4.47
 
+    '@playwright/test':
+      specifier: ^1.64.1
+      version: 1.65.0
+
     '@rollup/plugin-babel':
       specifier: ^7.0.0
       version: 7.0.0
@@ -161,7 +165,7 @@ importers:
         version: 2.31.0(@types/node@25.6.0)
       vite-plus:
         specifier: catalog:packages
-        version: 1.5.0(@types/node@25.6.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@25.6.0)(typescript@6.0.3))(terser@5.46.2)(typescript@6.0.3)
+        version: 1.5.0(@types/node@25.6.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@25.6.0)(typescript@6.0.3))(playwright@1.65.0)(terser@5.46.2)(typescript@6.0.3)
 
   apps/web:
     dependencies:
@@ -255,10 +259,28 @@ importers:
         version: '@voidzero-dev/vite-plus-core@1.5.0(@types/node@22.19.17)(esbuild@0.27.7)(jiti@2.7.0)(terser@5.46.2)(typescript@6.0.3)'
       vite-plus:
         specifier: catalog:packages
-        version: 1.5.0(@types/node@22.19.17)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@22.19.17)(typescript@6.0.3))(terser@5.46.2)(typescript@6.0.3)
+        version: 1.5.0(@types/node@22.19.17)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@22.19.17)(typescript@6.0.3))(playwright@1.65.0)(terser@5.46.2)(typescript@6.0.3)
       vite-tsconfig-paths:
         specifier: 'catalog:'
         version: 6.1.1(@voidzero-dev/vite-plus-core@1.5.0(@types/node@22.19.17)(esbuild@0.27.7)(jiti@2.7.0)(terser@5.46.2)(typescript@6.0.3))(typescript@6.0.3)
+
+  e2e:
+    devDependencies:
+      '@flixlix-cards/typescript-config':
+        specifier: workspace:*
+        version: link:../packages/tooling/typescript-config
+      '@playwright/test':
+        specifier: catalog:packages
+        version: 1.65.0
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.19.17
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vite-plus:
+        specifier: catalog:packages
+        version: 1.5.0(@types/node@22.19.17)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@22.19.17)(typescript@6.0.3))(playwright@1.65.0)(terser@5.46.2)(typescript@6.0.3)
 
   packages/flixlix-cards/energy-breakdown-card:
     dependencies:
@@ -334,7 +356,7 @@ importers:
         version: 6.0.3
       vite-plus:
         specifier: catalog:packages
-        version: 1.5.0(@types/node@22.19.17)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@22.19.17)(typescript@6.0.3))(terser@5.46.2)(typescript@6.0.3)
+        version: 1.5.0(@types/node@22.19.17)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@22.19.17)(typescript@6.0.3))(playwright@1.65.0)(terser@5.46.2)(typescript@6.0.3)
       vite-tsconfig-paths:
         specifier: 'catalog:'
         version: 6.1.1(typescript@6.0.3)(vite@7.3.2(@types/node@22.19.17)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.46.2))
@@ -425,7 +447,7 @@ importers:
         version: 6.0.3
       vite-plus:
         specifier: catalog:packages
-        version: 1.5.0(@types/node@22.19.17)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@22.19.17)(typescript@6.0.3))(terser@5.46.2)(typescript@6.0.3)
+        version: 1.5.0(@types/node@22.19.17)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@22.19.17)(typescript@6.0.3))(playwright@1.65.0)(terser@5.46.2)(typescript@6.0.3)
       vite-tsconfig-paths:
         specifier: 'catalog:'
         version: 6.1.1(typescript@6.0.3)(vite@7.3.2(@types/node@22.19.17)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.46.2))
@@ -516,7 +538,7 @@ importers:
         version: 6.0.3
       vite-plus:
         specifier: catalog:packages
-        version: 1.5.0(@types/node@22.19.17)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@22.19.17)(typescript@6.0.3))(terser@5.46.2)(typescript@6.0.3)
+        version: 1.5.0(@types/node@22.19.17)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@22.19.17)(typescript@6.0.3))(playwright@1.65.0)(terser@5.46.2)(typescript@6.0.3)
       vite-tsconfig-paths:
         specifier: 'catalog:'
         version: 6.1.1(typescript@6.0.3)(vite@7.3.2(@types/node@22.19.17)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.46.2))
@@ -595,7 +617,7 @@ importers:
         version: 6.0.3
       vite-plus:
         specifier: catalog:packages
-        version: 1.5.0(@types/node@22.19.17)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@22.19.17)(typescript@6.0.3))(terser@5.46.2)(typescript@6.0.3)
+        version: 1.5.0(@types/node@22.19.17)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@22.19.17)(typescript@6.0.3))(playwright@1.65.0)(terser@5.46.2)(typescript@6.0.3)
       vite-tsconfig-paths:
         specifier: 'catalog:'
         version: 6.1.1(typescript@6.0.3)(vite@7.3.2(@types/node@22.19.17)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.46.2))
@@ -647,7 +669,7 @@ importers:
         version: 6.0.3
       vite-plus:
         specifier: catalog:packages
-        version: 1.5.0(@types/node@22.19.17)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@22.19.17)(typescript@6.0.3))(terser@5.46.2)(typescript@6.0.3)
+        version: 1.5.0(@types/node@22.19.17)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@22.19.17)(typescript@6.0.3))(playwright@1.65.0)(terser@5.46.2)(typescript@6.0.3)
 
   packages/tooling/bundler:
     dependencies:
@@ -692,7 +714,7 @@ importers:
     devDependencies:
       vite-plus:
         specifier: catalog:packages
-        version: 1.5.0(@types/node@25.6.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@25.6.0)(typescript@6.0.3))(terser@5.46.2)(typescript@6.0.3)
+        version: 1.5.0(@types/node@25.6.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@25.6.0)(typescript@6.0.3))(playwright@1.65.0)(terser@5.46.2)(typescript@6.0.3)
 
   packages/tooling/testing:
     dependencies:
@@ -707,7 +729,7 @@ importers:
         version: 28.1.0(@noble/hashes@1.8.0)
       vite-plus:
         specifier: catalog:packages
-        version: 1.5.0(@types/node@25.6.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@25.6.0)(typescript@6.0.3))(terser@5.46.2)(typescript@6.0.3)
+        version: 1.5.0(@types/node@25.6.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@25.6.0)(typescript@6.0.3))(playwright@1.65.0)(terser@5.46.2)(typescript@6.0.3)
 
   packages/tooling/typescript-config: {}
 
@@ -2331,6 +2353,11 @@ packages:
   '@oxlint/plugins@1.91.0':
     resolution: {integrity: sha512-Fh+SOBxMu7/pbSk84WG4BN6npcxxlF4jWNQJ+S4IUNyvSVeQwOVTFQMD/Dx2EqBQ1lVeCADcJ+0rzT1BKQ9cUA==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
+
+  '@playwright/test@1.65.0':
+    resolution: {integrity: sha512-iGURLGuKDLakSEl7Pgfv8h7f+XLT+V861Wfhz0zlEl5nyFuKUopdkFBPKqTllTUp06aOwPuH8iuUEb3yp3MpbQ==}
+    engines: {node: '>=20'}
+    hasBin: true
 
   '@polka/url@1.0.0-next.29':
     resolution: {integrity: sha512-wwQAWhWSuHaag8c4q/KN/vCoeOJYshAIvMQwD4GpSb3OiZklFfvAgmj0VCBBImRpuF/aFgIRzllXlVX93Jevww==}
@@ -5848,6 +5875,16 @@ packages:
     resolution: {integrity: sha512-wQ0b/W4Fr01qtpHlqSqspcj3EhBvimsdh0KlHhH8HRZnMsEa0ea2fTULOXOS9ccQr3om+GcGRk4e+isrZWV8qQ==}
     engines: {node: '>=16.20.0'}
 
+  playwright-core@1.65.0:
+    resolution: {integrity: sha512-vNSKgH6YqtN7cdT/L334zo0a+YwkrpicyrHJlWWPIm/Q+Nn2SWInil01oT0mbu96U4GgoRtCYQD9CzJQgju+lA==}
+    engines: {node: '>=20'}
+    hasBin: true
+
+  playwright@1.65.0:
+    resolution: {integrity: sha512-F3AMWcR44qMBt4kq+6Kb6mX7bjGXshktKFOPULd7reED6ZJWevjbNRqysP7q+AATE9kdPEZBibex1BYsvpVoeA==}
+    engines: {node: '>=20'}
+    hasBin: true
+
   pngjs@7.0.0:
     resolution: {integrity: sha512-LKWqWJRhstyYo9pGvgor/ivk2w94eSjE3RGVuzLGlr3NmD8bf7RcYGze1mNdEHRP6TRP6rMuDHk5t44hnTRyow==}
     engines: {node: '>=14.19.0'}
@@ -8522,6 +8559,10 @@ snapshots:
     optional: true
 
   '@oxlint/plugins@1.91.0': {}
+
+  '@playwright/test@1.65.0':
+    dependencies:
+      playwright: 1.65.0
 
   '@polka/url@1.0.0-next.29': {}
 
@@ -11857,7 +11898,7 @@ snapshots:
       - '@emnapi/core'
       - '@emnapi/runtime'
 
-  oxfmt@0.76.0(vite-plus@1.5.0(@types/node@22.19.17)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@22.19.17)(typescript@6.0.3))(terser@5.46.2)(typescript@6.0.3)):
+  oxfmt@0.76.0(vite-plus@1.5.0(@types/node@22.19.17)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@22.19.17)(typescript@6.0.3))(playwright@1.65.0)(terser@5.46.2)(typescript@6.0.3)):
     dependencies:
       tinypool: 2.2.0
     optionalDependencies:
@@ -11880,9 +11921,9 @@ snapshots:
       '@oxfmt/binding-win32-arm64-msvc': 0.76.0
       '@oxfmt/binding-win32-ia32-msvc': 0.76.0
       '@oxfmt/binding-win32-x64-msvc': 0.76.0
-      vite-plus: 1.5.0(@types/node@22.19.17)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@22.19.17)(typescript@6.0.3))(terser@5.46.2)(typescript@6.0.3)
+      vite-plus: 1.5.0(@types/node@22.19.17)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@22.19.17)(typescript@6.0.3))(playwright@1.65.0)(terser@5.46.2)(typescript@6.0.3)
 
-  oxfmt@0.76.0(vite-plus@1.5.0(@types/node@25.6.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@25.6.0)(typescript@6.0.3))(terser@5.46.2)(typescript@6.0.3)):
+  oxfmt@0.76.0(vite-plus@1.5.0(@types/node@25.6.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@25.6.0)(typescript@6.0.3))(playwright@1.65.0)(terser@5.46.2)(typescript@6.0.3)):
     dependencies:
       tinypool: 2.2.0
     optionalDependencies:
@@ -11905,7 +11946,7 @@ snapshots:
       '@oxfmt/binding-win32-arm64-msvc': 0.76.0
       '@oxfmt/binding-win32-ia32-msvc': 0.76.0
       '@oxfmt/binding-win32-x64-msvc': 0.76.0
-      vite-plus: 1.5.0(@types/node@25.6.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@25.6.0)(typescript@6.0.3))(terser@5.46.2)(typescript@6.0.3)
+      vite-plus: 1.5.0(@types/node@25.6.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@25.6.0)(typescript@6.0.3))(playwright@1.65.0)(terser@5.46.2)(typescript@6.0.3)
 
   oxlint-tsgolint@7.0.2005:
     optionalDependencies:
@@ -11916,7 +11957,7 @@ snapshots:
       '@oxlint-tsgolint/win32-arm64': 7.0.2005
       '@oxlint-tsgolint/win32-x64': 7.0.2005
 
-  oxlint@1.91.0(oxlint-tsgolint@7.0.2005)(vite-plus@1.5.0(@types/node@22.19.17)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@22.19.17)(typescript@6.0.3))(terser@5.46.2)(typescript@6.0.3)):
+  oxlint@1.91.0(oxlint-tsgolint@7.0.2005)(vite-plus@1.5.0(@types/node@22.19.17)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@22.19.17)(typescript@6.0.3))(playwright@1.65.0)(terser@5.46.2)(typescript@6.0.3)):
     optionalDependencies:
       '@oxlint/binding-android-arm-eabi': 1.91.0
       '@oxlint/binding-android-arm64': 1.91.0
@@ -11938,9 +11979,9 @@ snapshots:
       '@oxlint/binding-win32-ia32-msvc': 1.91.0
       '@oxlint/binding-win32-x64-msvc': 1.91.0
       oxlint-tsgolint: 7.0.2005
-      vite-plus: 1.5.0(@types/node@22.19.17)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@22.19.17)(typescript@6.0.3))(terser@5.46.2)(typescript@6.0.3)
+      vite-plus: 1.5.0(@types/node@22.19.17)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@22.19.17)(typescript@6.0.3))(playwright@1.65.0)(terser@5.46.2)(typescript@6.0.3)
 
-  oxlint@1.91.0(oxlint-tsgolint@7.0.2005)(vite-plus@1.5.0(@types/node@25.6.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@25.6.0)(typescript@6.0.3))(terser@5.46.2)(typescript@6.0.3)):
+  oxlint@1.91.0(oxlint-tsgolint@7.0.2005)(vite-plus@1.5.0(@types/node@25.6.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@25.6.0)(typescript@6.0.3))(playwright@1.65.0)(terser@5.46.2)(typescript@6.0.3)):
     optionalDependencies:
       '@oxlint/binding-android-arm-eabi': 1.91.0
       '@oxlint/binding-android-arm64': 1.91.0
@@ -11962,7 +12003,7 @@ snapshots:
       '@oxlint/binding-win32-ia32-msvc': 1.91.0
       '@oxlint/binding-win32-x64-msvc': 1.91.0
       oxlint-tsgolint: 7.0.2005
-      vite-plus: 1.5.0(@types/node@25.6.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@25.6.0)(typescript@6.0.3))(terser@5.46.2)(typescript@6.0.3)
+      vite-plus: 1.5.0(@types/node@25.6.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@25.6.0)(typescript@6.0.3))(playwright@1.65.0)(terser@5.46.2)(typescript@6.0.3)
 
   p-filter@2.1.0:
     dependencies:
@@ -12040,6 +12081,12 @@ snapshots:
   pify@4.0.1: {}
 
   pkce-challenge@5.0.1: {}
+
+  playwright-core@1.65.0: {}
+
+  playwright@1.65.0:
+    dependencies:
+      playwright-core: 1.65.0
 
   pngjs@7.0.0: {}
 
@@ -12793,7 +12840,7 @@ snapshots:
 
   vary@1.1.2: {}
 
-  vite-plus@1.5.0(@types/node@22.19.17)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@22.19.17)(typescript@6.0.3))(terser@5.46.2)(typescript@6.0.3):
+  vite-plus@1.5.0(@types/node@22.19.17)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@22.19.17)(typescript@6.0.3))(playwright@1.65.0)(terser@5.46.2)(typescript@6.0.3):
     dependencies:
       '@oxc-project/runtime': 0.157.0
       '@oxc-project/types': 0.157.0
@@ -12805,8 +12852,8 @@ snapshots:
       '@vitest/snapshot': 5.1.0
       '@vitest/spy': 5.1.0
       '@vitest/utils': 5.1.0
-      oxfmt: 0.76.0(vite-plus@1.5.0(@types/node@22.19.17)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@22.19.17)(typescript@6.0.3))(terser@5.46.2)(typescript@6.0.3))
-      oxlint: 1.91.0(oxlint-tsgolint@7.0.2005)(vite-plus@1.5.0(@types/node@22.19.17)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@22.19.17)(typescript@6.0.3))(terser@5.46.2)(typescript@6.0.3))
+      oxfmt: 0.76.0(vite-plus@1.5.0(@types/node@22.19.17)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@22.19.17)(typescript@6.0.3))(playwright@1.65.0)(terser@5.46.2)(typescript@6.0.3))
+      oxlint: 1.91.0(oxlint-tsgolint@7.0.2005)(vite-plus@1.5.0(@types/node@22.19.17)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@22.19.17)(typescript@6.0.3))(playwright@1.65.0)(terser@5.46.2)(typescript@6.0.3))
       oxlint-tsgolint: 7.0.2005
       vite: '@voidzero-dev/vite-plus-core@1.5.0(@types/node@22.19.17)(esbuild@0.27.7)(jiti@2.7.0)(terser@5.46.2)(typescript@6.0.3)'
       vitest: 5.1.0(@types/node@22.19.17)(@vitest/browser-preview@5.1.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0(vitest@5.1.0))(@voidzero-dev/vite-plus-core@1.5.0(@types/node@22.19.17)(esbuild@0.27.7)(jiti@2.7.0)(terser@5.46.2)(typescript@6.0.3))(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@22.19.17)(typescript@6.0.3))
@@ -12819,6 +12866,7 @@ snapshots:
       '@voidzero-dev/vite-plus-linux-x64-musl': 1.5.0
       '@voidzero-dev/vite-plus-win32-arm64-msvc': 1.5.0
       '@voidzero-dev/vite-plus-win32-x64-msvc': 1.5.0
+      playwright: 1.65.0
     transitivePeerDependencies:
       - '@arethetypeswrong/core'
       - '@astrojs/compiler-rs'
@@ -12854,7 +12902,7 @@ snapshots:
       - vue-tsc
       - yaml
 
-  vite-plus@1.5.0(@types/node@25.6.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@25.6.0)(typescript@6.0.3))(terser@5.46.2)(typescript@6.0.3):
+  vite-plus@1.5.0(@types/node@25.6.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@25.6.0)(typescript@6.0.3))(playwright@1.65.0)(terser@5.46.2)(typescript@6.0.3):
     dependencies:
       '@oxc-project/runtime': 0.157.0
       '@oxc-project/types': 0.157.0
@@ -12866,8 +12914,8 @@ snapshots:
       '@vitest/snapshot': 5.1.0
       '@vitest/spy': 5.1.0
       '@vitest/utils': 5.1.0
-      oxfmt: 0.76.0(vite-plus@1.5.0(@types/node@25.6.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@25.6.0)(typescript@6.0.3))(terser@5.46.2)(typescript@6.0.3))
-      oxlint: 1.91.0(oxlint-tsgolint@7.0.2005)(vite-plus@1.5.0(@types/node@25.6.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@25.6.0)(typescript@6.0.3))(terser@5.46.2)(typescript@6.0.3))
+      oxfmt: 0.76.0(vite-plus@1.5.0(@types/node@25.6.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@25.6.0)(typescript@6.0.3))(playwright@1.65.0)(terser@5.46.2)(typescript@6.0.3))
+      oxlint: 1.91.0(oxlint-tsgolint@7.0.2005)(vite-plus@1.5.0(@types/node@25.6.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@25.6.0)(typescript@6.0.3))(playwright@1.65.0)(terser@5.46.2)(typescript@6.0.3))
       oxlint-tsgolint: 7.0.2005
       vite: '@voidzero-dev/vite-plus-core@1.5.0(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.7.0)(terser@5.46.2)(typescript@6.0.3)'
       vitest: 5.1.0(@types/node@25.6.0)(@vitest/browser-preview@5.1.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0(vitest@5.1.0))(@voidzero-dev/vite-plus-core@1.5.0(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.7.0)(terser@5.46.2)(typescript@6.0.3))(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@25.6.0)(typescript@6.0.3))
@@ -12880,6 +12928,7 @@ snapshots:
       '@voidzero-dev/vite-plus-linux-x64-musl': 1.5.0
       '@voidzero-dev/vite-plus-win32-arm64-msvc': 1.5.0
       '@voidzero-dev/vite-plus-win32-x64-msvc': 1.5.0
+      playwright: 1.65.0
     transitivePeerDependencies:
       - '@arethetypeswrong/core'
       - '@astrojs/compiler-rs'

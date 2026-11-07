@@ -33,8 +33,7 @@
     "dev": "rollup -c --watch",
     "typecheck": "tsc --noEmit",
     "test": "vp test run --coverage",
-    "test:watch": "vp test",
-    "start:hass": "docker run --rm -p8123:8123 -v ./.hass_dev:/config homeassistant/home-assistant:beta"
+    "test:watch": "vp test"
   },
   "dependencies": {
     "@flixlix-cards/shared": "workspace:*",
