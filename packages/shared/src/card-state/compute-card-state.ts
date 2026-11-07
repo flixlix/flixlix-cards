@@ -38,51 +38,70 @@ const hasNonFossil = (input: CardStateInput, fromGrid: number | null, fossilPerc
   return fromGrid !== null && fromGrid * (1 - fossilPercentage / 100) > 0;
 };
 
+type ToleratedTotals = {
+  fromGrid: number;
+  toGrid: number;
+  solarTotal: number;
+  toBattery: number;
+  fromBattery: number;
+};
+
+const toleratedTotals = (entities: ConfigEntities, readings: ReadyReadings): ToleratedTotals => {
+  const gridTolerance = entities.grid?.display_zero_tolerance;
+  const batteryTolerance = entities.battery?.display_zero_tolerance;
+  return {
+    fromGrid: adjustZeroTolerance(readings.grid.fromGrid, gridTolerance),
+    toGrid: adjustZeroTolerance(readings.grid.toGrid, gridTolerance),
+    solarTotal: adjustZeroTolerance(readings.solar.total, entities.solar?.display_zero_tolerance),
+    toBattery: adjustZeroTolerance(readings.battery.toBattery, batteryTolerance),
+    fromBattery: adjustZeroTolerance(readings.battery.fromBattery, batteryTolerance),
+  };
+};
+
+/** Which nodes are shown, honouring display_zero. */
+const nodePresence = (
+  entities: ConfigEntities,
+  readings: ReadyReadings,
+  totals: ToleratedTotals
+): Settled["has"] => ({
+  grid:
+    entities.grid?.entity !== undefined &&
+    !(entities.grid.display_zero === false && totals.fromGrid === 0 && totals.toGrid === 0),
+  solar:
+    entities.solar?.entity !== undefined &&
+    (entities.solar.display_zero !== false || (readings.solar.total ?? 0) > 0),
+  battery:
+    hasBatteryEntity(entities.battery) &&
+    !(
+      entities.battery?.display_zero === false &&
+      totals.fromBattery === 0 &&
+      totals.toBattery === 0
+    ),
+});
+
+const splitTolerance = (entities: ConfigEntities) => ({
+  grid: entities.grid?.display_zero_tolerance ?? 0,
+  battery: entities.battery?.display_zero_tolerance ?? 0,
+  solar: entities.solar?.display_zero_tolerance ?? 0,
+});
+
 /** Applies zero tolerance and display_zero, then splits the totals into flows. */
 const settle = (input: CardStateInput, readings: ReadyReadings): Settled => {
   const { entities } = input.config;
-  const fromGrid = adjustZeroTolerance(
-    readings.grid.fromGrid,
-    entities.grid?.display_zero_tolerance
-  );
-  const toGrid = adjustZeroTolerance(readings.grid.toGrid, entities.grid?.display_zero_tolerance);
-  const solarTotal = adjustZeroTolerance(
-    readings.solar.total,
-    entities.solar?.display_zero_tolerance
-  );
-  const tolerance = entities.battery?.display_zero_tolerance;
-  const toBattery = adjustZeroTolerance(readings.battery.toBattery, tolerance);
-  const fromBattery = adjustZeroTolerance(readings.battery.fromBattery, tolerance);
-  const has = {
-    grid:
-      entities.grid?.entity !== undefined &&
-      !(entities.grid.display_zero === false && fromGrid === 0 && toGrid === 0),
-    solar:
-      entities.solar?.entity !== undefined &&
-      (entities.solar.display_zero !== false || (readings.solar.total ?? 0) > 0),
-    battery:
-      hasBatteryEntity(entities.battery) &&
-      !(entities.battery?.display_zero === false && fromBattery === 0 && toBattery === 0),
-  };
+  const totals = toleratedTotals(entities, readings);
+  const { solarTotal, toBattery, fromBattery } = totals;
+  const has = nodePresence(entities, readings, totals);
   const fossilEntity = entities.fossil_fuel_percentage?.entity;
   const fossilPercentage =
     fossilEntity === undefined ? 0 : (getEntityState(input.hass, fossilEntity) ?? 0);
   const outage = isOutage(input.hass, entities);
   const flows = split(readings.family, {
-    fromGrid,
-    toGrid,
-    solarTotal,
-    toBattery,
-    fromBattery,
+    ...totals,
     outage,
     fossilPercentage,
     solarHas: has.solar,
     batteryHas: has.battery,
-    tolerance: {
-      grid: entities.grid?.display_zero_tolerance ?? 0,
-      battery: entities.battery?.display_zero_tolerance ?? 0,
-      solar: entities.solar?.display_zero_tolerance ?? 0,
-    },
+    tolerance: splitTolerance(entities),
     generator: readings.generator ?? 0,
     nonFossilHas: hasNonFossil(input, readings.grid.fromGrid, fossilPercentage),
     fossilEnergyConsumption: readings.fossilEnergyConsumption,

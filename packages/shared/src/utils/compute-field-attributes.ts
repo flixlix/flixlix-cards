@@ -3,6 +3,20 @@ import { type HomeAssistant } from "custom-card-helpers";
 import { getEntityStateObj } from "../states/utils/get-entity-state-obj";
 import { nonEmpty } from "./utils";
 
+/** An entity attribute for a node with `use_metadata`; a combo entity tries consumption first. */
+const metadataAttribute = (
+  hass: HomeAssistant,
+  field: ConfigEntity,
+  attribute: "icon" | "friendly_name"
+): string | undefined => {
+  const attributeOf = (entity: string | undefined) =>
+    nonEmpty(getEntityStateObj(hass, entity)?.attributes?.[attribute]);
+  if (typeof field.entity === "string") {
+    return attributeOf(field.entity);
+  }
+  return attributeOf(field.entity?.consumption) ?? attributeOf(field.entity?.production);
+};
+
 export const computeFieldIcon = (
   hass: HomeAssistant,
   field: ConfigEntity | undefined,
@@ -11,19 +25,9 @@ export const computeFieldIcon = (
   if (field?.icon) {
     return field.icon;
   }
-
   if (field?.use_metadata) {
-    if (typeof field?.entity === "string") {
-      return nonEmpty(getEntityStateObj(hass, field?.entity)?.attributes?.icon) ?? fallback;
-    }
-
-    return (
-      nonEmpty(getEntityStateObj(hass, field?.entity?.consumption)?.attributes?.icon) ??
-      nonEmpty(getEntityStateObj(hass, field?.entity?.production)?.attributes?.icon) ??
-      fallback
-    );
+    return metadataAttribute(hass, field, "icon") ?? fallback;
   }
-
   return fallback;
 };
 
@@ -35,18 +39,8 @@ export const computeFieldName = (
   if (field?.name) {
     return field.name;
   }
-
   if (field?.use_metadata) {
-    if (typeof field?.entity === "string") {
-      return nonEmpty(getEntityStateObj(hass, field.entity)?.attributes?.friendly_name) ?? fallback;
-    }
-
-    return (
-      nonEmpty(getEntityStateObj(hass, field?.entity?.consumption)?.attributes?.friendly_name) ??
-      nonEmpty(getEntityStateObj(hass, field?.entity?.production)?.attributes?.friendly_name) ??
-      fallback
-    );
+    return metadataAttribute(hass, field, "friendly_name") ?? fallback;
   }
-
   return fallback;
 };

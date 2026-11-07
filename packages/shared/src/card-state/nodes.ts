@@ -3,6 +3,7 @@ import { getEntityState } from "@flixlix-cards/shared/states/utils/get-entity-st
 import { getFirstEntityName } from "@flixlix-cards/shared/states/utils/mutli-entity";
 import { computeNonFossilFromCollection } from "@flixlix-cards/shared/states/utils/energy-period";
 import {
+  type ActionConfigSet,
   type BatteryObject,
   type ConfigEntities,
   type GridObject,
@@ -83,20 +84,48 @@ const secondaryInfo = (
 const gridIconTypes = ["color_dynamically", "no_color", "production", "consumption"] as const;
 const toGridIconType = (colorIcon: unknown) => gridIconTypes.find((type) => type === colorIcon);
 
+const nodeActions = (entity: ActionConfigSet | undefined): ActionConfigSet => ({
+  tap_action: entity?.tap_action,
+  hold_action: entity?.hold_action,
+  double_tap_action: entity?.double_tap_action,
+});
+
 export const isOutage = (hass: HomeAssistant, entities: ConfigEntities): boolean => {
   const outage = entities.grid?.power_outage;
   const outageState = outage?.entity === undefined ? undefined : hass.states[outage.entity]?.state;
   return entities.grid !== undefined && outageState === (outage?.state_alert ?? "on");
 };
 
+type GridConfig = ConfigEntities["grid"];
+
+const gridPowerOutage = (grid: GridConfig, outage: boolean): GridObject["powerOutage"] => {
+  const powerOutage = grid?.power_outage;
+  return {
+    has: powerOutage?.entity !== undefined,
+    isOutage: outage,
+    icon: powerOutage?.icon_alert?.length ? powerOutage.icon_alert : "mdi:transmission-tower-off",
+    name: powerOutage?.label_alert ?? html`Power<br />Outage`,
+    entityGenerator: powerOutage?.entity_generator,
+  };
+};
+
+const gridColor = (grid: GridConfig): GridObject["color"] => ({
+  fromGrid: grid?.color?.consumption,
+  toGrid: grid?.color?.production,
+  icon_type: toGridIconType(grid?.color_icon),
+  circle_type: grid?.color_circle,
+});
+
+const gridMainEntity = (grid: GridConfig): string | undefined =>
+  typeof grid?.entity === "object"
+    ? grid.entity.consumption || grid.entity.production
+    : grid?.entity;
+
 export const gridNode = (context: NodeContext): GridObject => {
   const { input, settled, format } = context;
   const { hass, config } = input;
   const grid = config.entities.grid;
-  const outageIcon = grid?.power_outage?.icon_alert?.length
-    ? grid.power_outage.icon_alert
-    : "mdi:transmission-tower-off";
-  const icon = computeFieldIcon(hass, grid, "mdi:transmission-tower");
+  const powerOutage = gridPowerOutage(grid, settled.outage);
   return {
     entity: grid?.entity,
     has: settled.has.grid,
@@ -108,32 +137,18 @@ export const gridNode = (context: NodeContext): GridObject => {
       toHome: settled.gridToHome,
     },
     display: { fromGrid: format(settled.fromGrid), toGrid: format(settled.toGrid) },
-    powerOutage: {
-      has: grid?.power_outage?.entity !== undefined,
-      isOutage: settled.outage,
-      icon: outageIcon,
-      name: grid?.power_outage?.label_alert ?? html`Power<br />Outage`,
-      entityGenerator: grid?.power_outage?.entity_generator,
-    },
-    icon: settled.outage ? outageIcon : icon,
+    powerOutage,
+    icon: settled.outage
+      ? powerOutage.icon
+      : computeFieldIcon(hass, grid, "mdi:transmission-tower"),
     name: computeFieldName(
       hass,
       grid,
       hass.localize("ui.panel.lovelace.cards.energy.energy_distribution.grid")
     ),
-    mainEntity:
-      typeof grid?.entity === "object"
-        ? grid.entity.consumption || grid.entity.production
-        : grid?.entity,
-    color: {
-      fromGrid: grid?.color?.consumption,
-      toGrid: grid?.color?.production,
-      icon_type: toGridIconType(grid?.color_icon),
-      circle_type: grid?.color_circle,
-    },
-    tap_action: grid?.tap_action,
-    hold_action: grid?.hold_action,
-    double_tap_action: grid?.double_tap_action,
+    mainEntity: gridMainEntity(grid),
+    color: gridColor(grid),
+    ...nodeActions(grid),
     secondary: {
       ...secondaryInfo(context, grid?.secondary_info, input.templates.gridSecondary),
       color: { type: grid?.secondary_info?.color_value },
@@ -216,17 +231,19 @@ const batteryIcon = (hass: HomeAssistant, entities: ConfigEntities, soc: number 
   return soc > 16 ? "mdi:battery-low" : "mdi:battery-outline";
 };
 
+const stateOfChargeFormat = (battery: ConfigEntities["battery"]) => ({
+  unit: battery?.state_of_charge_unit ?? "%",
+  unitWhiteSpace: battery?.state_of_charge_unit_white_space ?? true,
+  decimals: battery?.state_of_charge_decimals ?? 0,
+});
+
 export const batteryNode = ({ input, settled, format }: NodeContext): BatteryObject => {
   const { hass } = input;
   const { entities } = input.config;
   const battery = entities.battery;
   const soc =
     battery?.state_of_charge === undefined ? null : getEntityState(hass, battery.state_of_charge);
-  const socFormat = {
-    unit: battery?.state_of_charge_unit ?? "%",
-    unitWhiteSpace: battery?.state_of_charge_unit_white_space ?? true,
-    decimals: battery?.state_of_charge_decimals ?? 0,
-  };
+  const socFormat = stateOfChargeFormat(battery);
   return {
     entity: battery?.entity,
     has: settled.has.battery,
@@ -254,9 +271,7 @@ export const batteryNode = ({ input, settled, format }: NodeContext): BatteryObj
       fromBattery: format(settled.fromBattery),
       stateOfCharge: format(soc, { ...socFormat, accept_negative: true }),
     },
-    tap_action: battery?.tap_action,
-    hold_action: battery?.hold_action,
-    double_tap_action: battery?.double_tap_action,
+    ...nodeActions(battery),
     color: {
       fromBattery: battery?.color?.consumption,
       toBattery: battery?.color?.production,

@@ -39,52 +39,90 @@ export type Split = {
 
 const aboveTolerance = (value: number, tolerance: number) => (value > tolerance ? value : 0);
 
+type BatteryCharge = { gridToBattery: number; batteryToGrid: number };
+
+/** Battery charging beyond what solar covers is drawn from the grid, capped at the grid import. */
+function gridChargeForSolarShortfall(input: SplitInput, shortfall: number): BatteryCharge {
+  if (!input.batteryHas) {
+    return { gridToBattery: 0, batteryToGrid: 0 };
+  }
+  if (shortfall > input.fromGrid) {
+    return {
+      gridToBattery: input.fromGrid,
+      batteryToGrid: Math.min(shortfall - input.fromGrid, 0),
+    };
+  }
+  return { gridToBattery: shortfall, batteryToGrid: 0 };
+}
+
+type SolarSplit = BatteryCharge & { solarToHome: NodeState; solarToBattery: NodeState };
+
+function solarAndBatteryCharge(input: SplitInput, solarUnset: NodeState): SolarSplit {
+  const { toGrid, solarTotal, toBattery } = input;
+  const solarToHome = input.solarHas ? solarTotal - toGrid - toBattery : solarUnset;
+  if (solarToHome !== null && solarToHome < 0) {
+    return {
+      solarToHome: 0,
+      solarToBattery: solarUnset,
+      ...gridChargeForSolarShortfall(input, Math.abs(solarToHome)),
+    };
+  }
+  if (toBattery > 0) {
+    const solarToBattery = solarTotal - (solarToHome ?? 0) - toGrid;
+    return {
+      solarToHome,
+      solarToBattery,
+      gridToBattery: toBattery - solarToBattery,
+      batteryToGrid: 0,
+    };
+  }
+  return { solarToHome, solarToBattery: solarUnset, gridToBattery: 0, batteryToGrid: 0 };
+}
+
+type BatterySplit = { solarToBattery: NodeState; batteryToGrid: number; batteryToHome: number };
+
+function batteryDischarge(
+  input: SplitInput,
+  solar: SolarSplit,
+  gridToBattery: number,
+  tolerance: number
+): BatterySplit {
+  if (!input.batteryHas) {
+    return {
+      solarToBattery: solar.solarToBattery,
+      batteryToGrid: solar.batteryToGrid,
+      batteryToHome: 0,
+    };
+  }
+  let batteryToGrid = input.toGrid;
+  let solarToBattery = solar.solarToBattery;
+  if (input.solarHas) {
+    batteryToGrid =
+      solar.batteryToGrid === 0
+        ? Math.max(0, input.toGrid - input.solarTotal - input.toBattery - gridToBattery)
+        : solar.batteryToGrid;
+    const solarBelowTolerance = input.tolerance.solar && input.tolerance.solar >= input.solarTotal;
+    solarToBattery = solarBelowTolerance ? 0 : input.toBattery - gridToBattery;
+  }
+  batteryToGrid = aboveTolerance(batteryToGrid, tolerance);
+  return { solarToBattery, batteryToGrid, batteryToHome: input.fromBattery - batteryToGrid };
+}
+
 /** Live power: solar feeds home first, then battery and grid; remaining import feeds home. */
 function splitPower(input: SplitInput): Split {
-  const { fromGrid, toGrid, solarTotal, toBattery, fromBattery, tolerance } = input;
+  const { fromGrid, toGrid, solarTotal, tolerance } = input;
   const largestGridBatteryTolerance = Math.max(tolerance.grid, tolerance.battery);
   const solarUnset: NodeState = solarTotal === 0 ? 0 : null;
-  let solarToHome = input.solarHas ? solarTotal - toGrid - toBattery : solarUnset;
-  let solarToBattery = solarUnset;
-  let solarToGrid = solarUnset;
-  let gridToBattery = 0;
-  let batteryToGrid = 0;
-  let batteryToHome = 0;
-
-  if (solarToHome !== null && solarToHome < 0) {
-    if (input.batteryHas) {
-      gridToBattery = Math.abs(solarToHome);
-      if (gridToBattery > fromGrid) {
-        batteryToGrid = Math.min(gridToBattery - fromGrid, 0);
-        gridToBattery = fromGrid;
-      }
-    }
-    solarToHome = 0;
-  } else if (toBattery > 0) {
-    solarToBattery = solarTotal - (solarToHome ?? 0) - toGrid;
-    gridToBattery = toBattery - solarToBattery;
-  }
-  gridToBattery = aboveTolerance(gridToBattery, largestGridBatteryTolerance);
-
-  if (input.batteryHas) {
-    if (input.solarHas) {
-      if (batteryToGrid === 0) {
-        batteryToGrid = Math.max(0, toGrid - solarTotal - toBattery - gridToBattery);
-      }
-      solarToBattery = toBattery - gridToBattery;
-      if (tolerance.solar && tolerance.solar >= solarTotal) {
-        solarToBattery = 0;
-      }
-    } else {
-      batteryToGrid = toGrid;
-    }
-    batteryToGrid = aboveTolerance(batteryToGrid, largestGridBatteryTolerance);
-    batteryToHome = fromBattery - batteryToGrid;
-  }
-
-  if (input.solarHas && toGrid) {
-    solarToGrid = toGrid - batteryToGrid;
-  }
+  const solar = solarAndBatteryCharge(input, solarUnset);
+  const { solarToHome } = solar;
+  const gridToBattery = aboveTolerance(solar.gridToBattery, largestGridBatteryTolerance);
+  const { solarToBattery, batteryToGrid, batteryToHome } = batteryDischarge(
+    input,
+    solar,
+    gridToBattery,
+    largestGridBatteryTolerance
+  );
+  const solarToGrid = input.solarHas && toGrid ? toGrid - batteryToGrid : solarUnset;
 
   if (input.outage) {
     const generator = Math.max(input.generator, 0);

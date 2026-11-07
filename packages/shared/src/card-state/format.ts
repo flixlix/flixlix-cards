@@ -19,6 +19,43 @@ export const formatter =
   (value, options = {}) =>
     displayValue(hass, config, family, value, options);
 
+type Scale = {
+  divisor: number;
+  unit: string;
+  decimals: number | undefined;
+  fallbackDecimals: number;
+};
+
+/** The k/M scale a reading is shown in; an explicit unit always keeps the base scale. */
+const scaleFor = (
+  config: FlowCardPlusConfig,
+  baseUnit: string,
+  value: number,
+  unit: string | undefined
+): Scale => {
+  const base = { divisor: 1, unit: baseUnit, decimals: config.base_decimals, fallbackDecimals: 0 };
+  if (unit !== undefined) {
+    return base;
+  }
+  if (value >= (config.mega_threshold ?? defaultValues.megaThreshold)) {
+    return {
+      divisor: 1000000,
+      unit: `M${baseUnit}`,
+      decimals: config.mega_decimals,
+      fallbackDecimals: 2,
+    };
+  }
+  if (value >= (config.kilo_threshold ?? defaultValues.kiloThreshold)) {
+    return {
+      divisor: 1000,
+      unit: `k${baseUnit}`,
+      decimals: config.kilo_decimals,
+      fallbackDecimals: 2,
+    };
+  }
+  return base;
+};
+
 const displayValue = (
   hass: HomeAssistant,
   config: FlowCardPlusConfig,
@@ -26,11 +63,8 @@ const displayValue = (
   value: number | string | null,
   { unit, unitWhiteSpace, decimals, accept_negative }: FormatOptions
 ): string => {
-  const thinSpace = `\u2009`;
-  const whiteSpace = unitWhiteSpace === false ? "" : thinSpace;
+  const whiteSpace = unitWhiteSpace === false ? "" : `\u2009`;
   const baseUnit = family === "energy" ? "Wh" : "W";
-  const kiloUnit = `k${baseUnit}`;
-  const megaUnit = `M${baseUnit}`;
 
   if (value === null || value === undefined || value === "") {
     return `0${whiteSpace}${unit ?? baseUnit}`;
@@ -41,28 +75,12 @@ const displayValue = (
   }
 
   const valueInNumber = Number(value);
-
-  const isKilo =
-    unit === undefined && valueInNumber >= (config.kilo_threshold ?? defaultValues.kiloThreshold);
-  const isMega =
-    unit === undefined && valueInNumber >= (config.mega_threshold ?? defaultValues.megaThreshold);
-
-  const decimalsToRound =
-    decimals ??
-    (isMega ? config.mega_decimals : isKilo ? config.kilo_decimals : config.base_decimals);
-
-  const transformValue = (v: number) => (!accept_negative ? Math.abs(v) : v);
-
-  const v = formatNumber(
-    transformValue(
-      isMega
-        ? round(valueInNumber / 1000000, decimalsToRound ?? 2)
-        : isKilo
-          ? round(valueInNumber / 1000, decimalsToRound ?? 2)
-          : round(valueInNumber, decimalsToRound ?? 0)
-    ),
-    hass.locale
+  const scale = scaleFor(config, baseUnit, valueInNumber, unit);
+  const rounded = round(
+    valueInNumber / scale.divisor,
+    decimals ?? scale.decimals ?? scale.fallbackDecimals
   );
+  const v = formatNumber(accept_negative ? rounded : Math.abs(rounded), hass.locale);
 
-  return `${v}${whiteSpace}${nonEmpty(unit) ?? (isMega ? megaUnit : isKilo ? kiloUnit : baseUnit)}`;
+  return `${v}${whiteSpace}${nonEmpty(unit) ?? scale.unit}`;
 };

@@ -245,6 +245,16 @@ describe("power distribution", () => {
     expect(nodes.nonFossil.state.power).toBeNull();
   });
 
+  test("an outage without a configured alert icon and label shows the defaults", () => {
+    const { nodes } = ready(
+      compute({ hass: hassWith({ "binary_sensor.outage": "on" }), readings: readings() })
+    );
+
+    expect(nodes.grid.icon).toBe("mdi:transmission-tower-off");
+    expect(nodes.grid.powerOutage).toMatchObject({ has: true, isOutage: true });
+    expect(nodes.grid.powerOutage.name).not.toBe("");
+  });
+
   test("bug #795/#830/#890: solar charging the battery is solar→battery, home stays grid import", () => {
     const { nodes } = ready(
       compute({
@@ -575,6 +585,45 @@ describe("display units", () => {
   test("scale to kilo and mega units", () => {
     expect(solarText(1500)).toBe(`1.5${thinSpace}kWh`);
     expect(solarText(1_500_000)).toBe(`1.5${thinSpace}MWh`);
+  });
+
+  test("fall back to the default thresholds and decimals when unset", () => {
+    const unset = config({
+      kilo_threshold: undefined,
+      mega_threshold: undefined,
+      base_decimals: undefined,
+      kilo_decimals: undefined,
+      mega_decimals: undefined,
+    });
+    const text = (total: number) =>
+      ready(compute({ config: unset, readings: readings({ family: "energy", solar: { total } }) }))
+        .nodes.solar.display;
+
+    expect(text(999.4)).toBe(`999${thinSpace}Wh`);
+    expect(text(1234)).toBe(`1.23${thinSpace}kWh`);
+    expect(text(2_345_678)).toBe(`2.35${thinSpace}MWh`);
+  });
+
+  test("an explicit unit keeps the reading unscaled", () => {
+    const { nodes } = ready(
+      compute({
+        config: config({
+          entities: {
+            grid: {
+              ...gridEntity,
+              secondary_info: {
+                entity: "sensor.meter",
+                unit_of_measurement: "L",
+                unit_white_space: false,
+              },
+            },
+          },
+        }),
+        hass: hassWith({ "sensor.meter": "-2500", "binary_sensor.outage": "off" }),
+      })
+    );
+
+    expect(nodes.grid.secondary.text).toBe("2,500L");
   });
 });
 
