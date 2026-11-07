@@ -39,6 +39,7 @@ catalogs:
     "@vitest/coverage-v8": 5.1.0
     conventional-changelog-conventionalcommits: ^4.6.3
     custom-card-helpers: ^2.0.0
+    fast-check: ^4.10.2
     home-assistant-js-websocket: ^9.8.1
     lit: ^3.3.3
     memoize-one: ^6.0.0
