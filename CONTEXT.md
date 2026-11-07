@@ -6,6 +6,11 @@
 - **Flow rate / duration**: how fast a flow's dots move, expressed as seconds per trip along the line; larger flows move faster.
 - **Readings**: the numbers a card works from. Power readings are live watts (W) from entity states; energy readings are watt-hours (Wh) accumulated over the selected energy period.
 - **Card state**: everything a card renders (nodes, flows, home ring, layout, colours), derived from its config and readings.
+- **Node totals**: what each node puts in or takes out (grid import/export, solar, battery charge/discharge, measured home, individual devices, non-fossil fraction), always finite and ≥ 0. Normalizing readings into totals is the only place signs, `invert_state`, tolerance, outage and hidden nodes are applied.
+- **Presence**: which nodes are shown, kept apart from the totals; a hidden node's totals are 0.
+- **Solver / allocation order**: turns node totals into flows by walking one ordered table of source → sink steps, the Home Assistant energy dashboard order, for both power and energy cards (see `docs/adr/0001-flow-allocation-order.md`).
+- **Balanced home**: home consumption as the sum of the flows into home; flows always balance.
+- **Unaccounted**: measured home (home entity with `override_state`) minus balanced home; 0 without a measurement (see `docs/adr/0002-balanced-home-with-unaccounted.md`).
 - **Tolerance** (`display_zero_tolerance`): readings at or below this magnitude count as zero, to hide sensor noise.
 - **display_zero**: whether a node stays visible while its reading is zero.
 - **Display zero lines**: how lines with nothing flowing are drawn: shown, hidden, greyed out or faded.
