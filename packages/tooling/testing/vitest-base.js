@@ -34,6 +34,8 @@ export default defineConfig({
     },
     // Useful for debugging web components
     include: ["src/**/*.test.ts"],
+    // Mounted in Chromium by ./vitest-browser.js instead.
+    exclude: ["src/**/*.browser.test.ts"],
     coverage: {
       provider: "v8",
       reporter: ["text-summary", "json-summary", "html"],

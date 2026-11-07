@@ -38,6 +38,7 @@ catalogs:
     "@rollup/plugin-terser": ^1.0.0
     "@rollup/plugin-typescript": ^12.3.1
     "@types/sortablejs": ^1.15.9
+    "@vitest/browser-playwright": 5.1.0
     "@vitest/coverage-v8": 5.1.0
     conventional-changelog-conventionalcommits: ^4.6.3
     custom-card-helpers: ^2.0.0
@@ -45,6 +46,8 @@ catalogs:
     home-assistant-js-websocket: ^9.8.1
     lit: ^3.3.3
     memoize-one: ^6.0.0
+    # Pinned exactly: the visual tests run in mcr.microsoft.com/playwright:v<this version>-noble.
+    playwright: 1.64.1
     rollup: ^4.68.0
     rollup-plugin-minify-html-literals: ^1.2.6
     rollup-plugin-serve: ^1.1.1

@@ -14,7 +14,8 @@
     "./states/*": "./src/states/*.ts",
     "./utils/*": "./src/utils/*.ts",
     "./const/*": "./src/const/*.ts",
-    "./ui-editor/*": "./src/ui-editor/*.ts"
+    "./ui-editor/*": "./src/ui-editor/*.ts",
+    "./testing/*": "./src/testing/*.ts"
   },
   "peerDependencies": {
     "custom-card-helpers": "catalog:packages",
@@ -32,7 +33,9 @@
     "@flixlix-cards/typescript-config": "workspace:*",
     "@types/node": "catalog:",
     "@types/sortablejs": "catalog:packages",
+    "@vitest/browser-playwright": "catalog:packages",
     "fast-check": "catalog:packages",
+    "playwright": "catalog:packages",
     "typescript": "catalog:",
     "vite-plus": "catalog:packages"
   },

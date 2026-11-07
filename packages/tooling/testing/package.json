@@ -5,12 +5,15 @@
   "license": "MIT",
   "type": "module",
   "exports": {
-    ".": "./vitest-base.js"
+    ".": "./vitest-base.js",
+    "./browser": "./vitest-browser.js"
   },
   "dependencies": {
     "@testing-library/dom": "catalog:",
+    "@vitest/browser-playwright": "catalog:packages",
     "@vitest/coverage-v8": "catalog:packages",
     "jsdom": "catalog:",
+    "playwright": "catalog:packages",
     "vite-plus": "catalog:packages"
   }
 }

@@ -62,6 +62,8 @@
     "@rollup/plugin-terser": "catalog:packages",
     "@rollup/plugin-typescript": "catalog:packages",
     "@types/node": "catalog:",
+    "@vitest/browser-playwright": "catalog:packages",
+    "playwright": "catalog:packages",
     "rollup": "catalog:packages",
     "rollup-plugin-minify-html-literals": "catalog:packages",
     "rollup-plugin-serve": "catalog:packages",
