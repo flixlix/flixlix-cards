@@ -13,7 +13,12 @@ export default defineConfig({
       perf: "error",
     },
     env: { builtin: true, browser: true },
-    ignorePatterns: ["**/dist/**", "**/node_modules/**", "apps/web/src/routeTree.gen.ts"],
+    ignorePatterns: [
+      ".claude/**",
+      "**/dist/**",
+      "**/node_modules/**",
+      "apps/web/src/routeTree.gen.ts",
+    ],
     options: {
       typeAware: true,
       typeCheck: true,
@@ -129,6 +134,7 @@ export default defineConfig({
     arrowParens: "always",
     sortPackageJson: false,
     ignorePatterns: [
+      ".claude",
       "**/dist",
       "**/node_modules",
       ".pnpm-store",
