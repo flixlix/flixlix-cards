@@ -5,7 +5,7 @@ export default defineConfig({
     plugins: ["oxc", "typescript", "unicorn", "import", "promise", "vitest"],
     jsPlugins: [
       { name: "vite-plus", specifier: "vite-plus/oxlint-plugin" },
-      "./packages/tooling/lint-rules/index.js",
+      "./packages/tooling/lint-rules/plugin.js",
     ],
     categories: {
       correctness: "error",

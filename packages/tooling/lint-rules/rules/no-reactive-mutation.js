@@ -1,6 +1,4 @@
-import { definePlugin, defineRule } from "vite-plus/lint/plugins";
-
-const INDEX_METHODS = new Set(["findIndex", "findLastIndex", "indexOf", "lastIndexOf"]);
+import { defineRule } from "vite-plus/lint/plugins";
 
 const MUTATING_METHODS = new Set([
   "push",
@@ -19,68 +17,6 @@ const MUTATING_METHODS = new Set([
 ]);
 
 const REACTIVE_DECORATORS = new Set(["state", "property"]);
-
-const noIndexFallback = defineRule({
-  meta: {
-    type: "problem",
-    docs: {
-      description: "Disallow `||`/`??` fallbacks on index lookups, which return -1 on a miss.",
-    },
-    messages: {
-      noIndexFallback:
-        "`{{method}}` returns -1 when nothing matches, so this fallback never applies to a miss. Compare with -1 explicitly.",
-    },
-  },
-  create(context) {
-    return {
-      LogicalExpression(node) {
-        if (node.operator !== "||" && node.operator !== "??") {
-          return;
-        }
-        const left = node.left;
-        if (left.type !== "CallExpression" || left.callee.type !== "MemberExpression") {
-          return;
-        }
-        const property = left.callee.property;
-        if (property.type !== "Identifier" || !INDEX_METHODS.has(property.name)) {
-          return;
-        }
-        context.report({ node, messageId: "noIndexFallback", data: { method: property.name } });
-      },
-    };
-  },
-});
-
-function isLiteralOne(node) {
-  return node.type === "Literal" && node.value === 1;
-}
-
-const noIdentityArithmetic = defineRule({
-  meta: {
-    type: "problem",
-    docs: { description: "Disallow multiplying or dividing by the literal 1." },
-    messages: {
-      noIdentityArithmetic:
-        "`{{operator}} 1` does nothing. If a factor like `(1 - x)` was intended, add the parentheses.",
-    },
-  },
-  create(context) {
-    return {
-      BinaryExpression(node) {
-        const multipliesByOne =
-          node.operator === "*" && (isLiteralOne(node.left) || isLiteralOne(node.right));
-        const dividesByOne = node.operator === "/" && isLiteralOne(node.right);
-        if (multipliesByOne || dividesByOne) {
-          context.report({
-            node,
-            messageId: "noIdentityArithmetic",
-            data: { operator: node.operator },
-          });
-        }
-      },
-    };
-  },
-});
 
 function decoratorName(decorator) {
   const expression = decorator.expression;
@@ -189,11 +125,4 @@ const noReactiveMutation = defineRule({
   },
 });
 
-export default definePlugin({
-  meta: { name: "flixlix" },
-  rules: {
-    "no-index-fallback": noIndexFallback,
-    "no-identity-arithmetic": noIdentityArithmetic,
-    "no-reactive-mutation": noReactiveMutation,
-  },
-});
+export default noReactiveMutation;
