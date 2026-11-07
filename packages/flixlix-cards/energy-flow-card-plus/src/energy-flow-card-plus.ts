@@ -1,12 +1,9 @@
 import { computeCardState, type CardState, energyReadings } from "@flixlix-cards/shared/card-state";
 import { batteryElement } from "@flixlix-cards/shared/components/battery";
 import { flowElement } from "@flixlix-cards/shared/components/flows/index";
+import { individualElement } from "@flixlix-cards/shared/components/individual-element";
 import { gridElement } from "@flixlix-cards/shared/components/grid";
 import { homeElement } from "@flixlix-cards/shared/components/home";
-import { individualLeftBottomElement } from "@flixlix-cards/shared/components/individual-left-bottom-element";
-import { individualLeftTopElement } from "@flixlix-cards/shared/components/individual-left-top-element";
-import { individualRightBottomElement } from "@flixlix-cards/shared/components/individual-right-bottom-element";
-import { individualRightTopElement } from "@flixlix-cards/shared/components/individual-right-top-element";
 import { dashboardLinkElement } from "@flixlix-cards/shared/components/misc/dashboard-link";
 import { nonFossilElement } from "@flixlix-cards/shared/components/non-fossil";
 import { solarElement } from "@flixlix-cards/shared/components/solar";
@@ -233,10 +230,10 @@ export class EnergyFlowCardPlus extends LitElement {
                         ? spacer
                         : nothing
                   }
-                  ${individualLeftTopElement(main, config, { slot: leftTop, animate })}
+                  ${individualElement(main, config, "left-top", { slot: leftTop, animate })}
                   ${
                     layout.hasRightIndividual
-                      ? individualRightTopElement(main, config, {
+                      ? individualElement(main, config, "right-top", {
                           slot: rightTop,
                           animate,
                           hasBottomRow: layout.showBottomRow,
@@ -263,10 +260,13 @@ export class EnergyFlowCardPlus extends LitElement {
             layout.showBottomRow
               ? html`<div class="row">
                   ${spacer} ${battery.has ? batteryElement(main, config, battery) : spacer}
-                  ${individualLeftBottomElement(main, config, { slot: leftBottom, animate })}
+                  ${individualElement(main, config, "left-bottom", { slot: leftBottom, animate })}
                   ${
                     layout.hasRightIndividual
-                      ? individualRightBottomElement(main, config, { slot: rightBottom, animate })
+                      ? individualElement(main, config, "right-bottom", {
+                          slot: rightBottom,
+                          animate,
+                        })
                       : nothing
                   }
                 </div>`

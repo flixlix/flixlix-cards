@@ -6,9 +6,22 @@ import {
 } from "@flixlix-cards/shared/types";
 import { nonEmpty } from "@flixlix-cards/shared/utils/utils";
 import { html, nothing } from "lit";
+import { type DisplayState, directionShown } from "./display-state";
 
 const batteryEntityId = (battery: BatteryObject, direction: keyof ComboEntity) =>
   typeof battery.entity === "object" ? battery.entity[direction] : battery.entity;
+
+const chargeShown = ({ state }: BatteryObject, displayState: DisplayState): boolean =>
+  directionShown(displayState, {
+    nonZero: (state.toBattery ?? 0) > 0,
+    oneWay: state.toBattery !== 0,
+  });
+
+const dischargeShown = ({ state }: BatteryObject, displayState: DisplayState): boolean =>
+  directionShown(displayState, {
+    nonZero: (state.fromBattery ?? 0) > 0,
+    oneWay: state.toBattery === 0 || state.fromBattery !== 0,
+  });
 
 export const batteryElement = (
   main: CardMainContext,
@@ -16,6 +29,7 @@ export const batteryElement = (
   battery: BatteryObject
 ) => {
   const { entities } = config;
+  const displayState = entities.battery?.display_state;
   const disableEntityClick = !config.clickable_entities;
   const circleTarget = () =>
     nonEmpty(entities.battery?.state_of_charge) ?? batteryEntityId(battery, "production");
@@ -106,11 +120,7 @@ export const batteryElement = (
           : nothing
       }
       ${
-        entities.battery?.display_state === "two_way" ||
-        entities.battery?.display_state === undefined ||
-        (entities.battery?.display_state === "one_way_no_zero" &&
-          (battery.state.toBattery ?? 0) > 0) ||
-        (entities.battery?.display_state === "one_way" && battery.state.toBattery !== 0)
+        chargeShown(battery, displayState)
           ? html`<span
               class="battery-in"
               @click=${(e: MouseEvent) => {
@@ -146,12 +156,7 @@ export const batteryElement = (
           : nothing
       }
       ${
-        entities.battery?.display_state === "two_way" ||
-        entities.battery?.display_state === undefined ||
-        (entities.battery?.display_state === "one_way_no_zero" &&
-          (battery.state.fromBattery ?? 0) > 0) ||
-        (entities.battery?.display_state === "one_way" &&
-          (battery.state.toBattery === 0 || battery.state.fromBattery !== 0))
+        dischargeShown(battery, displayState)
           ? html`<span
               class="battery-out"
               @click=${(e: MouseEvent) => {
