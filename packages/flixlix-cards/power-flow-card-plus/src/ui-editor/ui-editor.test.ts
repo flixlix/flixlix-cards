@@ -65,9 +65,51 @@ describe("power flow ui editor", () => {
     expect(loadHaFormMock).toHaveBeenCalledTimes(1);
   });
 
-  test("converting legacy fields maps power decimals and threshold", async () => {
+  test.each([
+    { legacy: { watt_threshold: 900 }, current: { kilo_threshold: 900 } },
+    { legacy: { w_decimals: 1 }, current: { base_decimals: 1 } },
+    { legacy: { kw_decimals: 2 }, current: { kilo_decimals: 2 } },
+  ])("converting $legacy rewrites it to $current", async ({ legacy, current }) => {
+    const { editor, lastConfig } = await mountEditor({ entities: {}, ...legacy });
+
+    query(editor, ".legacy-fields-alert-button").click();
+
+    expect(lastConfig()).toEqual({ type: "custom:power-flow-card-plus", entities: {}, ...current });
+  });
+
+  test("converting keeps current fields over their legacy names and drops the legacy values", async () => {
     const { editor, lastConfig } = await mountEditor({
       entities: {},
+      watt_threshold: 900,
+      w_decimals: 1,
+      kw_decimals: 2,
+      kilo_threshold: 5000,
+      base_decimals: 0,
+      kilo_decimals: 1,
+    });
+
+    query(editor, ".legacy-fields-alert-button").click();
+
+    expect(lastConfig()).toEqual({
+      type: "custom:power-flow-card-plus",
+      entities: {},
+      kilo_threshold: 5000,
+      base_decimals: 0,
+      kilo_decimals: 1,
+    });
+  });
+
+  test("converting leaves unrelated options and legacy individual slots untouched", async () => {
+    const options = {
+      title: "Home",
+      clickable_entities: true,
+      entities: {
+        grid: { entity: "sensor.grid" },
+        individual1: { entity: "sensor.legacy_1" },
+      },
+    };
+    const { editor, lastConfig } = await mountEditor({
+      ...options,
       watt_threshold: 900,
       w_decimals: 1,
       kw_decimals: 2,
@@ -75,13 +117,21 @@ describe("power flow ui editor", () => {
 
     query(editor, ".legacy-fields-alert-button").click();
 
-    const config = lastConfig();
-    expect(config?.kilo_threshold).toBe(900);
-    expect(config?.base_decimals).toBe(1);
-    expect(config?.kilo_decimals).toBe(2);
-    expect(config).not.toHaveProperty("watt_threshold");
-    expect(config).not.toHaveProperty("w_decimals");
-    expect(config).not.toHaveProperty("kw_decimals");
+    expect(lastConfig()).toMatchObject({ type: "custom:power-flow-card-plus", ...options });
+  });
+
+  test("the conversion alert disappears once nothing legacy is left", async () => {
+    const { editor } = await mountEditor({
+      entities: {},
+      watt_threshold: 900,
+      w_decimals: 1,
+      kw_decimals: 2,
+    });
+
+    query(editor, ".legacy-fields-alert-button").click();
+    await editor.updateComplete;
+
+    expect(editor.shadowRoot?.querySelector(".legacy-fields-alert")).toBeNull();
   });
 
   test("converting legacy individual slots appends them to entities.individual", async () => {

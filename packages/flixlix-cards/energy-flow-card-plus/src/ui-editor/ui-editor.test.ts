@@ -56,9 +56,77 @@ describe("energy flow ui editor", () => {
     expect(loadHaFormMock).toHaveBeenCalledTimes(1);
   });
 
-  test("converting legacy fields maps energy decimals and threshold", async () => {
+  test.each([
+    { legacy: { wh_threshold: 900 }, current: { kilo_threshold: 900 } },
+    { legacy: { wh_kwh_threshold: 1200 }, current: { kilo_threshold: 1200 } },
+    { legacy: { wh_decimals: 1 }, current: { base_decimals: 1 } },
+    { legacy: { kwh_decimals: 2 }, current: { kilo_decimals: 2 } },
+    { legacy: { mwh_decimals: 3 }, current: { mega_decimals: 3 } },
+  ])("converting $legacy rewrites it to $current", async ({ legacy, current }) => {
+    const { editor, lastConfig } = await mountEditor({ entities: {}, ...legacy });
+
+    query(editor, ".legacy-fields-alert-button").click();
+
+    expect(lastConfig()).toEqual({
+      type: "custom:energy-flow-card-plus",
+      entities: {},
+      ...current,
+    });
+  });
+
+  test("wh_kwh_threshold wins over wh_threshold and both are removed", async () => {
     const { editor, lastConfig } = await mountEditor({
       entities: {},
+      wh_threshold: 900,
+      wh_kwh_threshold: 1200,
+    });
+
+    query(editor, ".legacy-fields-alert-button").click();
+
+    expect(lastConfig()).toEqual({
+      type: "custom:energy-flow-card-plus",
+      entities: {},
+      kilo_threshold: 1200,
+    });
+  });
+
+  test("converting keeps current fields over their legacy names and drops the legacy values", async () => {
+    const { editor, lastConfig } = await mountEditor({
+      entities: {},
+      wh_kwh_threshold: 1200,
+      wh_decimals: 1,
+      kwh_decimals: 2,
+      mwh_decimals: 3,
+      kilo_threshold: 5000,
+      base_decimals: 0,
+      kilo_decimals: 1,
+      mega_decimals: 2,
+    });
+
+    query(editor, ".legacy-fields-alert-button").click();
+
+    expect(lastConfig()).toEqual({
+      type: "custom:energy-flow-card-plus",
+      entities: {},
+      kilo_threshold: 5000,
+      base_decimals: 0,
+      kilo_decimals: 1,
+      mega_decimals: 2,
+    });
+  });
+
+  test("converting leaves unrelated options and legacy individual slots untouched", async () => {
+    const options = {
+      title: "Home",
+      clickable_entities: true,
+      entities: {
+        grid: { entity: "sensor.grid" },
+        individual1: { entity: "sensor.legacy_1" },
+      },
+    };
+    const { editor, lastConfig } = await mountEditor({
+      ...options,
+      wh_threshold: 900,
       wh_kwh_threshold: 1200,
       wh_decimals: 1,
       kwh_decimals: 2,
@@ -67,15 +135,23 @@ describe("energy flow ui editor", () => {
 
     query(editor, ".legacy-fields-alert-button").click();
 
-    const config = lastConfig();
-    expect(config?.kilo_threshold).toBe(1200);
-    expect(config?.base_decimals).toBe(1);
-    expect(config?.kilo_decimals).toBe(2);
-    expect(config?.mega_decimals).toBe(3);
-    expect(config).not.toHaveProperty("wh_kwh_threshold");
-    expect(config).not.toHaveProperty("wh_decimals");
-    expect(config).not.toHaveProperty("kwh_decimals");
-    expect(config).not.toHaveProperty("mwh_decimals");
+    expect(lastConfig()).toMatchObject({ type: "custom:energy-flow-card-plus", ...options });
+  });
+
+  test("the conversion alert disappears once nothing legacy is left", async () => {
+    const { editor } = await mountEditor({
+      entities: {},
+      wh_threshold: 900,
+      wh_kwh_threshold: 1200,
+      wh_decimals: 1,
+      kwh_decimals: 2,
+      mwh_decimals: 3,
+    });
+
+    query(editor, ".legacy-fields-alert-button").click();
+    await editor.updateComplete;
+
+    expect(editor.shadowRoot?.querySelector(".legacy-fields-alert")).toBeNull();
   });
 
   test("converting legacy individual slots appends them to entities.individual", async () => {
