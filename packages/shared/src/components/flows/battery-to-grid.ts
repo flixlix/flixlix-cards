@@ -59,10 +59,14 @@ export const flowBatteryToGrid = (
   const shouldShow =
     grid.has &&
     battery.has &&
-    showLine(config, Math.max(grid.state.toBattery || 0, battery.state.toGrid || 0));
+    showLine(config, Math.max(grid.state.toBattery ?? 0, battery.state.toGrid ?? 0));
   if (!shouldShow) {
     return nothing;
   }
+  const batteryGridPower =
+    battery.state.toGrid === null || battery.state.toGrid === 0
+      ? (grid.state.toBattery ?? 0)
+      : battery.state.toGrid;
 
   return html`<div
     class="lines ${classMap({
@@ -79,7 +83,7 @@ export const flowBatteryToGrid = (
     >
       <path
         id="battery-grid"
-        class="${styleLine(battery.state.toGrid || grid.state.toBattery || 0, config)}"
+        class="${styleLine(batteryGridPower, config)}"
         d="M45,100 v-15 c0,-30 -10,-30 -30,-30 h-20"
         vector-effect="non-scaling-stroke"
       ></path>

@@ -22,7 +22,7 @@ export const getNonFossilHas = (hass: HomeAssistant, config: FlowCardPlusConfig)
     return false;
   }
 
-  return gridFromGrid * 1 - (getEntityState(hass, fossilPercentageEntity) ?? 0) / 100 > 0;
+  return gridFromGrid * (1 - (getEntityState(hass, fossilPercentageEntity) ?? 0) / 100) > 0;
 };
 
 export const getNonFossilHasPercentage = (hass: HomeAssistant, config: FlowCardPlusConfig) => {
@@ -47,28 +47,8 @@ export const getNonFossilHasPercentage = (hass: HomeAssistant, config: FlowCardP
     return false;
   }
 
-  return gridFromGrid * 1 - (getEntityState(hass, fossilPercentageEntity) ?? 0) / 100 > 0;
+  return gridFromGrid * (1 - (getEntityState(hass, fossilPercentageEntity) ?? 0) / 100) > 0;
 };
 
 export const getNonFossilSecondaryState = (hass: HomeAssistant, config: FlowCardPlusConfig) =>
   getSecondaryState(hass, config, "fossil_fuel_percentage");
-
-export const getNonFossilState = (hass: HomeAssistant, config: FlowCardPlusConfig) => {
-  const nonFossil = config.entities.fossil_fuel_percentage;
-  const fossilPercentageEntity = nonFossil?.entity;
-  const gridFromGrid = getGridConsumptionState(hass, config);
-
-  if (fossilPercentageEntity === undefined) {
-    return null;
-  }
-
-  if (gridFromGrid === null) {
-    return null;
-  }
-
-  if (!getNonFossilHas(hass, config)) {
-    return 0;
-  }
-
-  return gridFromGrid * 1 - (getEntityState(hass, fossilPercentageEntity) ?? 0) / 100;
-};

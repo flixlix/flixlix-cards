@@ -1,57 +1,79 @@
-import { describe, expect, test } from "vite-plus/test";
+import { type Connection, type MessageBase } from "home-assistant-js-websocket";
+import { type HomeAssistant } from "custom-card-helpers";
+import { afterEach, describe, expect, test, vi } from "vite-plus/test";
 import { EnergyBreakdownCard } from "../src/energy-breakdown-card";
+import { type EnergyBreakdownCardConfig } from "../src/types";
 import { describeDonutSegment, resolveSegments } from "../src/utils";
 
-describe("energy-breakdown-card", () => {
-  const hass = {
-    localize: (key: string) => key,
-    locale: { language: "en", number_format: "comma_decimal" },
-    states: {
-      "sensor.solar": {
-        state: "120",
-        attributes: { friendly_name: "Solar", unit_of_measurement: "kWh" },
-      },
-      "sensor.grid": {
-        state: "80",
-        attributes: { friendly_name: "Grid", unit_of_measurement: "kWh" },
-      },
-      "sensor.battery": {
-        state: "40",
-        attributes: { friendly_name: "Battery", unit_of_measurement: "kWh" },
-      },
-    },
-    config: {},
-  } as any;
+type EntityState = HomeAssistant["states"][string];
 
-  test("renders with valid config", () => {
-    const card = new EnergyBreakdownCard();
-    card.hass = hass;
-    card.setConfig({
+function entityState(entity_id: string, state: string, friendly_name: string): EntityState {
+  return {
+    entity_id,
+    state,
+    attributes: { friendly_name, unit_of_measurement: "kWh" },
+    last_changed: "",
+    last_updated: "",
+    context: { id: "", user_id: null, parent_id: null },
+  };
+}
+
+function makeHass(overrides: Partial<HomeAssistant> = {}): HomeAssistant {
+  const hass: Partial<HomeAssistant> = {
+    localize: (key: string) => key,
+    states: {
+      "sensor.solar": entityState("sensor.solar", "120", "Solar"),
+      "sensor.grid": entityState("sensor.grid", "80", "Grid"),
+      "sensor.battery": entityState("sensor.battery", "40", "Battery"),
+    },
+    ...overrides,
+  };
+  return hass as HomeAssistant;
+}
+
+async function mount(
+  config: EnergyBreakdownCardConfig,
+  hass: HomeAssistant = makeHass()
+): Promise<EnergyBreakdownCard> {
+  const card = new EnergyBreakdownCard();
+  card.setConfig(config);
+  card.hass = hass;
+  document.body.append(card);
+  await card.updateComplete;
+  return card;
+}
+
+describe("energy-breakdown-card", () => {
+  const hass = makeHass();
+
+  afterEach(() => {
+    document.body.replaceChildren();
+  });
+
+  test("renders a segment per entity with a value", async () => {
+    const card = await mount({
       type: "custom:energy-breakdown-card",
       entities: [{ entity: "sensor.solar" }, { entity: "sensor.grid" }],
     });
-    const rendered = (card as unknown as { render: () => unknown }).render();
-    expect(rendered).toBeTruthy();
+    const legend = card.shadowRoot?.querySelectorAll(".legend-item");
+    expect(legend).toHaveLength(2);
+    expect(card.shadowRoot?.querySelector(".empty")).toBeNull();
   });
 
-  test("renders empty state when no value", () => {
-    const card = new EnergyBreakdownCard();
-    card.hass = { ...hass, states: {} };
-    card.setConfig({
-      type: "custom:energy-breakdown-card",
-      entities: [{ entity: "sensor.unknown" }],
-    });
-    const rendered = (card as unknown as { render: () => unknown }).render();
-    expect(rendered).toBeTruthy();
+  test("renders empty state when no value", async () => {
+    const card = await mount(
+      { type: "custom:energy-breakdown-card", entities: [{ entity: "sensor.unknown" }] },
+      makeHass({ states: {} })
+    );
+    expect(card.shadowRoot?.querySelector(".empty")).not.toBeNull();
   });
 
   test("setConfig throws if entities not provided as list", () => {
     const card = new EnergyBreakdownCard();
-    expect(() =>
-      card.setConfig({
-        type: "custom:energy-breakdown-card",
-      } as any)
-    ).toThrow();
+    const config: Partial<EnergyBreakdownCardConfig> = { type: "custom:energy-breakdown-card" };
+    expect(() => card.setConfig(config as EnergyBreakdownCardConfig)).toThrow(
+      "`entities` must be a list"
+    );
   });
 
   test("resolveSegments computes percentages and total", () => {
@@ -175,14 +197,26 @@ describe("energy-breakdown-card", () => {
     expect(outerArcMatch?.[1]).toBe("1");
   });
 
-  test("setConfig stores collection_key when provided", () => {
-    const card = new EnergyBreakdownCard();
-    card.setConfig({
-      type: "custom:energy-breakdown-card",
-      entities: [{ entity: "sensor.solar" }],
-      collection_key: "energy_kitchen",
-      energy_date_selection: true,
-    });
-    expect((card as any)._energyCollectionKey).toBe("energy_kitchen");
+  test("reads the energy period from the configured collection_key", async () => {
+    const start = new Date(2026, 0, 1);
+    const end = new Date(2026, 0, 2);
+    const requests: MessageBase[] = [];
+    const callWS: HomeAssistant["callWS"] = (msg) => {
+      requests.push(msg);
+      return Promise.reject(new Error("statistics are not served in this test"));
+    };
+    const connection = Object.assign({} as Connection, { _energy_kitchen: { start, end } });
+    await mount(
+      {
+        type: "custom:energy-breakdown-card",
+        entities: [{ entity: "sensor.solar" }],
+        collection_key: "energy_kitchen",
+        energy_date_selection: true,
+      },
+      makeHass({ callWS, connection })
+    );
+    await vi.waitFor(() =>
+      expect(requests).toContainEqual(expect.objectContaining({ start_time: start.toISOString() }))
+    );
   });
 });

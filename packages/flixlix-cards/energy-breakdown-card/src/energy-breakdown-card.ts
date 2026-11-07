@@ -323,7 +323,7 @@ export class EnergyBreakdownCard extends LitElement implements LovelaceCard {
     }
     const cfg = segment.config;
     const tap_action: ActionConfig | undefined = cfg?.tap_action ?? { action: "more-info" };
-    handleAction(
+    void handleAction(
       this,
       this.hass,
       {
@@ -392,12 +392,12 @@ export class EnergyBreakdownCard extends LitElement implements LovelaceCard {
     `;
   }
 
-  private _onChartHostPointerDown(event: PointerEvent): void {
-    const target = event.target as HTMLElement | null;
-    if (!target?.closest("[data-segment-index]")) {
+  private _onChartHostPointerDown = (event: PointerEvent): void => {
+    const target = event.target;
+    if (!(target instanceof Element && target.closest("[data-segment-index]"))) {
       this._closeTooltip();
     }
-  }
+  };
 
   private _renderEmpty(): TemplateResult {
     return html`<div class="empty">
@@ -561,8 +561,8 @@ export class EnergyBreakdownCard extends LitElement implements LovelaceCard {
       return;
     }
     event.preventDefault();
-    const target = event.currentTarget as HTMLElement | null;
-    if (target) {
+    const target = event.currentTarget;
+    if (target instanceof Element) {
       const rect = target.getBoundingClientRect();
       this._openTooltipFor(index, {
         clientX: rect.left + rect.width / 2,

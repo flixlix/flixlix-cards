@@ -1,5 +1,11 @@
 import { type IndividualObject } from "@flixlix-cards/shared/states/raw/individual/get-individual-object";
-import { type FlowCardPlusConfig, type NewDur } from "@flixlix-cards/shared/types";
+import {
+  type BatteryObject,
+  type FlowCardPlusConfig,
+  type GridObject,
+  type NewDur,
+  type SolarObject,
+} from "@flixlix-cards/shared/types";
 import { html } from "lit";
 import { flowBatteryToGrid } from "./battery-to-grid";
 import { flowBatteryToHome } from "./battery-to-home";
@@ -9,10 +15,10 @@ import { flowSolarToHome } from "./solar-to-home";
 import { flowSolarToBattery } from "./solart-to-battery";
 
 export interface Flows {
-  battery: any;
-  grid: any;
+  battery: BatteryObject;
+  grid: GridObject;
   individual: IndividualObject[];
-  solar: any;
+  solar: SolarObject;
   newDur: NewDur;
 }
 

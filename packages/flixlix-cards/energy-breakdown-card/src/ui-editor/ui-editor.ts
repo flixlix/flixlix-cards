@@ -6,6 +6,17 @@ import { type EnergyBreakdownCardConfig, type EnergyBreakdownEntityConfig } from
 
 type SchemaField = Record<string, unknown>;
 
+type ValueChangedEvent<T> = CustomEvent<{ value?: T }>;
+
+function inputValue(event: Event): string {
+  const target = event.target;
+  return target && "value" in target && typeof target.value === "string" ? target.value : "";
+}
+
+function blankToUndefined(value: string | undefined): string | undefined {
+  return value === "" ? undefined : value;
+}
+
 const COMMON_DISPLAY_GRID: SchemaField = {
   type: "grid",
   name: "",
@@ -141,7 +152,7 @@ export class EnergyBreakdownCardEditor extends LitElement implements LovelaceCar
 
   connectedCallback(): void {
     super.connectedCallback();
-    loadHaForm();
+    void loadHaForm();
   }
 
   protected render() {
@@ -244,8 +255,8 @@ export class EnergyBreakdownCardEditor extends LitElement implements LovelaceCar
                       .hass=${this.hass}
                       .value=${entity.entity}
                       .label=${"Entity"}
-                      @value-changed=${(e: CustomEvent) =>
-                        this._onEntityChanged(index, e.detail.value)}
+                      @value-changed=${(e: ValueChangedEvent<string>) =>
+                        this._onEntityChanged(index, e.detail.value ?? "")}
                     ></ha-entity-picker>
                   </div>
                   <div class="field-grid">
@@ -254,7 +265,7 @@ export class EnergyBreakdownCardEditor extends LitElement implements LovelaceCar
                       .value=${entity.name ?? ""}
                       @input=${(e: Event) =>
                         this._patchEntity(index, {
-                          name: (e.target as HTMLInputElement).value || undefined,
+                          name: blankToUndefined(inputValue(e)),
                         })}
                     ></ha-textfield>
                     <ha-textfield
@@ -263,7 +274,7 @@ export class EnergyBreakdownCardEditor extends LitElement implements LovelaceCar
                       .value=${entity.color ?? ""}
                       @input=${(e: Event) =>
                         this._patchEntity(index, {
-                          color: (e.target as HTMLInputElement).value || undefined,
+                          color: blankToUndefined(inputValue(e)),
                         })}
                     ></ha-textfield>
                   </div>
@@ -272,15 +283,15 @@ export class EnergyBreakdownCardEditor extends LitElement implements LovelaceCar
                       .hass=${this.hass}
                       .value=${entity.icon ?? ""}
                       .label=${"Icon"}
-                      @value-changed=${(e: CustomEvent) =>
-                        this._patchEntity(index, { icon: e.detail.value || undefined })}
+                      @value-changed=${(e: ValueChangedEvent<string>) =>
+                        this._patchEntity(index, { icon: blankToUndefined(e.detail.value) })}
                     ></ha-icon-picker>
                     <ha-textfield
                       label="Unit override"
                       .value=${entity.unit_of_measurement ?? ""}
                       @input=${(e: Event) =>
                         this._patchEntity(index, {
-                          unit_of_measurement: (e.target as HTMLInputElement).value || undefined,
+                          unit_of_measurement: blankToUndefined(inputValue(e)),
                         })}
                     ></ha-textfield>
                   </div>
@@ -296,16 +307,16 @@ export class EnergyBreakdownCardEditor extends LitElement implements LovelaceCar
     this._expanded = { ...this._expanded, [index]: !this._expanded[index] };
   }
 
-  private _onAddEntity = (event: CustomEvent) => {
-    const value = event.detail.value as string;
+  private _onAddEntity = (event: ValueChangedEvent<string>) => {
+    const value = event.detail.value;
     if (!value || !this._config) {
       return;
     }
     const entities = [...(this._config.entities ?? []), { entity: value }];
     this._update({ entities });
     this._expanded = { ...this._expanded, [entities.length - 1]: true };
-    const target = event.target as { value?: string } | null;
-    if (target) {
+    const target = event.target;
+    if (target && "value" in target) {
       target.value = "";
     }
   };
@@ -318,7 +329,7 @@ export class EnergyBreakdownCardEditor extends LitElement implements LovelaceCar
     if (!value) {
       entities.splice(index, 1);
     } else {
-      entities[index] = { ...entities[index]!, entity: value };
+      entities[index] = { ...entities[index], entity: value };
     }
     this._update({ entities });
   }
@@ -333,13 +344,12 @@ export class EnergyBreakdownCardEditor extends LitElement implements LovelaceCar
       return;
     }
     const merged = { ...current, ...patch };
-    Object.keys(merged).forEach((key) => {
-      const k = key as keyof EnergyBreakdownEntityConfig;
-      if (merged[k] === undefined || merged[k] === "") {
-        delete merged[k];
-      }
-    });
-    entities[index] = merged;
+    entities[index] = {
+      ...Object.fromEntries(
+        Object.entries(merged).filter(([, value]) => value !== undefined && value !== "")
+      ),
+      entity: merged.entity,
+    };
     this._update({ entities });
   }
 
@@ -366,9 +376,10 @@ export class EnergyBreakdownCardEditor extends LitElement implements LovelaceCar
     this._update({ entities });
   }
 
-  private _onGeneralChanged = (event: CustomEvent) => {
-    const incoming = event.detail.value as Partial<EnergyBreakdownCardConfig>;
-    this._update(incoming);
+  private _onGeneralChanged = (
+    event: CustomEvent<{ value: Partial<EnergyBreakdownCardConfig> }>
+  ) => {
+    this._update(event.detail.value);
   };
 
   private _update(patch: Partial<EnergyBreakdownCardConfig>) {

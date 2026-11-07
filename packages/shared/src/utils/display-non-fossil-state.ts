@@ -14,7 +14,7 @@ import { type HomeAssistant } from "custom-card-helpers";
 export const displayNonFossilState = (
   hass: HomeAssistant,
   config: FlowCardPlusConfig,
-  entityFossil: string,
+  entityFossil: string | undefined,
   totalFromGrid: number,
   fossilEnergyConsumption?: FossilEnergyConsumption
 ): string | number => {

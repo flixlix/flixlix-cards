@@ -3,33 +3,30 @@ import { describe, expect, test } from "vite-plus/test";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
-function getAllKeys(obj: { [key: string]: any }): string[] {
-  let keys: string[] = [];
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
 
-  for (const key in obj) {
-    if (Object.prototype.hasOwnProperty.call(obj, key)) {
-      keys.push(key);
-      if (typeof obj[key] === "object") {
-        const nestedKeys = getAllKeys(obj[key]);
-        keys = keys.concat(nestedKeys.map((nestedKey) => `${key}.${nestedKey}`));
-      }
+function getAllKeys(obj: unknown): string[] {
+  if (!isRecord(obj)) {
+    return [];
+  }
+  const keys: string[] = [];
+  for (const [key, value] of Object.entries(obj)) {
+    keys.push(key);
+    for (const nestedKey of getAllKeys(value)) {
+      keys.push(`${key}.${nestedKey}`);
     }
   }
-
   return keys;
 }
 
 describe("Language files", () => {
   const languagesDir = path.resolve(__dirname, "../languages");
-  const languageFiles = fs
-    .readdirSync(languagesDir)
-    .filter((file) => file.endsWith(".json"))
-    .sort();
+  const languageFiles = fs.readdirSync(languagesDir).filter((file) => file.endsWith(".json"));
+  languageFiles.sort();
 
-  const readLanguage = (file: string): { [key: string]: any } => {
-    const jsonText = fs.readFileSync(path.join(languagesDir, file), "utf8");
-    return JSON.parse(jsonText) as { [key: string]: any };
-  };
+  const readLanguage = (file: string): unknown =>
+    JSON.parse(fs.readFileSync(path.join(languagesDir, file), "utf8"));
 
   const enFile = "en.json";
   const enKeys = getAllKeys(readLanguage(enFile));

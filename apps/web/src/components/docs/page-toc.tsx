@@ -13,14 +13,11 @@ export function PageTOC({ items, className }: { items: TocItem[]; className?: st
   const [activeId, setActiveId] = React.useState<string | null>(items[0]?.id ?? null);
 
   React.useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
     const elements = items
       .map((i) => document.getElementById(i.id))
       .filter((el): el is HTMLElement => Boolean(el));
     if (elements.length === 0) {
-      return;
+      return undefined;
     }
 
     const visible = new Map<string, number>();

@@ -5,7 +5,7 @@ import {
   type TemplatesObj,
 } from "@flixlix-cards/shared/types";
 import { displayValue } from "@flixlix-cards/shared/utils/display-value";
-import { isNumberValue } from "@flixlix-cards/shared/utils/utils";
+import { isNumberValue, nonEmpty } from "@flixlix-cards/shared/utils/utils";
 import { type HomeAssistant } from "custom-card-helpers";
 import { nothing, type TemplateResult } from "lit";
 import { baseSecondarySpan } from "./base-secondary-span";
@@ -25,10 +25,10 @@ export const individualSecondarySpan = (
 
   const value = individual?.secondary?.has
     ? displayValue(hass, config, individual?.secondary?.state, {
-        unit: individual?.secondary?.unit || undefined,
+        unit: nonEmpty(individual.secondary.unit),
         unitWhiteSpace: individual.secondary.unit_white_space,
-        decimals: individual?.secondary?.decimals || 0,
-        accept_negative: individual?.secondary?.accept_negative || false,
+        decimals: individual.secondary.decimals ?? 0,
+        accept_negative: individual.secondary.accept_negative,
       })
     : undefined;
 
@@ -48,9 +48,7 @@ export const individualSecondarySpan = (
 
     const toleranceSet = individual?.secondary?.displayZeroTolerance ?? 0;
     return (
-      Number(individual.secondary.state) >= toleranceSet ||
-      (individual.secondary.accept_negative &&
-        typeof Number(+individual.secondary.state) === "number")
+      Number(individual.secondary.state) >= toleranceSet || individual.secondary.accept_negative
     );
   };
 
@@ -61,18 +59,17 @@ export const individualSecondarySpan = (
     main: main,
     className: key,
     entityId:
-      individual?.field?.secondary_info?.entity || individual?.secondary.entity || undefined,
-    icon: individual?.secondary?.icon || undefined,
+      nonEmpty(individual.field?.secondary_info?.entity) ?? nonEmpty(individual.secondary.entity),
+    icon: nonEmpty(individual.secondary.icon),
     value,
-    template: templatesObj.individual[index] || undefined,
+    template: nonEmpty(templatesObj.individual[index]),
     actions: {
-      tap_action:
-        individual?.field?.secondary_info?.tap_action || individual?.secondary?.tap_action,
+      tap_action: individual.field?.secondary_info?.tap_action ?? individual.secondary.tap_action,
       hold_action:
-        individual?.field?.secondary_info?.hold_action || individual?.secondary?.hold_action,
+        individual.field?.secondary_info?.hold_action ?? individual.secondary.hold_action,
       double_tap_action:
-        individual?.field?.secondary_info?.double_tap_action ||
-        individual?.secondary?.double_tap_action,
+        individual.field?.secondary_info?.double_tap_action ??
+        individual.secondary.double_tap_action,
     },
   });
 };

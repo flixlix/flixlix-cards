@@ -46,7 +46,7 @@ export function parseStateValue(
   }
   if (format === "json") {
     try {
-      const parsed = JSON.parse(value);
+      const parsed: unknown = JSON.parse(value);
       if (Array.isArray(parsed)) {
         return parsed.map((v) => String(v).trim()).filter(Boolean);
       }
@@ -103,13 +103,13 @@ export function substitute(value: unknown, ctx: SubstitutionContext): unknown {
     return value.map((v) => substitute(v, ctx));
   }
   if (value && typeof value === "object") {
-    const out: Record<string, unknown> = {};
-    for (const [k, v] of Object.entries(value)) {
-      out[k] = substitute(v, ctx);
-    }
-    return out;
+    return substituteRecord(value, ctx);
   }
   return value;
+}
+
+function substituteRecord(record: object, ctx: SubstitutionContext): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(record).map(([k, v]) => [k, substitute(v, ctx)]));
 }
 
 export function effectiveSaveAction(config: SortableListCardConfig) {
@@ -154,9 +154,7 @@ export function buildSaveCall(
   return {
     domain,
     service,
-    serviceData: action.data
-      ? (substitute(action.data, ctx) as Record<string, unknown>)
-      : undefined,
-    target: action.target ? (substitute(action.target, ctx) as Record<string, unknown>) : undefined,
+    serviceData: action.data ? substituteRecord(action.data, ctx) : undefined,
+    target: action.target ? substituteRecord(action.target, ctx) : undefined,
   };
 }

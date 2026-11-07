@@ -1,4 +1,4 @@
-import babel from "@rollup/plugin-babel";
+import { babel } from "@rollup/plugin-babel";
 import commonjs from "@rollup/plugin-commonjs";
 import json from "@rollup/plugin-json";
 import { nodeResolve } from "@rollup/plugin-node-resolve";
@@ -21,14 +21,6 @@ export function createCardConfig(options) {
         ? minifyHTML.default
         : typeof minifyHTML?.minifyHTMLLiterals === "function"
           ? minifyHTML.minifyHTMLLiterals
-          : null;
-  const babelPlugin =
-    typeof babel === "function"
-      ? babel
-      : typeof babel?.babel === "function"
-        ? babel.babel
-        : typeof babel?.default === "function"
-          ? babel.default
           : null;
 
   return {
@@ -55,24 +47,20 @@ export function createCardConfig(options) {
       nodeResolve(),
       json({ compact: true }),
       commonjs(),
-      ...(babelPlugin
-        ? [
-            babelPlugin({
-              babelHelpers: "bundled",
-              exclude: [/node_modules\/@mdi/],
-              presets: [
-                [
-                  "@babel/preset-env",
-                  {
-                    targets: "iOS >= 15, Safari >= 15, Chrome >= 80, Firefox >= 80",
-                    bugfixes: true,
-                    modules: false,
-                  },
-                ],
-              ],
-            }),
-          ]
-        : []),
+      babel({
+        babelHelpers: "bundled",
+        exclude: [/node_modules\/@mdi/],
+        presets: [
+          [
+            "@babel/preset-env",
+            {
+              targets: "iOS >= 15, Safari >= 15, Chrome >= 80, Firefox >= 80",
+              bugfixes: true,
+              modules: false,
+            },
+          ],
+        ],
+      }),
       ...(!watch
         ? [terser({ output: { comments: false } })]
         : [
@@ -90,9 +78,9 @@ export function createCardConfig(options) {
         "node_modules/@formatjs/intl-utils/lib/src/diff.js",
         "node_modules/@formatjs/intl-utils/lib/src/resolve-locale.js",
       ];
-      if (thisAsWindowForModules.some((id_) => id.trimEnd().endsWith(id_))) {
-        return "window";
-      }
+      return thisAsWindowForModules.some((id_) => id.trimEnd().endsWith(id_))
+        ? "window"
+        : undefined;
     },
   };
 }

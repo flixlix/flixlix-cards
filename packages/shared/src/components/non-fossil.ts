@@ -4,6 +4,8 @@ import {
   type CardMainContext,
   type ConfigEntities,
   type FlowCardPlusConfig,
+  type GridObject,
+  type NonFossilObject,
   type NewDur,
   type TemplatesObj,
 } from "@flixlix-cards/shared/types";
@@ -19,8 +21,8 @@ interface NonFossil {
   newDur: NewDur;
   templatesObj: TemplatesObj;
   entities: ConfigEntities;
-  nonFossil: any;
-  grid: any;
+  nonFossil: NonFossilObject;
+  grid: GridObject;
   fossilEnergyConsumption?: FossilEnergyConsumption;
 }
 
@@ -84,15 +86,15 @@ export const nonFossilElement = (
       }
       ${
         entities.fossil_fuel_percentage?.display_zero_state !== false ||
-        (nonFossil.state.power || 0) >
-          (entities.fossil_fuel_percentage?.display_zero_tolerance || 0)
+        (nonFossil.state.power ?? 0) >
+          (entities.fossil_fuel_percentage?.display_zero_tolerance ?? 0)
           ? html`
               <span class="low-carbon"
                 >${displayNonFossilState(
                   main.hass,
                   config,
-                  entities.fossil_fuel_percentage!.entity,
-                  grid.state.fromGrid,
+                  nonFossil.entity,
+                  grid.state.fromGrid ?? 0,
                   fossilEnergyConsumption
                 )}</span
               >
@@ -101,16 +103,16 @@ export const nonFossilElement = (
       }
     </div>
     ${
-      showLine(config, nonFossil.state.power || 0)
+      showLine(config, nonFossil.state.power ?? 0)
         ? html`
             <svg width="80" height="30">
               <path
                 d="M40 -10 v40"
-                class="low-carbon ${styleLine(nonFossil.state.power || 0, config)}"
+                class="low-carbon ${styleLine(nonFossil.state.power ?? 0, config)}"
                 id="low-carbon"
               />
               ${
-                checkShouldShowDots(config) && nonFossil.has && nonFossil.state.power > 0
+                checkShouldShowDots(config) && nonFossil.has && (nonFossil.state.power ?? 0) > 0
                   ? svg`<circle r="1.75" class="low-carbon" vector-effect="non-scaling-stroke">
                     <animateMotion
                       dur="${computeIndividualFlowRate(

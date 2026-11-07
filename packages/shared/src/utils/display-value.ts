@@ -2,7 +2,7 @@ import { type FlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { isEnergyCard } from "@flixlix-cards/shared/utils/is-energy-card";
 import { type HomeAssistant, formatNumber } from "custom-card-helpers";
 import { defaultValues } from "./get-default-config";
-import { isNumberValue, round } from "./utils";
+import { isNumberValue, nonEmpty, round } from "./utils";
 
 /**
  *
@@ -67,5 +67,5 @@ export const displayValue = (
     hass.locale
   );
 
-  return `${v}${whiteSpace}${unit || (isMega ? megaUnit : isKilo ? kiloUnit : baseUnit)}`;
+  return `${v}${whiteSpace}${nonEmpty(unit) ?? (isMega ? megaUnit : isKilo ? kiloUnit : baseUnit)}`;
 };

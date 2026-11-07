@@ -7,6 +7,7 @@ import React, {
   type ReactNode,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -38,17 +39,13 @@ export const LinkPreview = ({ children }: LinkPreviewProps) => {
   const [isHovering, setIsHovering] = useState(false);
   const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
   const triggerRef = useRef<HTMLElement>(null);
+  const context = useMemo(
+    () => ({ isHovering, setIsHovering, triggerRef, cursorPosition, setCursorPosition }),
+    [isHovering, cursorPosition]
+  );
 
   return (
-    <LinkPreviewContext.Provider
-      value={{
-        isHovering,
-        setIsHovering,
-        triggerRef,
-        cursorPosition,
-        setCursorPosition,
-      }}
-    >
+    <LinkPreviewContext.Provider value={context}>
       <div className="relative">{children}</div>
     </LinkPreviewContext.Provider>
   );
@@ -109,7 +106,7 @@ export const LinkPreviewContent = ({ children, className }: LinkPreviewContentPr
 
   useEffect(() => {
     if (!isHovering || !triggerRef.current) {
-      return;
+      return undefined;
     }
 
     const updatePosition = () => {
@@ -149,7 +146,7 @@ export const LinkPreviewContent = ({ children, className }: LinkPreviewContentPr
   const springY = useSpring(offsetY, { bounce: 0 });
 
   if (!isWideEnough) {
-    return;
+    return null;
   }
   return (
     <AnimatePresence>

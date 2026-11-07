@@ -1,3 +1,4 @@
+import { type HomeAssistant } from "custom-card-helpers";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vite-plus/test";
 import { SortableListCard } from "../src/sortable-list-card";
 import { type SortableListCardConfig } from "../src/types";
@@ -11,23 +12,37 @@ import {
   resolveOrder,
 } from "../src/utils";
 
-function makeHass(stateValue = "", callService = vi.fn()) {
+type EntityState = HomeAssistant["states"][string];
+type CallService = HomeAssistant["callService"];
+
+function entityState(
+  entity_id: string,
+  state: string,
+  attributes: EntityState["attributes"]
+): EntityState {
   return {
+    entity_id,
+    state,
+    attributes,
+    last_changed: "",
+    last_updated: "",
+    context: { id: "", user_id: null, parent_id: null },
+  };
+}
+
+function makeHass(stateValue = "", callService = vi.fn<CallService>()): HomeAssistant {
+  const hass: Partial<HomeAssistant> = {
     localize: (key: string) => key,
-    locale: { language: "en", number_format: "comma_decimal" },
     states: {
-      "input_text.order": {
-        state: stateValue,
-        attributes: { friendly_name: "Order" },
-      },
-      "light.kitchen": {
-        state: "on",
-        attributes: { friendly_name: "Kitchen Light", icon: "mdi:lightbulb" },
-      },
+      "input_text.order": entityState("input_text.order", stateValue, { friendly_name: "Order" }),
+      "light.kitchen": entityState("light.kitchen", "on", {
+        friendly_name: "Kitchen Light",
+        icon: "mdi:lightbulb",
+      }),
     },
     callService,
-    config: {},
-  } as any;
+  };
+  return hass as HomeAssistant;
 }
 
 const baseConfig: SortableListCardConfig = {
@@ -151,26 +166,91 @@ describe("sortable-list-card utils", () => {
   });
 });
 
+async function mount(
+  config: SortableListCardConfig = baseConfig,
+  hass: HomeAssistant = makeHass("battery,ev,heating")
+): Promise<SortableListCard> {
+  const card = new SortableListCard();
+  card.hass = hass;
+  card.setConfig({ ...config });
+  document.body.append(card);
+  await card.updateComplete;
+  return card;
+}
+
+function rows(card: SortableListCard): HTMLElement[] {
+  return [...(card.shadowRoot?.querySelectorAll<HTMLElement>(".row") ?? [])];
+}
+
+function rowKeys(card: SortableListCard): (string | undefined)[] {
+  return rows(card).map((row) => row.dataset.key);
+}
+
+function rowFor(card: SortableListCard, key: string): HTMLElement {
+  const found = card.shadowRoot?.querySelector<HTMLElement>(`.row[data-key="${key}"]`);
+  if (!found) {
+    throw new Error(`no row rendered for "${key}"`);
+  }
+  return found;
+}
+
+async function press(card: SortableListCard, key: string, direction: "up" | "down") {
+  rowFor(card, key).querySelector<HTMLElement>(`ha-icon-button.${direction}`)?.click();
+  await card.updateComplete;
+}
+
+async function setHass(card: SortableListCard, hass: HomeAssistant) {
+  card.hass = hass;
+  await card.updateComplete;
+}
+
+async function startDrag(card: SortableListCard, key: string) {
+  rowFor(card, key).dispatchEvent(new Event("dragstart"));
+  await card.updateComplete;
+}
+
+async function dragOver(card: SortableListCard, key: string, half: "top" | "bottom") {
+  const target = rowFor(card, key);
+  const rect = target.getBoundingClientRect();
+  const clientY = half === "top" ? rect.top : rect.top + rect.height + 1;
+  target.dispatchEvent(new MouseEvent("dragover", { clientY, cancelable: true }));
+  await card.updateComplete;
+}
+
+async function endDrag(card: SortableListCard, key: string) {
+  rowFor(card, key).dispatchEvent(new Event("dragend"));
+  await card.updateComplete;
+}
+
+function isAnimating(card: SortableListCard): boolean {
+  return card.shadowRoot?.querySelector(".list")?.classList.contains("animating") ?? false;
+}
+
 describe("sortable-list-card", () => {
+  afterEach(() => {
+    document.body.replaceChildren();
+  });
+
   test("setConfig throws when items is not a list", () => {
     const card = new SortableListCard();
-    expect(() => card.setConfig({ type: "custom:sortable-list-card" } as any)).toThrow();
+    const config: Partial<SortableListCardConfig> = { type: "custom:sortable-list-card" };
+    expect(() => card.setConfig(config as SortableListCardConfig)).toThrow(
+      "`items` must be a list"
+    );
   });
 
-  test("setConfig applies display defaults", () => {
-    const card = new SortableListCard();
-    card.setConfig({ ...baseConfig });
-    const cfg = (card as any)._config as SortableListCardConfig;
-    expect(cfg.show_handle).toBe(true);
-    expect(cfg.show_arrows).toBe(true);
-    expect(cfg.show_rank).toBe(true);
-    expect(cfg.show_state).toBe(false);
+  test("setConfig applies display defaults", async () => {
+    const card = await mount();
+    const first = rowFor(card, "battery");
+    expect(first.querySelector(".handle")).not.toBeNull();
+    expect(first.querySelector(".arrows")).not.toBeNull();
+    expect(first.querySelector(".rank")?.textContent).toBe("1");
+    expect(first.querySelector(".secondary")).toBeNull();
   });
 
-  test("setConfig seeds order from configured items", () => {
-    const card = new SortableListCard();
-    card.setConfig({ ...baseConfig });
-    expect((card as any)._order).toEqual(["battery", "ev", "heating"]);
+  test("setConfig seeds order from configured items", async () => {
+    const card = await mount(baseConfig, makeHass());
+    expect(rowKeys(card)).toEqual(["battery", "ev", "heating"]);
   });
 
   test("getStubConfig returns a valid, settable config", () => {
@@ -187,30 +267,25 @@ describe("sortable-list-card", () => {
     expect(card.getCardSize()).toBe(4);
   });
 
-  test("renders with a valid config", () => {
-    const card = new SortableListCard();
-    card.hass = makeHass("battery,ev,heating");
-    card.setConfig({ ...baseConfig });
-    expect((card as any).render()).toBeTruthy();
+  test("renders a row per item in the stored order", async () => {
+    const card = await mount(baseConfig, makeHass("heating,battery,ev"));
+    expect(rowKeys(card)).toEqual(["heating", "battery", "ev"]);
+    expect(rowFor(card, "heating").querySelector(".name")?.textContent).toBe("Heating");
   });
 
-  test("renders an empty state when no resolvable items", () => {
-    const card = new SortableListCard();
-    card.hass = makeHass();
-    card.setConfig({ ...baseConfig, items: [] });
-    expect((card as any).render()).toBeTruthy();
+  test("renders an empty state when no resolvable items", async () => {
+    const card = await mount({ ...baseConfig, items: [] });
+    expect(rows(card)).toHaveLength(0);
+    expect(card.shadowRoot?.querySelector(".empty")).not.toBeNull();
   });
 
-  test("_move reorders and commits the new value to the entity", () => {
-    const callService = vi.fn();
-    const card = new SortableListCard();
-    card.hass = makeHass("battery,ev,heating", callService);
-    card.setConfig({ ...baseConfig });
-    (card as any)._order = ["battery", "ev", "heating"];
+  test("moving a row reorders and commits the new value to the entity", async () => {
+    const callService = vi.fn<CallService>();
+    const card = await mount(baseConfig, makeHass("battery,ev,heating", callService));
 
-    (card as any)._move(0, 1);
+    await press(card, "battery", "down");
 
-    expect((card as any)._order).toEqual(["ev", "battery", "heating"]);
+    expect(rowKeys(card)).toEqual(["ev", "battery", "heating"]);
     expect(callService).toHaveBeenCalledWith(
       "input_text",
       "set_value",
@@ -219,61 +294,60 @@ describe("sortable-list-card", () => {
     );
   });
 
-  test("_move is a no-op at the boundaries", () => {
-    const callService = vi.fn();
-    const card = new SortableListCard();
-    card.hass = makeHass("battery,ev,heating", callService);
-    card.setConfig({ ...baseConfig });
-    (card as any)._order = ["battery", "ev", "heating"];
+  test("moving past the boundaries is a no-op", async () => {
+    const callService = vi.fn<CallService>();
+    const card = await mount(baseConfig, makeHass("battery,ev,heating", callService));
 
-    (card as any)._move(0, -1);
-    (card as any)._move(2, 3);
+    await press(card, "battery", "up");
+    await press(card, "heating", "down");
 
-    expect((card as any)._order).toEqual(["battery", "ev", "heating"]);
+    expect(rowKeys(card)).toEqual(["battery", "ev", "heating"]);
     expect(callService).not.toHaveBeenCalled();
   });
 
-  test("_moveTo uses drag insertion semantics", () => {
-    const callService = vi.fn();
-    const card = new SortableListCard();
-    card.hass = makeHass("battery,ev,heating", callService);
-    card.setConfig({ ...baseConfig });
-    (card as any)._order = ["battery", "ev", "heating"];
+  test("dropping a dragged row inserts it at the drop position", async () => {
+    const callService = vi.fn<CallService>();
+    const card = await mount(baseConfig, makeHass("battery,ev,heating", callService));
 
-    (card as any)._moveTo(0, 3);
+    await startDrag(card, "battery");
+    await dragOver(card, "heating", "bottom");
+    await endDrag(card, "battery");
 
-    expect((card as any)._order).toEqual(["ev", "heating", "battery"]);
+    expect(rowKeys(card)).toEqual(["ev", "heating", "battery"]);
     expect(callService).toHaveBeenCalledTimes(1);
   });
 
-  test("reordering without a live DOM never flags animating", () => {
-    const card = new SortableListCard();
-    card.hass = makeHass("battery,ev,heating");
-    card.setConfig({ ...baseConfig });
-    (card as any)._order = ["battery", "ev", "heating"];
+  test("dropping a row onto its own position does not commit", async () => {
+    const callService = vi.fn<CallService>();
+    const card = await mount(baseConfig, makeHass("battery,ev,heating", callService));
 
-    // hasUpdated is false (never rendered), so the FLIP snapshot must no-op and
-    // leave animation state untouched while the reorder itself still happens.
-    (card as any)._move(0, 1);
-    (card as any)._moveTo(0, 3);
+    await startDrag(card, "ev");
+    await dragOver(card, "heating", "top");
+    await endDrag(card, "ev");
 
-    expect((card as any)._order).toEqual(["battery", "heating", "ev"]);
-    expect((card as any)._animating).toBe(false);
-    expect((card as any)._flipPrev).toBeNull();
+    expect(rowKeys(card)).toEqual(["battery", "ev", "heating"]);
+    expect(callService).not.toHaveBeenCalled();
   });
 
-  test("commits via a custom save_action service", () => {
-    const callService = vi.fn();
-    const card = new SortableListCard();
-    card.hass = makeHass("battery,ev,heating", callService);
-    card.setConfig({
-      ...baseConfig,
-      entity: undefined,
-      save_action: { service: "script.persist", data: { order: "{value_list}" } },
-    });
-    (card as any)._order = ["battery", "ev", "heating"];
+  test("adopting the entity order on first render never flags animating", async () => {
+    const card = await mount(baseConfig, makeHass("heating,ev,battery"));
 
-    (card as any)._move(0, 1);
+    expect(rowKeys(card)).toEqual(["heating", "ev", "battery"]);
+    expect(isAnimating(card)).toBe(false);
+  });
+
+  test("commits via a custom save_action service", async () => {
+    const callService = vi.fn<CallService>();
+    const card = await mount(
+      {
+        ...baseConfig,
+        entity: undefined,
+        save_action: { service: "script.persist", data: { order: "{value_list}" } },
+      },
+      makeHass("battery,ev,heating", callService)
+    );
+
+    await press(card, "battery", "down");
 
     expect(callService).toHaveBeenCalledWith(
       "script",
@@ -283,83 +357,76 @@ describe("sortable-list-card", () => {
     );
   });
 
-  test("optimistic pending value is not overwritten by stale state", () => {
-    const card = new SortableListCard();
-    card.hass = makeHass("battery,ev,heating");
-    card.setConfig({ ...baseConfig });
-    (card as any)._order = ["battery", "ev", "heating"];
+  test("optimistic pending value is not overwritten by stale state", async () => {
+    const card = await mount();
 
-    (card as any)._move(0, 1);
-    expect((card as any)._pending).toBe("ev,battery,heating");
+    await press(card, "battery", "down");
+    expect(rowKeys(card)).toEqual(["ev", "battery", "heating"]);
 
-    card.hass = makeHass("battery,ev,heating");
-    (card as any)._syncFromState();
-    expect((card as any)._order).toEqual(["ev", "battery", "heating"]);
-    expect((card as any)._pending).toBe("ev,battery,heating");
+    await setHass(card, makeHass("battery,ev,heating"));
+    expect(rowKeys(card)).toEqual(["ev", "battery", "heating"]);
 
-    card.hass = makeHass("ev,battery,heating");
-    (card as any)._syncFromState();
-    expect((card as any)._pending).toBeNull();
+    // The entity catching up confirms the pending value, so later changes are adopted again.
+    await setHass(card, makeHass("ev,battery,heating"));
+    await setHass(card, makeHass("heating,ev,battery"));
+    expect(rowKeys(card)).toEqual(["heating", "ev", "battery"]);
   });
 
-  test("does not reconcile order while dragging", () => {
-    const card = new SortableListCard();
-    card.hass = makeHass("battery,ev,heating");
-    card.setConfig({ ...baseConfig });
-    (card as any)._order = ["battery", "ev", "heating"];
-    (card as any)._dragging = true;
+  test("does not reconcile order while dragging", async () => {
+    const card = await mount();
 
-    card.hass = makeHass("heating,ev,battery");
-    (card as any)._syncFromState();
-    expect((card as any)._order).toEqual(["battery", "ev", "heating"]);
+    await startDrag(card, "battery");
+    await setHass(card, makeHass("heating,ev,battery"));
+
+    expect(rowKeys(card)).toEqual(["battery", "ev", "heating"]);
   });
 
-  test("syncFromState adopts external entity changes", () => {
-    const card = new SortableListCard();
-    card.hass = makeHass("battery,ev,heating");
-    card.setConfig({ ...baseConfig });
-    (card as any)._order = ["battery", "ev", "heating"];
+  test("adopts external entity changes", async () => {
+    const card = await mount();
 
-    card.hass = makeHass("heating,battery,ev");
-    (card as any)._syncFromState();
-    expect((card as any)._order).toEqual(["heating", "battery", "ev"]);
+    await setHass(card, makeHass("heating,battery,ev"));
+
+    expect(rowKeys(card)).toEqual(["heating", "battery", "ev"]);
   });
 
-  test("without an entity the order stays local and is not reconciled", () => {
-    const callService = vi.fn();
-    const card = new SortableListCard();
-    card.hass = makeHass("", callService);
-    card.setConfig({
-      ...baseConfig,
-      entity: undefined,
-      save_action: { service: "script.persist", data: { order: "{value_csv}" } },
-    });
-    (card as any)._order = ["ev", "battery", "heating"];
+  test("without an entity the order stays local and is not reconciled", async () => {
+    const card = await mount(
+      {
+        ...baseConfig,
+        entity: undefined,
+        save_action: { service: "script.persist", data: { order: "{value_csv}" } },
+      },
+      makeHass("", vi.fn<CallService>())
+    );
 
-    (card as any)._syncFromState();
-    expect((card as any)._order).toEqual(["ev", "battery", "heating"]);
+    await press(card, "battery", "down");
+    await setHass(card, makeHass("heating,battery,ev"));
+
+    expect(rowKeys(card)).toEqual(["ev", "battery", "heating"]);
   });
 });
 
 describe("sortable-list-card FLIP animations", () => {
   let animations: { cancel: ReturnType<typeof vi.fn> }[];
   let animateMock: ReturnType<typeof vi.fn>;
-  let originalAnimate: typeof HTMLElement.prototype.animate;
-  let rectSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     animations = [];
     animateMock = vi.fn(() => {
       const anim = { cancel: vi.fn(), finished: Promise.resolve() };
       animations.push(anim);
-      return anim as unknown as Animation;
+      return anim;
     });
-    originalAnimate = HTMLElement.prototype.animate;
-    HTMLElement.prototype.animate = animateMock as unknown as typeof HTMLElement.prototype.animate;
+    // jsdom does not implement the Web Animations API.
+    Object.defineProperty(HTMLElement.prototype, "animate", {
+      configurable: true,
+      writable: true,
+      value: animateMock,
+    });
 
     // jsdom has no layout, so derive each row's top from its sibling index.
     // Reordering then yields non-zero FLIP deltas for the rows that moved.
-    rectSpy = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (
       this: HTMLElement
     ) {
       const parent = this.parentElement;
@@ -371,81 +438,65 @@ describe("sortable-list-card FLIP animations", () => {
   });
 
   afterEach(() => {
-    HTMLElement.prototype.animate = originalAnimate;
-    rectSpy.mockRestore();
+    document.body.replaceChildren();
+    Reflect.deleteProperty(HTMLElement.prototype, "animate");
+    vi.restoreAllMocks();
     vi.useRealTimers();
     delete (window as { matchMedia?: unknown }).matchMedia;
   });
 
-  async function mount(): Promise<SortableListCard> {
-    const card = new SortableListCard();
-    card.hass = makeHass("battery,ev,heating");
-    card.setConfig({ ...baseConfig });
-    document.body.appendChild(card);
-    await card.updateComplete;
-    return card;
-  }
-
   test("animates only the rows whose position changed", async () => {
     const card = await mount();
 
-    (card as any)._move(0, 1);
-    await card.updateComplete;
+    await press(card, "battery", "down");
 
-    expect((card as any)._order).toEqual(["ev", "battery", "heating"]);
+    expect(rowKeys(card)).toEqual(["ev", "battery", "heating"]);
     // battery and ev swap; heating stays put, so only two rows animate.
     expect(animateMock).toHaveBeenCalledTimes(2);
-    card.remove();
   });
 
-  test("sets _animating during the move and clears it after the duration", async () => {
+  test("flags the list as animating during the move and clears it after the duration", async () => {
     vi.useFakeTimers();
     const card = await mount();
 
-    (card as any)._move(0, 1);
-    await card.updateComplete;
-    expect((card as any)._animating).toBe(true);
+    await press(card, "battery", "down");
+    expect(isAnimating(card)).toBe(true);
 
     vi.advanceTimersByTime(200);
-    expect((card as any)._animating).toBe(false);
-    card.remove();
+    await card.updateComplete;
+    expect(isAnimating(card)).toBe(false);
   });
 
   test("respects prefers-reduced-motion", async () => {
     window.matchMedia = vi.fn().mockReturnValue({ matches: true });
     const card = await mount();
 
-    (card as any)._move(0, 1);
+    await press(card, "battery", "down");
     await card.updateComplete;
 
-    expect((card as any)._order).toEqual(["ev", "battery", "heating"]);
+    expect(rowKeys(card)).toEqual(["ev", "battery", "heating"]);
     expect(animateMock).not.toHaveBeenCalled();
-    expect((card as any)._animating).toBe(false);
-    card.remove();
+    expect(isAnimating(card)).toBe(false);
   });
 
   test("cancels in-flight slides before measuring the next move", async () => {
     const card = await mount();
 
-    (card as any)._move(0, 1);
-    await card.updateComplete;
+    await press(card, "battery", "down");
     const firstBatch = animations.slice();
     expect(firstBatch.length).toBe(2);
 
     // A second move while the first slide is still "running" must cancel it,
     // so deltas are measured from real layout instead of a transformed position.
-    (card as any)._move(0, 1);
-    await card.updateComplete;
+    await press(card, "ev", "down");
 
     firstBatch.forEach((anim) => expect(anim.cancel).toHaveBeenCalled());
-    card.remove();
   });
 
   test("disconnecting cancels any running slide animations", async () => {
     const card = await mount();
 
-    (card as any)._move(0, 1);
-    await card.updateComplete;
+    await press(card, "battery", "down");
     const batch = animations.slice();
     expect(batch.length).toBeGreaterThan(0);
 
@@ -455,26 +506,18 @@ describe("sortable-list-card FLIP animations", () => {
 
   test("no drop indicator renders on positions adjacent to the dragged row", async () => {
     const card = await mount();
-    const list = card.shadowRoot?.querySelector(".list");
-    const rowOf = (key: string) => list?.querySelector(`.row[data-key="${key}"]`);
-
-    (card as any)._dragKey = "battery";
-    (card as any)._dragging = true;
+    await startDrag(card, "battery");
 
     // Dropping right before itself (own index) is a no-op → no indicator.
-    (card as any)._dropPos = 0;
-    await card.updateComplete;
-    expect(rowOf("battery")?.classList.contains("drop-before")).toBe(false);
+    await dragOver(card, "battery", "top");
+    expect(rowFor(card, "battery").classList.contains("drop-before")).toBe(false);
 
     // Dropping right after itself (own index + 1) is also a no-op → no indicator.
-    (card as any)._dropPos = 1;
-    await card.updateComplete;
-    expect(rowOf("ev")?.classList.contains("drop-before")).toBe(false);
+    await dragOver(card, "ev", "top");
+    expect(rowFor(card, "ev").classList.contains("drop-before")).toBe(false);
 
     // A real target still shows the indicator.
-    (card as any)._dropPos = 2;
-    await card.updateComplete;
-    expect(rowOf("heating")?.classList.contains("drop-before")).toBe(true);
-    card.remove();
+    await dragOver(card, "heating", "top");
+    expect(rowFor(card, "heating").classList.contains("drop-before")).toBe(true);
   });
 });

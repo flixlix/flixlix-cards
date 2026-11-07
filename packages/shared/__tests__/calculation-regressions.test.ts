@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vite-plus/test";
+import { fakeConfig, fakeHass } from "./fixtures";
 import { computeNonFossilFromCollection } from "../src/states/utils/energy-period";
 import { computeEnergyDistribution } from "../src/utils/compute-energy-distribution";
 import { computeFlowRate } from "../src/utils/compute-flow-rate";
@@ -145,27 +146,27 @@ describe("calculation regressions", () => {
   });
 
   test("computeFlowRate returns max_flow_rate for invalid new model range", () => {
-    const config = {
+    const config = fakeConfig({
       max_expected_power: 100,
       min_expected_power: 100,
       max_flow_rate: 10,
       min_flow_rate: 1,
       use_new_flow_rate_model: true,
-    } as any;
+    });
 
     expect(computeFlowRate(config, 50, 0)).toBe(10);
   });
 
   test("displayValue supports mega units and explicit unit formatting", () => {
-    const hass = { locale: "en" } as any;
-    const config = {
+    const hass = fakeHass();
+    const config = fakeConfig({
       type: "energy-flow-card-plus",
       kilo_decimals: 1,
       base_decimals: 0,
       mega_decimals: 2,
       kilo_threshold: 1000,
       mega_threshold: 1000000,
-    } as any;
+    });
 
     expect(displayValue(hass, config, 1500000, {})).toBe(`1.5${thinSpace}MWh`);
     expect(displayValue(hass, config, 1500000, {})).toContain("MWh");

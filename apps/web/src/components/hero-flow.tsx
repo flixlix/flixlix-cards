@@ -122,12 +122,7 @@ export function HeroFlow({ className }: { className?: string }) {
   const homeSolarShare = 0.85;
 
   return (
-    <svg
-      viewBox="0 0 460 384"
-      role="img"
-      aria-label="Animated diagram of power flowing between solar, grid, battery and home"
-      className={cn("select-none", className)}
-    >
+    <svg viewBox="0 0 460 384" aria-hidden="true" className={cn("select-none", className)}>
       <g fill="none" strokeWidth="2">
         <path d={flowPath(FLOWS.solarToGrid)} className="stroke-foreground/10" />
         <path d={flowPath(FLOWS.batteryToHome)} className="stroke-foreground/10" />

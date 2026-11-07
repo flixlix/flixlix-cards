@@ -3,6 +3,7 @@ import {
   type CardMainContext,
   type ConfigEntities,
   type FlowCardPlusConfig,
+  type SolarObject,
   type TemplatesObj,
 } from "@flixlix-cards/shared/types";
 import { displayValue } from "@flixlix-cards/shared/utils/display-value";
@@ -19,7 +20,7 @@ export const solarElement = (
     templatesObj,
   }: {
     entities: ConfigEntities;
-    solar: any;
+    solar: SolarObject;
     templatesObj: TemplatesObj;
   }
 ) => {
@@ -42,8 +43,7 @@ export const solarElement = (
     const toleranceSet = config.entities.solar?.secondary_info?.display_zero_tolerance ?? 0;
     return (
       Number(solar.secondary.state) >= toleranceSet ||
-      (config.entities.solar?.secondary_info?.accept_negative &&
-        typeof Number(+solar.secondary.state) === "number")
+      config.entities.solar?.secondary_info?.accept_negative === true
     );
   };
   const sumTotalConfig = entities.solar?.secondary_info?.sum_total;
@@ -52,7 +52,7 @@ export const solarElement = (
     ? Math.max(getEntityStateWatts(main.hass, secondaryEntity), 0)
     : 0;
   const bottomSolarState = sumTotalConfig
-    ? solar.state.total - secondarySolarStateWatts
+    ? (solar.state.total ?? 0) - secondarySolarStateWatts
     : solar.state.total;
   return html`<div class="circle-container solar">
     <span class="label">${solar.name}</span>
@@ -91,13 +91,9 @@ export const solarElement = (
           : nothing
       }
       ${
-        entities.solar?.display_zero_state !== false || (bottomSolarState || 0) > 0
+        entities.solar?.display_zero_state !== false || (bottomSolarState ?? 0) > 0
           ? html` <span class="solar">
-              ${displayValue(main.hass, config, bottomSolarState, {
-                unit: solar.state.unit,
-                unitWhiteSpace: solar.state.unit_white_space,
-                decimals: solar.state.decimals,
-              })}
+              ${displayValue(main.hass, config, bottomSolarState, {})}
             </span>`
           : nothing
       }

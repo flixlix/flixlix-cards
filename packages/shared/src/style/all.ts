@@ -1,3 +1,13 @@
+import { type IndividualObject } from "@flixlix-cards/shared/states/raw/individual/get-individual-object";
+import {
+  type BatteryObject,
+  type ColorValue,
+  type ConfigEntities,
+  type GridObject,
+  type IndividualDeviceType,
+  type NonFossilObject,
+  type SolarObject,
+} from "@flixlix-cards/shared/types";
 import { computeColor } from "./colors";
 import { convertColorListToHex } from "./convert-color";
 
@@ -7,25 +17,24 @@ type HostWithStyle = {
   };
 };
 
-type IndividualDeviceType = {
-  color?: string | number[];
-  color_icon?: boolean;
-  color_value?: boolean;
-  secondary_info?: { color_value?: boolean };
-};
-
 type DynamicStylesInput = {
-  grid: any;
-  solar: any;
-  entities: any;
-  individual: Array<{ has?: boolean; field?: IndividualDeviceType }>;
-  battery: any;
+  grid: GridObject;
+  solar: SolarObject;
+  entities: ConfigEntities;
+  individual: Pick<IndividualObject, "has" | "field">[];
+  battery: BatteryObject;
   homeSources: Record<string, { color: string }>;
   homeLargestSource: string;
-  nonFossil: any;
+  nonFossil: NonFossilObject;
   display_zero_lines_transparency?: number;
   display_zero_lines_grey_color?: string | number[];
   isCardWideEnough?: boolean;
+};
+
+/** An empty colour (cleared in the editor) falls back like an unset one. */
+const cssColor = (color: ColorValue, fallback: string): string => {
+  const hex = typeof color === "object" ? convertColorListToHex(color) : color;
+  return hex === "" ? fallback : hex;
 };
 
 export const allDynamicStyles = (main: HostWithStyle, input: DynamicStylesInput) => {
@@ -70,17 +79,14 @@ export const allDynamicStyles = (main: HostWithStyle, input: DynamicStylesInput)
   );
 
   if (grid.color.fromGrid !== undefined) {
-    if (typeof grid.color.fromGrid === "object") {
-      grid.color.fromGrid = convertColorListToHex(grid.color.fromGrid);
-    }
-    main.style.setProperty("--energy-grid-consumption-color", grid.color.fromGrid || "#a280db");
+    main.style.setProperty(
+      "--energy-grid-consumption-color",
+      cssColor(grid.color.fromGrid, "#a280db")
+    );
   }
 
   if (grid.color.toGrid !== undefined) {
-    if (typeof grid.color.toGrid === "object") {
-      grid.color.toGrid = convertColorListToHex(grid.color.toGrid);
-    }
-    main.style.setProperty("--energy-grid-return-color", grid.color.toGrid || "#a280db");
+    main.style.setProperty("--energy-grid-return-color", cssColor(grid.color.toGrid, "#a280db"));
   }
 
   main.style.setProperty(
@@ -117,11 +123,7 @@ export const allDynamicStyles = (main: HostWithStyle, input: DynamicStylesInput)
   );
 
   if (entities.solar?.color !== undefined) {
-    let solarColor = entities.solar.color;
-    if (typeof solarColor === "object") {
-      solarColor = convertColorListToHex(solarColor);
-    }
-    main.style.setProperty("--energy-solar-color", solarColor || "#ff9800");
+    main.style.setProperty("--energy-solar-color", cssColor(entities.solar.color, "#ff9800"));
   }
   main.style.setProperty(
     "--icon-solar-color",
@@ -129,26 +131,27 @@ export const allDynamicStyles = (main: HostWithStyle, input: DynamicStylesInput)
   );
 
   if (battery.color.fromBattery !== undefined) {
-    if (typeof battery.color.fromBattery === "object") {
-      battery.color.fromBattery = convertColorListToHex(battery.color.fromBattery);
-    }
-    main.style.setProperty("--energy-battery-out-color", battery.color.fromBattery || "#4db6ac");
+    main.style.setProperty(
+      "--energy-battery-out-color",
+      cssColor(battery.color.fromBattery, "#4db6ac")
+    );
   }
   if (battery.color.toBattery !== undefined) {
-    if (typeof battery.color.toBattery === "object") {
-      battery.color.toBattery = convertColorListToHex(battery.color.toBattery);
-    }
-    main.style.setProperty("--energy-battery-in-color", battery.color.toBattery || "#a280db");
+    main.style.setProperty(
+      "--energy-battery-in-color",
+      cssColor(battery.color.toBattery, "#a280db")
+    );
   }
-  battery.color.icon_type = entities.battery?.color_icon;
+  const batteryIconColorType = entities.battery?.color_icon;
+  const isBatteryDischarging = (battery.state.fromBattery ?? 0) >= (battery.state.toBattery ?? 0);
   main.style.setProperty(
     "--icon-battery-color",
-    battery.color.icon_type === "consumption"
+    batteryIconColorType === "consumption"
       ? "var(--energy-battery-in-color)"
-      : battery.color.icon_type === "production"
+      : batteryIconColorType === "production"
         ? "var(--energy-battery-out-color)"
-        : battery.color.icon_type === "color_dynamically"
-          ? battery.state.fromBattery >= battery.state.toBattery
+        : batteryIconColorType === "color_dynamically"
+          ? isBatteryDischarging
             ? "var(--energy-battery-out-color)"
             : "var(--energy-battery-in-color)"
           : "var(--primary-text-color)"
@@ -161,7 +164,7 @@ export const allDynamicStyles = (main: HostWithStyle, input: DynamicStylesInput)
       : batteryStateOfChargeColorType === "production"
         ? "var(--energy-battery-out-color)"
         : batteryStateOfChargeColorType === "color_dynamically"
-          ? battery.state.fromBattery >= battery.state.toBattery
+          ? isBatteryDischarging
             ? "var(--energy-battery-out-color)"
             : "var(--energy-battery-in-color)"
           : "var(--primary-text-color)"
@@ -173,7 +176,7 @@ export const allDynamicStyles = (main: HostWithStyle, input: DynamicStylesInput)
       : battery.color.circle_type === "production"
         ? "var(--energy-battery-out-color)"
         : battery.color.circle_type !== "no_color"
-          ? battery.state.fromBattery >= battery.state.toBattery
+          ? isBatteryDischarging
             ? "var(--energy-battery-out-color)"
             : "var(--energy-battery-in-color)"
           : "var(--energy-battery-in-color)"
@@ -187,12 +190,9 @@ export const allDynamicStyles = (main: HostWithStyle, input: DynamicStylesInput)
   }
 
   if (nonFossil.color !== undefined) {
-    if (typeof nonFossil.color === "object") {
-      nonFossil.color = convertColorListToHex(nonFossil.color);
-    }
     main.style.setProperty(
       "--non-fossil-color",
-      nonFossil.color || "var(--energy-non-fossil-color)"
+      cssColor(nonFossil.color, "var(--energy-non-fossil-color)")
     );
   }
   main.style.setProperty(
@@ -235,7 +235,7 @@ export const allDynamicStyles = (main: HostWithStyle, input: DynamicStylesInput)
 
   main.style.setProperty(
     "--battery-grid-line",
-    grid.state.toBattery || 0 > 0
+    (grid.state.toBattery ?? 0) > 0
       ? "var(--energy-grid-consumption-color)"
       : "var(--energy-grid-return-color)"
   );
@@ -279,34 +279,31 @@ export const allDynamicStyles = (main: HostWithStyle, input: DynamicStylesInput)
   }
 
   if (individual?.some((ind) => ind.has)) {
-    const getStylesForIndividual = (field: IndividualDeviceType, index: number) => {
+    const getStylesForIndividual = (field: Partial<IndividualDeviceType>, index: number) => {
       const colors = ["#d0cc5b", "#964cb5", "#b54c9d", "#5bd0cc"];
       const fieldNames = ["left-top", "left-bottom", "right-top", "right-bottom"];
 
-      const fieldName = fieldNames[index] || "left-top";
+      const fieldName = fieldNames[index] ?? "left-top";
+      const defaultColor = colors[index] ?? "#d0cc5b";
 
-      let individualColor = field?.color;
-      if (typeof individualColor === "object") {
-        individualColor = convertColorListToHex(individualColor);
-      }
       main.style.setProperty(
         `--individual-${fieldName}-color`,
-        individualColor || colors[index] || "#d0cc5b"
+        field.color === undefined ? defaultColor : cssColor(field.color, defaultColor)
       );
 
       main.style.setProperty(
         `--icon-individual-${fieldName}-color`,
-        field?.color_icon !== false
+        field.color_icon !== false
           ? `var(--individual-${fieldName}-color)`
           : "var(--primary-text-color)"
       );
       main.style.setProperty(
         `--text-individual-${fieldName}-color`,
-        field?.color_value ? `var(--individual-${fieldName}-color)` : "var(--primary-text-color)"
+        field.color_value ? `var(--individual-${fieldName}-color)` : "var(--primary-text-color)"
       );
       main.style.setProperty(
         `--secondary-text-individual-${fieldName}-color`,
-        field?.secondary_info?.color_value
+        field.secondary_info?.color_value
           ? `var(--individual-${fieldName}-color)`
           : "var(--primary-text-color)"
       );
@@ -321,7 +318,7 @@ export const allDynamicStyles = (main: HostWithStyle, input: DynamicStylesInput)
       if (!individualShown) {
         continue;
       }
-      getStylesForIndividual(individualShown.field || {}, index);
+      getStylesForIndividual(individualShown.field ?? {}, index);
     }
   }
 };

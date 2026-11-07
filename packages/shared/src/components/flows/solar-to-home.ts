@@ -31,7 +31,7 @@ export const flowSolarToHome = (
   { battery, grid, individual, solar, newDur }: Flows
 ) => {
   const shouldShow =
-    solar.has && showLine(config, solar.state.toHome || 0) && !config.entities.home?.hide;
+    solar.has && showLine(config, solar.state.toHome ?? 0) && !config.entities.home?.hide;
   if (!shouldShow) {
     return nothing;
   }
@@ -51,7 +51,7 @@ export const flowSolarToHome = (
     >
       <path
         id="solar"
-        class="solar ${styleLine(solar.state.toHome || 0, config)}"
+        class="solar ${styleLine(solar.state.toHome ?? 0, config)}"
         d="M${battery.has ? 55 : 53},0 v${grid.has ? 15 : 17} c0,${
           battery.has ? "30 10,30 30,30" : "35 10,35 30,35"
         } h25"

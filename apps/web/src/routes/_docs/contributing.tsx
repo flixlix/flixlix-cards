@@ -139,7 +139,7 @@ function ContributingPage() {
 │  ├─ shared/                   # shared utilities & i18n
 │  ├─ ui/                       # shadcn-style UI primitives
 │  ├─ utils/                    # tiny helpers (cn)
-│  └─ tooling/                  # eslint, prettier, tsconfig presets
+│  └─ tooling/                  # bundler, lint rules, test & tsconfig presets
 ├─ pnpm-workspace.yaml
 └─ turbo.json`}
         />
@@ -208,13 +208,14 @@ pnpm dev`}
         </Prose>
         <CodeBlock
           language="bash"
-          code={`pnpm format:check   # prettier
-pnpm lint           # eslint
+          code={`pnpm check          # Vite+: oxfmt + oxlint + type-aware checks
 pnpm typecheck      # tsc --noEmit
-pnpm test           # vitest`}
+pnpm test           # Vitest via vp test`}
         />
         <Callout variant="info">
-          Each package also has a <code>precommit</code> script that runs the relevant subset.
+          <code>pnpm lint</code> (<code>vp lint</code>) and <code>pnpm format</code> (
+          <code>vp fmt</code>) run the lint and format steps on their own. Coding standards live in{" "}
+          <code>CODING_STANDARDS.md</code>.
         </Callout>
       </Section>
 

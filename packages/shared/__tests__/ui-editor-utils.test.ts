@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
-import { fireEvent } from "../src/ui-editor/utils/fire-event";
+import { fireEvent } from "../src/ha/common/dom/fire-event";
 import { loadHaForm } from "../src/ui-editor/utils/load-ha-form";
 import { loadSortable } from "../src/ui-editor/utils/sortable.ondemand";
 
@@ -10,6 +10,12 @@ vi.mock("../src/ui-editor/utils/sortable", () => ({
   },
 }));
 
+declare global {
+  interface HASSDomEvents {
+    "test-event": { foo: string };
+  }
+}
+
 describe("ui editor utilities", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
@@ -17,27 +23,22 @@ describe("ui editor utilities", () => {
   });
 
   test("fireEvent dispatches default bubbling and composed event with detail", () => {
-    const dispatchEvent = vi.fn();
-    const node = {
-      dispatchEvent,
-    } as unknown as HTMLElement;
+    const node = new EventTarget();
+    const dispatchEvent = vi.spyOn(node, "dispatchEvent");
 
-    const detail = { foo: "bar" } as any;
-    const event = fireEvent(node, "hass-more-info" as any, detail);
+    const detail = { foo: "bar" };
+    const event = fireEvent(node, "test-event", detail);
 
     expect(dispatchEvent).toHaveBeenCalledTimes(1);
     expect(event.bubbles).toBe(true);
     expect(event.composed).toBe(true);
-    expect((event as any).detail).toEqual(detail);
+    expect(event.detail).toEqual(detail);
   });
 
   test("fireEvent uses empty detail and explicit options", () => {
-    const dispatchEvent = vi.fn();
-    const node = {
-      dispatchEvent,
-    } as unknown as HTMLElement;
+    const node = new EventTarget();
 
-    const event = fireEvent(node, "hass-more-info" as any, undefined, {
+    const event = fireEvent(node, "test-event", undefined, {
       bubbles: false,
       cancelable: true,
       composed: false,
@@ -46,7 +47,7 @@ describe("ui editor utilities", () => {
     expect(event.bubbles).toBe(false);
     expect(event.cancelable).toBe(true);
     expect(event.composed).toBe(false);
-    expect((event as any).detail).toEqual({});
+    expect(event.detail).toEqual({});
   });
 
   test("loadHaForm initializes button-card and entities-card config elements when needed", async () => {
@@ -91,7 +92,7 @@ describe("ui editor utilities", () => {
     vi.stubGlobal("customElements", {
       get: vi.fn((name: string) => {
         if (name === "ha-form") {
-          return class HaForm {};
+          return {};
         }
         return undefined;
       }),

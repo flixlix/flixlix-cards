@@ -3,6 +3,8 @@ import {
   type CardMainContext,
   type ConfigEntities,
   type FlowCardPlusConfig,
+  type GridObject,
+  type HomeObject,
   type NewDur,
   type TemplatesObj,
 } from "@flixlix-cards/shared/types";
@@ -10,10 +12,10 @@ import { html, nothing, svg } from "lit";
 import { generalSecondarySpan } from "./spans/general-secondary-span";
 
 interface Home {
-  home: any;
+  home: HomeObject;
   entities: ConfigEntities;
   templatesObj: TemplatesObj;
-  grid: any;
+  grid: GridObject;
   newDur: NewDur;
   homeUsageToDisplay: string;
   homeSolarCircumference: number;

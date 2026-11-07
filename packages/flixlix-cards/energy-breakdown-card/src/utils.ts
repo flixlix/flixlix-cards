@@ -18,7 +18,7 @@ const DEFAULT_PALETTE = [
   "#ec407a",
   "#7e57c2",
   "#26c6da",
-];
+] as const;
 
 const NAME_COLOR_HINTS: Array<{ test: RegExp; color: string }> = [
   { test: /(solar|pv|photovoltaic|inverter)/i, color: "var(--energy-solar-color, #ff9800)" },
@@ -43,7 +43,7 @@ export function pickColor(
   if (hint) {
     return hint;
   }
-  return DEFAULT_PALETTE[index % DEFAULT_PALETTE.length] ?? DEFAULT_PALETTE[0]!;
+  return DEFAULT_PALETTE[index % DEFAULT_PALETTE.length] ?? DEFAULT_PALETTE[0];
 }
 
 export function getEntityNumericState(hass: HomeAssistant, entity: string): number {
@@ -118,10 +118,10 @@ export function resolveSegments(
     };
   });
 
-  let prepared = list;
   if (config.sort !== false) {
-    prepared = [...prepared].sort((a, b) => b.value - a.value);
+    list.sort((a, b) => b.value - a.value);
   }
+  let prepared = list;
 
   const max = config.max_items;
   if (typeof max === "number" && max > 0 && prepared.length > max) {

@@ -31,7 +31,7 @@ export const flowGridToHome = (
   { battery, grid, individual, solar, newDur }: Flows
 ) => {
   const shouldShow =
-    grid.has && showLine(config, grid.state.fromGrid) && !config.entities.home?.hide;
+    grid.has && showLine(config, grid.state.fromGrid ?? 0) && !config.entities.home?.hide;
   if (!shouldShow) {
     return nothing;
   }
@@ -51,7 +51,7 @@ export const flowGridToHome = (
       class="flat-line"
     >
       <path
-        class="grid ${styleLine(grid.state.toHome || 0, config)}"
+        class="grid ${styleLine(grid.state.toHome ?? 0, config)}"
         id="grid"
         d="M0,${battery.has ? 50 : solar.has ? 56 : 53} H100"
         vector-effect="non-scaling-stroke"

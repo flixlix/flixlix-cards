@@ -29,18 +29,22 @@ export const individualLeftBottomElement = (
     return spacer;
   }
   const disableEntityClick = !config.clickable_entities;
-  const indexOfIndividual =
-    config?.entities?.individual?.findIndex((e) => e.entity === individualObj.entity) || 0;
-  const duration = newDur.individual[indexOfIndividual] || 0;
+  const indexOfIndividual = config.entities.individual?.findIndex(
+    (e) => e.entity === individualObj.entity
+  );
+  if (indexOfIndividual === -1 || indexOfIndividual === undefined) {
+    return spacer;
+  }
+  const duration = newDur.individual[indexOfIndividual] ?? 0;
   return html`<div class="circle-container individual-bottom bottom">
     ${
-      showLine(config, individualObj?.state || 0) && !config.entities.home?.hide
+      showLine(config, individualObj?.state ?? 0) && !config.entities.home?.hide
         ? html`
             <svg width="80" height="30">
               <path
                 d="M40 40 v-40"
                 id="individual-bottom"
-                class="${styleLine(individualObj?.state || 0, config)}"
+                class="${styleLine(individualObj?.state ?? 0, config)}"
               />
               ${
                 checkShouldShowDots(config) &&
@@ -106,7 +110,7 @@ export const individualLeftBottomElement = (
       }
       ${
         individualObj?.field?.display_zero_state !== false ||
-        (individualObj?.state || 0) > (individualObj.displayZeroTolerance ?? 0)
+        (individualObj?.state ?? 0) > (individualObj.displayZeroTolerance ?? 0)
           ? html` <span class="individual-bottom individual-left-bottom"
               >${
                 individualObj?.showDirection

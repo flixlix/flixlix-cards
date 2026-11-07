@@ -33,7 +33,7 @@ export const flowBatteryToHome = (
   { battery, grid, individual, newDur }: FlowBatteryToHomeFlows
 ) => {
   const shouldShow =
-    battery.has && showLine(config, battery.state.toHome) && !config.entities.home?.hide;
+    battery.has && showLine(config, battery.state.toHome ?? 0) && !config.entities.home?.hide;
   if (!shouldShow) {
     return nothing;
   }
@@ -53,7 +53,7 @@ export const flowBatteryToHome = (
     >
       <path
         id="battery-home"
-        class="battery-home ${styleLine(battery.state.toHome || 0, config)}"
+        class="battery-home ${styleLine(battery.state.toHome ?? 0, config)}"
         d="M55,100 v-${grid.has ? 15 : 17} c0,-30 10,-30 30,-30 h20"
         vector-effect="non-scaling-stroke"
       ></path>

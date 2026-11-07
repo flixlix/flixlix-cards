@@ -1,5 +1,6 @@
 import { type IndividualObject } from "@flixlix-cards/shared/states/raw/individual/get-individual-object";
 import {
+  type BatteryObject,
   type CardMainContext,
   type FlowCardPlusConfig,
   type NewDur,
@@ -19,7 +20,7 @@ interface TopIndividual {
   templatesObj: TemplatesObj;
   individualObj?: IndividualObject;
   displayState: string;
-  battery: any;
+  battery: BatteryObject;
   individualObjs: IndividualObject[];
 }
 
@@ -40,7 +41,8 @@ export const individualRightTopElement = (
     return spacer;
   }
 
-  const duration = newDur.individual[indexOfIndividual] || 1.66;
+  const flowDuration = newDur.individual[indexOfIndividual];
+  const duration = flowDuration === undefined || flowDuration === 0 ? 1.66 : flowDuration;
 
   const hasBottomRow = !!battery?.has || checkHasBottomIndividual(individualObjs);
 
@@ -86,7 +88,7 @@ export const individualRightTopElement = (
       }
       ${
         individualObj?.field?.display_zero_state !== false ||
-        (individualObj.state || 0) > (individualObj.displayZeroTolerance ?? 0)
+        (individualObj.state ?? 0) > (individualObj.displayZeroTolerance ?? 0)
           ? html` <span class="individual-top individual-right-top">
               ${
                 individualObj?.showDirection
@@ -101,7 +103,7 @@ export const individualRightTopElement = (
       }
     </div>
     ${
-      showLine(config, individualObj.state || 0) && !config.entities.home?.hide
+      showLine(config, individualObj.state ?? 0) && !config.entities.home?.hide
         ? html`
             <div class="right-individual-flow-container">
               <svg
@@ -112,7 +114,7 @@ export const individualRightTopElement = (
               >
                 <path
                   id="individual-top-right-home"
-                  class="${styleLine(individualObj.state || 0, config)}"
+                  class="${styleLine(individualObj.state ?? 0, config)}"
                   d="M${hasBottomRow ? 45 : 47},0 v15 c0,${
                     hasBottomRow ? "30 -10,30 -30,30" : "35 -10,35 -30,35"
                   } h-20"

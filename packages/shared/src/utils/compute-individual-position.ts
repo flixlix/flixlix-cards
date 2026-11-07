@@ -1,7 +1,7 @@
 import { type IndividualObject } from "@flixlix-cards/shared/states/raw/individual/get-individual-object";
 
 const filterUnusedIndividualObjs = (individualObjs: IndividualObject[]): IndividualObject[] => {
-  const cloneIndividualObjs = JSON.parse(JSON.stringify(individualObjs)) as IndividualObject[];
+  const cloneIndividualObjs = structuredClone(individualObjs);
   const individualObjsWithHas = cloneIndividualObjs.filter((i) => i?.has);
   return individualObjsWithHas;
 };

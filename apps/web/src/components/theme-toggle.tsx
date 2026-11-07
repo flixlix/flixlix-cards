@@ -1,5 +1,5 @@
 import { Airplay, Moon, Sun } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 
 import {
   applyThemeMode,
@@ -10,7 +10,8 @@ import {
 } from "#/lib/theme";
 import { cn } from "@flixlix-cards/cn";
 
-const ITEM_BASE = "size-6 rounded-full p-1.5 transition-colors";
+const ITEM_BASE =
+  "size-6 cursor-pointer rounded-full p-1.5 transition-colors has-focus-visible:ring-2 has-focus-visible:ring-ring";
 const ITEM_ACTIVE = "bg-accent text-accent-foreground";
 const ITEM_INACTIVE = "text-muted-foreground hover:text-foreground";
 
@@ -20,35 +21,28 @@ const MODES: { key: ThemeMode; label: string; Icon: typeof Sun }[] = [
   { key: "auto", label: "System", Icon: Airplay },
 ];
 
+// Stay in sync when the theme is changed elsewhere (e.g. command menu).
+function subscribeToThemeChange(onChange: () => void) {
+  window.addEventListener(THEME_CHANGE_EVENT, onChange);
+  return () => window.removeEventListener(THEME_CHANGE_EVENT, onChange);
+}
+
 export default function ThemeToggle({ className }: { className?: string }) {
-  const [mode, setMode] = useState<ThemeMode>("light");
-  const [mounted, setMounted] = useState(false);
+  const active = useSyncExternalStore<ThemeMode | null>(
+    subscribeToThemeChange,
+    getThemeMode,
+    () => null
+  );
 
   useEffect(() => {
-    setMode(getThemeMode());
-    setMounted(true);
-    // Stay in sync when the theme is changed elsewhere (e.g. command menu).
-    const onThemeChange = (e: Event) => setMode((e as CustomEvent<ThemeMode>).detail);
-    window.addEventListener(THEME_CHANGE_EVENT, onThemeChange);
-    return () => window.removeEventListener(THEME_CHANGE_EVENT, onThemeChange);
-  }, []);
-
-  useEffect(() => {
-    if (mode !== "auto") {
-      return;
+    if (active !== "auto") {
+      return undefined;
     }
     const media = window.matchMedia("(prefers-color-scheme: dark)");
     const onChange = () => applyThemeMode("auto");
     media.addEventListener("change", onChange);
     return () => media.removeEventListener("change", onChange);
-  }, [mode]);
-
-  function selectMode(next: ThemeMode) {
-    setMode(next);
-    setThemeMode(next);
-  }
-
-  const active = mounted ? mode : null;
+  }, [active]);
 
   return (
     <div
@@ -61,18 +55,22 @@ export default function ThemeToggle({ className }: { className?: string }) {
       )}
     >
       {MODES.map(({ key, label, Icon }) => (
-        <button
+        <label
           key={key}
-          type="button"
-          role="radio"
-          aria-checked={active === key}
-          aria-label={label}
           title={label}
-          onClick={() => selectMode(key)}
           className={cn(ITEM_BASE, active === key ? ITEM_ACTIVE : ITEM_INACTIVE)}
         >
+          <input
+            type="radio"
+            name="theme"
+            value={key}
+            aria-label={label}
+            checked={active === key}
+            onChange={() => setThemeMode(key)}
+            className="sr-only"
+          />
           <Icon className="size-full" fill="currentColor" />
-        </button>
+        </label>
       ))}
     </div>
   );

@@ -11,7 +11,7 @@ export const styleLine = (power: number, config: FlowCardPlusConfig): string => 
   let styleclass = "";
   if (displayZeroMode === "transparency" || displayZeroMode === "custom") {
     const transparency = config?.display_zero_lines?.transparency;
-    if (transparency ?? 50 > 0) {
+    if ((transparency ?? 50) > 0) {
       styleclass += "transparency ";
     }
   }

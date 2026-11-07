@@ -266,7 +266,9 @@ export class SortableListCard extends LitElement implements LovelaceCard {
     }
     const call = buildSaveCall(this._config, this._order);
     if (call) {
-      this.hass.callService(call.domain, call.service, call.serviceData, call.target);
+      // Fire-and-forget: a failed call surfaces as an unhandled rejection, and the optimistic
+      // order falls back to the entity state on the first update after PENDING_TIMEOUT.
+      void this.hass.callService(call.domain, call.service, call.serviceData, call.target);
     }
   }
 
@@ -285,13 +287,15 @@ export class SortableListCard extends LitElement implements LovelaceCard {
       return;
     }
     event.preventDefault();
-    const row = event.currentTarget as HTMLElement;
-    const rect = row.getBoundingClientRect();
+    if (!(event.currentTarget instanceof Element)) {
+      return;
+    }
+    const rect = event.currentTarget.getBoundingClientRect();
     const after = event.clientY - rect.top > rect.height / 2;
     this._dropPos = after ? index + 1 : index;
   }
 
-  private _onDragEnd(): void {
+  private _onDragEnd = (): void => {
     if (this._dragKey !== null && this._dropPos !== null) {
       const from = this._order.indexOf(this._dragKey);
       if (from !== -1) {
@@ -301,7 +305,7 @@ export class SortableListCard extends LitElement implements LovelaceCard {
     this._dragging = false;
     this._dragKey = null;
     this._dropPos = null;
-  }
+  };
 
   protected render(): TemplateResult | typeof nothing {
     if (!this._config || !this.hass) {

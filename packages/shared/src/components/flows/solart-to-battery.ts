@@ -32,7 +32,7 @@ export const flowSolarToBattery = (
   config: FlowCardPlusConfig,
   { battery, individual, solar, newDur }: FlowSolarToBatteryFlows
 ) => {
-  const shouldShow = battery.has && solar.has && showLine(config, solar.state.toBattery || 0);
+  const shouldShow = battery.has && solar.has && showLine(config, solar.state.toBattery ?? 0);
   if (!shouldShow) {
     return nothing;
   }
@@ -53,7 +53,7 @@ export const flowSolarToBattery = (
     >
       <path
         id="battery-solar"
-        class="battery-solar ${styleLine(solar.state.toBattery || 0, config)}"
+        class="battery-solar ${styleLine(solar.state.toBattery ?? 0, config)}"
         d="M50,0 V100"
         vector-effect="non-scaling-stroke"
       ></path>

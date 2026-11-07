@@ -37,7 +37,8 @@ export const individualRightBottomElement = (
     return spacer;
   }
 
-  const duration = newDur.individual[indexOfIndividual] || 1.66;
+  const flowDuration = newDur.individual[indexOfIndividual];
+  const duration = flowDuration === undefined || flowDuration === 0 ? 1.66 : flowDuration;
 
   return html`<div
     class="circle-container individual-bottom individual-right individual-right-bottom"
@@ -82,7 +83,7 @@ export const individualRightBottomElement = (
       }
       ${
         individualObj?.field?.display_zero_state !== false ||
-        (individualObj.state || 0) > (individualObj.displayZeroTolerance ?? 0)
+        (individualObj.state ?? 0) > (individualObj.displayZeroTolerance ?? 0)
           ? html` <span class="individual-bottom individual-right-bottom">
               ${
                 individualObj?.showDirection
@@ -98,7 +99,7 @@ export const individualRightBottomElement = (
     </div>
     <span class="label">${individualObj.name}</span>
     ${
-      showLine(config, individualObj.state || 0) && !config.entities.home?.hide
+      showLine(config, individualObj.state ?? 0) && !config.entities.home?.hide
         ? html`
             <div class="right-individual-flow-container">
               <svg
@@ -109,7 +110,7 @@ export const individualRightBottomElement = (
               >
                 <path
                   id="individual-bottom-right-home"
-                  class="${styleLine(individualObj.state || 0, config)}"
+                  class="${styleLine(individualObj.state ?? 0, config)}"
                   d="M45,100 v-15 c0,-30 -10,-30 -30,-30 h-20"
                   vector-effect="non-scaling-stroke"
                 />

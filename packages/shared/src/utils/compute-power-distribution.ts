@@ -86,7 +86,7 @@ export function computePowerDistributionAfterSolarAndBattery(params: {
     solar.state.toHome = 0;
   } else if (battery.state.toBattery !== null && battery.state.toBattery > 0) {
     solar.state.toBattery =
-      (solar.state.total ?? 0) - (solar.state.toHome || 0) - (grid.state.toGrid || 0);
+      (solar.state.total ?? 0) - (solar.state.toHome ?? 0) - (grid.state.toGrid ?? 0);
     grid.state.toBattery = (battery.state.toBattery ?? 0) - solar.state.toBattery;
   } else {
     grid.state.toBattery = 0;
@@ -97,28 +97,28 @@ export function computePowerDistributionAfterSolarAndBattery(params: {
 
   if (battery.has) {
     if (solar.has) {
-      if (!battery.state.toGrid) {
+      if (battery.state.toGrid === null || battery.state.toGrid === 0) {
         battery.state.toGrid = Math.max(
           0,
-          (grid.state.toGrid || 0) -
-            (solar.state.total || 0) -
-            (battery.state.toBattery || 0) -
-            (grid.state.toBattery || 0)
+          (grid.state.toGrid ?? 0) -
+            (solar.state.total ?? 0) -
+            (battery.state.toBattery ?? 0) -
+            (grid.state.toBattery ?? 0)
         );
       }
 
-      solar.state.toBattery = (battery.state.toBattery ?? 0) - (grid.state.toBattery || 0);
+      solar.state.toBattery = (battery.state.toBattery ?? 0) - (grid.state.toBattery ?? 0);
       if (entities.solar?.display_zero_tolerance) {
-        if (entities.solar.display_zero_tolerance >= (solar.state.total || 0)) {
+        if (entities.solar.display_zero_tolerance >= (solar.state.total ?? 0)) {
           solar.state.toBattery = 0;
         }
       }
     } else {
-      battery.state.toGrid = grid.state.toGrid || 0;
+      battery.state.toGrid = grid.state.toGrid ?? 0;
     }
 
     battery.state.toGrid =
-      (battery.state.toGrid || 0) > largestGridBatteryTolerance ? battery.state.toGrid || 0 : 0;
+      (battery.state.toGrid ?? 0) > largestGridBatteryTolerance ? (battery.state.toGrid ?? 0) : 0;
     battery.state.toHome = (battery.state.fromBattery ?? 0) - (battery.state.toGrid ?? 0);
   }
 

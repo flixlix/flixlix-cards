@@ -19,10 +19,7 @@ export const defaultValues = {
   },
 };
 
-export function getDefaultConfig(
-  hass: HomeAssistant,
-  cardType: "power" | "energy" = "power"
-): object {
+export function getDefaultConfig(hass: HomeAssistant, cardType: "power" | "energy" = "power") {
   function checkStrings(entiyId: string, testStrings: string[]): boolean {
     const firstId = getFirstEntityName(entiyId);
     const friendlyName = hass.states[firstId]?.attributes.friendly_name;
@@ -35,8 +32,8 @@ export function getDefaultConfig(
     const energyEntities = Object.keys(hass.states).filter((entityId) => {
       const stateObj = hass.states[getFirstEntityName(entityId)];
       const isAvailable =
-        (stateObj?.state && stateObj.attributes && stateObj.attributes.device_class === "energy") ||
-        stateObj?.entity_id.includes("energy");
+        (!!stateObj?.state && stateObj.attributes?.device_class === "energy") ||
+        stateObj?.entity_id.includes("energy") === true;
       return isAvailable;
     });
     optionEntities = energyEntities;
@@ -44,8 +41,8 @@ export function getDefaultConfig(
     const powerEntities = Object.keys(hass.states).filter((entityId) => {
       const stateObj = hass.states[getFirstEntityName(entityId)];
       const isAvailable =
-        (stateObj?.state && stateObj.attributes && stateObj.attributes.device_class === "power") ||
-        stateObj?.entity_id.includes("power");
+        (!!stateObj?.state && stateObj.attributes?.device_class === "power") ||
+        stateObj?.entity_id.includes("power") === true;
       return isAvailable;
     });
     optionEntities = powerEntities;
@@ -61,15 +58,13 @@ export function getDefaultConfig(
     "soc",
     "percentage",
   ];
-  const firstGridEntity = optionEntities.filter((entityId) =>
-    checkStrings(entityId, gridTestString)
-  )[0];
-  const firstSolarEntity = optionEntities.filter((entityId) =>
+  const firstGridEntity = optionEntities.find((entityId) => checkStrings(entityId, gridTestString));
+  const firstSolarEntity = optionEntities.find((entityId) =>
     checkStrings(entityId, solarTestString)
-  )[0];
-  const firstBatteryEntity = optionEntities.filter((entityId) =>
+  );
+  const firstBatteryEntity = optionEntities.find((entityId) =>
     checkStrings(entityId, batteryTestString)
-  )[0];
+  );
 
   const percentageEntities = Object.keys(hass.states).filter((entityId) => {
     const stateObj = hass.states[entityId];
@@ -81,9 +76,9 @@ export function getDefaultConfig(
     return isAvailable;
   });
 
-  const firstBatteryPercentageEntity = percentageEntities.filter((entityId) =>
+  const firstBatteryPercentageEntity = percentageEntities.find((entityId) =>
     checkStrings(entityId, batteryPercentTestString)
-  )[0];
+  );
   return {
     entities: {
       battery: {
