@@ -32,31 +32,15 @@ const readings = (
   } as FlowCardPlusConfig);
 
 describe("powerReadings", () => {
-  test("a single grid entity reads positive as import and negative as export", () => {
-    const grid = { grid: { entity: "sensor.grid", power_outage: { entity: "" } } };
-
-    expect(readings(grid, { "sensor.grid": ["500"] }).grid).toEqual({ fromGrid: 500, toGrid: 0 });
-    expect(readings(grid, { "sensor.grid": ["-200"] }).grid).toEqual({ fromGrid: 0, toGrid: 200 });
-  });
-
-  test("invert_state swaps the direction of a single grid or battery entity", () => {
+  test("a single grid or battery entity is read as one signed value", () => {
     const entities = {
-      grid: { entity: "sensor.grid", invert_state: true, power_outage: { entity: "" } },
+      grid: { entity: "sensor.grid", power_outage: { entity: "" } },
       battery: { entity: "sensor.battery", invert_state: true },
     };
-    const result = readings(entities, { "sensor.grid": ["500"], "sensor.battery": ["300"] });
+    const result = readings(entities, { "sensor.grid": ["-200"], "sensor.battery": ["300"] });
 
-    expect(result.grid).toEqual({ fromGrid: 0, toGrid: 500 });
-    expect(result.battery).toEqual({ toBattery: 300, fromBattery: 0 });
-  });
-
-  test("a single battery entity reads positive as discharge", () => {
-    const result = readings(
-      { battery: { entity: "sensor.battery" } },
-      { "sensor.battery": ["300"] }
-    );
-
-    expect(result.battery).toEqual({ toBattery: 0, fromBattery: 300 });
+    expect(result.grid).toEqual({ kind: "single", value: -200 });
+    expect(result.battery).toEqual({ kind: "single", value: 300 });
   });
 
   test("split consumption/production entities are read separately", () => {
@@ -68,7 +52,7 @@ describe("powerReadings", () => {
     };
     const result = readings(entities, { "sensor.import": ["120"], "sensor.export": ["30"] });
 
-    expect(result.grid).toEqual({ fromGrid: 120, toGrid: 30 });
+    expect(result.grid).toEqual({ kind: "split", outOf: 120, into: 30 });
   });
 
   test("kW and MW readings are converted to W", () => {
@@ -85,7 +69,7 @@ describe("powerReadings", () => {
     };
     const result = readings(entities, { "sensor.grid": [state], "sensor.device": [state] });
 
-    expect(result.grid).toEqual({ fromGrid: null, toGrid: null });
+    expect(result.grid).toEqual({ kind: "single", value: null });
     expect(result.individuals).toEqual([null]);
   });
 
@@ -110,14 +94,5 @@ describe("powerReadings", () => {
     );
 
     expect(result.solar).toEqual({ total: 350, secondary: 50 });
-  });
-
-  test("individual devices read as absolute values", () => {
-    const result = readings(
-      { individual: [{ entity: "sensor.device" }] },
-      { "sensor.device": ["-50"] }
-    );
-
-    expect(result.individuals).toEqual([50]);
   });
 });

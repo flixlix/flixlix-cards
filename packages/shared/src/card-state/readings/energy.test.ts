@@ -38,9 +38,6 @@ const grid = (entity: string | { consumption: string; production: string }, inve
   grid: { entity, invert_state: invert, power_outage: { entity: "" } },
 });
 
-const battery = (invert: boolean) =>
-  config({ battery: { entity: "sensor.battery", invert_state: invert } });
-
 describe("energyReadings", () => {
   test("are loading until the period's growth map is available", () => {
     expect(energyReadings(hassWith(), config(grid("sensor.grid")), undefined)).toEqual({
@@ -61,33 +58,22 @@ describe("energyReadings", () => {
     );
 
     expect(result.family).toBe("energy");
-    expect(result.grid).toEqual({ fromGrid: 1200, toGrid: 300 });
+    expect(result.grid).toEqual({ kind: "split", outOf: 1200, into: 300 });
     expect(result.solar.total).toBe(900);
   });
 
-  test("a single grid entity is import, or export with invert_state", () => {
-    const growth = { "sensor.grid": 500 };
+  test("a single grid or battery entity is read as one value", () => {
+    const growth = { "sensor.grid": 500, "sensor.battery": 400 };
+    const result = ready(
+      energyReadings(
+        hassWith(),
+        config({ ...grid("sensor.grid", true), battery: { entity: "sensor.battery" } }),
+        growth
+      )
+    );
 
-    expect(ready(energyReadings(hassWith(), config(grid("sensor.grid")), growth)).grid).toEqual({
-      fromGrid: 500,
-      toGrid: 0,
-    });
-    expect(
-      ready(energyReadings(hassWith(), config(grid("sensor.grid", true)), growth)).grid
-    ).toEqual({ fromGrid: 0, toGrid: 500 });
-  });
-
-  test("a single battery entity is charge, or discharge with invert_state", () => {
-    const growth = { "sensor.battery": 400 };
-
-    expect(ready(energyReadings(hassWith(), battery(false), growth)).battery).toEqual({
-      toBattery: 400,
-      fromBattery: 0,
-    });
-    expect(ready(energyReadings(hassWith(), battery(true), growth)).battery).toEqual({
-      toBattery: 0,
-      fromBattery: 400,
-    });
+    expect(result.grid).toEqual({ kind: "single", value: 500 });
+    expect(result.battery).toEqual({ kind: "single", value: 400 });
   });
 
   test("a statistic missing from the growth map reads as null", () => {

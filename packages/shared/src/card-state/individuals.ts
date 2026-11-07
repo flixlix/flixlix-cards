@@ -5,10 +5,10 @@ import {
   computeFieldName,
 } from "@flixlix-cards/shared/utils/compute-field-attributes";
 import { convertColorListToHex } from "@flixlix-cards/shared/utils/convert-color";
-import { isNumberValue, nonEmpty } from "@flixlix-cards/shared/utils/utils";
+import { isNumberValue, nonEmpty, sortedCopy } from "@flixlix-cards/shared/utils/utils";
 import { type HomeAssistant } from "custom-card-helpers";
 import { type Formatter } from "./format";
-import { isAboveTolerance } from "./tolerance";
+import { type NodeTotals, type Presence } from "./normalize";
 import { type CardStateInput, type IndividualSlot, type ReadyCardState } from "./types";
 
 const unconfigured: IndividualObject = {
@@ -98,28 +98,28 @@ const fieldColor = (color: IndividualDeviceType["color"]): string | null => {
 /** Individual device nodes in config order. */
 export const individualNodes = (
   input: CardStateInput,
-  readings: (number | null)[],
+  totals: NodeTotals,
+  presence: Presence,
   format: Formatter
 ): IndividualObject[] =>
   (input.config.entities.individual ?? []).map((field, index) => {
     if (!field?.entity) {
       return unconfigured;
     }
-    const state = readings[index] ?? null;
+    const state = totals.individuals[index] ?? 0;
     const displayZero = field.display_zero ?? false;
     const displayZeroTolerance = field.display_zero_tolerance ?? 0;
-    const invertConfigured = field.inverted_animation ?? false;
     return {
       field,
       entity: field.entity,
-      has: displayZero || isAboveTolerance(state, displayZeroTolerance),
+      has: presence.individuals[index] ?? false,
       state,
       displayZero,
       displayZeroTolerance,
       icon: computeFieldIcon(input.hass, field, "mdi:flash"),
       name: computeFieldName(input.hass, field, "Individual"),
       color: fieldColor(field.color),
-      invertAnimation: state !== null && state < 0 ? !invertConfigured : invertConfigured,
+      invertAnimation: field.inverted_animation ?? false,
       showDirection: field.show_direction ?? false,
       displayState: format(state, {
         decimals: field.decimals,
@@ -138,10 +138,9 @@ const WIDTH_FOR_FOUR_INDIVIDUALS = 359;
 
 /** Sorts individual devices if configured and places the visible ones into the four slots. */
 export const placeIndividuals = (input: CardStateInput, devices: IndividualSlot[]) => {
-  const sorted = [...devices];
-  if (input.config.sort_individual_devices) {
-    sorted.sort(byStateThenEntity);
-  }
+  const sorted = input.config.sort_individual_devices
+    ? sortedCopy(devices, byStateThenEntity)
+    : devices;
   const maxVisible =
     input.config.allow_layout_break || input.width >= WIDTH_FOR_FOUR_INDIVIDUALS ? 4 : 2;
   const visible = sorted.filter((device) => device.node.has).slice(0, maxVisible);

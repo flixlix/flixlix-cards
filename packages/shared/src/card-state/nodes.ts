@@ -1,7 +1,6 @@
 import { isEntityAvailable } from "@flixlix-cards/shared/states/utils/existence-entity";
 import { getEntityState } from "@flixlix-cards/shared/states/utils/get-entity-state";
 import { getFirstEntityName } from "@flixlix-cards/shared/states/utils/mutli-entity";
-import { computeNonFossilFromCollection } from "@flixlix-cards/shared/states/utils/energy-period";
 import {
   type ActionConfigSet,
   type BatteryObject,
@@ -21,23 +20,18 @@ import { unavailableOrMisconfiguredError } from "@flixlix-cards/shared/utils/una
 import { isNumberValue } from "@flixlix-cards/shared/utils/utils";
 import { type HomeAssistant } from "custom-card-helpers";
 import { html } from "lit";
-import { type Split } from "./distribution";
 import { type Formatter } from "./format";
+import { type Normalized } from "./normalize";
+import { type NodeFlows } from "./solve";
 import { type CardStateInput, type ReadyReadings } from "./types";
 
-/** Node totals and presence once tolerance, display_zero and the distribution split are applied. */
-export type Settled = Split & {
-  has: { grid: boolean; solar: boolean; battery: boolean };
-  outage: boolean;
-  solarTotal: number;
-  toBattery: number;
-  fromBattery: number;
-};
+/** Node totals and presence with the flows solved from them. */
+export type Balance = Normalized & Readonly<{ flows: NodeFlows }>;
 
 type NodeContext = {
   input: CardStateInput;
   readings: ReadyReadings;
-  settled: Settled;
+  balance: Balance;
   format: Formatter;
 };
 
@@ -90,12 +84,6 @@ const nodeActions = (entity: ActionConfigSet | undefined): ActionConfigSet => ({
   double_tap_action: entity?.double_tap_action,
 });
 
-export const isOutage = (hass: HomeAssistant, entities: ConfigEntities): boolean => {
-  const outage = entities.grid?.power_outage;
-  const outageState = outage?.entity === undefined ? undefined : hass.states[outage.entity]?.state;
-  return entities.grid !== undefined && outageState === (outage?.state_alert ?? "on");
-};
-
 type GridConfig = ConfigEntities["grid"];
 
 const gridPowerOutage = (grid: GridConfig, outage: boolean): GridObject["powerOutage"] => {
@@ -122,23 +110,24 @@ const gridMainEntity = (grid: GridConfig): string | undefined =>
     : grid?.entity;
 
 export const gridNode = (context: NodeContext): GridObject => {
-  const { input, settled, format } = context;
+  const { input, balance, format } = context;
+  const { totals, flows } = balance;
   const { hass, config } = input;
   const grid = config.entities.grid;
-  const powerOutage = gridPowerOutage(grid, settled.outage);
+  const powerOutage = gridPowerOutage(grid, balance.outage);
   return {
     entity: grid?.entity,
-    has: settled.has.grid,
+    has: balance.presence.grid,
     hasReturnToGrid: typeof grid?.entity === "string" || !!grid?.entity?.production,
     state: {
-      fromGrid: settled.fromGrid,
-      toGrid: settled.toGrid,
-      toBattery: settled.gridToBattery,
-      toHome: settled.gridToHome,
+      fromGrid: totals.gridImport,
+      toGrid: totals.gridExport,
+      toBattery: flows.gridToBattery,
+      toHome: flows.gridToHome,
     },
-    display: { fromGrid: format(settled.fromGrid), toGrid: format(settled.toGrid) },
+    display: { fromGrid: format(totals.gridImport), toGrid: format(totals.gridExport) },
     powerOutage,
-    icon: settled.outage
+    icon: balance.outage
       ? powerOutage.icon
       : computeFieldIcon(hass, grid, "mdi:transmission-tower"),
     name: computeFieldName(
@@ -177,21 +166,22 @@ const solarSecondaryShown = (
 };
 
 export const solarNode = (context: NodeContext): SolarObject => {
-  const { input, readings, settled, format } = context;
+  const { input, readings, balance, format } = context;
+  const { totals, flows } = balance;
   const { hass } = input;
   const solar = input.config.entities.solar;
   const secondary = secondaryInfo(context, solar?.secondary_info, input.templates.solarSecondary);
   const ownProduction = solar?.secondary_info?.sum_total
-    ? settled.solarTotal - readings.solar.secondary
-    : settled.solarTotal;
+    ? totals.solar - readings.solar.secondary
+    : totals.solar;
   return {
     entity: solar?.entity,
-    has: settled.has.solar,
+    has: balance.presence.solar,
     state: {
-      total: settled.solarTotal,
-      toHome: settled.solarToHome,
-      toGrid: settled.solarToGrid,
-      toBattery: settled.solarToBattery,
+      total: totals.solar,
+      toHome: flows.solarToHome,
+      toGrid: flows.solarToGrid,
+      toBattery: flows.solarToBattery,
     },
     display:
       solar?.display_zero_state !== false || ownProduction > 0 ? format(ownProduction) : undefined,
@@ -237,7 +227,8 @@ const stateOfChargeFormat = (battery: ConfigEntities["battery"]) => ({
   decimals: battery?.state_of_charge_decimals ?? 0,
 });
 
-export const batteryNode = ({ input, settled, format }: NodeContext): BatteryObject => {
+export const batteryNode = ({ input, balance, format }: NodeContext): BatteryObject => {
+  const { totals, flows } = balance;
   const { hass } = input;
   const { entities } = input.config;
   const battery = entities.battery;
@@ -246,7 +237,7 @@ export const batteryNode = ({ input, settled, format }: NodeContext): BatteryObj
   const socFormat = stateOfChargeFormat(battery);
   return {
     entity: battery?.entity,
-    has: settled.has.battery,
+    has: balance.presence.battery,
     mainEntity: typeof battery?.entity === "object" ? battery.entity.consumption : battery?.entity,
     name: computeFieldName(
       hass,
@@ -261,14 +252,14 @@ export const batteryNode = ({ input, settled, format }: NodeContext): BatteryObj
       decimals: socFormat.decimals,
     },
     state: {
-      toBattery: settled.toBattery,
-      fromBattery: settled.fromBattery,
-      toGrid: settled.batteryToGrid,
-      toHome: settled.batteryToHome,
+      toBattery: totals.batteryCharge,
+      fromBattery: totals.batteryDischarge,
+      toGrid: flows.batteryToGrid,
+      toHome: flows.batteryToHome,
     },
     display: {
-      toBattery: format(settled.toBattery),
-      fromBattery: format(settled.fromBattery),
+      toBattery: format(totals.batteryCharge),
+      fromBattery: format(totals.batteryDischarge),
       stateOfCharge: format(soc, { ...socFormat, accept_negative: true }),
     },
     ...nodeActions(battery),
@@ -298,48 +289,37 @@ export const homeNode = (context: NodeContext, label: string): HomeObject => {
 };
 
 /** The non-fossil share of grid import, as energy/power or as a percentage. */
-const nonFossilText = ({ input, readings, settled, format }: NodeContext): string => {
+const nonFossilText = ({ input, readings, balance, format }: NodeContext): string => {
   const fossil = input.config.entities.fossil_fuel_percentage;
-  const unitWhiteSpace = fossil?.unit_white_space ?? true;
-  const asPercentage = fossil?.state_type === "percentage";
-  const tolerance = fossil?.display_zero_tolerance ?? 0;
-  const tolerated = (value: number) => (tolerance && value < tolerance ? 0 : value);
-  const show = (amount: number, percentage: number) =>
-    asPercentage
-      ? format(tolerated(percentage), { unit: "%", unitWhiteSpace, decimals: 0 })
-      : format(tolerated(amount), { unitWhiteSpace });
-
-  if (readings.fossilEnergyConsumption) {
-    const share = computeNonFossilFromCollection(
-      readings.fossilEnergyConsumption,
-      settled.fromGrid
-    );
-    return show(share.nonFossilEnergy, share.nonFossilPercentage);
-  }
-  if (!fossil?.entity || !isEntityAvailable(input.hass, fossil.entity)) {
+  if (
+    !readings.fossilEnergyConsumption &&
+    (!fossil?.entity || !isEntityAvailable(input.hass, fossil.entity))
+  ) {
     unavailableOrMisconfiguredError(fossil?.entity);
     return "NaN";
   }
-  const fossilPercentage = getEntityState(input.hass, fossil.entity) ?? 0;
-  const gridImport =
-    typeof input.config.entities.grid?.entity === "string"
-      ? settled.fromGrid
-      : (readings.grid.fromGrid ?? 0);
-  return show(gridImport * (1 - fossilPercentage / 100), 100 - fossilPercentage);
+  const unitWhiteSpace = fossil?.unit_white_space ?? true;
+  const tolerance = fossil?.display_zero_tolerance ?? 0;
+  const tolerated = (value: number) => (tolerance && value < tolerance ? 0 : value);
+  const { gridImport, nonFossilFraction } = balance.totals;
+  return fossil?.state_type === "percentage"
+    ? format(tolerated(nonFossilFraction * 100), { unit: "%", unitWhiteSpace, decimals: 0 })
+    : format(tolerated(gridImport * nonFossilFraction), { unitWhiteSpace });
 };
 
 export const nonFossilNode = (context: NodeContext): NonFossilObject => {
-  const { input, settled } = context;
+  const { input, balance } = context;
   const { hass, templates } = input;
   const fossil = input.config.entities.fossil_fuel_percentage;
+  const has = balance.presence.nonFossil;
   return {
     entity: fossil?.entity,
     name: computeFieldName(hass, fossil, hass.localize("card.label.non_fossil_fuel_percentage")),
     icon: computeFieldIcon(hass, fossil, "mdi:leaf"),
-    has: settled.nonFossilHas,
-    hasPercentage: settled.nonFossilHas,
-    state: { power: settled.nonFossilPower },
-    display: settled.nonFossilHas ? nonFossilText(context) : "",
+    has,
+    hasPercentage: has,
+    state: { power: has ? balance.flows.nonFossilToHome : null },
+    display: has ? nonFossilText(context) : "",
     color: fossil?.color,
     color_value: fossil?.color_value,
     tap_action: fossil?.tap_action,

@@ -13,25 +13,34 @@ import {
 import { type HomeAssistant } from "custom-card-helpers";
 
 /**
- * What a reading measures. It picks the display units (W or Wh) and the distribution split:
- * instantaneous power is split live, energy over a period is split by the energy dashboard rules.
+ * What a reading measures. It picks the display units (W or Wh) and which direction a single
+ * battery entity counts towards.
  */
 export type UnitFamily = "power" | "energy";
 
 export type Readings = { status: "loading" } | ReadyReadings;
 
+/**
+ * A grid or battery reading as read from its entities: one entity for both directions, or one
+ * entity each for the flow into the node (export, charge) and out of it (import, discharge).
+ */
+export type TwoWayReading =
+  | { kind: "single"; value: number | null }
+  | { kind: "split"; into: number | null; outOf: number | null };
+
+/** Entity readings as read, before signs, tolerance or display_zero are applied. */
 export type ReadyReadings = {
   status: "ready";
   family: UnitFamily;
-  grid: { fromGrid: number | null; toGrid: number | null };
+  grid: TwoWayReading;
   /** `secondary` is the part of `total` contributed by a summed secondary entity. */
   solar: { total: number | null; secondary: number };
-  battery: { toBattery: number | null; fromBattery: number | null };
+  battery: TwoWayReading;
   /** The home entity's own reading, used when `override_state` is set. */
   home: number | null;
   /** The generator's reading during a power outage. */
   generator: number | null;
-  /** Absolute reading of each configured individual device, in config order. */
+  /** Reading of each configured individual device, in config order. */
   individuals: (number | null)[];
   fossilEnergyConsumption?: FossilEnergyConsumption;
 };
@@ -104,6 +113,11 @@ export type ReadyCardState = {
     rightBottom?: IndividualSlot;
   };
   homeRing: HomeRing;
+  /**
+   * Home consumption as balanced from the sources, the home entity's reading when
+   * `override_state` is set, and the difference measured − balanced (0 without a measurement).
+   */
+  homeBalance: { balanced: number; measured: number | undefined; unaccounted: number };
   flows: Flows;
   /** Whether flow dots are animated. */
   animate: boolean;

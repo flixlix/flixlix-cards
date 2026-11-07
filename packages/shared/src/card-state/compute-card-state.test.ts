@@ -1,6 +1,7 @@
 import { CIRCLE_CIRCUMFERENCE } from "@flixlix-cards/shared/const/circle";
 import { type FlowCardPlusConfig, type TemplatesObj } from "@flixlix-cards/shared/types";
 import { type HomeAssistant, NumberFormat, TimeFormat } from "custom-card-helpers";
+import * as fc from "fast-check";
 import { describe, expect, test } from "vite-plus/test";
 import { computeCardState } from "./compute-card-state";
 import { energyReadings } from "./readings/energy";
@@ -47,17 +48,25 @@ const noTemplates: TemplatesObj = {
 };
 
 type ReadingsOverrides = Partial<Omit<ReadyReadings, "grid" | "solar" | "battery">> & {
-  grid?: Partial<ReadyReadings["grid"]>;
+  grid?: { fromGrid?: number; toGrid?: number };
   solar?: Partial<ReadyReadings["solar"]>;
-  battery?: Partial<ReadyReadings["battery"]>;
+  battery?: { toBattery?: number; fromBattery?: number };
 };
 
 const readings = (overrides: ReadingsOverrides = {}): ReadyReadings => ({
   status: "ready",
   family: overrides.family ?? "power",
-  grid: { fromGrid: 0, toGrid: 0, ...overrides.grid },
+  grid: {
+    kind: "split",
+    outOf: overrides.grid?.fromGrid ?? 0,
+    into: overrides.grid?.toGrid ?? 0,
+  },
   solar: { total: 0, secondary: 0, ...overrides.solar },
-  battery: { toBattery: 0, fromBattery: 0, ...overrides.battery },
+  battery: {
+    kind: "split",
+    outOf: overrides.battery?.fromBattery ?? 0,
+    into: overrides.battery?.toBattery ?? 0,
+  },
   home: overrides.home ?? null,
   generator: overrides.generator ?? null,
   individuals: overrides.individuals ?? [],
@@ -197,7 +206,7 @@ describe("power distribution", () => {
     expect(nodes.nonFossil.state.power).toBeCloseTo(420, 10);
   });
 
-  test("export larger than solar charges the battery from the grid", () => {
+  test("export larger than solar comes from the battery; import home cannot use charges it", () => {
     const { nodes } = ready(
       compute({
         config: withFossil,
@@ -210,10 +219,10 @@ describe("power distribution", () => {
       })
     );
 
-    expect(nodes.solar.state).toMatchObject({ toHome: 0, toGrid: 600 });
-    expect(nodes.grid.state).toMatchObject({ toBattery: 200, toHome: 0 });
-    expect(nodes.battery.state.toGrid).toBe(0);
-    expect(nodes.nonFossil.state.power).toBe(0);
+    expect(nodes.solar.state).toMatchObject({ toHome: 0, toBattery: 50, toGrid: 450 });
+    expect(nodes.grid.state).toMatchObject({ toBattery: 150, toHome: 50 });
+    expect(nodes.battery.state).toMatchObject({ toGrid: 150, toHome: 0 });
+    expect(nodes.nonFossil.state.power).toBe(37.5);
   });
 
   test("a power outage feeds home from the generator and drops non-fossil", () => {
@@ -694,4 +703,152 @@ describe("secondary info", () => {
     expect(individualSecondaryShown(false)).toBe(false);
     expect(individualSecondaryShown(true)).toBe(true);
   });
+});
+
+describe("home balance", () => {
+  test("a measured home is shown, and its difference to the balanced home is unaccounted", () => {
+    const state = ready(
+      compute({
+        config: config({ entities: { home: { entity: "sensor.home", override_state: true } } }),
+        readings: readings({ grid: { fromGrid: 300 }, solar: { total: 100 }, home: 450 }),
+      })
+    );
+
+    expect(state.homeBalance).toEqual({ balanced: 400, measured: 450, unaccounted: 50 });
+    expect(state.homeRing.usageText).toBe(`450${thinSpace}W`);
+    expect(state.homeRing.solar + state.homeRing.grid).toBeCloseTo(CIRCLE_CIRCUMFERENCE, 10);
+  });
+
+  test("without a measured home nothing is unaccounted", () => {
+    const state = ready(compute({ readings: readings({ grid: { fromGrid: 300 } }) }));
+
+    expect(state.homeBalance).toEqual({ balanced: 300, measured: undefined, unaccounted: 0 });
+  });
+});
+
+const RUNS = { numRuns: 1000, seed: 20261107 };
+const amount = fc.oneof(
+  fc.constant(0),
+  fc.integer({ min: 0, max: 5000 }),
+  fc.double({ min: 0, max: 1e6, noNaN: true })
+);
+const totalsReadings = fc.record({
+  grid: fc.record({ fromGrid: amount, toGrid: amount }),
+  solar: fc.record({ total: amount }),
+  battery: fc.record({ toBattery: amount, fromBattery: amount }),
+});
+
+describe("card state properties", () => {
+  test("home ring segments sum to the circumference, or are all 0", () => {
+    fc.assert(
+      fc.property(totalsReadings, (overrides) => {
+        const { homeRing, homeBalance } = ready(
+          compute({ config: withFossil, hass: fossilHass("40"), readings: readings(overrides) })
+        );
+        const segments = [homeRing.battery, homeRing.solar, homeRing.grid, homeRing.nonFossil];
+        const sum = segments.reduce((total, segment) => total + segment, 0);
+        expect(segments.every((segment) => segment >= 0)).toBe(true);
+        expect(sum).toBeCloseTo(homeBalance.balanced === 0 ? 0 : CIRCLE_CIRCUMFERENCE, 9);
+      }),
+      RUNS
+    );
+  });
+
+  test("power and energy readings with the same totals give the same flows", () => {
+    fc.assert(
+      fc.property(totalsReadings, (overrides) => {
+        const nodes = (family: "power" | "energy") => {
+          const state = ready(compute({ readings: readings({ ...overrides, family }) }));
+          return [state.nodes.grid.state, state.nodes.solar.state, state.nodes.battery.state];
+        };
+        expect(nodes("power")).toEqual(nodes("energy"));
+      }),
+      RUNS
+    );
+  });
+});
+
+const batteryIconAt = (stateOfCharge: string | undefined) =>
+  ready(
+    compute({
+      config: config({
+        entities: {
+          battery: {
+            entity: "sensor.battery",
+            state_of_charge: stateOfCharge === undefined ? undefined : "sensor.soc",
+          },
+        },
+      }),
+      hass: hassWith(stateOfCharge === undefined ? {} : { "sensor.soc": stateOfCharge }),
+    })
+  ).nodes.battery.icon;
+
+const solarSecondaryShown = (
+  state: string,
+  info: { display_zero?: boolean; display_zero_tolerance?: number; accept_negative?: boolean }
+) =>
+  ready(
+    compute({
+      config: config({
+        entities: {
+          solar: { entity: "sensor.solar", secondary_info: { entity: "sensor.x", ...info } },
+        },
+      }),
+      hass: hassWith({ "sensor.x": state }),
+    })
+  ).nodes.solar.secondary.show;
+
+describe("node details", () => {
+  test("the battery icon follows the state of charge", () => {
+    expect(batteryIconAt(undefined)).toBe("mdi:battery");
+    expect(batteryIconAt("80")).toBe("mdi:battery-high");
+    expect(batteryIconAt("50")).toBe("mdi:battery-medium");
+    expect(batteryIconAt("20")).toBe("mdi:battery-low");
+    expect(batteryIconAt("10")).toBe("mdi:battery-outline");
+  });
+
+  test("solar secondary info hides zero and sub-tolerance numbers unless configured", () => {
+    expect(solarSecondaryShown("0", {})).toBe(false);
+    expect(solarSecondaryShown("0", { display_zero: true })).toBe(true);
+    expect(solarSecondaryShown("sunny", {})).toBe(true);
+    expect(solarSecondaryShown("5", { display_zero_tolerance: 10 })).toBe(false);
+    expect(solarSecondaryShown("-5", { display_zero_tolerance: 10, accept_negative: true })).toBe(
+      true
+    );
+  });
+
+  test("the home icon takes the colour of its largest source", () => {
+    const { cssVars } = ready(
+      compute({
+        config: config({ entities: { home: { entity: "sensor.home", color_icon: true } } }),
+        readings: readings({ grid: { fromGrid: 100 }, solar: { total: 300 } }),
+      })
+    );
+
+    expect(cssVars["--icon-home-color"]).toBe("var(--energy-solar-color)");
+  });
+});
+
+const individualSecondaryShownAt = (state: string) =>
+  ready(
+    compute({
+      config: config({
+        entities: {
+          individual: [
+            {
+              entity: "sensor.ev",
+              display_zero: true,
+              secondary_info: { entity: "sensor.ev_soc", display_zero_tolerance: 10 },
+            },
+          ],
+        },
+      }),
+      hass: hassWith({ "sensor.ev_soc": state }),
+      readings: readings({ individuals: [0] }),
+    })
+  ).nodes.individuals[0]?.secondary.show;
+
+test("individual secondary info hides numbers below its tolerance", () => {
+  expect(individualSecondaryShownAt("5")).toBe(false);
+  expect(individualSecondaryShownAt("50")).toBe(true);
 });
