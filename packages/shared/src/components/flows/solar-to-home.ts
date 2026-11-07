@@ -15,7 +15,9 @@ const solarToHomeDot = (
   solar: Flows["solar"],
   newDur: Flows["newDur"]
 ) => {
-  if (!checkShouldShowDots(config) || !solar.state.toHome) return nothing;
+  if (!checkShouldShowDots(config) || !solar.state.toHome) {
+    return nothing;
+  }
 
   return svg`<circle r="1" class="solar" vector-effect="non-scaling-stroke">
       <animateMotion dur="${newDur.solarToHome}s" repeatCount="indefinite" calcMode="paced">
@@ -30,7 +32,9 @@ export const flowSolarToHome = (
 ) => {
   const shouldShow =
     solar.has && showLine(config, solar.state.toHome || 0) && !config.entities.home?.hide;
-  if (!shouldShow) return nothing;
+  if (!shouldShow) {
+    return nothing;
+  }
 
   return html`<div
     class="lines ${classMap({

@@ -17,7 +17,7 @@ export const gridElement = (
     templatesObj,
   }: { entities: ConfigEntities; grid: any; templatesObj: TemplatesObj }
 ) => {
-  const disableEntityClick = config.clickable_entities === false;
+  const disableEntityClick = !config.clickable_entities;
   return html`<div class="circle-container grid">
     <div
       class="circle ${disableEntityClick ? "pointer-events-none" : ""}"
@@ -29,7 +29,7 @@ export const gridElement = (
             ? outageTarget
             : typeof entities.grid!.entity === "string"
               ? entities.grid!.entity
-              : entities.grid!.entity.consumption!;
+              : entities.grid!.entity.consumption;
         main.onEntityClick(e, grid, target);
       }}
       @dblclick=${(e: MouseEvent) => {
@@ -40,7 +40,7 @@ export const gridElement = (
             ? outageTarget
             : typeof entities.grid!.entity === "string"
               ? entities.grid!.entity
-              : entities.grid!.entity.consumption!;
+              : entities.grid!.entity.consumption;
         main.onEntityDoubleClick(e, grid, target);
       }}
       @pointerdown=${(e: PointerEvent) => {
@@ -51,7 +51,7 @@ export const gridElement = (
             ? outageTarget
             : typeof entities.grid!.entity === "string"
               ? entities.grid!.entity
-              : entities.grid!.entity.consumption!;
+              : entities.grid!.entity.consumption;
         main.onEntityPointerDown(e, entities.grid, target);
       }}
       @pointerup=${(e: PointerEvent) => {
@@ -69,7 +69,7 @@ export const gridElement = (
               ? outageTarget
               : typeof entities.grid!.entity === "string"
                 ? entities.grid!.entity
-                : entities.grid!.entity.consumption!;
+                : entities.grid!.entity.consumption;
           main.openDetails(e, entities.grid, target, "tap");
         }
       }}
@@ -92,21 +92,21 @@ export const gridElement = (
                 const target =
                   typeof entities.grid!.entity === "string"
                     ? entities.grid!.entity
-                    : entities.grid!.entity.production!;
+                    : entities.grid!.entity.production;
                 main.onEntityClick(e, grid, target);
               }}
               @dblclick=${(e: MouseEvent) => {
                 const target =
                   typeof entities.grid!.entity === "string"
                     ? entities.grid!.entity
-                    : entities.grid!.entity.production!;
+                    : entities.grid!.entity.production;
                 main.onEntityDoubleClick(e, grid, target);
               }}
               @pointerdown=${(e: PointerEvent) => {
                 const target =
                   typeof entities.grid!.entity === "string"
                     ? entities.grid!.entity
-                    : entities.grid!.entity.production!;
+                    : entities.grid!.entity.production;
                 main.onEntityPointerDown(e, entities.grid, target);
               }}
               @pointerup=${(e: PointerEvent) => {
@@ -120,7 +120,7 @@ export const gridElement = (
                   const target =
                     typeof entities.grid!.entity === "string"
                       ? entities.grid!.entity
-                      : entities.grid!.entity.production!;
+                      : entities.grid!.entity.production;
                   main.openDetails(e, entities.grid, target, "tap");
                 }
               }}
@@ -150,21 +150,21 @@ export const gridElement = (
                 const target =
                   typeof entities.grid!.entity === "string"
                     ? entities.grid!.entity
-                    : entities.grid!.entity.consumption!;
+                    : entities.grid!.entity.consumption;
                 main.onEntityClick(e, grid, target);
               }}
               @dblclick=${(e: MouseEvent) => {
                 const target =
                   typeof entities.grid!.entity === "string"
                     ? entities.grid!.entity
-                    : entities.grid!.entity.consumption!;
+                    : entities.grid!.entity.consumption;
                 main.onEntityDoubleClick(e, grid, target);
               }}
               @pointerdown=${(e: PointerEvent) => {
                 const target =
                   typeof entities.grid!.entity === "string"
                     ? entities.grid!.entity
-                    : entities.grid!.entity.consumption!;
+                    : entities.grid!.entity.consumption;
                 main.onEntityPointerDown(e, entities.grid, target);
               }}
               @pointerup=${(e: PointerEvent) => {
@@ -178,7 +178,7 @@ export const gridElement = (
                   const target =
                     typeof entities.grid!.entity === "string"
                       ? entities.grid!.entity
-                      : entities.grid!.entity.consumption!;
+                      : entities.grid!.entity.consumption;
                   main.openDetails(e, entities.grid, target, "tap");
                 }
               }}

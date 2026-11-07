@@ -10,11 +10,17 @@ export const getNonFossilHas = (hass: HomeAssistant, config: FlowCardPlusConfig)
   const fossilPercentageDisplayZero = nonFossil?.display_zero;
   const gridFromGrid = getGridConsumptionState(hass, config);
 
-  if (fossilPercentageEntity === undefined) return false;
+  if (fossilPercentageEntity === undefined) {
+    return false;
+  }
 
-  if (fossilPercentageDisplayZero === true) return true;
+  if (fossilPercentageDisplayZero === true) {
+    return true;
+  }
 
-  if (gridFromGrid === null) return false;
+  if (gridFromGrid === null) {
+    return false;
+  }
 
   return gridFromGrid * 1 - (getEntityState(hass, fossilPercentageEntity) ?? 0) / 100 > 0;
 };
@@ -25,13 +31,21 @@ export const getNonFossilHasPercentage = (hass: HomeAssistant, config: FlowCardP
   const fossilPercentageDisplayZero = nonFossil?.display_zero;
   const gridFromGrid = getGridConsumptionState(hass, config);
 
-  if (fossilPercentageEntity === undefined) return false;
+  if (fossilPercentageEntity === undefined) {
+    return false;
+  }
 
-  if (fossilPercentageDisplayZero === true) return true;
+  if (fossilPercentageDisplayZero === true) {
+    return true;
+  }
 
-  if (gridFromGrid === null) return false;
+  if (gridFromGrid === null) {
+    return false;
+  }
 
-  if (getNonFossilHas(hass, config) === false) return false;
+  if (!getNonFossilHas(hass, config)) {
+    return false;
+  }
 
   return gridFromGrid * 1 - (getEntityState(hass, fossilPercentageEntity) ?? 0) / 100 > 0;
 };
@@ -44,11 +58,17 @@ export const getNonFossilState = (hass: HomeAssistant, config: FlowCardPlusConfi
   const fossilPercentageEntity = nonFossil?.entity;
   const gridFromGrid = getGridConsumptionState(hass, config);
 
-  if (fossilPercentageEntity === undefined) return null;
+  if (fossilPercentageEntity === undefined) {
+    return null;
+  }
 
-  if (gridFromGrid === null) return null;
+  if (gridFromGrid === null) {
+    return null;
+  }
 
-  if (getNonFossilHas(hass, config) === false) return 0;
+  if (!getNonFossilHas(hass, config)) {
+    return 0;
+  }
 
   return gridFromGrid * 1 - (getEntityState(hass, fossilPercentageEntity) ?? 0) / 100;
 };

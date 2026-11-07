@@ -108,10 +108,14 @@ export const LinkPreviewContent = ({ children, className }: LinkPreviewContentPr
   const motionCursorY = useMotionValue(0);
 
   useEffect(() => {
-    if (!isHovering || !triggerRef.current) return;
+    if (!isHovering || !triggerRef.current) {
+      return;
+    }
 
     const updatePosition = () => {
-      if (!triggerRef.current) return;
+      if (!triggerRef.current) {
+        return;
+      }
       const rect = triggerRef.current.getBoundingClientRect();
       setPosition({
         x: rect.right + 24,
@@ -144,7 +148,9 @@ export const LinkPreviewContent = ({ children, className }: LinkPreviewContentPr
   const springX = useSpring(offsetX, { bounce: 0 });
   const springY = useSpring(offsetY, { bounce: 0 });
 
-  if (!isWideEnough) return;
+  if (!isWideEnough) {
+    return;
+  }
   return (
     <AnimatePresence>
       {isHovering && (

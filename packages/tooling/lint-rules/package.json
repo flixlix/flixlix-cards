@@ -1,0 +1,16 @@
+{
+  "name": "@flixlix-cards/lint-rules",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./index.js"
+  },
+  "scripts": {
+    "test": "vp test run"
+  },
+  "devDependencies": {
+    "vite-plus": "catalog:packages"
+  }
+}

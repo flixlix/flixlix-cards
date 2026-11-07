@@ -69,7 +69,9 @@ export class SortableListCardEditor extends LitElement implements LovelaceCardEd
   }
 
   protected render() {
-    if (!this.hass || !this._config) return nothing;
+    if (!this.hass || !this._config) {
+      return nothing;
+    }
     const data: Record<string, unknown> = {
       value_format: "csv",
       show_handle: true,
@@ -121,7 +123,7 @@ export class SortableListCardEditor extends LitElement implements LovelaceCardEd
   private _renderItemRow(item: SortableListItemConfig, index: number) {
     const expanded = this._expanded[index] ?? false;
     const stateObj = item.entity ? this.hass.states[item.entity] : undefined;
-    const friendly = stateObj?.attributes?.friendly_name as string | undefined;
+    const friendly = stateObj?.attributes?.friendly_name;
     const label = item.name || friendly || item.key || item.entity || "(unnamed)";
     return html`
       <div class="item-card">
@@ -247,56 +249,79 @@ export class SortableListCardEditor extends LitElement implements LovelaceCardEd
   }
 
   private _addItem = () => {
-    if (!this._config) return;
+    if (!this._config) {
+      return;
+    }
     const items = [...(this._config.items ?? []), {} as SortableListItemConfig];
     this._update({ items });
     this._expanded = { ...this._expanded, [items.length - 1]: true };
   };
 
   private _patchItem(index: number, patch: Partial<SortableListItemConfig>) {
-    if (!this._config) return;
+    if (!this._config) {
+      return;
+    }
     const items = [...(this._config.items ?? [])];
     const current = items[index];
-    if (!current) return;
+    if (!current) {
+      return;
+    }
     const merged: SortableListItemConfig = { ...current, ...patch };
     (Object.keys(merged) as (keyof SortableListItemConfig)[]).forEach((k) => {
-      if (!merged[k]) delete merged[k];
+      if (!merged[k]) {
+        delete merged[k];
+      }
     });
     items[index] = merged;
     this._update({ items });
   }
 
   private _removeItem(index: number) {
-    if (!this._config) return;
+    if (!this._config) {
+      return;
+    }
     const items = [...(this._config.items ?? [])];
     items.splice(index, 1);
     const expanded: Record<number, boolean> = {};
     Object.keys(this._expanded).forEach((k) => {
       const num = Number(k);
       const value = this._expanded[num];
-      if (value === undefined) return;
-      if (num < index) expanded[num] = value;
-      else if (num > index) expanded[num - 1] = value;
+      if (value === undefined) {
+        return;
+      }
+      if (num < index) {
+        expanded[num] = value;
+      } else if (num > index) {
+        expanded[num - 1] = value;
+      }
     });
     this._expanded = expanded;
     this._update({ items });
   }
 
   private _patchSaveAction(patch: Partial<SortableListSaveAction>) {
-    if (!this._config) return;
+    if (!this._config) {
+      return;
+    }
     const current = this._config.save_action ?? { service: "" };
     const merged: SortableListSaveAction = { ...current, ...patch };
     if (!merged.service) {
       this._update({ save_action: undefined });
       return;
     }
-    if (!merged.data || Object.keys(merged.data).length === 0) delete merged.data;
-    if (!merged.target || Object.keys(merged.target).length === 0) delete merged.target;
+    if (!merged.data || Object.keys(merged.data).length === 0) {
+      delete merged.data;
+    }
+    if (!merged.target || Object.keys(merged.target).length === 0) {
+      delete merged.target;
+    }
     this._update({ save_action: merged });
   }
 
   private _onSaveDataChanged = (event: CustomEvent) => {
-    if (event.detail?.isValid === false) return;
+    if (event.detail?.isValid === false) {
+      return;
+    }
     const value = event.detail?.value;
     this._patchSaveAction({
       data: value && typeof value === "object" && !Array.isArray(value) ? value : undefined,
@@ -309,12 +334,18 @@ export class SortableListCardEditor extends LitElement implements LovelaceCardEd
   };
 
   private _update(patch: Partial<SortableListCardConfig>) {
-    if (!this._config) return;
+    if (!this._config) {
+      return;
+    }
     const next: SortableListCardConfig = { ...this._config, ...patch };
     (Object.keys(next) as (keyof SortableListCardConfig)[]).forEach((key) => {
-      if (key === "items" || key === "type") return;
+      if (key === "items" || key === "type") {
+        return;
+      }
       const value = next[key];
-      if (value === undefined || value === "") delete next[key];
+      if (value === undefined || value === "") {
+        delete next[key];
+      }
     });
     this._config = next;
     fireEvent(this, "config-changed", { config: next });

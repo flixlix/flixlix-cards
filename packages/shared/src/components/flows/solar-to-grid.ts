@@ -15,7 +15,9 @@ const solarToGridDot = (
   solar: Flows["solar"],
   newDur: Flows["newDur"]
 ) => {
-  if (!checkShouldShowDots(config) || !solar.state.toGrid || !solar.has) return nothing;
+  if (!checkShouldShowDots(config) || !solar.state.toGrid || !solar.has) {
+    return nothing;
+  }
 
   return svg`<circle r="1" class="return" vector-effect="non-scaling-stroke">
       <animateMotion dur="${newDur.solarToGrid}s" repeatCount="indefinite" calcMode="paced">
@@ -30,7 +32,9 @@ export const flowSolarToGrid = (
 ) => {
   const shouldShow =
     grid.has && grid.hasReturnToGrid && solar.has && showLine(config, solar.state.toGrid || 0);
-  if (!shouldShow) return nothing;
+  if (!shouldShow) {
+    return nothing;
+  }
 
   return html`<div
     class="lines ${classMap({

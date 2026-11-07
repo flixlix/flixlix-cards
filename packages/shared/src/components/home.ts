@@ -42,13 +42,13 @@ export const homeElement = (
 ) => {
   const showHomeLabel = individual.filter((i) => i.has).length <= 1;
   const isHomeEntityDefined = entities.home?.entity !== undefined;
-  const noActionSet = ["none", undefined];
+  const noActionSet = new Set(["none", undefined]);
   const staticAction =
-    !noActionSet.includes(entities.home?.tap_action?.action) ||
-    !noActionSet.includes(entities.home?.hold_action?.action) ||
-    !noActionSet.includes(entities.home?.double_tap_action?.action);
+    !noActionSet.has(entities.home?.tap_action?.action) ||
+    !noActionSet.has(entities.home?.hold_action?.action) ||
+    !noActionSet.has(entities.home?.double_tap_action?.action);
   const isClickable = isHomeEntityDefined || staticAction;
-  const disableEntityClick = config.clickable_entities === false || !isClickable;
+  const disableEntityClick = !config.clickable_entities || !isClickable;
 
   return html`
     <div class="circle-container home">
@@ -140,11 +140,11 @@ export const homeElement = (
             r="38"
             stroke-dasharray="${
               homeGridCircumference ??
-              CIRCLE_CIRCUMFERENCE - homeSolarCircumference! - (homeBatteryCircumference || 0)
+              CIRCLE_CIRCUMFERENCE - homeSolarCircumference - (homeBatteryCircumference || 0)
             } ${
               homeGridCircumference !== undefined
                 ? CIRCLE_CIRCUMFERENCE - homeGridCircumference
-                : homeSolarCircumference! + (homeBatteryCircumference || 0)
+                : homeSolarCircumference + (homeBatteryCircumference || 0)
             }"
             stroke-dashoffset="0"
             shape-rendering="geometricPrecision"

@@ -9,7 +9,9 @@ export const getSolarState = (hass: HomeAssistant, config: FlowCardPlusConfig) =
   const entity = config.entities.solar?.entity;
   const secondaryEntity = config.entities.solar?.secondary_info?.entity;
 
-  if (entity === undefined) return null;
+  if (entity === undefined) {
+    return null;
+  }
 
   const solarStateWatts = getEntityStateWatts(hass, entity);
   const secondarySolarStateWatts = secondaryEntity
@@ -21,7 +23,9 @@ export const getSolarState = (hass: HomeAssistant, config: FlowCardPlusConfig) =
     ? solarStateWatts + secondarySolarStateWatts
     : solarStateWatts;
 
-  if (isEntityInverted(config, "solar")) return onlyNegative(totalSolarState);
+  if (isEntityInverted(config, "solar")) {
+    return onlyNegative(totalSolarState);
+  }
 
   return onlyPositive(totalSolarState);
 };

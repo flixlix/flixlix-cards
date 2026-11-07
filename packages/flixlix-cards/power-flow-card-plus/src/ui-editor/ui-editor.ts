@@ -87,7 +87,9 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
   }
 
   private _hasLegacyFields(): boolean {
-    if (!this._config) return false;
+    if (!this._config) {
+      return false;
+    }
     return (
       this._config.watt_threshold !== undefined ||
       this._config.w_decimals !== undefined ||
@@ -96,7 +98,9 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
   }
 
   private _migrateLegacyFields(): void {
-    if (!this._config) return;
+    if (!this._config) {
+      return;
+    }
     const config: PowerFlowCardPlusConfig = { ...this._config };
 
     if (typeof config.watt_threshold === "number" && config.kilo_threshold === undefined) {
@@ -118,7 +122,9 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
   }
 
   private _renderLegacyFieldsAlert() {
-    if (!this._hasLegacyFields()) return nothing;
+    if (!this._hasLegacyFields()) {
+      return nothing;
+    }
     return html`
       <ha-alert class="legacy-fields-alert" alert-type="warning">
         Legacy config fields detected. Field names changed: w_decimals -> base_decimals, kw_decimals
@@ -136,7 +142,9 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
   }
 
   private _hasLegacyIndividualFields(): boolean {
-    if (!this._config) return false;
+    if (!this._config) {
+      return false;
+    }
     const entities = this._config.entities as PowerFlowCardPlusConfig["entities"] & {
       individual1?: unknown;
       individual2?: unknown;
@@ -145,7 +153,9 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
   }
 
   private _migrateLegacyIndividualFields(): void {
-    if (!this._config) return;
+    if (!this._config) {
+      return;
+    }
     const config = {
       ...this._config,
       entities: { ...this._config.entities },
@@ -181,7 +191,9 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
   }
 
   private _renderLegacyIndividualFieldsAlert() {
-    if (!this._hasLegacyIndividualFields()) return nothing;
+    if (!this._hasLegacyIndividualFields()) {
+      return nothing;
+    }
     return html`
       <ha-alert class="legacy-fields-alert" alert-type="warning">
         Legacy individual fields detected. Field names changed: entities.individual1/individual2 ->
@@ -253,9 +265,13 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
       page: ConfigPage,
       fallbackIcon: string | undefined = "mdi:dots-horizontal-circle-outline"
     ) => {
-      if (page === null) return nothing;
+      if (page === null) {
+        return nothing;
+      }
       const getIconToUse = () => {
-        if (page === "individual" || page === "advanced") return fallbackIcon;
+        if (page === "individual" || page === "advanced") {
+          return fallbackIcon;
+        }
         const entityConfig = this?._config?.entities[page] as { icon?: string } | undefined;
         return entityConfig?.icon || fallbackIcon;
       };
@@ -314,7 +330,7 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
   }
 
   private _computeLabelCallback = (schema: any) =>
-    this.hass!.localize(`ui.panel.lovelace.editor.card.generic.${schema?.name}`) ||
+    this.hass.localize(`ui.panel.lovelace.editor.card.generic.${schema?.name}`) ||
     localize(`editor.${schema?.name}`) ||
     schema?.label;
 

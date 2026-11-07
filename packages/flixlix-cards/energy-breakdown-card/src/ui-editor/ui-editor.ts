@@ -145,7 +145,9 @@ export class EnergyBreakdownCardEditor extends LitElement implements LovelaceCar
   }
 
   protected render() {
-    if (!this.hass || !this._config) return nothing;
+    if (!this.hass || !this._config) {
+      return nothing;
+    }
     const chartType = this._config.chart_type === "bar" ? "bar" : "donut";
     const data: Record<string, unknown> = {
       chart_type: "donut",
@@ -208,8 +210,7 @@ export class EnergyBreakdownCardEditor extends LitElement implements LovelaceCar
   private _renderEntityRow(entity: EnergyBreakdownEntityConfig, index: number) {
     const expanded = this._expanded[index] ?? false;
     const stateObj = entity.entity ? this.hass.states[entity.entity] : undefined;
-    const fallbackLabel =
-      entity.name ?? (stateObj?.attributes.friendly_name as string | undefined) ?? entity.entity;
+    const fallbackLabel = entity.name ?? stateObj?.attributes.friendly_name ?? entity.entity;
     return html`
       <div class="entity-card">
         <div class="entity-card-header">
@@ -297,16 +298,22 @@ export class EnergyBreakdownCardEditor extends LitElement implements LovelaceCar
 
   private _onAddEntity = (event: CustomEvent) => {
     const value = event.detail.value as string;
-    if (!value || !this._config) return;
+    if (!value || !this._config) {
+      return;
+    }
     const entities = [...(this._config.entities ?? []), { entity: value }];
     this._update({ entities });
     this._expanded = { ...this._expanded, [entities.length - 1]: true };
     const target = event.target as { value?: string } | null;
-    if (target) target.value = "";
+    if (target) {
+      target.value = "";
+    }
   };
 
   private _onEntityChanged(index: number, value: string) {
-    if (!this._config) return;
+    if (!this._config) {
+      return;
+    }
     const entities = [...(this._config.entities ?? [])];
     if (!value) {
       entities.splice(index, 1);
@@ -317,30 +324,43 @@ export class EnergyBreakdownCardEditor extends LitElement implements LovelaceCar
   }
 
   private _patchEntity(index: number, patch: Partial<EnergyBreakdownEntityConfig>) {
-    if (!this._config) return;
+    if (!this._config) {
+      return;
+    }
     const entities = [...(this._config.entities ?? [])];
     const current = entities[index];
-    if (!current) return;
+    if (!current) {
+      return;
+    }
     const merged = { ...current, ...patch };
     Object.keys(merged).forEach((key) => {
       const k = key as keyof EnergyBreakdownEntityConfig;
-      if (merged[k] === undefined || merged[k] === "") delete merged[k];
+      if (merged[k] === undefined || merged[k] === "") {
+        delete merged[k];
+      }
     });
     entities[index] = merged;
     this._update({ entities });
   }
 
   private _removeEntity(index: number) {
-    if (!this._config) return;
+    if (!this._config) {
+      return;
+    }
     const entities = [...(this._config.entities ?? [])];
     entities.splice(index, 1);
     const expanded: Record<number, boolean> = {};
     Object.keys(this._expanded).forEach((k) => {
       const n = Number(k);
       const v = this._expanded[n];
-      if (v === undefined) return;
-      if (n < index) expanded[n] = v;
-      else if (n > index) expanded[n - 1] = v;
+      if (v === undefined) {
+        return;
+      }
+      if (n < index) {
+        expanded[n] = v;
+      } else if (n > index) {
+        expanded[n - 1] = v;
+      }
     });
     this._expanded = expanded;
     this._update({ entities });
@@ -352,7 +372,9 @@ export class EnergyBreakdownCardEditor extends LitElement implements LovelaceCar
   };
 
   private _update(patch: Partial<EnergyBreakdownCardConfig>) {
-    if (!this._config) return;
+    if (!this._config) {
+      return;
+    }
     const next: EnergyBreakdownCardConfig = { ...this._config, ...patch };
     if (next.chart_type === "bar") {
       delete next.legend_position;

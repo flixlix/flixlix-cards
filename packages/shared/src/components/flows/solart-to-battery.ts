@@ -15,7 +15,9 @@ const solarToBatteryDot = (
   solar: Flows["solar"],
   newDur: Flows["newDur"]
 ) => {
-  if (!checkShouldShowDots(config) || !solar.state.toBattery) return nothing;
+  if (!checkShouldShowDots(config) || !solar.state.toBattery) {
+    return nothing;
+  }
 
   return svg`<circle r="1" class="battery-solar" vector-effect="non-scaling-stroke">
       <animateMotion dur="${newDur.solarToBattery}s" repeatCount="indefinite" calcMode="paced">
@@ -31,7 +33,9 @@ export const flowSolarToBattery = (
   { battery, individual, solar, newDur }: FlowSolarToBatteryFlows
 ) => {
   const shouldShow = battery.has && solar.has && showLine(config, solar.state.toBattery || 0);
-  if (!shouldShow) return nothing;
+  if (!shouldShow) {
+    return nothing;
+  }
 
   return html`<div
     class="lines ${classMap({

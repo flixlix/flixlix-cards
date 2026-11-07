@@ -235,13 +235,19 @@ export class EnergyFlowCardPlus extends LitElement {
   private _collectStatisticIds(): string[] {
     const ids = new Set<string>();
     const pushEntity = (entity?: string) => {
-      if (!entity) return;
+      if (!entity) {
+        return;
+      }
       getEntityNames(entity).forEach((id) => {
-        if (id) ids.add(id);
+        if (id) {
+          ids.add(id);
+        }
       });
     };
     const { entities } = this._config;
-    if (!entities) return [];
+    if (!entities) {
+      return [];
+    }
     if (typeof entities.grid?.entity === "string") {
       pushEntity(entities.grid.entity);
     } else {
@@ -254,7 +260,7 @@ export class EnergyFlowCardPlus extends LitElement {
       pushEntity(entities.battery?.entity?.consumption);
       pushEntity(entities.battery?.entity?.production);
     }
-    pushEntity(entities.solar?.entity as string | undefined);
+    pushEntity(entities.solar?.entity);
     pushEntity(entities.home?.entity);
     pushEntity(entities.fossil_fuel_percentage?.entity);
     entities.individual?.forEach((individual) => {
@@ -264,7 +270,9 @@ export class EnergyFlowCardPlus extends LitElement {
   }
 
   private _scheduleRefreshEnergyData(): void {
-    if (this._energyRefreshPending) return;
+    if (this._energyRefreshPending) {
+      return;
+    }
     this._energyRefreshPending = true;
     queueMicrotask(() => {
       this._energyRefreshPending = false;
@@ -283,7 +291,9 @@ export class EnergyFlowCardPlus extends LitElement {
       }
     }
 
-    if (generation !== this._energyRefreshGeneration) return;
+    if (generation !== this._energyRefreshGeneration) {
+      return;
+    }
 
     this._energyRefreshInFlight = this._doRefreshEnergyData();
     try {
@@ -294,7 +304,9 @@ export class EnergyFlowCardPlus extends LitElement {
   }
 
   private async _doRefreshEnergyData(): Promise<void> {
-    if (!this.hass || !this._config?.entities) return;
+    if (!this.hass || !this._config?.entities) {
+      return;
+    }
     const window = getGlobalEnergyPeriodWindow(this.hass, this._energyCollectionKey);
     this._energyWindow = window;
     const statisticIds = this._collectStatisticIds();
@@ -317,7 +329,9 @@ export class EnergyFlowCardPlus extends LitElement {
   }
 
   private _ensureEnergyPeriodListener() {
-    if (this._unsubEnergyPeriodListener || !this.hass) return;
+    if (this._unsubEnergyPeriodListener || !this.hass) {
+      return;
+    }
     const unsub = watchGlobalEnergyPeriodChanges(
       this.hass,
       () => {
@@ -332,7 +346,9 @@ export class EnergyFlowCardPlus extends LitElement {
   }
 
   private _ensureFossilDataSubscription(): void {
-    if (this._unsubFossilData || !this.hass) return;
+    if (this._unsubFossilData || !this.hass) {
+      return;
+    }
     const unsub = subscribeEnergyCollectionData(
       this.hass,
       (data) => {
@@ -355,9 +371,11 @@ export class EnergyFlowCardPlus extends LitElement {
   private _normalizeActionConfig(
     config?: ActionConfig | ActionConfigSet
   ): ActionConfigSet | undefined {
-    if (!config) return undefined;
+    if (!config) {
+      return undefined;
+    }
     if ("tap_action" in config || "hold_action" in config || "double_tap_action" in config) {
-      return config as ActionConfigSet;
+      return config;
     }
     return {
       tap_action: {
@@ -369,7 +387,7 @@ export class EnergyFlowCardPlus extends LitElement {
   public openDetails(
     event: { stopPropagation: () => void; key?: string; target: HTMLElement },
     config?: ActionConfig | ActionConfigSet,
-    entityId?: string | undefined,
+    entityId?: string,
     action: "tap" | "hold" | "double_tap" = "tap"
   ): void {
     event.stopPropagation();
@@ -381,8 +399,12 @@ export class EnergyFlowCardPlus extends LitElement {
     );
 
     if (!hasAnyAction) {
-      if (!entityId || !this._config.clickable_entities) return;
-      if (!doesEntityExist(this.hass, entityId)) return;
+      if (!entityId || !this._config.clickable_entities) {
+        return;
+      }
+      if (!doesEntityExist(this.hass, entityId)) {
+        return;
+      }
       const e = new CustomEvent("hass-more-info", {
         composed: true,
         detail: { entityId },
@@ -393,7 +415,7 @@ export class EnergyFlowCardPlus extends LitElement {
 
     handleAction(
       event.target,
-      this.hass!,
+      this.hass,
       {
         entity: entityId,
         tap_action: normalizedConfig?.tap_action,
@@ -412,14 +434,18 @@ export class EnergyFlowCardPlus extends LitElement {
     event.stopPropagation();
     const target = event.currentTarget as HTMLElement | null;
     const normalizedConfig = this._normalizeActionConfig(config);
-    if (!target) return;
+    if (!target) {
+      return;
+    }
     if (this._holdTriggered.get(target)) {
       this._holdTriggered.set(target, false);
       return;
     }
     if (normalizedConfig?.double_tap_action) {
       const existing = this._pendingTapTimeouts.get(target);
-      if (existing) clearTimeout(existing);
+      if (existing) {
+        clearTimeout(existing);
+      }
       const timeout = setTimeout(() => {
         this.openDetails(
           { stopPropagation: () => event.stopPropagation(), target },
@@ -447,13 +473,17 @@ export class EnergyFlowCardPlus extends LitElement {
   ): void {
     const target = event.currentTarget as HTMLElement | null;
     const normalizedConfig = this._normalizeActionConfig(config);
-    if (!target) return;
+    if (!target) {
+      return;
+    }
     const existing = this._pendingTapTimeouts.get(target);
     if (existing) {
       clearTimeout(existing);
       this._pendingTapTimeouts.delete(target);
     }
-    if (!normalizedConfig?.double_tap_action) return;
+    if (!normalizedConfig?.double_tap_action) {
+      return;
+    }
     this.openDetails(
       { stopPropagation: () => event.stopPropagation(), target },
       normalizedConfig,
@@ -469,9 +499,13 @@ export class EnergyFlowCardPlus extends LitElement {
   ): void {
     const target = event.currentTarget as HTMLElement | null;
     const normalizedConfig = this._normalizeActionConfig(config);
-    if (!target || !normalizedConfig?.hold_action) return;
+    if (!target || !normalizedConfig?.hold_action) {
+      return;
+    }
     const existing = this._holdTimeouts.get(target);
-    if (existing) clearTimeout(existing);
+    if (existing) {
+      clearTimeout(existing);
+    }
     this._holdTriggered.set(target, false);
     const timeout = setTimeout(() => {
       this._holdTriggered.set(target, true);
@@ -488,7 +522,9 @@ export class EnergyFlowCardPlus extends LitElement {
 
   public onEntityPointerUp(event: PointerEvent): void {
     const target = event.currentTarget as HTMLElement | null;
-    if (!target) return;
+    if (!target) {
+      return;
+    }
     const holdTimeout = this._holdTimeouts.get(target);
     if (holdTimeout) {
       clearTimeout(holdTimeout);
@@ -694,7 +730,9 @@ export class EnergyFlowCardPlus extends LitElement {
       if (!this._resizeObserver) {
         this._resizeObserver = new ResizeObserver((entries) => {
           const entry = entries[0];
-          if (!entry) return;
+          if (!entry) {
+            return;
+          }
           const width = Math.round(entry.contentRect.width);
           if (width !== this._width) {
             this._width = width;
@@ -734,7 +772,8 @@ export class EnergyFlowCardPlus extends LitElement {
     ) {
       this.style.setProperty(
         "--clickable-cursor",
-        this._config.clickable_entities !== false ? "pointer" : "default"
+
+        this._config.clickable_entities ? "pointer" : "default"
       );
       this._renderData = this._computeRenderData();
     }
@@ -816,11 +855,11 @@ export class EnergyFlowCardPlus extends LitElement {
       },
     };
     const hasSolarEntity = entities.solar?.entity !== undefined;
-    const solarTotal = getEnergyEntityStateLocal(entities.solar?.entity as string | undefined);
+    const solarTotal = getEnergyEntityStateLocal(entities.solar?.entity);
     const isProducingSolar = (solarTotal ?? 0) > 0;
     const displayZero = entities.solar?.display_zero !== false || isProducingSolar;
     const solar = {
-      entity: entities.solar?.entity as string | undefined,
+      entity: entities.solar?.entity,
       has: hasSolarEntity && displayZero,
       state: {
         total: solarTotal,
@@ -853,9 +892,12 @@ export class EnergyFlowCardPlus extends LitElement {
       },
     };
     const checkIfHasBattery = () => {
-      if (!entities.battery?.entity) return false;
-      if (typeof entities.battery?.entity === "object")
+      if (!entities.battery?.entity) {
+        return false;
+      }
+      if (typeof entities.battery?.entity === "object") {
         return entities.battery?.entity.consumption || entities.battery?.entity.production;
+      }
       return entities.battery?.entity !== undefined;
     };
     const battery = {
@@ -932,7 +974,9 @@ export class EnergyFlowCardPlus extends LitElement {
           useDateSelection: useDateSelection,
           field: individual,
         });
-        if (!obj.unit) obj.unit = "Wh";
+        if (!obj.unit) {
+          obj.unit = "Wh";
+        }
         return obj;
       }) || [];
     const nonFossil = {
@@ -1106,7 +1150,9 @@ export class EnergyFlowCardPlus extends LitElement {
     } else if (battery.state_of_charge.state <= 16) {
       battery.icon = "mdi:battery-outline";
     }
-    if (entities.battery?.icon !== undefined) battery.icon = entities.battery?.icon;
+    if (entities.battery?.icon !== undefined) {
+      battery.icon = entities.battery?.icon;
+    }
     const batteryUseMetadataIcon = entities.battery?.use_metadata;
     if (batteryUseMetadataIcon) {
       const metadataIcon = computeFieldIcon(this.hass, entities.battery, "NO_ICON_METADATA");
@@ -1159,7 +1205,7 @@ export class EnergyFlowCardPlus extends LitElement {
           prevDur !== nextDur
         ) {
           const safePrevDur = prevDur as number;
-          const safeNextDur = nextDur as number;
+          const safeNextDur = nextDur;
           const scale = safeNextDur / safePrevDur;
           const currentTime = flowSVGElement.getCurrentTime();
           const nextTime = currentTime * scale;
@@ -1170,7 +1216,7 @@ export class EnergyFlowCardPlus extends LitElement {
           flowSVGElement.unpauseAnimations();
         }
         this.previousDur[flowName] = Number.isFinite(nextDur)
-          ? (nextDur as number)
+          ? nextDur
           : this._config.max_flow_rate;
       });
     } else {
@@ -1233,28 +1279,25 @@ export class EnergyFlowCardPlus extends LitElement {
     const individualFieldRightTop = getTopRightIndividual(visibleIndividualObjects);
     const individualFieldRightBottom = getBottomRightIndividual(visibleIndividualObjects);
 
-    allDynamicStyles(
-      this as any,
-      {
-        grid,
-        solar,
-        battery,
-        display_zero_lines_grey_color:
-          this._config.display_zero_lines?.mode === "grey_out"
-            ? this._config.display_zero_lines?.grey_color
-            : "",
-        display_zero_lines_transparency:
-          this._config.display_zero_lines?.mode === "transparency"
-            ? this._config.display_zero_lines?.transparency
-            : undefined,
-        entities,
-        homeLargestSource,
-        homeSources,
-        individual: sortedIndividualObjects as any,
-        nonFossil,
-        isCardWideEnough,
-      } as any
-    );
+    allDynamicStyles(this, {
+      grid,
+      solar,
+      battery,
+      display_zero_lines_grey_color:
+        this._config.display_zero_lines?.mode === "grey_out"
+          ? this._config.display_zero_lines?.grey_color
+          : "",
+      display_zero_lines_transparency:
+        this._config.display_zero_lines?.mode === "transparency"
+          ? this._config.display_zero_lines?.transparency
+          : undefined,
+      entities,
+      homeLargestSource,
+      homeSources,
+      individual: sortedIndividualObjects as any,
+      nonFossil,
+      isCardWideEnough,
+    });
     return {
       entities,
       grid,
@@ -1295,7 +1338,9 @@ export class EnergyFlowCardPlus extends LitElement {
         if (Array.isArray(value)) {
           const individualKeys = ["left-top", "left-bottom", "right-top", "right-bottom"];
           value.forEach((template, index) => {
-            if (template) this._tryConnect(template, `${individualKeys[index]}Secondary`);
+            if (template) {
+              this._tryConnect(template, `${individualKeys[index]}Secondary`);
+            }
           });
         } else {
           this._tryConnect(value, key);
@@ -1332,7 +1377,7 @@ export class EnergyFlowCardPlus extends LitElement {
           entity_ids: templateEntityIds,
           variables: {
             config: this._config,
-            user: this.hass.user!.name,
+            user: this.hass.user.name,
           },
           strict: true,
         }

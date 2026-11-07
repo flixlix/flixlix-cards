@@ -73,7 +73,7 @@ export class IndividualDevicesEditor extends LitElement {
   }
 
   private _entitiesChanged(ev: CustomEvent): void {
-    let config = this.config!;
+    let config = this.config;
 
     config = {
       ...config,
@@ -88,7 +88,7 @@ export class IndividualDevicesEditor extends LitElement {
   }
 
   private _computeLabelCallback = (schema: any) =>
-    this.hass!.localize(`ui.panel.lovelace.editor.card.generic.${schema?.name}`) ||
+    this.hass.localize(`ui.panel.lovelace.editor.card.generic.${schema?.name}`) ||
     localize(`editor.${schema?.name}`);
 
   private _editDetailElement(ev: HASSDomEvent<EditSubElementEvent>): void {

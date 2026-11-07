@@ -109,7 +109,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     setOpenSections((prev) => {
       const next = new Set(prev);
       for (const section of SECTIONS) {
-        if (isSectionActive(pathname, section.to)) next.add(section.to);
+        if (isSectionActive(pathname, section.to)) {
+          next.add(section.to);
+        }
       }
       return next;
     });
@@ -118,8 +120,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   function setSectionOpen(sectionTo: string, open: boolean) {
     setOpenSections((prev) => {
       const next = new Set(prev);
-      if (open) next.add(sectionTo);
-      else next.delete(sectionTo);
+      if (open) {
+        next.add(sectionTo);
+      } else {
+        next.delete(sectionTo);
+      }
       return next;
     });
   }

@@ -67,8 +67,12 @@ export class SortableListCard extends LitElement implements LovelaceCard {
   }
 
   public setConfig(config: SortableListCardConfig): void {
-    if (!config) throw new Error("Invalid configuration");
-    if (!Array.isArray(config.items)) throw new Error("`items` must be a list");
+    if (!config) {
+      throw new Error("Invalid configuration");
+    }
+    if (!Array.isArray(config.items)) {
+      throw new Error("`items` must be a list");
+    }
     this._config = {
       show_handle: true,
       show_arrows: true,
@@ -84,29 +88,43 @@ export class SortableListCard extends LitElement implements LovelaceCard {
   }
 
   public disconnectedCallback(): void {
-    if (this._pendingTimer) clearTimeout(this._pendingTimer);
-    if (this._animTimer) clearTimeout(this._animTimer);
+    if (this._pendingTimer) {
+      clearTimeout(this._pendingTimer);
+    }
+    if (this._animTimer) {
+      clearTimeout(this._animTimer);
+    }
     this._cancelFlip();
     super.disconnectedCallback();
   }
 
   protected willUpdate(changed: PropertyValues): void {
     super.willUpdate?.(changed);
-    if (!this._config || !this.hass) return;
+    if (!this._config || !this.hass) {
+      return;
+    }
     if (changed.has("hass") || changed.has("_config")) {
       this._syncFromState();
     }
   }
 
   private _syncFromState(): void {
-    if (!this._config) return;
-    if (this._dragging) return;
+    if (!this._config) {
+      return;
+    }
+    if (this._dragging) {
+      return;
+    }
     const entity = this._config.entity;
-    if (!entity) return;
+    if (!entity) {
+      return;
+    }
     const stateObj = this.hass.states[entity];
     const cur = stateObj ? stateObj.state : "";
     if (this._pending !== null) {
-      if (cur === this._pending) this._clearPending();
+      if (cur === this._pending) {
+        this._clearPending();
+      }
       return;
     }
     const next = resolveOrder(this._config, cur);
@@ -130,14 +148,18 @@ export class SortableListCard extends LitElement implements LovelaceCard {
   }
 
   private _snapshotPositions(): void {
-    if (!this.hasUpdated) return;
+    if (!this.hasUpdated) {
+      return;
+    }
     // Settle any in-flight slide first so we measure true layout positions,
     // not transformed ones — keeps rapid successive moves from compounding.
     this._cancelFlip();
     const map = new Map<string, number>();
     this.renderRoot.querySelectorAll<HTMLElement>(".row").forEach((row) => {
       const key = row.dataset.key;
-      if (key) map.set(key, row.getBoundingClientRect().top);
+      if (key) {
+        map.set(key, row.getBoundingClientRect().top);
+      }
     });
     this._flipPrev = map;
     this._animating = true;
@@ -157,15 +179,23 @@ export class SortableListCard extends LitElement implements LovelaceCard {
   }
 
   private _playFlip(prev: Map<string, number>): boolean {
-    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return false;
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+      return false;
+    }
     let animated = false;
     this.renderRoot.querySelectorAll<HTMLElement>(".row").forEach((row) => {
       const key = row.dataset.key;
-      if (!key) return;
+      if (!key) {
+        return;
+      }
       const prevTop = prev.get(key);
-      if (prevTop === undefined) return;
+      if (prevTop === undefined) {
+        return;
+      }
       const delta = prevTop - row.getBoundingClientRect().top;
-      if (!delta) return;
+      if (!delta) {
+        return;
+      }
       animated = true;
       const anim = row.animate(
         [{ transform: `translateY(${delta}px)` }, { transform: "translateY(0)" }],
@@ -177,7 +207,9 @@ export class SortableListCard extends LitElement implements LovelaceCard {
   }
 
   private _scheduleAnimationEnd(): void {
-    if (this._animTimer) clearTimeout(this._animTimer);
+    if (this._animTimer) {
+      clearTimeout(this._animTimer);
+    }
     this._animTimer = setTimeout(() => {
       this._animating = false;
       this._animTimer = undefined;
@@ -185,10 +217,14 @@ export class SortableListCard extends LitElement implements LovelaceCard {
   }
 
   private _move(from: number, to: number): void {
-    if (to < 0 || to >= this._order.length || from === to) return;
+    if (to < 0 || to >= this._order.length || from === to) {
+      return;
+    }
     const arr = this._order.slice();
     const [moved] = arr.splice(from, 1);
-    if (moved === undefined) return;
+    if (moved === undefined) {
+      return;
+    }
     arr.splice(to, 0, moved);
     this._snapshotPositions();
     this._order = arr;
@@ -198,7 +234,9 @@ export class SortableListCard extends LitElement implements LovelaceCard {
   private _moveTo(from: number, pos: number): void {
     const arr = this._order.slice();
     const [moved] = arr.splice(from, 1);
-    if (moved === undefined) return;
+    if (moved === undefined) {
+      return;
+    }
     let insert = pos > from ? pos - 1 : pos;
     insert = Math.max(0, Math.min(insert, arr.length));
     if (insert === from) {
@@ -213,10 +251,14 @@ export class SortableListCard extends LitElement implements LovelaceCard {
   }
 
   private _commit(): void {
-    if (!this._config || !this.hass) return;
+    if (!this._config || !this.hass) {
+      return;
+    }
     if (this._config.entity) {
       this._pending = formatOrder(this._order, this._config.value_format ?? "csv");
-      if (this._pendingTimer) clearTimeout(this._pendingTimer);
+      if (this._pendingTimer) {
+        clearTimeout(this._pendingTimer);
+      }
       this._pendingTimer = setTimeout(() => {
         this._pending = null;
         this._pendingTimer = undefined;
@@ -239,7 +281,9 @@ export class SortableListCard extends LitElement implements LovelaceCard {
   }
 
   private _onDragOver(event: DragEvent, index: number): void {
-    if (!this._dragging) return;
+    if (!this._dragging) {
+      return;
+    }
     event.preventDefault();
     const row = event.currentTarget as HTMLElement;
     const rect = row.getBoundingClientRect();
@@ -250,7 +294,9 @@ export class SortableListCard extends LitElement implements LovelaceCard {
   private _onDragEnd(): void {
     if (this._dragKey !== null && this._dropPos !== null) {
       const from = this._order.indexOf(this._dragKey);
-      if (from !== -1) this._moveTo(from, this._dropPos);
+      if (from !== -1) {
+        this._moveTo(from, this._dropPos);
+      }
     }
     this._dragging = false;
     this._dragKey = null;
@@ -258,7 +304,9 @@ export class SortableListCard extends LitElement implements LovelaceCard {
   }
 
   protected render(): TemplateResult | typeof nothing {
-    if (!this._config || !this.hass) return nothing;
+    if (!this._config || !this.hass) {
+      return nothing;
+    }
     const title = this._config.title;
     const resolved = resolveItems(this.hass, this._config);
     if (!resolved.length) {

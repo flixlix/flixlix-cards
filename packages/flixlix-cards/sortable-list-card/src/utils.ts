@@ -21,14 +21,16 @@ export function resolveItems(
   return (config.items ?? [])
     .map((item): ResolvedItem | null => {
       const key = itemKey(item);
-      if (!key) return null;
+      if (!key) {
+        return null;
+      }
       const stateObj = item.entity ? hass?.states?.[item.entity] : undefined;
-      const friendly = stateObj?.attributes?.friendly_name as string | undefined;
+      const friendly = stateObj?.attributes?.friendly_name;
       return {
         key,
         entity: item.entity,
         name: item.name ?? friendly ?? item.entity ?? key,
-        icon: item.icon ?? (stateObj?.attributes?.icon as string | undefined),
+        icon: item.icon ?? stateObj?.attributes?.icon,
         state: stateObj?.state,
       };
     })
@@ -39,7 +41,9 @@ export function parseStateValue(
   value: string | undefined | null,
   format: SortableListValueFormat = "csv"
 ): string[] {
-  if (!value) return [];
+  if (!value) {
+    return [];
+  }
   if (format === "json") {
     try {
       const parsed = JSON.parse(value);
@@ -79,7 +83,9 @@ type SubstitutionContext = {
 };
 
 function substituteString(input: string, ctx: SubstitutionContext): unknown {
-  if (input === "{value_list}") return ctx.value_list;
+  if (input === "{value_list}") {
+    return ctx.value_list;
+  }
   return input
     .split("{value_csv}")
     .join(ctx.value_csv)
@@ -90,18 +96,26 @@ function substituteString(input: string, ctx: SubstitutionContext): unknown {
 }
 
 export function substitute(value: unknown, ctx: SubstitutionContext): unknown {
-  if (typeof value === "string") return substituteString(value, ctx);
-  if (Array.isArray(value)) return value.map((v) => substitute(v, ctx));
+  if (typeof value === "string") {
+    return substituteString(value, ctx);
+  }
+  if (Array.isArray(value)) {
+    return value.map((v) => substitute(v, ctx));
+  }
   if (value && typeof value === "object") {
     const out: Record<string, unknown> = {};
-    for (const [k, v] of Object.entries(value)) out[k] = substitute(v, ctx);
+    for (const [k, v] of Object.entries(value)) {
+      out[k] = substitute(v, ctx);
+    }
     return out;
   }
   return value;
 }
 
 export function effectiveSaveAction(config: SortableListCardConfig) {
-  if (config.save_action?.service) return config.save_action;
+  if (config.save_action?.service) {
+    return config.save_action;
+  }
   if (config.entity) {
     return {
       service: "input_text.set_value",
@@ -123,9 +137,13 @@ export function buildSaveCall(
   order: string[]
 ): ResolvedServiceCall | null {
   const action = effectiveSaveAction(config);
-  if (!action?.service) return null;
+  if (!action?.service) {
+    return null;
+  }
   const [domain, service] = action.service.split(".");
-  if (!domain || !service) return null;
+  if (!domain || !service) {
+    return null;
+  }
   const format = config.value_format ?? "csv";
   const ctx: SubstitutionContext = {
     value: formatOrder(order, format),

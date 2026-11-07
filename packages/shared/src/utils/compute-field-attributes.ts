@@ -7,11 +7,14 @@ export const computeFieldIcon = (
   field: ConfigEntity | undefined,
   fallback: string
 ): string => {
-  if (field?.icon) return field.icon;
+  if (field?.icon) {
+    return field.icon;
+  }
 
   if (field?.use_metadata) {
-    if (typeof field?.entity === "string")
+    if (typeof field?.entity === "string") {
       return getEntityStateObj(hass, field?.entity)?.attributes?.icon || fallback;
+    }
 
     return (
       getEntityStateObj(hass, field?.entity?.consumption)?.attributes?.icon ||
@@ -28,11 +31,14 @@ export const computeFieldName = (
   field: ConfigEntity | undefined,
   fallback: string
 ): string => {
-  if (field?.name) return field.name;
+  if (field?.name) {
+    return field.name;
+  }
 
   if (field?.use_metadata) {
-    if (typeof field?.entity === "string")
+    if (typeof field?.entity === "string") {
       return getEntityStateObj(hass, field.entity)?.attributes?.friendly_name || fallback;
+    }
 
     return (
       getEntityStateObj(hass, field?.entity?.consumption)?.attributes?.friendly_name ||

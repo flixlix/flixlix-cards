@@ -118,7 +118,9 @@ export const allDynamicStyles = (main: HostWithStyle, input: DynamicStylesInput)
 
   if (entities.solar?.color !== undefined) {
     let solarColor = entities.solar.color;
-    if (typeof solarColor === "object") solarColor = convertColorListToHex(solarColor);
+    if (typeof solarColor === "object") {
+      solarColor = convertColorListToHex(solarColor);
+    }
     main.style.setProperty("--energy-solar-color", solarColor || "#ff9800");
   }
   main.style.setProperty(
@@ -245,7 +247,9 @@ export const allDynamicStyles = (main: HostWithStyle, input: DynamicStylesInput)
 
   if (display_zero_lines_grey_color !== undefined) {
     let greyColor = display_zero_lines_grey_color;
-    if (typeof greyColor === "object") greyColor = convertColorListToHex(greyColor);
+    if (typeof greyColor === "object") {
+      greyColor = convertColorListToHex(greyColor);
+    }
     main.style.setProperty("--greyed-out--line-color", greyColor);
   }
 
@@ -314,7 +318,9 @@ export const allDynamicStyles = (main: HostWithStyle, input: DynamicStylesInput)
       index++
     ) {
       const individualShown = individualsShown[index];
-      if (!individualShown) continue;
+      if (!individualShown) {
+        continue;
+      }
       getStylesForIndividual(individualShown.field || {}, index);
     }
   }

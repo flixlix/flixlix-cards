@@ -29,8 +29,10 @@ export const nonFossilElement = (
   config: FlowCardPlusConfig,
   { nonFossil, entities, templatesObj, grid, newDur, fossilEnergyConsumption }: NonFossil
 ): TemplateResult => {
-  const disableEntityClick = config.clickable_entities === false;
-  if (!nonFossil.hasPercentage) return spacer;
+  const disableEntityClick = !config.clickable_entities;
+  if (!nonFossil.hasPercentage) {
+    return spacer;
+  }
   return html`<div class="circle-container low-carbon">
     <span class="label">${nonFossil.name}</span>
     <div
@@ -89,7 +91,7 @@ export const nonFossilElement = (
                 >${displayNonFossilState(
                   main.hass,
                   config,
-                  entities!.fossil_fuel_percentage!.entity,
+                  entities.fossil_fuel_percentage!.entity,
                   grid.state.fromGrid,
                   fossilEnergyConsumption
                 )}</span

@@ -33,10 +33,18 @@ export const individualSecondarySpan = (
     : undefined;
 
   const shouldShowSecondary = () => {
-    if (templateResult) return true;
-    if (individual?.secondary?.displayZero === true) return true;
-    if (!individual?.secondary?.state) return false;
-    if (!isNumberValue(individual?.secondary?.state)) return true;
+    if (templateResult) {
+      return true;
+    }
+    if (individual?.secondary?.displayZero) {
+      return true;
+    }
+    if (!individual?.secondary?.state) {
+      return false;
+    }
+    if (!isNumberValue(individual?.secondary?.state)) {
+      return true;
+    }
 
     const toleranceSet = individual?.secondary?.displayZeroTolerance ?? 0;
     return (
@@ -46,7 +54,9 @@ export const individualSecondarySpan = (
     );
   };
 
-  if (!shouldShowSecondary()) return nothing;
+  if (!shouldShowSecondary()) {
+    return nothing;
+  }
   return baseSecondarySpan({
     main: main,
     className: key,

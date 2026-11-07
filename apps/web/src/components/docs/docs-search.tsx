@@ -72,7 +72,9 @@ const THEME_COMMANDS: Command[] = [
 
 function matchCommands(query: string): Command[] {
   const tokens = query.toLowerCase().split(/\s+/).filter(Boolean);
-  if (tokens.length === 0) return THEME_COMMANDS;
+  if (tokens.length === 0) {
+    return THEME_COMMANDS;
+  }
   return THEME_COMMANDS.filter((c) => {
     const haystack = `${c.title} ${c.keywords}`.toLowerCase();
     return tokens.every((t) => haystack.includes(t));
@@ -80,9 +82,13 @@ function matchCommands(query: string): Command[] {
 }
 
 function highlight(text: string, query: string): React.ReactNode {
-  if (!query) return text;
+  if (!query) {
+    return text;
+  }
   const idx = text.toLowerCase().indexOf(query.toLowerCase());
-  if (idx === -1) return text;
+  if (idx === -1) {
+    return text;
+  }
   return (
     <>
       {text.slice(0, idx)}
@@ -121,7 +127,9 @@ export function DocsSearch({ className }: { className?: string }) {
 
   // Lock body scroll when open
   React.useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      return;
+    }
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
@@ -169,7 +177,7 @@ function CommandMenu({ onClose }: { onClose: () => void }) {
         ? [
             {
               label: "Commands",
-              items: commands.map((command) => ({ kind: "command", command }) as MenuItem),
+              items: commands.map((command) => ({ kind: "command", command })),
             },
           ]
         : [];
@@ -178,7 +186,7 @@ function CommandMenu({ onClose }: { onClose: () => void }) {
       return [
         ...SUGGESTED_GROUPS.filter((g) => g.entries.length > 0).map((g) => ({
           label: g.label,
-          items: g.entries.map((entry) => ({ kind: "doc", entry }) as MenuItem),
+          items: g.entries.map((entry) => ({ kind: "doc", entry })),
         })),
         ...commandGroup(THEME_COMMANDS),
       ];
@@ -186,7 +194,9 @@ function CommandMenu({ onClose }: { onClose: () => void }) {
 
     const results = searchDocs(query, 24);
     const commands = commandGroup(matchCommands(trimmed));
-    if (results.length === 0) return commands;
+    if (results.length === 0) {
+      return commands;
+    }
     // group by type for a richer command-menu feel
     const order: SearchEntry["type"][] = ["page", "section", "option", "example"];
     const buckets = new Map<SearchEntry["type"], SearchEntry[]>();
@@ -201,7 +211,7 @@ function CommandMenu({ onClose }: { onClose: () => void }) {
           label: { page: "Pages", section: "Sections", option: "Options", example: "Examples" }[
             type
           ],
-          items: (buckets.get(type) ?? []).map((entry) => ({ kind: "doc", entry }) as MenuItem),
+          items: (buckets.get(type) ?? []).map((entry) => ({ kind: "doc", entry })),
         }))
         .filter((g) => g.items.length > 0),
       ...commands,
@@ -219,7 +229,9 @@ function CommandMenu({ onClose }: { onClose: () => void }) {
 
   // Keep the active item visible
   React.useEffect(() => {
-    if (!listRef.current) return;
+    if (!listRef.current) {
+      return;
+    }
     const node = listRef.current.querySelector<HTMLElement>(`[data-index="${activeIndex}"]`);
     node?.scrollIntoView({ block: "nearest" });
   }, [activeIndex]);

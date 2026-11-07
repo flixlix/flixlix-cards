@@ -13,11 +13,15 @@ export function PageTOC({ items, className }: { items: TocItem[]; className?: st
   const [activeId, setActiveId] = React.useState<string | null>(items[0]?.id ?? null);
 
   React.useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined") {
+      return;
+    }
     const elements = items
       .map((i) => document.getElementById(i.id))
       .filter((el): el is HTMLElement => Boolean(el));
-    if (elements.length === 0) return;
+    if (elements.length === 0) {
+      return;
+    }
 
     const visible = new Map<string, number>();
 
@@ -30,9 +34,13 @@ export function PageTOC({ items, className }: { items: TocItem[]; className?: st
             visible.delete(entry.target.id);
           }
         }
-        if (visible.size === 0) return;
+        if (visible.size === 0) {
+          return;
+        }
         const top = items.find((i) => visible.has(i.id));
-        if (top) setActiveId(top.id);
+        if (top) {
+          setActiveId(top.id);
+        }
       },
       {
         rootMargin: "-80px 0px -60% 0px",
@@ -40,14 +48,18 @@ export function PageTOC({ items, className }: { items: TocItem[]; className?: st
       }
     );
 
-    for (const el of elements) observer.observe(el);
+    for (const el of elements) {
+      observer.observe(el);
+    }
     return () => observer.disconnect();
   }, [items]);
 
   function jumpTo(e: React.MouseEvent<HTMLAnchorElement>, id: string) {
     e.preventDefault();
     const el = document.getElementById(id);
-    if (!el) return;
+    if (!el) {
+      return;
+    }
     const top = el.getBoundingClientRect().top + window.scrollY - 80;
     window.scrollTo({ top, behavior: "smooth" });
     if (typeof window.history?.replaceState === "function") {

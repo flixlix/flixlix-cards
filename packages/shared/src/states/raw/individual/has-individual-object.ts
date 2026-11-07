@@ -5,7 +5,11 @@ export const hasIndividualObject = (
   state: number | null,
   tolerance: number
 ) => {
-  if (displayZero) return true;
-  if (isAboveTolerance(state, tolerance)) return true;
+  if (displayZero) {
+    return true;
+  }
+  if (isAboveTolerance(state, tolerance)) {
+    return true;
+  }
   return false;
 };

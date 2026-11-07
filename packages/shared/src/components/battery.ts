@@ -17,7 +17,7 @@ export const batteryElement = (
     entities: ConfigEntities;
   }
 ) => {
-  const disableEntityClick = config.clickable_entities === false;
+  const disableEntityClick = !config.clickable_entities;
   return html`<div class="circle-container battery">
     <div
       class="circle ${disableEntityClick ? "pointer-events-none" : ""}"
@@ -135,23 +135,23 @@ export const batteryElement = (
               @click=${(e: MouseEvent) => {
                 const target =
                   typeof entities.battery!.entity === "string"
-                    ? entities.battery!.entity!
-                    : entities.battery!.entity!.production!;
+                    ? entities.battery!.entity
+                    : entities.battery!.entity.production;
 
                 main.onEntityClick(e, entities.battery, target);
               }}
               @dblclick=${(e: MouseEvent) => {
                 const target =
                   typeof entities.battery!.entity === "string"
-                    ? entities.battery!.entity!
-                    : entities.battery!.entity!.production!;
+                    ? entities.battery!.entity
+                    : entities.battery!.entity.production;
                 main.onEntityDoubleClick(e, entities.battery, target);
               }}
               @pointerdown=${(e: PointerEvent) => {
                 const target =
                   typeof entities.battery!.entity === "string"
-                    ? entities.battery!.entity!
-                    : entities.battery!.entity!.production!;
+                    ? entities.battery!.entity
+                    : entities.battery!.entity.production;
                 main.onEntityPointerDown(e, entities.battery, target);
               }}
               @pointerup=${(e: PointerEvent) => {
@@ -164,8 +164,8 @@ export const batteryElement = (
                 if (e.key === "Enter") {
                   const target =
                     typeof entities.battery!.entity === "string"
-                      ? entities.battery!.entity!
-                      : entities.battery!.entity!.production!;
+                      ? entities.battery!.entity
+                      : entities.battery!.entity.production;
 
                   main.openDetails(e, entities.battery, target, "tap");
                 }
@@ -191,23 +191,23 @@ export const batteryElement = (
               @click=${(e: MouseEvent) => {
                 const target =
                   typeof entities.battery!.entity === "string"
-                    ? entities.battery!.entity!
-                    : entities.battery!.entity!.consumption!;
+                    ? entities.battery!.entity
+                    : entities.battery!.entity.consumption;
 
                 main.onEntityClick(e, entities.battery, target);
               }}
               @dblclick=${(e: MouseEvent) => {
                 const target =
                   typeof entities.battery!.entity === "string"
-                    ? entities.battery!.entity!
-                    : entities.battery!.entity!.consumption!;
+                    ? entities.battery!.entity
+                    : entities.battery!.entity.consumption;
                 main.onEntityDoubleClick(e, entities.battery, target);
               }}
               @pointerdown=${(e: PointerEvent) => {
                 const target =
                   typeof entities.battery!.entity === "string"
-                    ? entities.battery!.entity!
-                    : entities.battery!.entity!.consumption!;
+                    ? entities.battery!.entity
+                    : entities.battery!.entity.consumption;
                 main.onEntityPointerDown(e, entities.battery, target);
               }}
               @pointerup=${(e: PointerEvent) => {
@@ -220,8 +220,8 @@ export const batteryElement = (
                 if (e.key === "Enter") {
                   const target =
                     typeof entities.battery!.entity === "string"
-                      ? entities.battery!.entity!
-                      : entities.battery!.entity!.consumption!;
+                      ? entities.battery!.entity
+                      : entities.battery!.entity.consumption;
 
                   main.openDetails(e, entities.battery, target, "tap");
                 }

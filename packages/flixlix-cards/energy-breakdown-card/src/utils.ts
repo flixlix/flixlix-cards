@@ -34,35 +34,43 @@ export function pickColor(
   fallbackName: string,
   index: number
 ): string {
-  if (config.color) return config.color;
+  if (config.color) {
+    return config.color;
+  }
   const hint = NAME_COLOR_HINTS.find(
     (h) => h.test.test(config.entity ?? "") || h.test.test(fallbackName ?? "")
   )?.color;
-  if (hint) return hint;
+  if (hint) {
+    return hint;
+  }
   return DEFAULT_PALETTE[index % DEFAULT_PALETTE.length] ?? DEFAULT_PALETTE[0]!;
 }
 
 export function getEntityNumericState(hass: HomeAssistant, entity: string): number {
   const state = hass.states[entity]?.state;
-  if (state === undefined || state === null) return 0;
+  if (state === undefined || state === null) {
+    return 0;
+  }
   const n = Number(state);
   return Number.isFinite(n) ? n : 0;
 }
 
 export function getEntityFriendlyName(hass: HomeAssistant, entity: string): string {
-  return (
-    (hass.states[entity]?.attributes.friendly_name as string | undefined) ?? entity ?? "Unknown"
-  );
+  return hass.states[entity]?.attributes.friendly_name ?? entity ?? "Unknown";
 }
 
 export function getEntityIcon(hass: HomeAssistant, entity?: string): string | undefined {
-  if (!entity) return undefined;
-  return hass.states[entity]?.attributes.icon as string | undefined;
+  if (!entity) {
+    return undefined;
+  }
+  return hass.states[entity]?.attributes.icon;
 }
 
 export function getEntityUnit(hass: HomeAssistant, entity?: string): string | undefined {
-  if (!entity) return undefined;
-  return hass.states[entity]?.attributes.unit_of_measurement as string | undefined;
+  if (!entity) {
+    return undefined;
+  }
+  return hass.states[entity]?.attributes.unit_of_measurement;
 }
 
 export function formatValue(
@@ -170,7 +178,9 @@ export function describeDonutSegment(opts: {
 }): string {
   const { cx, cy, innerRadius: rI, outerRadius: rO, startAngle, endAngle } = opts;
   const angleSpan = endAngle - startAngle;
-  if (angleSpan <= 0 || rO <= rI) return "";
+  if (angleSpan <= 0 || rO <= rI) {
+    return "";
+  }
   if (angleSpan >= FULL_CIRCLE_THRESHOLD) {
     return describeFullDonut(cx, cy, rI, rO);
   }

@@ -82,7 +82,7 @@ export class IndividualRowEditor extends LitElement {
             ${this._indexBeingEdited + 1} / ${this.entities.length} ${localize("editor.individual")}
           </h4>
           <ha-icon-button
-            .label=${this.hass!.localize("ui.components.entity.entity-picker.clear")}
+            .label=${this.hass.localize("ui.components.entity.entity-picker.clear")}
             .path=${mdiClose}
             class="remove-icon"
             @click=${() => (this._indexBeingEdited = -1)}
@@ -174,7 +174,9 @@ export class IndividualRowEditor extends LitElement {
       this.config.entities.individual = [];
     }
     const individualConfig = [...this.config.entities.individual];
-    if (!individualConfig) return;
+    if (!individualConfig) {
+      return;
+    }
 
     individualConfig[this._indexBeingEdited] = newRowConfig;
 
@@ -199,7 +201,7 @@ export class IndividualRowEditor extends LitElement {
 
   private async _createSortable() {
     const Sortable = await loadSortable();
-    this._sortable = new Sortable(this.shadowRoot!.querySelector(".entities")!, {
+    this._sortable = new Sortable(this.shadowRoot!.querySelector(".entities"), {
       animation: 150,
       fallbackClass: "sortable-fallback",
       handle: ".handle",

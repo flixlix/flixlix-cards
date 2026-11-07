@@ -3,7 +3,9 @@ import { type HomeAssistant } from "custom-card-helpers";
 import { html, nothing } from "lit";
 
 export const dashboardLinkElement = (config: FlowCardPlusConfig, hass: HomeAssistant) => {
-  if (!config.dashboard_link && !config.second_dashboard_link) return nothing;
+  if (!config.dashboard_link && !config.second_dashboard_link) {
+    return nothing;
+  }
 
   return html`
     <div class="card-actions">

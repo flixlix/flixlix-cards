@@ -34,7 +34,9 @@ export const generalSecondarySpan = (
   },
   key: SecondaryKey
 ) => {
-  if (!field?.secondary?.has && !field?.secondary?.template) return nothing;
+  if (!field?.secondary?.has && !field?.secondary?.template) {
+    return nothing;
+  }
 
   return baseSecondarySpan({
     main,

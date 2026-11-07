@@ -8,8 +8,12 @@ export const getIndividualDisplayState = (
   config: FlowCardPlusConfig,
   individualObj?: IndividualObject
 ) => {
-  if (!individualObj) return "";
-  if (individualObj?.state === undefined) return "";
+  if (!individualObj) {
+    return "";
+  }
+  if (individualObj?.state === undefined) {
+    return "";
+  }
 
   return displayValue(hass, config, individualObj?.state, {
     decimals: individualObj.field?.decimals,

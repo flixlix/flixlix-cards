@@ -15,7 +15,9 @@ const gridToHomeDot = (
   grid: Flows["grid"],
   newDur: Flows["newDur"]
 ) => {
-  if (!checkShouldShowDots(config) || !grid.state.toHome) return nothing;
+  if (!checkShouldShowDots(config) || !grid.state.toHome) {
+    return nothing;
+  }
 
   return svg`<circle r="1" class="grid" vector-effect="non-scaling-stroke">
       <animateMotion dur="${newDur.gridToHome}s" repeatCount="indefinite" calcMode="paced">
@@ -30,7 +32,9 @@ export const flowGridToHome = (
 ) => {
   const shouldShow =
     grid.has && showLine(config, grid.state.fromGrid) && !config.entities.home?.hide;
-  if (!shouldShow) return nothing;
+  if (!shouldShow) {
+    return nothing;
+  }
 
   return html`<div
     class="lines ${classMap({

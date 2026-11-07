@@ -25,13 +25,17 @@ export const individualRightBottomElement = (
   config: FlowCardPlusConfig,
   { individualObj, templatesObj, displayState, newDur }: TopIndividual
 ) => {
-  if (!individualObj) return spacer;
-  const disableEntityClick = config.clickable_entities === false;
+  if (!individualObj) {
+    return spacer;
+  }
+  const disableEntityClick = !config.clickable_entities;
 
   const indexOfIndividual = config?.entities?.individual?.findIndex(
     (e) => e.entity === individualObj.entity
   );
-  if (indexOfIndividual === -1 || indexOfIndividual === undefined) return spacer;
+  if (indexOfIndividual === -1 || indexOfIndividual === undefined) {
+    return spacer;
+  }
 
   const duration = newDur.individual[indexOfIndividual] || 1.66;
 

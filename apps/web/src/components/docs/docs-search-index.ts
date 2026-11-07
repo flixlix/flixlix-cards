@@ -638,7 +638,9 @@ export const SEARCH_ENTRIES: SearchEntry[] = [
 
 function score(query: string, entry: SearchEntry): number {
   const q = query.toLowerCase().trim();
-  if (!q) return 0;
+  if (!q) {
+    return 0;
+  }
 
   const haystacks: { value: string; weight: number }[] = [
     { value: entry.title.toLowerCase(), weight: 10 },
@@ -649,29 +651,42 @@ function score(query: string, entry: SearchEntry): number {
 
   let total = 0;
   for (const { value, weight } of haystacks) {
-    if (!value) continue;
-    if (value === q) total += weight * 4;
-    else if (value.startsWith(q)) total += weight * 2;
-    else if (value.includes(q)) total += weight;
+    if (!value) {
+      continue;
+    }
+    if (value === q) {
+      total += weight * 4;
+    } else if (value.startsWith(q)) {
+      total += weight * 2;
+    } else if (value.includes(q)) {
+      total += weight;
+    }
   }
 
   // tokens: every word in the query must appear somewhere
   const tokens = q.split(/\s+/).filter(Boolean);
   if (tokens.length > 1) {
     const combined = haystacks.map((h) => h.value).join(" ");
-    if (tokens.every((t) => combined.includes(t))) total += 6;
-    else return 0; // multi-word queries require all tokens to match
+    if (tokens.every((t) => combined.includes(t))) {
+      total += 6;
+    } else {
+      return 0;
+    } // multi-word queries require all tokens to match
   }
 
   // boost type
-  if (entry.type === "page" && total > 0) total += 1;
+  if (entry.type === "page" && total > 0) {
+    total += 1;
+  }
 
   return total;
 }
 
 export function searchDocs(query: string, max = 8): SearchEntry[] {
   const q = query.trim();
-  if (!q) return [];
+  if (!q) {
+    return [];
+  }
   return SEARCH_ENTRIES.map((entry) => ({ entry, s: score(q, entry) }))
     .filter(({ s }) => s > 0)
     .sort((a, b) => b.s - a.s)

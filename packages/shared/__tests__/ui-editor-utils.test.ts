@@ -59,10 +59,18 @@ describe("ui editor utilities", () => {
     });
     vi.stubGlobal("customElements", {
       get: vi.fn((name: string) => {
-        if (name === "ha-form") return undefined;
-        if (name === "ha-entity-picker") return undefined;
-        if (name === "hui-button-card") return { getConfigElement: buttonGetConfigElement };
-        if (name === "hui-entities-card") return { getConfigElement: entitiesGetConfigElement };
+        if (name === "ha-form") {
+          return undefined;
+        }
+        if (name === "ha-entity-picker") {
+          return undefined;
+        }
+        if (name === "hui-button-card") {
+          return { getConfigElement: buttonGetConfigElement };
+        }
+        if (name === "hui-entities-card") {
+          return { getConfigElement: entitiesGetConfigElement };
+        }
         return undefined;
       }),
     });
@@ -82,7 +90,9 @@ describe("ui editor utilities", () => {
     });
     vi.stubGlobal("customElements", {
       get: vi.fn((name: string) => {
-        if (name === "ha-form") return class HaForm {};
+        if (name === "ha-form") {
+          return class HaForm {};
+        }
         return undefined;
       }),
     });

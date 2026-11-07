@@ -15,14 +15,22 @@ type DocsVideoProps = {
 };
 
 function resolveSrc(src: string, ext: string): string {
-  if (/^https?:\/\//.test(src)) return src;
-  if (/\.[a-z0-9]+$/i.test(src)) return src;
+  if (/^https?:\/\//.test(src)) {
+    return src;
+  }
+  if (/\.[a-z0-9]+$/i.test(src)) {
+    return src;
+  }
   return `/videos/${src}.${ext}`;
 }
 
 function resolvePoster(poster: string): string {
-  if (/^https?:\/\//.test(poster)) return poster;
-  if (/\.[a-z0-9]+$/i.test(poster)) return poster;
+  if (/^https?:\/\//.test(poster)) {
+    return poster;
+  }
+  if (/\.[a-z0-9]+$/i.test(poster)) {
+    return poster;
+  }
   return `/videos/${poster}.jpg`;
 }
 

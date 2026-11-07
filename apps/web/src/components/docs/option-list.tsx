@@ -32,7 +32,9 @@ const TYPE_TONE: Record<string, string> = {
 function tokenTone(token: string): string {
   const lower = token.toLowerCase();
   for (const [key, tone] of Object.entries(TYPE_TONE)) {
-    if (lower.includes(key)) return tone;
+    if (lower.includes(key)) {
+      return tone;
+    }
   }
   return "bg-muted text-muted-foreground";
 }

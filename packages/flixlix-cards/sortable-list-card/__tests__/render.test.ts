@@ -367,7 +367,7 @@ describe("sortable-list-card FLIP animations", () => {
       return { top: idx * 50, height: 50, bottom: idx * 50 + 50 } as DOMRect;
     });
 
-    window.matchMedia = vi.fn().mockReturnValue({ matches: false }) as unknown as typeof matchMedia;
+    window.matchMedia = vi.fn().mockReturnValue({ matches: false });
   });
 
   afterEach(() => {
@@ -412,7 +412,7 @@ describe("sortable-list-card FLIP animations", () => {
   });
 
   test("respects prefers-reduced-motion", async () => {
-    window.matchMedia = vi.fn().mockReturnValue({ matches: true }) as unknown as typeof matchMedia;
+    window.matchMedia = vi.fn().mockReturnValue({ matches: true });
     const card = await mount();
 
     (card as any)._move(0, 1);

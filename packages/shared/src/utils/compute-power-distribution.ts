@@ -109,8 +109,9 @@ export function computePowerDistributionAfterSolarAndBattery(params: {
 
       solar.state.toBattery = (battery.state.toBattery ?? 0) - (grid.state.toBattery || 0);
       if (entities.solar?.display_zero_tolerance) {
-        if (entities.solar.display_zero_tolerance >= (solar.state.total || 0))
+        if (entities.solar.display_zero_tolerance >= (solar.state.total || 0)) {
           solar.state.toBattery = 0;
+        }
       }
     } else {
       battery.state.toGrid = grid.state.toGrid || 0;
@@ -123,8 +124,9 @@ export function computePowerDistributionAfterSolarAndBattery(params: {
 
   grid.state.toHome = Math.max((grid.state.fromGrid ?? 0) - (grid.state.toBattery ?? 0), 0);
 
-  if (solar.has && grid.state.toGrid)
+  if (solar.has && grid.state.toGrid) {
     solar.state.toGrid = grid.state.toGrid - (battery.state.toGrid ?? 0);
+  }
 
   if (grid.powerOutage.isOutage) {
     grid.state.fromGrid = grid.powerOutage.entityGenerator

@@ -169,7 +169,9 @@ const getEnergyCollection = (
   const keysToCheck = [resolveConnectionKey(hass, collectionKey), "_energy"];
   for (const key of keysToCheck) {
     const candidate = connection?.[key] as ListenerCollection | undefined;
-    if (candidate) return candidate;
+    if (candidate) {
+      return candidate;
+    }
   }
   return null;
 };
@@ -289,20 +291,28 @@ export const watchGlobalEnergyPeriodChanges = (
 };
 
 const getSumGrowth = (values: StatisticsValue[]): number => {
-  if (!values.length) return 0;
+  if (!values.length) {
+    return 0;
+  }
   let changeGrowth = 0;
   let hasChange = false;
   for (const value of values) {
-    if (value.change === null || value.change === undefined) continue;
+    if (value.change === null || value.change === undefined) {
+      continue;
+    }
     changeGrowth += value.change;
     hasChange = true;
   }
-  if (hasChange) return Math.max(changeGrowth, 0);
+  if (hasChange) {
+    return Math.max(changeGrowth, 0);
+  }
   const first = values.find((item) => item.sum !== null && item.sum !== undefined)?.sum;
   const last = [...values]
     .reverse()
     .find((item) => item.sum !== null && item.sum !== undefined)?.sum;
-  if (first === undefined || first === null || last === undefined || last === null) return 0;
+  if (first === undefined || first === null || last === undefined || last === null) {
+    return 0;
+  }
   return Math.max(last - first, 0);
 };
 
@@ -311,9 +321,11 @@ export const fetchEnergyPeriodGrowth = async (
   statisticIds: string[],
   window: EnergyPeriodWindow
 ): Promise<Record<string, number>> => {
-  if (!statisticIds.length) return {};
+  if (!statisticIds.length) {
+    return {};
+  }
 
-  const raw = (await hass.callWS({
+  const raw = await hass.callWS<PeriodStatisticsResponse>({
     type: "recorder/statistics_during_period",
     start_time: window.start.toISOString(),
     end_time: window.end.toISOString(),
@@ -321,7 +333,7 @@ export const fetchEnergyPeriodGrowth = async (
     period: getSuggestedPeriod(window.start, window.end),
     types: ["change", "sum"],
     units: { energy: "Wh" },
-  })) as PeriodStatisticsResponse;
+  });
 
   const result: Record<string, number> = {};
   for (const statisticId of statisticIds) {
@@ -334,7 +346,9 @@ export const getEntityEnergyFromGrowthMap = (
   growthMap: Record<string, number>,
   entity?: string
 ): number => {
-  if (!entity) return 0;
+  if (!entity) {
+    return 0;
+  }
   return getEntityNames(entity).reduce((sum, entityId) => sum + (growthMap[entityId] ?? 0), 0);
 };
 

@@ -23,13 +23,21 @@ export const solarElement = (
     templatesObj: TemplatesObj;
   }
 ) => {
-  const disableEntityClick = config.clickable_entities === false;
+  const disableEntityClick = !config.clickable_entities;
   const templateResult = templatesObj.solarSecondary;
   const shouldShowSecondary = () => {
-    if (templateResult) return true;
-    if (config.entities.solar?.secondary_info?.display_zero === true) return true;
-    if (!solar?.secondary?.state) return false;
-    if (!isNumberValue(solar?.secondary?.state)) return true;
+    if (templateResult) {
+      return true;
+    }
+    if (config.entities.solar?.secondary_info?.display_zero === true) {
+      return true;
+    }
+    if (!solar?.secondary?.state) {
+      return false;
+    }
+    if (!isNumberValue(solar?.secondary?.state)) {
+      return true;
+    }
 
     const toleranceSet = config.entities.solar?.secondary_info?.display_zero_tolerance ?? 0;
     return (

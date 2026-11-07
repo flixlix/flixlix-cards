@@ -8,7 +8,9 @@ type UseClickOutsideOptions = {
 
 export function useClickOutside({ ref, handler, enabled = true }: UseClickOutsideOptions) {
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled) {
+      return;
+    }
 
     const listener = (event: MouseEvent | TouchEvent) => {
       const element = ref.current;

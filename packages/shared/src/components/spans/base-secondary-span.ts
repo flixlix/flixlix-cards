@@ -24,7 +24,9 @@ export const baseSecondarySpan = ({
   icon,
   actions,
 }: BaseSecondarySpan) => {
-  if (value && offlineStr.includes(value)) return nothing;
+  if (value && offlineStr.includes(value)) {
+    return nothing;
+  }
   if (value || template) {
     return html`<span
       class="secondary-info ${className}"

@@ -56,7 +56,9 @@ export function setupCustomlocalize(key: string) {
     .replace("-", "_");
 
   let translated = getTranslatedString(key, lang);
-  if (!translated) translated = getTranslatedString(key, defaultLang);
+  if (!translated) {
+    translated = getTranslatedString(key, defaultLang);
+  }
   return translated ?? key;
 }
 

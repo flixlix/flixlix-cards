@@ -83,7 +83,9 @@ export const getIndividualObject = ({
   useDateSelection?: boolean;
   field: IndividualDeviceType | undefined;
 }): IndividualObject => {
-  if (!field || !field?.entity) return fallbackIndividualObject;
+  if (!field || !field?.entity) {
+    return fallbackIndividualObject;
+  }
   const entity = field.entity;
   const state = getIndividualState({ hass, config, energyGrowthMap, useDateSelection, field });
   const displayZero = field?.display_zero || false;

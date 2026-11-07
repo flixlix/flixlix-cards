@@ -39,7 +39,9 @@ export const displayValue = (
     return `0${whiteSpace}${unit ?? baseUnit}`;
   }
 
-  if (!isNumberValue(value)) return value.toString();
+  if (!isNumberValue(value)) {
+    return value.toString();
+  }
 
   const valueInNumber = Number(value);
 
