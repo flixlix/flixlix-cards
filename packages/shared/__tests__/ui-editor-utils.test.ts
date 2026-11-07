@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 import { fireEvent } from "../src/ui-editor/utils/fire-event";
 import { loadHaForm } from "../src/ui-editor/utils/load-ha-form";

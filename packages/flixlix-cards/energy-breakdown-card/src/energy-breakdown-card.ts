@@ -344,11 +344,13 @@ export class EnergyBreakdownCard extends LitElement implements LovelaceCard {
             })}
           >
             <div class="chart-host" @pointerdown=${this._onChartHostPointerDown}>
-              ${hasData
-                ? chartType === "donut"
-                  ? this._renderDonut(segments, total)
-                  : this._renderBar(segments, total)
-                : this._renderEmpty()}
+              ${
+                hasData
+                  ? chartType === "donut"
+                    ? this._renderDonut(segments, total)
+                    : this._renderBar(segments, total)
+                  : this._renderEmpty()
+              }
               ${this._renderTooltip(segments)}
             </div>
             ${showLegend && hasData ? this._renderLegend(segments) : nothing}
@@ -450,11 +452,13 @@ export class EnergyBreakdownCard extends LitElement implements LovelaceCard {
           />
           ${paths}
         </svg>
-        ${centerLabel
-          ? html`<div class="center-label">
-              <div class="center-value">${centerLabel}</div>
-            </div>`
-          : nothing}
+        ${
+          centerLabel
+            ? html`<div class="center-label">
+                <div class="center-value">${centerLabel}</div>
+              </div>`
+            : nothing
+        }
       </div>
     `;
   }
@@ -470,14 +474,16 @@ export class EnergyBreakdownCard extends LitElement implements LovelaceCard {
 
     return html`
       <div class="bar-wrapper">
-        ${showTotal
-          ? html`<div class="bar-header">
-              <div class="bar-header-value">
-                ${headerLabel}
-                <small>Total</small>
-              </div>
-            </div>`
-          : nothing}
+        ${
+          showTotal
+            ? html`<div class="bar-header">
+                <div class="bar-header-value">
+                  ${headerLabel}
+                  <small>Total</small>
+                </div>
+              </div>`
+            : nothing
+        }
         <div
           class="bar-track"
           style=${styleMap({
@@ -551,18 +557,24 @@ export class EnergyBreakdownCard extends LitElement implements LovelaceCard {
               @keydown=${(e: KeyboardEvent) => this._onSegmentKeydown(index, e, segment)}
             >
               <span class="legend-swatch" style=${styleMap({ background: segment.color })}></span>
-              ${showIcons && segment.icon
-                ? html`<ha-icon class="legend-icon" .icon=${segment.icon}></ha-icon>`
-                : nothing}
+              ${
+                showIcons && segment.icon
+                  ? html`<ha-icon class="legend-icon" .icon=${segment.icon}></ha-icon>`
+                  : nothing
+              }
               <span class="legend-name">${segment.name}</span>
-              ${showValue || showPercent
-                ? html`<span class="legend-value">
-                    ${showValue ? html`<span class="legend-amount">${valueText}</span>` : nothing}
-                    ${showPercent
-                      ? html`<span class="legend-percent">${percentText}</span>`
-                      : nothing}
-                  </span>`
-                : nothing}
+              ${
+                showValue || showPercent
+                  ? html`<span class="legend-value">
+                      ${showValue ? html`<span class="legend-amount">${valueText}</span>` : nothing}
+                      ${
+                        showPercent
+                          ? html`<span class="legend-percent">${percentText}</span>`
+                          : nothing
+                      }
+                    </span>`
+                  : nothing
+              }
             </li>
           `;
         })}

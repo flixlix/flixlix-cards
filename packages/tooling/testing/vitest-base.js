@@ -1,6 +1,6 @@
 import path from "node:path";
 import process from "node:process";
-import { defineConfig } from "vitest/config";
+import { defineConfig } from "vite-plus";
 
 export default defineConfig({
   resolve: {
@@ -12,9 +12,13 @@ export default defineConfig({
     ],
   },
   test: {
-    // Allows you to use describe, it, expect without importing them
-    globals: true,
-    // Use 'jsdom' or 'happy-dom'
+    // Vitest v4 compatibility: preserve mock call history.
+    // Remove after tests no longer rely on calls from setup or earlier tests.
+    // https://viteplus.dev/guide/vitest-v5#remove-unneeded-compatibility-settings
+    // https://vitest.dev/guide/migration/#clearmocks-is-enabled-by-default
+    clearMocks: false,
+    globals: false,
+
     environment: "node",
     alias: [
       {

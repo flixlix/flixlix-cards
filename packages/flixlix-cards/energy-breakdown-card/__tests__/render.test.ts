@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 import { EnergyBreakdownCard } from "../src/energy-breakdown-card";
 import { describeDonutSegment, resolveSegments } from "../src/utils";
 

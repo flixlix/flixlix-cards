@@ -8,13 +8,10 @@
     "#/*": "./src/*"
   },
   "scripts": {
-    "dev": "vite dev --port 3000",
-    "build": "vite build",
-    "preview": "vite preview",
-    "test": "vitest run",
-    "lint": "eslint",
-    "format": "prettier --write . --ignore-path ../../.prettierignore",
-    "format:check": "prettier --check . --ignore-path ../../.prettierignore"
+    "dev": "vp dev --port 3000",
+    "build": "vp build",
+    "preview": "vp preview",
+    "test": "vp test run"
   },
   "dependencies": {
     "@flixlix-cards/cn": "workspace:*",
@@ -36,12 +33,9 @@
     "tailwindcss": "catalog:"
   },
   "devDependencies": {
-    "@flixlix-cards/eslint-config": "workspace:*",
-    "@flixlix-cards/prettier-config": "workspace:*",
     "@flixlix-cards/typescript-config": "workspace:*",
     "@tailwindcss/typography": "^0.5.19",
     "@tanstack/devtools-vite": "latest",
-    "@tanstack/eslint-config": "latest",
     "@testing-library/dom": "catalog:",
     "@testing-library/react": "^16.3.2",
     "@types/node": "catalog:",
@@ -49,10 +43,9 @@
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "^5.2.0",
     "jsdom": "catalog:",
-    "prettier": "catalog:",
     "typescript": "catalog:",
-    "vite": "^7.3.2",
+    "vite": "catalog:packages",
     "vite-tsconfig-paths": "catalog:",
-    "vitest": "catalog:packages"
+    "vite-plus": "catalog:packages"
   }
 }

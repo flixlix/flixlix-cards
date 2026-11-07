@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import { computeFieldIcon, computeFieldName } from "../src/utils/compute-field-attributes";
 import { getDefaultConfig } from "../src/utils/get-default-config";

@@ -108,33 +108,35 @@ export class IndividualRowEditor extends LitElement {
               <div class="handle">
                 <ha-svg-icon .path=${mdiDrag}></ha-svg-icon>
               </div>
-              ${entityConf.type
-                ? html`
-                    <div class="special-row">
-                      <div>
-                        <span>
-                          ${this.hass!.localize(
-                            `ui.panel.lovelace.editor.card.entities.entity_row.${entityConf.type}`
-                          )}
-                        </span>
-                        <span class="secondary"
-                          >${this.hass!.localize(
-                            "ui.panel.lovelace.editor.card.entities.edit_special_row"
-                          )}</span
-                        >
+              ${
+                entityConf.type
+                  ? html`
+                      <div class="special-row">
+                        <div>
+                          <span>
+                            ${this.hass!.localize(
+                              `ui.panel.lovelace.editor.card.entities.entity_row.${entityConf.type}`
+                            )}
+                          </span>
+                          <span class="secondary"
+                            >${this.hass!.localize(
+                              "ui.panel.lovelace.editor.card.entities.edit_special_row"
+                            )}</span
+                          >
+                        </div>
                       </div>
-                    </div>
-                  `
-                : html`
-                    <ha-entity-picker
-                      allow-custom-entity
-                      hideClearIcon
-                      .hass=${this.hass}
-                      .value=${(entityConf as EntityConfig).entity}
-                      .index=${index}
-                      @value-changed=${this._valueChanged}
-                    ></ha-entity-picker>
-                  `}
+                    `
+                  : html`
+                      <ha-entity-picker
+                        allow-custom-entity
+                        hideClearIcon
+                        .hass=${this.hass}
+                        .value=${(entityConf as EntityConfig).entity}
+                        .index=${index}
+                        @value-changed=${this._valueChanged}
+                      ></ha-entity-picker>
+                    `
+              }
               <ha-icon-button
                 .label=${this.hass!.localize("ui.components.entity.entity-picker.clear")}
                 .path=${mdiClose}

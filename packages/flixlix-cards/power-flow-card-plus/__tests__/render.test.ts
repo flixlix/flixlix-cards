@@ -1,6 +1,6 @@
 // test that the card renders correctly
 
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import { type PowerFlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { PowerFlowCardPlus } from "../src/power-flow-card-plus";

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import { adjustZeroTolerance } from "../src/states/tolerance/base";
 import { type FlowCardPlusConfig } from "../src/types";

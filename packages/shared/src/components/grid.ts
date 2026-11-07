@@ -77,120 +77,126 @@ export const gridElement = (
       <ha-ripple .disabled=${disableEntityClick}></ha-ripple>
       ${generalSecondarySpan(main.hass, main, config, templatesObj, grid, "grid")}
       ${grid.icon !== " " ? html` <ha-icon id="grid-icon" .icon=${grid.icon}></ha-icon>` : nothing}
-      ${(entities.grid?.display_state === "two_way" ||
-        entities.grid?.display_state === undefined ||
-        (entities.grid?.display_state === "one_way_no_zero" && (grid.state.toGrid ?? 0) > 0) ||
-        (entities.grid?.display_state === "one_way" &&
-          (grid.state.fromGrid === null || grid.state.fromGrid === 0) &&
-          grid.state.toGrid !== 0)) &&
-      grid.state.toGrid !== null &&
-      !grid.powerOutage.isOutage
-        ? html`<span
-            class="return"
-            @click=${(e: MouseEvent) => {
-              const target =
-                typeof entities.grid!.entity === "string"
-                  ? entities.grid!.entity
-                  : entities.grid!.entity.production!;
-              main.onEntityClick(e, grid, target);
-            }}
-            @dblclick=${(e: MouseEvent) => {
-              const target =
-                typeof entities.grid!.entity === "string"
-                  ? entities.grid!.entity
-                  : entities.grid!.entity.production!;
-              main.onEntityDoubleClick(e, grid, target);
-            }}
-            @pointerdown=${(e: PointerEvent) => {
-              const target =
-                typeof entities.grid!.entity === "string"
-                  ? entities.grid!.entity
-                  : entities.grid!.entity.production!;
-              main.onEntityPointerDown(e, entities.grid, target);
-            }}
-            @pointerup=${(e: PointerEvent) => {
-              main.onEntityPointerUp(e);
-            }}
-            @pointercancel=${(e: PointerEvent) => {
-              main.onEntityPointerUp(e);
-            }}
-            @keyDown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
-              if (e.key === "Enter") {
+      ${
+        (entities.grid?.display_state === "two_way" ||
+          entities.grid?.display_state === undefined ||
+          (entities.grid?.display_state === "one_way_no_zero" && (grid.state.toGrid ?? 0) > 0) ||
+          (entities.grid?.display_state === "one_way" &&
+            (grid.state.fromGrid === null || grid.state.fromGrid === 0) &&
+            grid.state.toGrid !== 0)) &&
+        grid.state.toGrid !== null &&
+        !grid.powerOutage.isOutage
+          ? html`<span
+              class="return"
+              @click=${(e: MouseEvent) => {
                 const target =
                   typeof entities.grid!.entity === "string"
                     ? entities.grid!.entity
                     : entities.grid!.entity.production!;
-                main.openDetails(e, entities.grid, target, "tap");
-              }
-            }}
-          >
-            <ha-icon class="small" .icon=${"mdi:arrow-left"}></ha-icon>
+                main.onEntityClick(e, grid, target);
+              }}
+              @dblclick=${(e: MouseEvent) => {
+                const target =
+                  typeof entities.grid!.entity === "string"
+                    ? entities.grid!.entity
+                    : entities.grid!.entity.production!;
+                main.onEntityDoubleClick(e, grid, target);
+              }}
+              @pointerdown=${(e: PointerEvent) => {
+                const target =
+                  typeof entities.grid!.entity === "string"
+                    ? entities.grid!.entity
+                    : entities.grid!.entity.production!;
+                main.onEntityPointerDown(e, entities.grid, target);
+              }}
+              @pointerup=${(e: PointerEvent) => {
+                main.onEntityPointerUp(e);
+              }}
+              @pointercancel=${(e: PointerEvent) => {
+                main.onEntityPointerUp(e);
+              }}
+              @keyDown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
+                if (e.key === "Enter") {
+                  const target =
+                    typeof entities.grid!.entity === "string"
+                      ? entities.grid!.entity
+                      : entities.grid!.entity.production!;
+                  main.openDetails(e, entities.grid, target, "tap");
+                }
+              }}
+            >
+              <ha-icon class="small" .icon=${"mdi:arrow-left"}></ha-icon>
 
-            ${displayValue(main.hass, config, grid.state.toGrid, {
-              unit: grid.unit,
-              unitWhiteSpace: grid.unit_white_space,
-              decimals: grid.decimals,
-            })}
-          </span>`
-        : nothing}
-      ${((entities.grid?.display_state === "two_way" ||
-        entities.grid?.display_state === undefined ||
-        (entities.grid?.display_state === "one_way_no_zero" && grid.state.fromGrid > 0) ||
-        (entities.grid?.display_state === "one_way" &&
-          (grid.state.toGrid === null || grid.state.toGrid === 0))) &&
-        grid.state.fromGrid !== null &&
-        !grid.powerOutage.isOutage) ||
-      (grid.powerOutage.isOutage && !!grid.powerOutage.entityGenerator)
-        ? html` <span
-            class="consumption"
-            @click=${(e: MouseEvent) => {
-              const target =
-                typeof entities.grid!.entity === "string"
-                  ? entities.grid!.entity
-                  : entities.grid!.entity.consumption!;
-              main.onEntityClick(e, grid, target);
-            }}
-            @dblclick=${(e: MouseEvent) => {
-              const target =
-                typeof entities.grid!.entity === "string"
-                  ? entities.grid!.entity
-                  : entities.grid!.entity.consumption!;
-              main.onEntityDoubleClick(e, grid, target);
-            }}
-            @pointerdown=${(e: PointerEvent) => {
-              const target =
-                typeof entities.grid!.entity === "string"
-                  ? entities.grid!.entity
-                  : entities.grid!.entity.consumption!;
-              main.onEntityPointerDown(e, entities.grid, target);
-            }}
-            @pointerup=${(e: PointerEvent) => {
-              main.onEntityPointerUp(e);
-            }}
-            @pointercancel=${(e: PointerEvent) => {
-              main.onEntityPointerUp(e);
-            }}
-            @keyDown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
-              if (e.key === "Enter") {
+              ${displayValue(main.hass, config, grid.state.toGrid, {
+                unit: grid.unit,
+                unitWhiteSpace: grid.unit_white_space,
+                decimals: grid.decimals,
+              })}
+            </span>`
+          : nothing
+      }
+      ${
+        ((entities.grid?.display_state === "two_way" ||
+          entities.grid?.display_state === undefined ||
+          (entities.grid?.display_state === "one_way_no_zero" && grid.state.fromGrid > 0) ||
+          (entities.grid?.display_state === "one_way" &&
+            (grid.state.toGrid === null || grid.state.toGrid === 0))) &&
+          grid.state.fromGrid !== null &&
+          !grid.powerOutage.isOutage) ||
+        (grid.powerOutage.isOutage && !!grid.powerOutage.entityGenerator)
+          ? html` <span
+              class="consumption"
+              @click=${(e: MouseEvent) => {
                 const target =
                   typeof entities.grid!.entity === "string"
                     ? entities.grid!.entity
                     : entities.grid!.entity.consumption!;
-                main.openDetails(e, entities.grid, target, "tap");
-              }
-            }}
-          >
-            <ha-icon class="small" .icon=${"mdi:arrow-right"}></ha-icon>
-            ${displayValue(main.hass, config, grid.state.fromGrid, {
-              unit: grid.unit,
-              unitWhiteSpace: grid.unit_white_space,
-              decimals: grid.decimals,
-            })}
-          </span>`
-        : nothing}
-      ${grid.powerOutage?.isOutage && !grid.powerOutage?.entityGenerator
-        ? html`<span class="grid power-outage">${grid.powerOutage.name}</span>`
-        : nothing}
+                main.onEntityClick(e, grid, target);
+              }}
+              @dblclick=${(e: MouseEvent) => {
+                const target =
+                  typeof entities.grid!.entity === "string"
+                    ? entities.grid!.entity
+                    : entities.grid!.entity.consumption!;
+                main.onEntityDoubleClick(e, grid, target);
+              }}
+              @pointerdown=${(e: PointerEvent) => {
+                const target =
+                  typeof entities.grid!.entity === "string"
+                    ? entities.grid!.entity
+                    : entities.grid!.entity.consumption!;
+                main.onEntityPointerDown(e, entities.grid, target);
+              }}
+              @pointerup=${(e: PointerEvent) => {
+                main.onEntityPointerUp(e);
+              }}
+              @pointercancel=${(e: PointerEvent) => {
+                main.onEntityPointerUp(e);
+              }}
+              @keyDown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
+                if (e.key === "Enter") {
+                  const target =
+                    typeof entities.grid!.entity === "string"
+                      ? entities.grid!.entity
+                      : entities.grid!.entity.consumption!;
+                  main.openDetails(e, entities.grid, target, "tap");
+                }
+              }}
+            >
+              <ha-icon class="small" .icon=${"mdi:arrow-right"}></ha-icon>
+              ${displayValue(main.hass, config, grid.state.fromGrid, {
+                unit: grid.unit,
+                unitWhiteSpace: grid.unit_white_space,
+                decimals: grid.decimals,
+              })}
+            </span>`
+          : nothing
+      }
+      ${
+        grid.powerOutage?.isOutage && !grid.powerOutage?.entityGenerator
+          ? html`<span class="grid power-outage">${grid.powerOutage.name}</span>`
+          : nothing
+      }
     </div>
     <span class="label">${grid.name}</span>
   </div>`;

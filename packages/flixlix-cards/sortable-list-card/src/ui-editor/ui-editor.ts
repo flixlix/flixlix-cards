@@ -104,11 +104,13 @@ export class SortableListCardEditor extends LitElement implements LovelaceCardEd
             pull its name, icon and state automatically.
           </p>
         </header>
-        ${items.length
-          ? html`<div class="item-list">
-              ${items.map((item, index) => this._renderItemRow(item, index))}
-            </div>`
-          : html`<div class="empty-list">No items yet — add one below.</div>`}
+        ${
+          items.length
+            ? html`<div class="item-list">
+                ${items.map((item, index) => this._renderItemRow(item, index))}
+              </div>`
+            : html`<div class="empty-list">No items yet — add one below.</div>`
+        }
         <div class="add-row">
           <ha-button raised @click=${this._addItem}>Add item</ha-button>
         </div>
@@ -131,9 +133,11 @@ export class SortableListCardEditor extends LitElement implements LovelaceCardEd
             @click=${() => this._toggleExpanded(index)}
             title=${expanded ? "Collapse" : "Expand"}
           >
-            ${item.icon
-              ? html`<ha-icon class="item-icon" .icon=${item.icon}></ha-icon>`
-              : html`<span class="item-rank">${index + 1}</span>`}
+            ${
+              item.icon
+                ? html`<ha-icon class="item-icon" .icon=${item.icon}></ha-icon>`
+                : html`<span class="item-rank">${index + 1}</span>`
+            }
             <span class="item-title">${label}</span>
             <span class="item-chevron ${expanded ? "open" : ""}">▾</span>
           </button>
@@ -146,50 +150,52 @@ export class SortableListCardEditor extends LitElement implements LovelaceCardEd
             ✕
           </button>
         </div>
-        ${expanded
-          ? html`
-              <div class="item-card-body">
-                <div class="field full-width">
-                  <ha-entity-picker
-                    allow-custom-entity
-                    .hass=${this.hass}
-                    .value=${item.entity ?? ""}
-                    .label=${"Entity (optional)"}
-                    @value-changed=${(e: CustomEvent) =>
-                      this._patchItem(index, { entity: e.detail.value || undefined })}
-                  ></ha-entity-picker>
+        ${
+          expanded
+            ? html`
+                <div class="item-card-body">
+                  <div class="field full-width">
+                    <ha-entity-picker
+                      allow-custom-entity
+                      .hass=${this.hass}
+                      .value=${item.entity ?? ""}
+                      .label=${"Entity (optional)"}
+                      @value-changed=${(e: CustomEvent) =>
+                        this._patchItem(index, { entity: e.detail.value || undefined })}
+                    ></ha-entity-picker>
+                  </div>
+                  <div class="field-grid">
+                    <ha-textfield
+                      label="Key"
+                      helper=${item.entity ? "Defaults to the entity id" : "Required"}
+                      .value=${item.key ?? ""}
+                      @input=${(e: Event) =>
+                        this._patchItem(index, {
+                          key: (e.target as HTMLInputElement).value || undefined,
+                        })}
+                    ></ha-textfield>
+                    <ha-textfield
+                      label="Name"
+                      .value=${item.name ?? ""}
+                      @input=${(e: Event) =>
+                        this._patchItem(index, {
+                          name: (e.target as HTMLInputElement).value || undefined,
+                        })}
+                    ></ha-textfield>
+                  </div>
+                  <div class="field full-width">
+                    <ha-icon-picker
+                      .hass=${this.hass}
+                      .value=${item.icon ?? ""}
+                      .label=${"Icon"}
+                      @value-changed=${(e: CustomEvent) =>
+                        this._patchItem(index, { icon: e.detail.value || undefined })}
+                    ></ha-icon-picker>
+                  </div>
                 </div>
-                <div class="field-grid">
-                  <ha-textfield
-                    label="Key"
-                    helper=${item.entity ? "Defaults to the entity id" : "Required"}
-                    .value=${item.key ?? ""}
-                    @input=${(e: Event) =>
-                      this._patchItem(index, {
-                        key: (e.target as HTMLInputElement).value || undefined,
-                      })}
-                  ></ha-textfield>
-                  <ha-textfield
-                    label="Name"
-                    .value=${item.name ?? ""}
-                    @input=${(e: Event) =>
-                      this._patchItem(index, {
-                        name: (e.target as HTMLInputElement).value || undefined,
-                      })}
-                  ></ha-textfield>
-                </div>
-                <div class="field full-width">
-                  <ha-icon-picker
-                    .hass=${this.hass}
-                    .value=${item.icon ?? ""}
-                    .label=${"Icon"}
-                    @value-changed=${(e: CustomEvent) =>
-                      this._patchItem(index, { icon: e.detail.value || undefined })}
-                  ></ha-icon-picker>
-                </div>
-              </div>
-            `
-          : nothing}
+              `
+            : nothing
+        }
       </div>
     `;
   }
@@ -218,18 +224,20 @@ export class SortableListCardEditor extends LitElement implements LovelaceCardEd
               this._patchSaveAction({ service: (e.target as HTMLInputElement).value.trim() })}
           ></ha-textfield>
         </div>
-        ${hasYamlEditor
-          ? html`<div class="field full-width yaml">
-              <span class="yaml-label">Service data</span>
-              <ha-yaml-editor
-                .hass=${this.hass}
-                .defaultValue=${action?.data ?? { value: "{value}" }}
-                @value-changed=${this._onSaveDataChanged}
-              ></ha-yaml-editor>
-            </div>`
-          : html`<p class="section-help">
-              Switch the card to YAML mode to edit the service data.
-            </p>`}
+        ${
+          hasYamlEditor
+            ? html`<div class="field full-width yaml">
+                <span class="yaml-label">Service data</span>
+                <ha-yaml-editor
+                  .hass=${this.hass}
+                  .defaultValue=${action?.data ?? { value: "{value}" }}
+                  @value-changed=${this._onSaveDataChanged}
+                ></ha-yaml-editor>
+              </div>`
+            : html`<p class="section-help">
+                Switch the card to YAML mode to edit the service data.
+              </p>`
+        }
       </section>
     `;
   }

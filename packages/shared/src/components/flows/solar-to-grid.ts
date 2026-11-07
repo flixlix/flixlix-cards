@@ -48,9 +48,9 @@ export const flowSolarToGrid = (
       <path
         id="return"
         class="return ${styleLine(solar.state.toGrid || 0, config)}"
-        d="M${battery.has ? 45 : 47},0 v15 c0,${battery.has
-          ? "30 -10,30 -30,30"
-          : "35 -10,35 -30,35"} h-20"
+        d="M${battery.has ? 45 : 47},0 v15 c0,${
+          battery.has ? "30 -10,30 -30,30" : "35 -10,35 -30,35"
+        } h-20"
         vector-effect="non-scaling-stroke"
       ></path>
       ${solarToGridDot(config, solar, newDur)}

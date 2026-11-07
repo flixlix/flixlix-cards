@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 import { computeNonFossilFromCollection } from "../src/states/utils/energy-period";
 import { computeEnergyDistribution } from "../src/utils/compute-energy-distribution";
 import { computeFlowRate } from "../src/utils/compute-flow-rate";

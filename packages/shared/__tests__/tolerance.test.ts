@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import { hasIndividualObject } from "../src/states/raw/individual/has-individual-object";
 import { adjustZeroTolerance, isAboveTolerance } from "../src/states/tolerance/base";

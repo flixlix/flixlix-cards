@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 import { computeEnergyDistribution } from "../src/utils/compute-energy-distribution";
 
 describe("energy distribution", () => {

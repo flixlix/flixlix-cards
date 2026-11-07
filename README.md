@@ -17,7 +17,7 @@ This is a monorepo for all my Home Assistant cards, including their source code,
 
 ## Issues and Feature Requests
 
-Have feedback, feature ideas, or encountered a problem? We encourage you to open an issue in this repository. 
+Have feedback, feature ideas, or encountered a problem? We encourage you to open an issue in this repository.
 When submitting, simply select the relevant card so I can assist you more efficiently.
 [Open an issue](https://github.com/flixlix/flixlix-cards/issues/new/choose)
 

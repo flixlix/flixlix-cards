@@ -1,7 +1,7 @@
 import baseConfig from "@flixlix-cards/testing";
 import path from "node:path";
 import tsconfigPaths from "vite-tsconfig-paths";
-import { mergeConfig } from "vitest/config";
+import { mergeConfig } from "vite-plus";
 import packageJson from "./package.json";
 const packageName = packageJson.name;
 

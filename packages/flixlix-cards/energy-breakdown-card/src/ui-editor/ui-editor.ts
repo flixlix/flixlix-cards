@@ -233,58 +233,60 @@ export class EnergyBreakdownCardEditor extends LitElement implements LovelaceCar
             ✕
           </button>
         </div>
-        ${expanded
-          ? html`
-              <div class="entity-card-body">
-                <div class="field full-width">
-                  <ha-entity-picker
-                    allow-custom-entity
-                    .hass=${this.hass}
-                    .value=${entity.entity}
-                    .label=${"Entity"}
-                    @value-changed=${(e: CustomEvent) =>
-                      this._onEntityChanged(index, e.detail.value)}
-                  ></ha-entity-picker>
+        ${
+          expanded
+            ? html`
+                <div class="entity-card-body">
+                  <div class="field full-width">
+                    <ha-entity-picker
+                      allow-custom-entity
+                      .hass=${this.hass}
+                      .value=${entity.entity}
+                      .label=${"Entity"}
+                      @value-changed=${(e: CustomEvent) =>
+                        this._onEntityChanged(index, e.detail.value)}
+                    ></ha-entity-picker>
+                  </div>
+                  <div class="field-grid">
+                    <ha-textfield
+                      label="Name"
+                      .value=${entity.name ?? ""}
+                      @input=${(e: Event) =>
+                        this._patchEntity(index, {
+                          name: (e.target as HTMLInputElement).value || undefined,
+                        })}
+                    ></ha-textfield>
+                    <ha-textfield
+                      label="Color"
+                      placeholder="#488fc2 or var(--energy-grid-consumption-color)"
+                      .value=${entity.color ?? ""}
+                      @input=${(e: Event) =>
+                        this._patchEntity(index, {
+                          color: (e.target as HTMLInputElement).value || undefined,
+                        })}
+                    ></ha-textfield>
+                  </div>
+                  <div class="field-grid">
+                    <ha-icon-picker
+                      .hass=${this.hass}
+                      .value=${entity.icon ?? ""}
+                      .label=${"Icon"}
+                      @value-changed=${(e: CustomEvent) =>
+                        this._patchEntity(index, { icon: e.detail.value || undefined })}
+                    ></ha-icon-picker>
+                    <ha-textfield
+                      label="Unit override"
+                      .value=${entity.unit_of_measurement ?? ""}
+                      @input=${(e: Event) =>
+                        this._patchEntity(index, {
+                          unit_of_measurement: (e.target as HTMLInputElement).value || undefined,
+                        })}
+                    ></ha-textfield>
+                  </div>
                 </div>
-                <div class="field-grid">
-                  <ha-textfield
-                    label="Name"
-                    .value=${entity.name ?? ""}
-                    @input=${(e: Event) =>
-                      this._patchEntity(index, {
-                        name: (e.target as HTMLInputElement).value || undefined,
-                      })}
-                  ></ha-textfield>
-                  <ha-textfield
-                    label="Color"
-                    placeholder="#488fc2 or var(--energy-grid-consumption-color)"
-                    .value=${entity.color ?? ""}
-                    @input=${(e: Event) =>
-                      this._patchEntity(index, {
-                        color: (e.target as HTMLInputElement).value || undefined,
-                      })}
-                  ></ha-textfield>
-                </div>
-                <div class="field-grid">
-                  <ha-icon-picker
-                    .hass=${this.hass}
-                    .value=${entity.icon ?? ""}
-                    .label=${"Icon"}
-                    @value-changed=${(e: CustomEvent) =>
-                      this._patchEntity(index, { icon: e.detail.value || undefined })}
-                  ></ha-icon-picker>
-                  <ha-textfield
-                    label="Unit override"
-                    .value=${entity.unit_of_measurement ?? ""}
-                    @input=${(e: Event) =>
-                      this._patchEntity(index, {
-                        unit_of_measurement: (e.target as HTMLInputElement).value || undefined,
-                      })}
-                  ></ha-textfield>
-                </div>
-              </div>
-            `
-          : nothing}
+              `
+            : nothing
+        }
       </div>
     `;
   }

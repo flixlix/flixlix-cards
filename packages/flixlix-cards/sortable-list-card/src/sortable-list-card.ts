@@ -272,9 +272,11 @@ export class SortableListCard extends LitElement implements LovelaceCard {
     const n = this._order.length;
     return html`
       <ha-card .header=${title}>
-        ${missingEntity
-          ? html`<div class="warning">Entity <code>${missingEntity}</code> not found.</div>`
-          : nothing}
+        ${
+          missingEntity
+            ? html`<div class="warning">Entity <code>${missingEntity}</code> not found.</div>`
+            : nothing
+        }
         <div
           class=${classMap({ list: true, dragging: this._dragging, animating: this._animating })}
         >
@@ -329,26 +331,28 @@ export class SortableListCard extends LitElement implements LovelaceCard {
           ${showState ? html`<span class="secondary">${item?.state ?? ""}</span>` : nothing}
         </div>
         ${showRank ? html`<span class="rank">${index + 1}</span>` : nothing}
-        ${showArrows
-          ? html`<span class="arrows">
-              <ha-icon-button
-                class="up"
-                .disabled=${index === 0}
-                label="Move up"
-                @click=${() => this._move(index, index - 1)}
-              >
-                <ha-icon icon="mdi:chevron-up"></ha-icon>
-              </ha-icon-button>
-              <ha-icon-button
-                class="down"
-                .disabled=${index === total - 1}
-                label="Move down"
-                @click=${() => this._move(index, index + 1)}
-              >
-                <ha-icon icon="mdi:chevron-down"></ha-icon>
-              </ha-icon-button>
-            </span>`
-          : nothing}
+        ${
+          showArrows
+            ? html`<span class="arrows">
+                <ha-icon-button
+                  class="up"
+                  .disabled=${index === 0}
+                  label="Move up"
+                  @click=${() => this._move(index, index - 1)}
+                >
+                  <ha-icon icon="mdi:chevron-up"></ha-icon>
+                </ha-icon-button>
+                <ha-icon-button
+                  class="down"
+                  .disabled=${index === total - 1}
+                  label="Move down"
+                  @click=${() => this._move(index, index + 1)}
+                >
+                  <ha-icon icon="mdi:chevron-down"></ha-icon>
+                </ha-icon-button>
+              </span>`
+            : nothing
+        }
       </div>
     `;
   }

@@ -5,28 +5,24 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
-    "lint": "turbo run lint",
+    "check": "vp check",
+    "lint": "vp lint",
+    "format": "vp fmt",
+    "format:check": "vp fmt --check",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test --filter=!@flixlix-cards/web",
     "clean": "turbo run clean && rm -rf node_modules",
-    "format": "turbo run format",
-    "format:check": "turbo run format:check",
     "changeset": "changeset",
     "version-packages": "changeset version",
     "release": "turbo run build && changeset publish",
     "release:tag": "changeset tag",
-    "precommit": "turbo run precommit",
-    "typecheck": "turbo run typecheck",
-    "start:hass": "docker run --rm -p8123:8123 -v ./.hass_dev:/config homeassistant/home-assistant:beta",
-    "test": "npx turbo test --filter=!@flixlix-cards/web"
+    "start:hass": "docker run --rm -p8123:8123 -v ./.hass_dev:/config homeassistant/home-assistant:beta"
   },
   "devDependencies": {
     "@changesets/changelog-github": "catalog:packages",
     "@changesets/cli": "catalog:packages",
-    "@flixlix-cards/eslint-config": "workspace:*",
-    "@flixlix-cards/prettier-config": "workspace:*",
-    "eslint": "catalog:packages",
-    "prettier": "catalog:",
-    "prettier-plugin-embed": "catalog:packages",
-    "turbo": "^2.9.7"
+    "turbo": "^2.11.10",
+    "vite-plus": "catalog:packages"
   },
   "packageManager": "pnpm@11.5.0+sha512.dbfcc4f81cf48597afd4bc391ffdf12c11f1a9fb83a395bfa6b0a2d9cc2fd8ffebafdb1ccbd529632153f793904c2615b7f09fe1a345473fd1c35845172a8eb1",
   "engines": {
