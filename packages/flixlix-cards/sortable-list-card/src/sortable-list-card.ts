@@ -354,13 +354,7 @@ export class SortableListCard extends LitElement implements LovelaceCard {
     const showArrows = this._config?.show_arrows !== false;
     const showRank = this._config?.show_rank !== false;
     const showState = this._config?.show_state === true && item?.entity;
-    const dragIndex = this._dragKey !== null ? this._order.indexOf(this._dragKey) : -1;
-    const noopDrop =
-      dragIndex !== -1 && (this._dropPos === dragIndex || this._dropPos === dragIndex + 1);
-    const dropBefore =
-      !noopDrop && this._dropPos !== null && this._dropPos < total && this._dropPos === index;
-    const dropAfter =
-      !noopDrop && this._dropPos !== null && this._dropPos >= total && index === total - 1;
+    const { dropBefore, dropAfter } = this._dropIndicator(index, total);
     return html`
       <div
         class=${classMap({
@@ -383,30 +377,44 @@ export class SortableListCard extends LitElement implements LovelaceCard {
           ${showState ? html`<span class="secondary">${item?.state ?? ""}</span>` : nothing}
         </div>
         ${showRank ? html`<span class="rank">${index + 1}</span>` : nothing}
-        ${
-          showArrows
-            ? html`<span class="arrows">
-                <ha-icon-button
-                  class="up"
-                  .disabled=${index === 0}
-                  label="Move up"
-                  @click=${() => this._move(index, index - 1)}
-                >
-                  <ha-icon icon="mdi:chevron-up"></ha-icon>
-                </ha-icon-button>
-                <ha-icon-button
-                  class="down"
-                  .disabled=${index === total - 1}
-                  label="Move down"
-                  @click=${() => this._move(index, index + 1)}
-                >
-                  <ha-icon icon="mdi:chevron-down"></ha-icon>
-                </ha-icon-button>
-              </span>`
-            : nothing
-        }
+        ${showArrows ? this._renderArrows(index, total) : nothing}
       </div>
     `;
+  }
+
+  /** Where the drop line shows while dragging; dropping a row back onto its own place shows none. */
+  private _dropIndicator(index: number, total: number) {
+    const dropPos = this._dropPos;
+    const dragIndex = this._dragKey !== null ? this._order.indexOf(this._dragKey) : -1;
+    const noopDrop = dragIndex !== -1 && (dropPos === dragIndex || dropPos === dragIndex + 1);
+    if (noopDrop || dropPos === null) {
+      return { dropBefore: false, dropAfter: false };
+    }
+    return {
+      dropBefore: dropPos < total && dropPos === index,
+      dropAfter: dropPos >= total && index === total - 1,
+    };
+  }
+
+  private _renderArrows(index: number, total: number): TemplateResult {
+    return html`<span class="arrows">
+      <ha-icon-button
+        class="up"
+        .disabled=${index === 0}
+        label="Move up"
+        @click=${() => this._move(index, index - 1)}
+      >
+        <ha-icon icon="mdi:chevron-up"></ha-icon>
+      </ha-icon-button>
+      <ha-icon-button
+        class="down"
+        .disabled=${index === total - 1}
+        label="Move down"
+        @click=${() => this._move(index, index + 1)}
+      >
+        <ha-icon icon="mdi:chevron-down"></ha-icon>
+      </ha-icon-button>
+    </span>`;
   }
 
   static styles = css`
