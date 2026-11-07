@@ -100,6 +100,7 @@ export default defineConfig({
       {
         // Cards render; calculations belong in shared/card-state.
         files: ["packages/flixlix-cards/*-flow-card-plus/src/**"],
+        excludeFiles: ["**/*.test.ts"],
         rules: {
           "max-lines": ["error", { max: 450, skipBlankLines: true, skipComments: true }],
           "max-lines-per-function": [
