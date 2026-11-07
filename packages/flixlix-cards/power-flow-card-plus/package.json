@@ -32,7 +32,7 @@
     "start": "rollup -wc",
     "dev": "rollup -c --watch",
     "typecheck": "tsc --noEmit",
-    "test": "vp test run --coverage",
+    "test": "vp test run --coverage && vp test run --config vitest.browser.config.ts --project dom",
     "test:watch": "vp test"
   },
   "dependencies": {
