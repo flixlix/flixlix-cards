@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@testing-library/dom": "catalog:",
+    "@vitest/coverage-v8": "catalog:packages",
     "jsdom": "catalog:",
     "vite-plus": "catalog:packages"
   }

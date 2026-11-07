@@ -37,7 +37,7 @@
     "start": "rollup -wc",
     "dev": "rollup -c --watch",
     "typecheck": "tsc --noEmit",
-    "test": "vp test run",
+    "test": "vp test run --coverage",
     "test:watch": "vp test"
   },
   "dependencies": {

@@ -36,6 +36,7 @@ catalogs:
     "@rollup/plugin-terser": ^1.0.0
     "@rollup/plugin-typescript": ^12.3.1
     "@types/sortablejs": ^1.15.9
+    "@vitest/coverage-v8": 5.1.0
     conventional-changelog-conventionalcommits: ^4.6.3
     custom-card-helpers: ^2.0.0
     home-assistant-js-websocket: ^9.8.1

@@ -17,6 +17,10 @@ export default mergeConfig(baseConfig, {
   },
   test: {
     name: packageName,
+    coverage: {
+      // Ratchet: raise these when coverage grows, never lower them.
+      thresholds: { lines: 62, branches: 50, functions: 60, statements: 63 },
+    },
     environment: "jsdom",
     alias: [
       {
