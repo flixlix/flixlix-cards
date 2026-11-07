@@ -1,42 +1,15 @@
 import { Link } from "@tanstack/react-router";
-import {
-  AlertTriangle,
-  ArrowRight,
-  Battery,
-  BookOpen,
-  Calculator,
-  Cpu,
-  EyeOff,
-  Github,
-  Home,
-  Info,
-  Layers,
-  Leaf,
-  MousePointerClick,
-  Package,
-  Palette,
-  Settings,
-  Split,
-  Sun,
-  Wrench,
-  Zap,
-} from "lucide-react";
+import { Github } from "lucide-react";
 import * as React from "react";
 
 import { Button } from "@flixlix-cards/ui/components/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@flixlix-cards/ui/components/card";
-import { Checkbox } from "@flixlix-cards/ui/components/checkbox";
 
 import { CategorySection } from "./category-section";
 import {
   Callout,
   CodeBlock,
+  ConfigShortcut,
+  HighlightItem,
   NextPageNav,
   PageHeader,
   Prose,
@@ -122,15 +95,6 @@ const VARIANTS: Record<CardKey, Variant> = {
   },
 };
 
-function HighlightsListCheckedItem({ children }: { children: React.ReactNode }) {
-  return (
-    <li className="bg-muted/40 flex items-center gap-2 rounded-md border p-3">
-      <Checkbox className="pointer-events-none" checked />
-      {children}
-    </li>
-  );
-}
-
 function variant(key: CardKey): Variant {
   return VARIANTS[key];
 }
@@ -175,76 +139,14 @@ export function OverviewPage({ cardKey }: { cardKey: CardKey }) {
       </Prose>
 
       <Section title="Highlights">
-        <ul className="text-foreground/90 grid grid-cols-1 gap-2 text-sm md:grid-cols-2">
-          <HighlightsListCheckedItem>
-            Full UI editor with subpages for each entity
-          </HighlightsListCheckedItem>
-          <HighlightsListCheckedItem>
-            Up to 4 individual devices with custom icons & colors
-          </HighlightsListCheckedItem>
-          <HighlightsListCheckedItem>
-            Bidirectional grid &amp; battery (split or single entity)
-          </HighlightsListCheckedItem>
-          <HighlightsListCheckedItem>
-            Secondary info, templates, and clickable entities
-          </HighlightsListCheckedItem>
-          <HighlightsListCheckedItem>
-            Configurable flow rate model (legacy & new)
-          </HighlightsListCheckedItem>
-          <HighlightsListCheckedItem>
-            Translated to 14+ languages out of the box
-          </HighlightsListCheckedItem>
+        <ul className="text-foreground/90 grid grid-cols-1 gap-x-8 gap-y-2.5 text-sm md:grid-cols-2">
+          <HighlightItem>Full UI editor with subpages for each entity</HighlightItem>
+          <HighlightItem>Up to 4 individual devices with custom icons & colors</HighlightItem>
+          <HighlightItem>Bidirectional grid &amp; battery (split or single entity)</HighlightItem>
+          <HighlightItem>Secondary info, templates, and clickable entities</HighlightItem>
+          <HighlightItem>Configurable flow rate model (legacy & new)</HighlightItem>
+          <HighlightItem>Translated to 14+ languages out of the box</HighlightItem>
         </ul>
-      </Section>
-
-      <Section title="What's in this section">
-        <div className="grid gap-3 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Package className="size-4" /> Installation
-              </CardTitle>
-              <CardDescription>HACS or manual install in two minutes.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button asChild size="sm" variant="outline">
-                <Link to={`${v.basePath}/installation`}>
-                  Open <ArrowRight className="size-3.5" />
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <BookOpen className="size-4" /> Configuration
-              </CardTitle>
-              <CardDescription>Every option, with defaults and types.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button asChild size="sm" variant="outline">
-                <Link to={`${v.basePath}/configuration`}>
-                  Open <ArrowRight className="size-3.5" />
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Wrench className="size-4" /> Examples
-              </CardTitle>
-              <CardDescription>Copy-pastable configs for common setups.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button asChild size="sm" variant="outline">
-                <Link to={`${v.basePath}/examples`}>
-                  Open <ArrowRight className="size-3.5" />
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
       </Section>
 
       <Section title="Source & releases">
@@ -965,35 +867,6 @@ const DISPLAY_ZERO_LINES_OPTIONS: OptionRow[] = [
   },
 ];
 
-function ConfigShortcut({
-  to,
-  icon: Icon,
-  label,
-  hint,
-  accent,
-}: {
-  to: string;
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  hint: string;
-  accent: string;
-}) {
-  return (
-    <a
-      href={to}
-      className="group bg-card hover:border-foreground/20 flex items-start gap-3 rounded-lg border p-3 transition-colors"
-    >
-      <div className={`flex size-8 shrink-0 items-center justify-center rounded-md ${accent}`}>
-        <Icon className="size-4" />
-      </div>
-      <div className="min-w-0">
-        <div className="text-foreground text-sm font-medium">{label}</div>
-        <div className="text-muted-foreground text-xs">{hint}</div>
-      </div>
-    </a>
-  );
-}
-
 export function ConfigurationPage({ cardKey }: { cardKey: CardKey }) {
   const v = variant(cardKey);
   const basicOptions = BASIC_CARD_OPTIONS(v);
@@ -1030,8 +903,8 @@ export function ConfigurationPage({ cardKey }: { cardKey: CardKey }) {
           description={
             <>
               Every option, what it does, and how to use it. Required fields are marked with{" "}
-              <span className="text-destructive font-mono">*</span>. The colored section headers
-              group options by which entity they apply to.
+              <span className="text-destructive font-mono">*</span>. The colored dot on each section
+              heading matches the entity's color in the card.
             </>
           }
         />
@@ -1042,55 +915,22 @@ export function ConfigurationPage({ cardKey }: { cardKey: CardKey }) {
         </Callout>
 
         {/* Quick navigation grid */}
-        <div className="my-6 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="my-6 grid gap-x-6 gap-y-1 border-y py-3 sm:grid-cols-2 lg:grid-cols-3 xl:hidden">
           <ConfigShortcut
             to="#card-options"
-            icon={Settings}
             label="Card options"
             hint="Title, decimals, flow rate"
-            accent="bg-slate-500/10 text-slate-700 dark:text-slate-300"
           />
-          <ConfigShortcut
-            to="#grid"
-            icon={Zap}
-            label="Grid"
-            hint="Bidirectional or split entity"
-            accent="bg-sky-500/10 text-sky-700 dark:text-sky-300"
-          />
-          <ConfigShortcut
-            to="#solar"
-            icon={Sun}
-            label="Solar"
-            hint="Production sensor"
-            accent="bg-orange-500/10 text-orange-700 dark:text-orange-300"
-          />
-          <ConfigShortcut
-            to="#battery"
-            icon={Battery}
-            label="Battery"
-            hint="Charge/discharge + SoC"
-            accent="bg-pink-500/10 text-pink-700 dark:text-pink-300"
-          />
-          <ConfigShortcut
-            to="#home"
-            icon={Home}
-            label="Home"
-            hint="Home consumption circle"
-            accent="bg-primary/10 text-primary"
-          />
-          <ConfigShortcut
-            to="#fossil-fuel"
-            icon={Leaf}
-            label="Low-carbon"
-            hint="Fossil fuel percentage"
-            accent="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-          />
+          <ConfigShortcut to="#grid" label="Grid" hint="Bidirectional or split entity" />
+          <ConfigShortcut to="#solar" label="Solar" hint="Production sensor" />
+          <ConfigShortcut to="#battery" label="Battery" hint="Charge/discharge + SoC" />
+          <ConfigShortcut to="#home" label="Home" hint="Home consumption circle" />
+          <ConfigShortcut to="#fossil-fuel" label="Low-carbon" hint="Fossil fuel percentage" />
         </div>
 
         <CategorySection
           id="card-options"
           title="Card options"
-          icon={Settings}
           accent="slate"
           description="Top-level options that affect the whole card — title, dashboard links, decimals, flow speed, and behavior toggles."
           example={{
@@ -1118,7 +958,6 @@ entities:
         <CategorySection
           id="actions"
           title="Actions"
-          icon={MousePointerClick}
           accent="slate"
           description="Per-circle click handlers. Use these to open more-info, navigate, call services, or fire scripts."
           intro={
@@ -1168,7 +1007,6 @@ entities:
         <CategorySection
           id="entities"
           title="Entities"
-          icon={Layers}
           accent="slate"
           description={
             <>
@@ -1213,7 +1051,6 @@ entities:
         <CategorySection
           id="grid"
           title="Grid"
-          icon={Zap}
           accent="blue"
           description="The connection to the public power grid. Supports either a single bidirectional sensor or split production/consumption sensors."
           example={{
@@ -1236,7 +1073,6 @@ entities:
         <CategorySection
           id="solar"
           title="Solar"
-          icon={Sun}
           accent="orange"
           description="Solar production. A single sensor giving the current solar output is enough."
           example={{
@@ -1256,7 +1092,6 @@ entities:
         <CategorySection
           id="battery"
           title="Battery"
-          icon={Battery}
           accent="pink"
           example={{
             language: "yaml",
@@ -1277,7 +1112,6 @@ entities:
         <CategorySection
           id="individual"
           title="Individual devices"
-          icon={Cpu}
           accent="cyan"
           description={
             <>
@@ -1315,7 +1149,6 @@ entities:
         <CategorySection
           id="home"
           title="Home"
-          icon={Home}
           accent="primary"
           description="The receiving circle. Its value is computed from the other sources by default — you only need an entity for the more-info dialog."
           example={{
@@ -1334,7 +1167,6 @@ entities:
         <CategorySection
           id="fossil-fuel"
           title="Fossil fuel / low-carbon"
-          icon={Leaf}
           accent="green"
           description="Show the percentage of low-carbon energy on the grid (e.g. from the CO2 Signal integration)."
           example={{
@@ -1361,7 +1193,6 @@ entities:
         <CategorySection
           id="color-object"
           title="Color object"
-          icon={Palette}
           accent="violet"
           description="Used by Grid and Battery to specify a separate color for production and consumption."
           example={{
@@ -1385,7 +1216,6 @@ entities:
         <CategorySection
           id="split-entities"
           title="Split entities"
-          icon={Split}
           accent="slate"
           description="Use this on Grid or Battery when production and consumption come from separate sensors. Both must share a compatible unit_of_measurement."
           example={{
@@ -1408,7 +1238,6 @@ entities:
         <CategorySection
           id="secondary-info"
           title="Secondary info"
-          icon={Info}
           accent="slate"
           description="Adds a small extra value next to a circle. Great for an EV's SoC, a daily total, or a templated string."
           example={{
@@ -1429,7 +1258,6 @@ entities:
         <CategorySection
           id="power-outage"
           title="Power outage"
-          icon={AlertTriangle}
           accent="amber"
           description="Detect a grid outage and react: switch the icon, show a label, override the flow rate, optionally include a generator entity."
           example={{
@@ -1450,7 +1278,6 @@ entities:
         <CategorySection
           id="display-zero-lines"
           title="Display zero lines"
-          icon={EyeOff}
           accent="slate"
           description="What to do with lines whose value is 0 — keep them visible, hide them, or fade them out."
           example={{
@@ -1467,7 +1294,6 @@ entities:
           <CategorySection
             id="collection-key"
             title="Energy collection key"
-            icon={BookOpen}
             accent="cyan"
             description="Bind the card to a specific Home Assistant energy dashboard's collection."
             intro={
@@ -1514,7 +1340,6 @@ entities:
         <CategorySection
           id="flow-formula"
           title="Flow formulas"
-          icon={Calculator}
           accent="violet"
           description="The card animates dots along the lines. There are two formulas controlling how fast they travel."
         >

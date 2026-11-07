@@ -1,31 +1,14 @@
 import { Link } from "@tanstack/react-router";
-import {
-  ArrowRight,
-  BookOpen,
-  Eye,
-  Github,
-  ListOrdered,
-  Package,
-  Save,
-  Settings,
-  Wrench,
-} from "lucide-react";
-import type * as React from "react";
+import { Github } from "lucide-react";
 
 import { Button } from "@flixlix-cards/ui/components/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@flixlix-cards/ui/components/card";
-import { Checkbox } from "@flixlix-cards/ui/components/checkbox";
 
 import { CategorySection } from "./category-section";
 import {
   Callout,
   CodeBlock,
+  ConfigShortcut,
+  HighlightItem,
   NextPageNav,
   PageHeader,
   Prose,
@@ -43,15 +26,6 @@ const REPO_URL = "https://github.com/flixlix/sortable-list-card";
 const HACS_REDIRECT =
   "https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=sortable-list-card&category=Dashboard";
 const RELEASE_URL = "https://github.com/flixlix/sortable-list-card/releases/latest";
-
-function HighlightItem({ children }: { children: React.ReactNode }) {
-  return (
-    <li className="bg-muted/40 flex items-center gap-2 rounded-md border p-3">
-      <Checkbox className="pointer-events-none" checked />
-      {children}
-    </li>
-  );
-}
 
 // ---------- Overview ----------
 
@@ -108,7 +82,7 @@ export function OverviewPage() {
       </Section>
 
       <Section title="Highlights">
-        <ul className="text-foreground/90 grid grid-cols-1 gap-2 text-sm md:grid-cols-2">
+        <ul className="text-foreground/90 grid grid-cols-1 gap-x-8 gap-y-2.5 text-sm md:grid-cols-2">
           <HighlightItem>Drag-and-drop reordering with a live drop indicator</HighlightItem>
           <HighlightItem>Up/down arrow buttons for precise, accessible reordering</HighlightItem>
           <HighlightItem>
@@ -118,56 +92,6 @@ export function OverviewPage() {
           <HighlightItem>Entity-backed items (name / icon / state) with overrides</HighlightItem>
           <HighlightItem>Optimistic updates, plus a full UI editor</HighlightItem>
         </ul>
-      </Section>
-
-      <Section title="What's in this section">
-        <div className="grid gap-3 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Package className="size-4" /> Installation
-              </CardTitle>
-              <CardDescription>HACS custom repository or manual install.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button asChild size="sm" variant="outline">
-                <Link to={`${BASE_PATH}/installation`}>
-                  Open <ArrowRight className="size-3.5" />
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <BookOpen className="size-4" /> Configuration
-              </CardTitle>
-              <CardDescription>Every option, with defaults and types.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button asChild size="sm" variant="outline">
-                <Link to={`${BASE_PATH}/configuration`}>
-                  Open <ArrowRight className="size-3.5" />
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Wrench className="size-4" /> Examples
-              </CardTitle>
-              <CardDescription>Copy-pastable configs, including the HEMS list.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button asChild size="sm" variant="outline">
-                <Link to={`${BASE_PATH}/examples`}>
-                  Open <ArrowRight className="size-3.5" />
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
       </Section>
 
       <Section title="Source & releases">
@@ -496,35 +420,6 @@ const ITEM_OPTIONS: OptionRow[] = [
   },
 ];
 
-function ConfigShortcut({
-  to,
-  icon: Icon,
-  label,
-  hint,
-  accent,
-}: {
-  to: string;
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  hint: string;
-  accent: string;
-}) {
-  return (
-    <a
-      href={to}
-      className="group bg-card hover:border-foreground/20 flex items-start gap-3 rounded-lg border p-3 transition-colors"
-    >
-      <div className={`flex size-8 shrink-0 items-center justify-center rounded-md ${accent}`}>
-        <Icon className="size-4" />
-      </div>
-      <div className="min-w-0">
-        <div className="text-foreground text-sm font-medium">{label}</div>
-        <div className="text-muted-foreground text-xs">{hint}</div>
-      </div>
-    </a>
-  );
-}
-
 // ---------- Configuration ----------
 
 export function ConfigurationPage() {
@@ -554,41 +449,20 @@ export function ConfigurationPage() {
           paste straight into your dashboard, including the HEMS priority list.
         </Callout>
 
-        <div className="my-6 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="my-6 grid gap-x-6 gap-y-1 border-y py-3 sm:grid-cols-2 lg:grid-cols-3 xl:hidden">
           <ConfigShortcut
             to="#card-options"
-            icon={Settings}
             label="Card options"
             hint="Type, entity, value format"
-            accent="bg-slate-500/10 text-slate-700 dark:text-slate-300"
           />
-          <ConfigShortcut
-            to="#display"
-            icon={Eye}
-            label="Display"
-            hint="Handle, arrows, rank, state"
-            accent="bg-sky-500/10 text-sky-700 dark:text-sky-300"
-          />
-          <ConfigShortcut
-            to="#save-action"
-            icon={Save}
-            label="Save action"
-            hint="Persist via any service"
-            accent="bg-violet-500/10 text-violet-700 dark:text-violet-300"
-          />
-          <ConfigShortcut
-            to="#item-options"
-            icon={ListOrdered}
-            label="Item options"
-            hint="Key, entity, name, icon"
-            accent="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-          />
+          <ConfigShortcut to="#display" label="Display" hint="Handle, arrows, rank, state" />
+          <ConfigShortcut to="#save-action" label="Save action" hint="Persist via any service" />
+          <ConfigShortcut to="#item-options" label="Item options" hint="Key, entity, name, icon" />
         </div>
 
         <CategorySection
           id="card-options"
           title="Card options"
-          icon={Settings}
           accent="slate"
           description="Top-level configuration — type, the items list, the read-back entity, and how the order value is stored."
           example={{
@@ -610,7 +484,6 @@ items:
         <CategorySection
           id="display"
           title="Display"
-          icon={Eye}
           accent="blue"
           description="Toggle the row affordances: the drag handle, arrow buttons, rank number, and entity state."
           example={{
@@ -627,7 +500,6 @@ show_state: false`,
         <CategorySection
           id="save-action"
           title="Save action"
-          icon={Save}
           accent="violet"
           description="The service called on every reorder. This is what makes the card generic."
           intro={
@@ -666,7 +538,6 @@ save_action:
         <CategorySection
           id="item-options"
           title="Item options"
-          icon={ListOrdered}
           accent="green"
           description="Each entry in the items array. Items can be plain (key + label) or backed by an entity."
           intro={

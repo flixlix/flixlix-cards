@@ -1,5 +1,5 @@
 import { Link, Outlet, createFileRoute, useRouterState } from "@tanstack/react-router";
-import { Github, Heart } from "lucide-react";
+import { Github } from "lucide-react";
 
 import { AppSidebar } from "@/components/app-sidebar";
 import { DocsSearch } from "@/components/docs/docs-search";
@@ -99,10 +99,7 @@ function DocsLayout() {
         </main>
         <footer className="mt-auto border-t px-4 py-6 md:px-8 lg:px-12">
           <div className="text-muted-foreground mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-3 text-xs xl:max-w-7xl">
-            <p className="inline-flex items-center gap-1">
-              Built with <Heart aria-label="love" className="size-3 fill-current text-rose-500" />{" "}
-              for the Home Assistant community
-            </p>
+            <p>Open source cards for Home Assistant dashboards.</p>
             <p className="inline-flex flex-wrap items-center gap-x-3 gap-y-1">
               <a
                 href="https://github.com/flixlix/flixlix-cards/blob/main/LICENSE"

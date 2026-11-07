@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { Check, Copy, Info, Lightbulb, TriangleAlert } from "lucide-react";
 import * as React from "react";
 
@@ -17,11 +18,9 @@ export function PageHeader({
   badges?: { label: string; variant?: "default" | "secondary" | "outline" }[];
 }) {
   return (
-    <header className="mb-10">
+    <header className="mb-10 border-b pb-8">
       {eyebrow ? (
-        <div className="text-primary mb-3 font-mono text-[11px] font-medium tracking-widest uppercase">
-          {eyebrow}
-        </div>
+        <div className="text-muted-foreground mb-2 text-sm font-medium">{eyebrow}</div>
       ) : null}
       <h1 className="text-3xl font-bold tracking-tight text-balance md:text-4xl">{title}</h1>
       {description ? (
@@ -38,7 +37,6 @@ export function PageHeader({
           ))}
         </div>
       ) : null}
-      <div className="from-primary/70 via-primary/25 mt-6 h-px bg-linear-to-r via-40% to-transparent" />
     </header>
   );
 }
@@ -241,38 +239,48 @@ export function NextPageNav({
   prev?: { label: string; to: string };
   next?: { label: string; to: string };
 }) {
+  const linkClass = "group flex flex-col gap-0.5 py-2";
   return (
-    <nav className="mt-12 grid grid-cols-2 gap-3 text-sm">
+    <nav className="mt-16 flex justify-between gap-4 border-t pt-6 text-sm">
       {prev ? (
-        <a
-          href={prev.to}
-          className="group hover:border-primary/50 hover:bg-accent/40 rounded-xl border p-4 transition-colors"
-        >
-          <span className="text-muted-foreground font-mono text-[11px] tracking-wide uppercase">
-            ← Previous
+        <Link to={prev.to} className={linkClass}>
+          <span className="text-muted-foreground text-xs">Previous</span>
+          <span className="group-hover:text-primary font-medium transition-colors">
+            ← {prev.label}
           </span>
-          <span className="group-hover:text-primary mt-1 block font-medium transition-colors">
-            {prev.label}
-          </span>
-        </a>
+        </Link>
       ) : (
         <span />
       )}
       {next ? (
-        <a
-          href={next.to}
-          className="group hover:border-primary/50 hover:bg-accent/40 rounded-xl border p-4 text-right transition-colors"
-        >
-          <span className="text-muted-foreground font-mono text-[11px] tracking-wide uppercase">
-            Next →
+        <Link to={next.to} className={cn(linkClass, "text-right")}>
+          <span className="text-muted-foreground text-xs">Next</span>
+          <span className="group-hover:text-primary font-medium transition-colors">
+            {next.label} →
           </span>
-          <span className="group-hover:text-primary mt-1 block font-medium transition-colors">
-            {next.label}
-          </span>
-        </a>
+        </Link>
       ) : (
         <span />
       )}
     </nav>
+  );
+}
+
+export function HighlightItem({ children }: { children: React.ReactNode }) {
+  return (
+    <li className="flex gap-2.5">
+      <Check aria-hidden className="text-primary mt-0.5 size-4 shrink-0" />
+      <span>{children}</span>
+    </li>
+  );
+}
+
+/** In-page jump link; shown only below xl, where the side TOC is hidden. */
+export function ConfigShortcut({ to, label, hint }: { to: string; label: string; hint: string }) {
+  return (
+    <a href={to} className="group flex min-w-0 flex-col py-1.5 text-sm">
+      <span className="group-hover:text-primary font-medium transition-colors">{label}</span>
+      <span className="text-muted-foreground truncate text-xs">{hint}</span>
+    </a>
   );
 }

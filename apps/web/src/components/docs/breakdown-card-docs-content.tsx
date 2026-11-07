@@ -1,35 +1,14 @@
 import { Link } from "@tanstack/react-router";
-import {
-  ArrowRight,
-  BookOpen,
-  CalendarRange,
-  ChartPie,
-  Filter,
-  Github,
-  Layers,
-  ListChecks,
-  MousePointerClick,
-  Package,
-  PaintBucket,
-  Settings,
-  Wrench,
-} from "lucide-react";
-import type * as React from "react";
+import { Github } from "lucide-react";
 
 import { Button } from "@flixlix-cards/ui/components/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@flixlix-cards/ui/components/card";
-import { Checkbox } from "@flixlix-cards/ui/components/checkbox";
 
 import { CategorySection } from "./category-section";
 import {
   Callout,
   CodeBlock,
+  ConfigShortcut,
+  HighlightItem,
   NextPageNav,
   PageHeader,
   Prose,
@@ -47,15 +26,6 @@ const REPO_URL = "https://github.com/flixlix/energy-breakdown-card";
 const HACS_REDIRECT =
   "https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=energy-breakdown-card&category=Dashboard";
 const RELEASE_URL = "https://github.com/flixlix/energy-breakdown-card/releases/latest";
-
-function HighlightItem({ children }: { children: React.ReactNode }) {
-  return (
-    <li className="bg-muted/40 flex items-center gap-2 rounded-md border p-3">
-      <Checkbox className="pointer-events-none" checked />
-      {children}
-    </li>
-  );
-}
 
 // ---------- Overview ----------
 
@@ -84,7 +54,7 @@ export function OverviewPage() {
       </Prose>
 
       <Section title="Highlights">
-        <ul className="text-foreground/90 grid grid-cols-1 gap-2 text-sm md:grid-cols-2">
+        <ul className="text-foreground/90 grid grid-cols-1 gap-x-8 gap-y-2.5 text-sm md:grid-cols-2">
           <HighlightItem>Two visual variants — donut and stacked bar</HighlightItem>
           <HighlightItem>Optional legend with names, values, and percentages</HighlightItem>
           <HighlightItem>Mobile-friendly tooltip on tap, desktop hover tooltip</HighlightItem>
@@ -94,56 +64,6 @@ export function OverviewPage() {
           </HighlightItem>
           <HighlightItem>Optional sync to the Home Assistant energy dashboard period</HighlightItem>
         </ul>
-      </Section>
-
-      <Section title="What's in this section">
-        <div className="grid gap-3 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Package className="size-4" /> Installation
-              </CardTitle>
-              <CardDescription>HACS custom repository or manual install.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button asChild size="sm" variant="outline">
-                <Link to={`${BASE_PATH}/installation`}>
-                  Open <ArrowRight className="size-3.5" />
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <BookOpen className="size-4" /> Configuration
-              </CardTitle>
-              <CardDescription>Every option, with defaults and types.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button asChild size="sm" variant="outline">
-                <Link to={`${BASE_PATH}/configuration`}>
-                  Open <ArrowRight className="size-3.5" />
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Wrench className="size-4" /> Examples
-              </CardTitle>
-              <CardDescription>Copy-pastable configs for common setups.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button asChild size="sm" variant="outline">
-                <Link to={`${BASE_PATH}/examples`}>
-                  Open <ArrowRight className="size-3.5" />
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
       </Section>
 
       <Section title="Source & releases">
@@ -508,35 +428,6 @@ const ENTITY_OPTIONS: OptionRow[] = [
   { name: "double_tap_action", type: "object", description: "Action triggered on double-tap." },
 ];
 
-function ConfigShortcut({
-  to,
-  icon: Icon,
-  label,
-  hint,
-  accent,
-}: {
-  to: string;
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  hint: string;
-  accent: string;
-}) {
-  return (
-    <a
-      href={to}
-      className="group bg-card hover:border-foreground/20 flex items-start gap-3 rounded-lg border p-3 transition-colors"
-    >
-      <div className={`flex size-8 shrink-0 items-center justify-center rounded-md ${accent}`}>
-        <Icon className="size-4" />
-      </div>
-      <div className="min-w-0">
-        <div className="text-foreground text-sm font-medium">{label}</div>
-        <div className="text-muted-foreground text-xs">{hint}</div>
-      </div>
-    </a>
-  );
-}
-
 // ---------- Configuration ----------
 
 export function ConfigurationPage() {
@@ -569,55 +460,34 @@ export function ConfigurationPage() {
           paste straight into your dashboard. Come back here to fine-tune.
         </Callout>
 
-        <div className="my-6 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="my-6 grid gap-x-6 gap-y-1 border-y py-3 sm:grid-cols-2 lg:grid-cols-3 xl:hidden">
           <ConfigShortcut
             to="#card-options"
-            icon={Settings}
             label="Card options"
             hint="Type, title, chart variant"
-            accent="bg-slate-500/10 text-slate-700 dark:text-slate-300"
           />
-          <ConfigShortcut
-            to="#display"
-            icon={ListChecks}
-            label="Legend & tooltip"
-            hint="Visibility and position"
-            accent="bg-sky-500/10 text-sky-700 dark:text-sky-300"
-          />
-          <ConfigShortcut
-            to="#data"
-            icon={Filter}
-            label="Data shaping"
-            hint="Sort, group, decimals"
-            accent="bg-violet-500/10 text-violet-700 dark:text-violet-300"
-          />
+          <ConfigShortcut to="#display" label="Legend & tooltip" hint="Visibility and position" />
+          <ConfigShortcut to="#data" label="Data shaping" hint="Sort, group, decimals" />
           <ConfigShortcut
             to="#appearance"
-            icon={PaintBucket}
             label="Chart appearance"
             hint="Thickness and corner radius"
-            accent="bg-pink-500/10 text-pink-700 dark:text-pink-300"
           />
           <ConfigShortcut
             to="#energy-dashboard"
-            icon={CalendarRange}
             label="Energy dashboard"
             hint="Sync to selected period"
-            accent="bg-cyan-500/10 text-cyan-700 dark:text-cyan-300"
           />
           <ConfigShortcut
             to="#entity-options"
-            icon={Layers}
             label="Per-entity options"
             hint="Name, color, icon, actions"
-            accent="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
           />
         </div>
 
         <CategorySection
           id="card-options"
           title="Card options"
-          icon={Settings}
           accent="slate"
           description="Top-level card configuration — type, chart variant, title, and the entities list."
           example={{
@@ -637,7 +507,6 @@ entities:
         <CategorySection
           id="display"
           title="Legend & tooltip"
-          icon={ChartPie}
           accent="blue"
           description="Toggle and position the legend, tooltip, total, and icons."
           intro={
@@ -671,7 +540,6 @@ show_icons: true`,
         <CategorySection
           id="data"
           title="Data shaping"
-          icon={Filter}
           accent="violet"
           description="Sort, group, and format the values that feed the chart."
           intro={
@@ -697,7 +565,6 @@ unit_of_measurement: kWh`,
         <CategorySection
           id="appearance"
           title="Chart appearance"
-          icon={PaintBucket}
           accent="pink"
           description="Tune the visual proportions of each chart variant."
           intro={
@@ -722,7 +589,6 @@ section_radius: 12`,
         <CategorySection
           id="energy-dashboard"
           title="Energy dashboard sync"
-          icon={CalendarRange}
           accent="cyan"
           description="Optionally bind the card to the Home Assistant energy dashboard, so values follow the dashboard's selected date range."
           intro={
@@ -757,7 +623,6 @@ entities:
         <CategorySection
           id="entity-options"
           title="Entity options"
-          icon={Layers}
           accent="green"
           description="Each item in the entities array supports the options below."
           intro={
@@ -791,7 +656,6 @@ entities:
         <CategorySection
           id="actions"
           title="Actions"
-          icon={MousePointerClick}
           accent="amber"
           description="Per-entity click handlers. Use these to open more-info, navigate, call services, or fire scripts."
           intro={
