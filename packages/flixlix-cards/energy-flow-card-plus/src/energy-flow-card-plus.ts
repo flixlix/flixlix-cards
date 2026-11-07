@@ -1,13 +1,5 @@
 import { computeCardState, type CardState, energyReadings } from "@flixlix-cards/shared/card-state";
-import { batteryElement } from "@flixlix-cards/shared/components/battery";
-import { flowElement } from "@flixlix-cards/shared/components/flows/index";
-import { individualElement } from "@flixlix-cards/shared/components/individual-element";
-import { gridElement } from "@flixlix-cards/shared/components/grid";
-import { homeElement } from "@flixlix-cards/shared/components/home";
-import { dashboardLinkElement } from "@flixlix-cards/shared/components/misc/dashboard-link";
-import { nonFossilElement } from "@flixlix-cards/shared/components/non-fossil";
-import { solarElement } from "@flixlix-cards/shared/components/solar";
-import { spacer } from "@flixlix-cards/shared/components/spacer";
+import { flowCard } from "@flixlix-cards/shared/components/flow-card";
 import { styles } from "@flixlix-cards/shared/style";
 import {
   fetchEnergyPeriodGrowth,
@@ -20,6 +12,10 @@ import {
 import { getEntityNames } from "@flixlix-cards/shared/states/utils/mutli-entity";
 import { type EnergyFlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { applyCardState } from "@flixlix-cards/shared/utils/apply-card-state";
+import {
+  assertRenderableFlowCardConfig,
+  displayZeroLinesWithDefaults,
+} from "@flixlix-cards/shared/utils/flow-card-config";
 import { EntityActions } from "@flixlix-cards/shared/utils/entity-actions";
 import { defaultValues, getDefaultConfig } from "@flixlix-cards/shared/utils/get-default-config";
 import { registerCustomCard } from "@flixlix-cards/shared/utils/register-custom-card";
@@ -73,20 +69,7 @@ export class EnergyFlowCardPlus extends LitElement {
   };
 
   setConfig(config: EnergyFlowCardPlusConfig): void {
-    if (config.entities?.individual1 || config.entities?.individual2) {
-      throw new Error(
-        "You are using an outdated configuration. Please update your configuration to the latest version. The individual1 and individual2 properties are now just a single individual array property. The easiest way to do this is to remove the individual1 and individual2 properties and replace them in the UI Editor."
-      );
-    }
-    if (
-      !config.entities ||
-      (!config.entities?.battery?.entity &&
-        !config.entities?.grid?.entity &&
-        !config.entities?.solar?.entity)
-    ) {
-      throw new Error("At least one entity for battery, grid or solar must be defined");
-    }
-
+    assertRenderableFlowCardConfig(config);
     this._config = {
       ...config,
       min_flow_rate: coerceNumber(config.min_flow_rate, defaultValues.minFlowRate),
@@ -98,15 +81,7 @@ export class EnergyFlowCardPlus extends LitElement {
       max_expected_power: coerceNumber(config.max_expected_power, defaultValues.maxExpectedPower),
       min_expected_power: coerceNumber(config.min_expected_power, defaultValues.minExpectedPower),
       use_new_flow_rate_model: false,
-      display_zero_lines: {
-        mode: config.display_zero_lines?.mode ?? defaultValues.displayZeroLines.mode,
-        transparency: coerceNumber(
-          config.display_zero_lines?.transparency,
-          defaultValues.displayZeroLines.transparency
-        ),
-        grey_color:
-          config.display_zero_lines?.grey_color ?? defaultValues.displayZeroLines.grey_color,
-      },
+      display_zero_lines: displayZeroLinesWithDefaults(config.display_zero_lines),
     };
     const previousCollectionKey = this._energyCollectionKey;
     this._energyCollectionKey = config.collection_key;
@@ -200,83 +175,7 @@ export class EnergyFlowCardPlus extends LitElement {
         </div>
       </ha-card>`;
     }
-    const config = this._config;
-    const main = this._actions;
-    const { grid, solar, battery, home, nonFossil } = cardState.nodes;
-    const { leftTop, leftBottom, rightTop, rightBottom } = cardState.individualSlots;
-    const { layout, animate } = cardState;
-
-    return html`
-      <ha-card
-        .header=${config.title}
-        class=${config.full_size ? "full-size" : ""}
-        style=${config.style_ha_card ?? ""}
-      >
-        <div
-          class="card-content ${config.full_size ? "full-size" : ""} ${
-            config.no_labels ? "no-labels" : ""
-          }"
-          id="energy-flow-card-plus"
-          style=${config.style_card_content ?? ""}
-        >
-          ${
-            layout.showTopRow
-              ? html`<div class="row">
-                  ${nonFossilElement(main, config, { nonFossil, flow: cardState.flows.nonFossil, animate })}
-                  ${
-                    solar.has
-                      ? solarElement(main, config, solar)
-                      : cardState.nodes.individuals.length > 0
-                        ? spacer
-                        : nothing
-                  }
-                  ${individualElement(main, config, "left-top", { slot: leftTop, animate })}
-                  ${
-                    layout.hasRightIndividual
-                      ? individualElement(main, config, "right-top", {
-                          slot: rightTop,
-                          animate,
-                          hasBottomRow: layout.showBottomRow,
-                        })
-                      : nothing
-                  }
-                </div>`
-              : nothing
-          }
-          <div class="row">
-            ${grid.has ? gridElement(main, config, grid) : spacer} ${spacer}
-            ${
-              !config.entities.home?.hide
-                ? homeElement(main, config, {
-                    home,
-                    ring: cardState.homeRing,
-                    showLabel: layout.showHomeLabel,
-                  })
-                : spacer
-            }
-            ${layout.hasRightIndividual ? spacer : nothing}
-          </div>
-          ${
-            layout.showBottomRow
-              ? html`<div class="row">
-                  ${spacer} ${battery.has ? batteryElement(main, config, battery) : spacer}
-                  ${individualElement(main, config, "left-bottom", { slot: leftBottom, animate })}
-                  ${
-                    layout.hasRightIndividual
-                      ? individualElement(main, config, "right-bottom", {
-                          slot: rightBottom,
-                          animate,
-                        })
-                      : nothing
-                  }
-                </div>`
-              : spacer
-          }
-          ${flowElement(config, cardState)}
-        </div>
-        ${dashboardLinkElement(config, this.hass)}
-      </ha-card>
-    `;
+    return flowCard(this._actions, this._config, cardState, this.hass, "energy-flow-card-plus");
   }
 
   protected updated(changedProps: PropertyValues): void {
