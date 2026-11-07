@@ -36,6 +36,8 @@ export const batteryElement = (
   return html`<div class="circle-container battery">
     <div
       class="circle ${disableEntityClick ? "pointer-events-none" : ""}"
+      tabindex=${disableEntityClick ? nothing : 0}
+      role=${disableEntityClick ? nothing : "button"}
       @click=${(e: MouseEvent) => {
         const target = circleTarget();
         main.onEntityClick(e, battery, target);
@@ -54,7 +56,7 @@ export const batteryElement = (
       @pointercancel=${(e: PointerEvent) => {
         main.onEntityPointerUp(e);
       }}
-      @keyDown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
+      @keydown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
         if (e.key === "Enter") {
           const target = circleTarget();
           main.openDetails(e, battery, target, "tap");
@@ -80,7 +82,7 @@ export const batteryElement = (
               @pointercancel=${(e: PointerEvent) => {
                 main.onEntityPointerUp(e);
               }}
-              @keyDown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
+              @keydown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
                 if (e.key === "Enter") {
                   main.openDetails(e, battery, entities.battery?.state_of_charge, "tap");
                 }
@@ -111,7 +113,7 @@ export const batteryElement = (
               @pointercancel=${(e: PointerEvent) => {
                 main.onEntityPointerUp(e);
               }}
-              @keyDown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
+              @keydown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
                 if (e.key === "Enter") {
                   main.openDetails(e, battery, entities.battery?.state_of_charge, "tap");
                 }
@@ -142,7 +144,7 @@ export const batteryElement = (
               @pointercancel=${(e: PointerEvent) => {
                 main.onEntityPointerUp(e);
               }}
-              @keyDown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
+              @keydown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
                 if (e.key === "Enter") {
                   const target = batteryEntityId(battery, "production");
 
@@ -178,7 +180,7 @@ export const batteryElement = (
               @pointercancel=${(e: PointerEvent) => {
                 main.onEntityPointerUp(e);
               }}
-              @keyDown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
+              @keydown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
                 if (e.key === "Enter") {
                   const target = batteryEntityId(battery, "consumption");
 

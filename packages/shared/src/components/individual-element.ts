@@ -36,6 +36,8 @@ const individualCircle = (
   const vertical = key.endsWith("top") ? "top" : "bottom";
   return html`<div
     class="circle ${disableEntityClick ? "pointer-events-none" : ""}"
+    tabindex=${disableEntityClick ? nothing : 0}
+    role=${disableEntityClick ? nothing : "button"}
     @click=${(e: MouseEvent) => {
       main.onEntityClick(e, node.field, node.entity);
     }}
@@ -51,7 +53,7 @@ const individualCircle = (
     @pointercancel=${(e: PointerEvent) => {
       main.onEntityPointerUp(e);
     }}
-    @keyDown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
+    @keydown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
       if (e.key === "Enter") {
         main.openDetails(e, node.field, node.entity, "tap");
       }

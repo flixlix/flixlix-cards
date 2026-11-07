@@ -22,6 +22,8 @@ export const nonFossilElement = (
     <span class="label">${nonFossil.name}</span>
     <div
       class="circle ${disableEntityClick ? "pointer-events-none" : ""}"
+      tabindex=${disableEntityClick ? nothing : 0}
+      role=${disableEntityClick ? nothing : "button"}
       @click=${(e: MouseEvent) => {
         main.onEntityClick(
           e,
@@ -49,7 +51,7 @@ export const nonFossilElement = (
       @pointercancel=${(e: PointerEvent) => {
         main.onEntityPointerUp(e);
       }}
-      @keyDown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
+      @keydown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
         if (e.key === "Enter") {
           main.openDetails(
             e,

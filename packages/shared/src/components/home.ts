@@ -27,6 +27,8 @@ export const homeElement = (
     <div class="circle-container home">
       <div
         class="circle ${disableEntityClick ? "pointer-events-none" : ""}"
+        tabindex=${disableEntityClick ? nothing : 0}
+        role=${disableEntityClick ? nothing : "button"}
         id="home-circle"
         @click=${(e: MouseEvent) => {
           main.onEntityClick(e, entities.home, entities.home?.entity);
@@ -43,7 +45,7 @@ export const homeElement = (
         @pointercancel=${(e: PointerEvent) => {
           main.onEntityPointerUp(e);
         }}
-        @keyDown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
+        @keydown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
           if (e.key === "Enter") {
             main.openDetails(e, entities.home, entities.home?.entity, "tap");
           }

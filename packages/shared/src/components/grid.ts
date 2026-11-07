@@ -54,6 +54,8 @@ export const gridElement = (
   return html`<div class="circle-container grid">
     <div
       class="circle ${disableEntityClick ? "pointer-events-none" : ""}"
+      tabindex=${disableEntityClick ? nothing : 0}
+      role=${disableEntityClick ? nothing : "button"}
       @click=${(e: MouseEvent) => {
         const target = circleTarget();
         main.onEntityClick(e, grid, target);
@@ -72,7 +74,7 @@ export const gridElement = (
       @pointercancel=${(e: PointerEvent) => {
         main.onEntityPointerUp(e);
       }}
-      @keyDown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
+      @keydown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
         if (e.key === "Enter") {
           const target = circleTarget();
           main.openDetails(e, entities.grid, target, "tap");
@@ -104,7 +106,7 @@ export const gridElement = (
               @pointercancel=${(e: PointerEvent) => {
                 main.onEntityPointerUp(e);
               }}
-              @keyDown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
+              @keydown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
                 if (e.key === "Enter") {
                   const target = gridEntityId(grid, "production");
                   main.openDetails(e, entities.grid, target, "tap");
@@ -139,7 +141,7 @@ export const gridElement = (
               @pointercancel=${(e: PointerEvent) => {
                 main.onEntityPointerUp(e);
               }}
-              @keyDown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
+              @keydown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
                 if (e.key === "Enter") {
                   const target = gridEntityId(grid, "consumption");
                   main.openDetails(e, entities.grid, target, "tap");

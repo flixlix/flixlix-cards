@@ -50,7 +50,7 @@ export const baseSecondarySpan = ({
         e.stopPropagation();
         main.onEntityPointerUp(e);
       }}
-      @keyDown=${(e: {
+      @keydown=${(e: {
         stopPropagation: () => void;
         key?: string | undefined;
         target: HTMLElement;

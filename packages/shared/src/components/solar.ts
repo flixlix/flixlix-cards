@@ -16,6 +16,8 @@ export const solarElement = (
     <span class="label">${solar.name}</span>
     <div
       class="circle ${disableEntityClick ? "pointer-events-none" : ""}"
+      tabindex=${disableEntityClick ? nothing : 0}
+      role=${disableEntityClick ? nothing : "button"}
       @click=${(e: MouseEvent) => {
         main.onEntityClick(e, solar, solar.entity);
       }}
@@ -31,7 +33,7 @@ export const solarElement = (
       @pointercancel=${(e: PointerEvent) => {
         main.onEntityPointerUp(e);
       }}
-      @keyDown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
+      @keydown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
         if (e.key === "Enter") {
           main.openDetails(e, solar, solar.entity, "tap");
         }

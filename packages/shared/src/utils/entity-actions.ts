@@ -147,6 +147,8 @@ export class EntityActions implements CardMainContext {
     if (!target || !normalizedConfig?.hold_action) {
       return;
     }
+    // A value inside a node holds on its own; the node around it must not start a second hold.
+    event.stopPropagation();
     const existing = this._holdTimeouts.get(target);
     if (existing) {
       clearTimeout(existing);
