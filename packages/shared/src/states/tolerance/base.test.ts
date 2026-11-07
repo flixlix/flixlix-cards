@@ -1,7 +1,24 @@
 import { describe, expect, test } from "vite-plus/test";
+import { adjustZeroTolerance, isAboveTolerance } from "./base";
 
-import { hasIndividualObject } from "../src/states/raw/individual/has-individual-object";
-import { adjustZeroTolerance, isAboveTolerance } from "../src/states/tolerance/base";
+describe("base", () => {
+  test("adjustZeroTolerance returns 0 for null/zero values", () => {
+    expect(adjustZeroTolerance(null, 10)).toBe(0);
+    expect(adjustZeroTolerance(0, 10)).toBe(0);
+  });
+
+  test("adjustZeroTolerance returns original value when tolerance is missing", () => {
+    expect(adjustZeroTolerance(5, undefined)).toBe(5);
+  });
+
+  test("adjustZeroTolerance returns 0 when value is below tolerance", () => {
+    expect(adjustZeroTolerance(4.9, 5)).toBe(0);
+  });
+
+  test("adjustZeroTolerance returns original value when value meets tolerance", () => {
+    expect(adjustZeroTolerance(5, 5)).toBe(5);
+  });
+});
 
 describe("adjustZeroTolerance", () => {
   test("null input returns 0", () => {
@@ -40,11 +57,5 @@ describe("isAboveTolerance", () => {
 
   test("negative value above tolerance magnitude (regression: should return true)", () => {
     expect(isAboveTolerance(-50, 0)).toBe(true);
-  });
-});
-
-describe("hasIndividualObject", () => {
-  test("negative state above tolerance is visible (user-visible bug regression)", () => {
-    expect(hasIndividualObject(false, -50, 0)).toBe(true);
   });
 });

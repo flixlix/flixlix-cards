@@ -2,8 +2,7 @@ import { type PowerFlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { type HomeAssistant } from "custom-card-helpers";
 import { LitElement } from "lit";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vite-plus/test";
-
-import { PowerFlowCardPlusEditor } from "../src/ui-editor/ui-editor";
+import { PowerFlowCardPlusEditor } from "./ui-editor";
 
 const { loadHaFormMock } = vi.hoisted(() => ({
   loadHaFormMock: vi.fn(),

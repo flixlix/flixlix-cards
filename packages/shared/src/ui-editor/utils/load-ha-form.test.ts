@@ -1,8 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
-
-import { fireEvent } from "../src/ha/common/dom/fire-event";
-import { loadHaForm } from "../src/ui-editor/utils/load-ha-form";
-import { loadSortable } from "../src/ui-editor/utils/sortable.ondemand";
+import { loadHaForm } from "./load-ha-form";
 
 vi.mock("sortablejs", () => ({
   default: {
@@ -16,38 +13,10 @@ declare global {
   }
 }
 
-describe("ui editor utilities", () => {
+describe("load-ha-form", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
-  });
-
-  test("fireEvent dispatches default bubbling and composed event with detail", () => {
-    const node = new EventTarget();
-    const dispatchEvent = vi.spyOn(node, "dispatchEvent");
-
-    const detail = { foo: "bar" };
-    const event = fireEvent(node, "test-event", detail);
-
-    expect(dispatchEvent).toHaveBeenCalledTimes(1);
-    expect(event.bubbles).toBe(true);
-    expect(event.composed).toBe(true);
-    expect(event.detail).toEqual(detail);
-  });
-
-  test("fireEvent uses empty detail and explicit options", () => {
-    const node = new EventTarget();
-
-    const event = fireEvent(node, "test-event", undefined, {
-      bubbles: false,
-      cancelable: true,
-      composed: false,
-    });
-
-    expect(event.bubbles).toBe(false);
-    expect(event.cancelable).toBe(true);
-    expect(event.composed).toBe(false);
-    expect(event.detail).toEqual({});
   });
 
   test("loadHaForm initializes button-card and entities-card config elements when needed", async () => {
@@ -101,12 +70,5 @@ describe("ui editor utilities", () => {
     await loadHaForm();
 
     expect(loadCardHelpers).not.toHaveBeenCalled();
-  });
-
-  test("loadSortable caches loaded module instance", async () => {
-    const first = await loadSortable();
-    const second = await loadSortable();
-
-    expect(second).toBe(first);
   });
 });

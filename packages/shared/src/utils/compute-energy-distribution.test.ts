@@ -1,5 +1,75 @@
 import { describe, expect, test } from "vite-plus/test";
-import { computeEnergyDistribution } from "../src/utils/compute-energy-distribution";
+import { computeEnergyDistribution } from "./compute-energy-distribution";
+
+describe("compute-energy-distribution", () => {
+  test("computeEnergyDistribution applies display zero tolerance to grid/battery exchange", () => {
+    const grid = {
+      icon: "grid",
+      powerOutage: { isOutage: false, icon: "outage" },
+      state: { fromGrid: 10, toGrid: 5, toBattery: 0, toHome: 0 },
+    };
+    const solar = {
+      has: true,
+      state: { total: 0, toHome: 0, toBattery: 0, toGrid: 0 },
+    };
+    const battery = {
+      has: true,
+      state: { fromBattery: 6, toBattery: 2, toGrid: 0, toHome: 0 },
+    };
+    const nonFossil = { has: false, hasPercentage: false, state: { power: 0 } };
+
+    computeEnergyDistribution({
+      entities: {
+        grid: { display_zero_tolerance: 6 },
+        battery: { display_zero_tolerance: 6 },
+      },
+      grid,
+      solar,
+      battery,
+      nonFossil,
+      getEntityStateValue: () => 0,
+      getEntityState: () => 0,
+    });
+
+    expect(grid.state.toBattery).toBe(0);
+    expect(battery.state.toGrid).toBe(0);
+    expect(grid.state.toHome).toBe(8);
+    expect(battery.state.toHome).toBe(1);
+  });
+
+  test("computeEnergyDistribution uses fossil collection values for non-fossil power", () => {
+    const grid = {
+      icon: "grid",
+      powerOutage: { isOutage: false, icon: "outage" },
+      state: { fromGrid: 1000, toGrid: 0, toBattery: 0, toHome: 0 },
+    };
+    const solar = {
+      has: false,
+      state: { total: 0, toHome: 0, toBattery: 0, toGrid: 0 },
+    };
+    const battery = {
+      has: false,
+      state: { fromBattery: 0, toBattery: 0, toGrid: 0, toHome: 0 },
+    };
+    const nonFossil = { has: true, hasPercentage: true, state: { power: 0 } };
+
+    computeEnergyDistribution({
+      entities: {
+        fossil_fuel_percentage: { entity: "sensor.fossil" },
+      },
+      grid,
+      solar,
+      battery,
+      nonFossil,
+      getEntityStateValue: () => 0,
+      getEntityState: () => 40,
+      fossilEnergyConsumption: { coal: 0.2 },
+    });
+
+    expect(grid.state.toHome).toBe(1000);
+    expect(nonFossil.state.power).toBe(800);
+  });
+});
 
 describe("energy distribution", () => {
   test("allows import and export in same period", () => {

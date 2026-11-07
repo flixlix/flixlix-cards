@@ -33,7 +33,7 @@ export default defineConfig({
       },
     },
     // Useful for debugging web components
-    include: ["__tests__/**/*.test.ts", "src/**/*.test.ts"],
+    include: ["src/**/*.test.ts"],
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],

@@ -1,9 +1,9 @@
 import { type Connection, type MessageBase } from "home-assistant-js-websocket";
 import { type HomeAssistant } from "custom-card-helpers";
 import { afterEach, describe, expect, test, vi } from "vite-plus/test";
-import { EnergyBreakdownCard } from "../src/energy-breakdown-card";
-import { type EnergyBreakdownCardConfig } from "../src/types";
-import { describeDonutSegment, resolveSegments } from "../src/utils";
+import { EnergyBreakdownCard } from "./energy-breakdown-card";
+import { type EnergyBreakdownCardConfig } from "./types";
+import { describeDonutSegment, resolveSegments } from "./utils";
 
 type EntityState = HomeAssistant["states"][string];
 

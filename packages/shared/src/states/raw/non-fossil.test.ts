@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vite-plus/test";
-import { getNonFossilHas, getNonFossilHasPercentage } from "../src/states/raw/non-fossil";
-import { fakeConfig, fakeEntity, fakeHass } from "./fixtures";
+import { getNonFossilHas, getNonFossilHasPercentage } from "./non-fossil";
+import { fakeConfig, fakeEntity, fakeHass } from "../../testing/fixtures";
 
 const setup = (gridWatts: string, fossilPercentage: string) => {
   const hass = fakeHass({

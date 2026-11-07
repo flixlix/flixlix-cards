@@ -1,8 +1,7 @@
 import { type PowerFlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { type HomeAssistant } from "custom-card-helpers";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vite-plus/test";
-
-import { EnergyFlowCardPlusEditor } from "../src/ui-editor/ui-editor";
+import { EnergyFlowCardPlusEditor } from "./ui-editor";
 
 const { loadHaFormMock } = vi.hoisted(() => ({
   loadHaFormMock: vi.fn(),

@@ -64,7 +64,7 @@ export default defineConfig({
     },
     overrides: [
       {
-        files: ["**/__tests__/**", "**/*.test.ts"],
+        files: ["**/*.test.ts", "**/*.test.js", "packages/shared/src/testing/**"],
         rules: {
           "typescript/no-non-null-assertion": "off",
           "typescript/no-unsafe-member-access": "off",

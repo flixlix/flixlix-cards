@@ -1,6 +1,75 @@
 import { describe, expect, test } from "vite-plus/test";
+import { computePowerDistributionAfterSolarAndBattery } from "./compute-power-distribution";
 
-import { computePowerDistributionAfterSolarAndBattery } from "../src/utils/compute-power-distribution";
+describe("compute-power-distribution", () => {
+  test("computePowerDistributionAfterSolarAndBattery handles battery-only export path", () => {
+    const grid = {
+      icon: "grid",
+      powerOutage: { isOutage: false, icon: "outage" },
+      state: { fromGrid: 300, toGrid: 90, toBattery: 0, toHome: 0 },
+    };
+    const solar = {
+      has: false,
+      state: { total: 0, toHome: 0, toBattery: 0, toGrid: 0 },
+    };
+    const battery = {
+      has: true,
+      state: { fromBattery: 160, toBattery: 0, toGrid: 0, toHome: 0 },
+    };
+    const nonFossil = { has: false, hasPercentage: false, state: { power: 0 } };
+
+    computePowerDistributionAfterSolarAndBattery({
+      entities: {
+        grid: { display_zero_tolerance: 0 },
+        battery: { display_zero_tolerance: 0 },
+      },
+      grid,
+      solar,
+      battery,
+      nonFossil,
+      getEntityStateWatts: () => 0,
+      getEntityState: () => 0,
+    });
+
+    expect(battery.state.toGrid).toBe(90);
+    expect(battery.state.toHome).toBe(70);
+    expect(grid.state.toHome).toBe(300);
+  });
+
+  test("computePowerDistributionAfterSolarAndBattery zeros solar toBattery under solar tolerance", () => {
+    const grid = {
+      icon: "grid",
+      powerOutage: { isOutage: false, icon: "outage" },
+      state: { fromGrid: 100, toGrid: 0, toBattery: 0, toHome: 0 },
+    };
+    const solar = {
+      has: true,
+      state: { total: 50, toHome: 0, toBattery: 0, toGrid: 0 },
+    };
+    const battery = {
+      has: true,
+      state: { fromBattery: 0, toBattery: 10, toGrid: 0, toHome: 0 },
+    };
+    const nonFossil = { has: false, hasPercentage: false, state: { power: 0 } };
+
+    computePowerDistributionAfterSolarAndBattery({
+      entities: {
+        grid: { display_zero_tolerance: 0 },
+        battery: { display_zero_tolerance: 0 },
+        solar: { display_zero_tolerance: 100 },
+      },
+      grid,
+      solar,
+      battery,
+      nonFossil,
+      getEntityStateWatts: () => 0,
+      getEntityState: () => 0,
+    });
+
+    expect(solar.state.toBattery).toBe(0);
+    expect(grid.state.toBattery).toBe(0);
+  });
+});
 
 describe("power distribution after solar and battery", () => {
   test("scenario: solar + battery + no outage computes expected toHome/toBattery/toGrid", () => {

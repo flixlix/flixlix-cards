@@ -1,10 +1,10 @@
 import { describe, expect, test } from "vite-plus/test";
-import { individualLeftBottomElement } from "../src/components/individual-left-bottom-element";
-import { individualLeftTopElement } from "../src/components/individual-left-top-element";
-import { spacer } from "../src/components/spacer";
-import { type IndividualObject } from "../src/states/raw/individual/get-individual-object";
-import { type CardMainContext, type NewDur, type TemplatesObj } from "../src/types";
-import { fakeConfig, fakeHass } from "./fixtures";
+import { individualLeftBottomElement } from "./individual-left-bottom-element";
+import { individualLeftTopElement } from "./individual-left-top-element";
+import { spacer } from "./spacer";
+import { type IndividualObject } from "../states/raw/individual/get-individual-object";
+import { type CardMainContext, type NewDur, type TemplatesObj } from "../types";
+import { fakeConfig, fakeHass } from "../testing/fixtures";
 
 const individualObj: IndividualObject = {
   field: { entity: "sensor.unconfigured" },

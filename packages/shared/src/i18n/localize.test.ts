@@ -1,5 +1,4 @@
 import { describe, expect, test } from "vite-plus/test";
-
 import * as fs from "node:fs";
 import * as path from "node:path";
 
@@ -21,7 +20,7 @@ function getAllKeys(obj: unknown): string[] {
 }
 
 describe("Language files", () => {
-  const languagesDir = path.resolve(__dirname, "../languages");
+  const languagesDir = path.resolve(__dirname, "./languages");
   const languageFiles = fs.readdirSync(languagesDir).filter((file) => file.endsWith(".json"));
   languageFiles.sort();
 

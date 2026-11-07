@@ -4,7 +4,7 @@ Read by `/code-review` (Standards axis). One line per standard. Mechanical rules
 
 - Only mention in comments what cannot be discerned from the code. Delete any claim derivable from the code.
 - Tautological tests considered harmful: a test that restates the implementation or asserts on file contents proves nothing.
-- Test behaviour through the public surface of a package, not its internals.
+- Test behaviour through the public surface of a package, not its internals. Tests sit next to the module they test (`<module>.test.ts`); no `__tests__` directories.
 - Name things after what they are in the domain (node, flow, entity, tolerance, secondary info), not after their shape or lifecycle (data, item, manager, helper, obj). Prefer plain, jargon-free file names.
 - Prefer a small named function over a comment explaining a block.
 - No speculative abstractions: an interface with one implementation needs a reason in the PR description.

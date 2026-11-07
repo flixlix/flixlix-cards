@@ -1,7 +1,7 @@
 import { type HomeAssistant } from "custom-card-helpers";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vite-plus/test";
-import { SortableListCard } from "../src/sortable-list-card";
-import { type SortableListCardConfig } from "../src/types";
+import { SortableListCard } from "./sortable-list-card";
+import { type SortableListCardConfig } from "./types";
 import {
   buildSaveCall,
   configKeys,
@@ -10,7 +10,7 @@ import {
   reconcileOrder,
   resolveItems,
   resolveOrder,
-} from "../src/utils";
+} from "./utils";
 
 type EntityState = HomeAssistant["states"][string];
 type CallService = HomeAssistant["callService"];

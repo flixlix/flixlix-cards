@@ -1,4 +1,4 @@
-import { type FlowCardPlusConfig } from "../src/types";
+import { type FlowCardPlusConfig } from "../types";
 import { type HomeAssistant, NumberFormat, TimeFormat } from "custom-card-helpers";
 
 export const fakeHass = (overrides: Partial<HomeAssistant> = {}): HomeAssistant =>
