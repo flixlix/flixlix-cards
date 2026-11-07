@@ -14,7 +14,6 @@
     "test": "vp test run"
   },
   "dependencies": {
-    "@flixlix-cards/cn": "workspace:*",
     "@flixlix-cards/shared": "workspace:*",
     "@flixlix-cards/ui": "workspace:*",
     "@tailwindcss/vite": "^4.2.4",
@@ -25,6 +24,7 @@
     "@tanstack/react-start": "latest",
     "@tanstack/router-plugin": "^1.167.32",
     "@vercel/analytics": "^2.0.1",
+    "cn": "^0.5.2",
     "lucide-react": "catalog:",
     "nitro": "3.0.260311-beta",
     "power-flow-card-plus": "workspace:*",

@@ -5,7 +5,7 @@ import { PanelLeftIcon } from "lucide-react";
 import { Slot } from "radix-ui";
 import * as React from "react";
 
-import { cn } from "@flixlix-cards/cn";
+import { cn } from "cn";
 import { Button } from "@flixlix-cards/ui/components/button";
 import { Input } from "@flixlix-cards/ui/components/input";
 import { Separator } from "@flixlix-cards/ui/components/separator";

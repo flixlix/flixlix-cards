@@ -1,7 +1,7 @@
 import { BatteryCharging, House, Sun, UtilityPole } from "lucide-react";
 import * as React from "react";
 
-import { cn } from "@flixlix-cards/cn";
+import { cn } from "cn";
 
 // Layout and styling mirror the real power-flow-card-plus:
 // circles in a diamond (solar top, grid left, home right, battery bottom),

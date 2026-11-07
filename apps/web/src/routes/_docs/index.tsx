@@ -13,7 +13,7 @@ import {
 import * as React from "react";
 
 import { HeroFlow } from "@/components/hero-flow";
-import { cn } from "@flixlix-cards/cn";
+import { cn } from "cn";
 import { Button } from "@flixlix-cards/ui/components/button";
 
 export const Route = createFileRoute("/_docs/")({

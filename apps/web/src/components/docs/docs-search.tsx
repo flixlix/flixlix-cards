@@ -15,7 +15,7 @@ import * as React from "react";
 import { createPortal } from "react-dom";
 
 import { setThemeMode } from "#/lib/theme";
-import { cn } from "@flixlix-cards/cn";
+import { cn } from "cn";
 
 import { searchDocs, SUGGESTED_GROUPS, type SearchEntry } from "./docs-search-index";
 

@@ -11,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@flixlix-cards/ui/components/dialog";
-import { cn } from "@flixlix-cards/cn";
+import { cn } from "cn";
 
 function Command({ className, ...props }: React.ComponentProps<typeof CommandPrimitive>) {
   return (

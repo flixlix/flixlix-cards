@@ -3,7 +3,6 @@ packages:
   - "packages/*"
   - "packages/tooling/*"
   - "packages/flixlix-cards/*"
-  - "packages/utils/*"
 
 allowBuilds:
   esbuild: false
@@ -37,7 +36,6 @@ catalogs:
     "@rollup/plugin-terser": ^1.0.0
     "@rollup/plugin-typescript": ^12.3.1
     "@types/sortablejs": ^1.15.9
-    clsx: ^2.1.1
     conventional-changelog-conventionalcommits: ^4.6.3
     custom-card-helpers: ^2.0.0
     home-assistant-js-websocket: ^9.8.1
@@ -48,7 +46,6 @@ catalogs:
     rollup-plugin-serve: ^1.1.1
     superstruct: ^2.0.2
     sortablejs: ^1.15.7
-    tailwind-merge: ^3.5.0
     vitest: 5.1.0
     vite: npm:@voidzero-dev/vite-plus-core@1.5.0
     vite-plus: 1.5.0

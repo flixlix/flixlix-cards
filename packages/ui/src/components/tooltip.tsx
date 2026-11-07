@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@flixlix-cards/cn";
+import { cn } from "cn";
 import { Tooltip as TooltipPrimitive } from "radix-ui";
 import * as React from "react";
 

@@ -1,6 +1,6 @@
 import { ChevronDown } from "lucide-react";
 
-import { cn } from "@flixlix-cards/cn";
+import { cn } from "cn";
 import {
   Collapsible,
   CollapsibleContent,

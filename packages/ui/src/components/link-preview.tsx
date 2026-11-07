@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@flixlix-cards/cn";
+import { cn } from "cn";
 import { AnimatePresence, motion, useMotionValue, useSpring, useTransform } from "motion/react";
 import React, {
   createContext,

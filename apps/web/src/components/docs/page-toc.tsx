@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { cn } from "@flixlix-cards/cn";
+import { cn } from "cn";
 
 export type TocItem = {
   id: string;

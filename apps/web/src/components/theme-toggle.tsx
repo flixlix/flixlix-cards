@@ -8,7 +8,7 @@ import {
   THEME_CHANGE_EVENT,
   type ThemeMode,
 } from "#/lib/theme";
-import { cn } from "@flixlix-cards/cn";
+import { cn } from "cn";
 
 const ITEM_BASE =
   "size-6 cursor-pointer rounded-full p-1.5 transition-colors has-focus-visible:ring-2 has-focus-visible:ring-ring";
