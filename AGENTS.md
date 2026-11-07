@@ -15,4 +15,16 @@ pnpm check && pnpm typecheck && pnpm test
 
 All three must pass with zero lint errors. Do not add `oxlint-disable`, `@ts-expect-error`, `as any` or `as unknown as`; fix the type. A bug fix lands with a failing-then-passing test, and if the bug class can recur, with a rule in `packages/tooling/lint-rules`.
 
+## End-to-end against Home Assistant
+
+Needs Docker; not part of `pnpm test`. See [`e2e/README.md`](e2e/README.md).
+
+```bash
+pnpm hass:up     # build cards, start HA (localhost:8123, dev/dev), bootstrap
+pnpm e2e         # Playwright against it (pnpm e2e:ui for UI mode)
+pnpm hass:down   # stop; pnpm hass:reset wipes generated state
+```
+
+Dummy entities and scenario scripts: `.hass_dev/packages/`; one YAML dashboard per card: `.hass_dev/dashboards/`. The scenario matrix belongs in the browser tests with a fake hass; e2e covers only what needs a real HA.
+
 User-facing changes to a released card need a changeset (`pnpm changeset`).

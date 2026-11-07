@@ -174,10 +174,11 @@ pnpm dev`}
           To test the card end-to-end, you need a Home Assistant instance. From the repo root you
           can spin one up via Docker:
           <br />
-          <code>pnpm start:hass</code>
+          <code>pnpm hass:up</code>
           <br />
-          Then open <code>http://localhost:8123</code> and add the local resource{" "}
-          <code>http://&lt;your-ip&gt;:5001/&lt;card-filename&gt;.js</code> to your dashboard.
+          Then open <code>http://localhost:8123</code> and log in as <code>dev</code> /{" "}
+          <code>dev</code>: every card already has its own dashboard with dummy entities. Keep{" "}
+          <code>pnpm dev</code> running and reload to see your changes.
         </Callout>
       </Section>
 
