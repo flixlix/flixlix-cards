@@ -62,6 +62,8 @@ export default defineConfig({
       "unicorn/filename-case": ["error", { case: "kebabCase" }],
       "no-underscore-dangle": "off",
       // Repo-specific guards for bugs that already shipped once
+      complexity: ["error", { max: 20 }],
+      "flixlix/cognitive-complexity": ["error", { max: 15 }],
       "flixlix/no-index-fallback": "error",
       "flixlix/no-identity-arithmetic": "error",
       "flixlix/no-reactive-mutation": "error",
