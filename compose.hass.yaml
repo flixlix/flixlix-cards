@@ -1,0 +1,17 @@
+# Dev and e2e Home Assistant: `pnpm hass:up` (see e2e/README.md).
+# HA_VERSION=beta pnpm hass:up runs the beta instead of the pinned-by-tag stable image.
+name: flixlix-cards-hass
+services:
+  homeassistant:
+    image: homeassistant/home-assistant:${HA_VERSION:-stable}
+    ports:
+      - "8123:8123"
+    environment:
+      TZ: UTC
+    volumes:
+      - ./.hass_dev:/config
+      # Each card's build output, served as /local/<card>/<card>.js; a rebuild shows on reload.
+      - ./packages/flixlix-cards/power-flow-card-plus/dist:/config/www/power-flow-card-plus:ro
+      - ./packages/flixlix-cards/energy-flow-card-plus/dist:/config/www/energy-flow-card-plus:ro
+      - ./packages/flixlix-cards/energy-breakdown-card/dist:/config/www/energy-breakdown-card:ro
+      - ./packages/flixlix-cards/sortable-list-card/dist:/config/www/sortable-list-card:ro

@@ -1,0 +1,310 @@
+# Controllable power readings. input_number.* are the knobs; sensor.* expose them as real
+# power sensors and become unavailable while their input_boolean.*_available is off.
+# Scenario scripts that set several knobs at once live in scenarios.yaml.
+input_number:
+  grid_power:
+    name: Grid Power
+    icon: mdi:transmission-tower
+    min: -10000
+    max: 10000
+    step: 1
+    initial: 0
+    unit_of_measurement: W
+  battery_power:
+    name: Battery Power
+    icon: mdi:home-battery
+    min: -10000
+    max: 10000
+    step: 1
+    initial: 0
+    unit_of_measurement: W
+  grid_import_power:
+    name: Grid Import Power
+    icon: mdi:transmission-tower-import
+    min: 0
+    max: 10000
+    step: 1
+    initial: 0
+    unit_of_measurement: W
+  grid_export_power:
+    name: Grid Export Power
+    icon: mdi:transmission-tower-export
+    min: 0
+    max: 10000
+    step: 1
+    initial: 0
+    unit_of_measurement: W
+  solar_power:
+    name: Solar Power
+    icon: mdi:solar-power
+    min: 0
+    max: 10000
+    step: 1
+    initial: 0
+    unit_of_measurement: W
+  battery_charge_power:
+    name: Battery Charge Power
+    icon: mdi:battery-arrow-down
+    min: 0
+    max: 10000
+    step: 1
+    initial: 0
+    unit_of_measurement: W
+  battery_discharge_power:
+    name: Battery Discharge Power
+    icon: mdi:battery-arrow-up
+    min: 0
+    max: 10000
+    step: 1
+    initial: 0
+    unit_of_measurement: W
+  home_power:
+    name: Home Power
+    icon: mdi:home
+    min: 0
+    max: 10000
+    step: 1
+    initial: 0
+    unit_of_measurement: W
+  generator_power:
+    name: Generator Power
+    icon: mdi:generator-portable
+    min: 0
+    max: 10000
+    step: 1
+    initial: 0
+    unit_of_measurement: W
+  ev_charger_power:
+    name: EV Charger Power
+    icon: mdi:car-electric
+    min: -5000
+    max: 5000
+    step: 1
+    initial: 0
+    unit_of_measurement: W
+  heat_pump_power:
+    name: Heat Pump Power
+    icon: mdi:heat-pump
+    min: -5000
+    max: 5000
+    step: 1
+    initial: 0
+    unit_of_measurement: W
+  washing_machine_power:
+    name: Washing Machine Power
+    icon: mdi:washing-machine
+    min: -5000
+    max: 5000
+    step: 1
+    initial: 0
+    unit_of_measurement: W
+  dryer_power:
+    name: Dryer Power
+    icon: mdi:tumble-dryer
+    min: -5000
+    max: 5000
+    step: 1
+    initial: 0
+    unit_of_measurement: W
+  dishwasher_power:
+    name: Dishwasher Power
+    icon: mdi:dishwasher
+    min: -5000
+    max: 5000
+    step: 1
+    initial: 0
+    unit_of_measurement: W
+  fridge_power:
+    name: Fridge Power
+    icon: mdi:fridge
+    min: -5000
+    max: 5000
+    step: 1
+    initial: 0
+    unit_of_measurement: W
+  battery_soc:
+    name: Battery State of Charge
+    icon: mdi:battery-50
+    min: 0
+    max: 100
+    step: 1
+    initial: 50
+    unit_of_measurement: "%"
+  fossil_percentage:
+    name: Fossil Fuel Percentage
+    icon: mdi:factory
+    min: 0
+    max: 100
+    step: 1
+    initial: 30
+    unit_of_measurement: "%"
+
+input_boolean:
+  grid_available:
+    name: Grid Available
+    icon: mdi:power-plug
+    initial: true
+  solar_available:
+    name: Solar Available
+    icon: mdi:power-plug
+    initial: true
+  battery_available:
+    name: Battery Available
+    icon: mdi:power-plug
+    initial: true
+  home_available:
+    name: Home Available
+    icon: mdi:power-plug
+    initial: true
+  devices_available:
+    name: Devices Available
+    icon: mdi:power-plug
+    initial: true
+  power_outage:
+    name: Power Outage
+    icon: mdi:transmission-tower-off
+
+template:
+  - sensor:
+      - name: Grid Power
+        unique_id: e2e_grid_power
+        icon: mdi:transmission-tower
+        device_class: power
+        unit_of_measurement: W
+        state_class: measurement
+        state: "{{ states('input_number.grid_power') }}"
+        availability: "{{ is_state('input_boolean.grid_available', 'on') }}"
+      - name: Battery Power
+        unique_id: e2e_battery_power
+        icon: mdi:home-battery
+        device_class: power
+        unit_of_measurement: W
+        state_class: measurement
+        state: "{{ states('input_number.battery_power') }}"
+        availability: "{{ is_state('input_boolean.battery_available', 'on') }}"
+      - name: Grid Import Power
+        unique_id: e2e_grid_import_power
+        icon: mdi:transmission-tower-import
+        device_class: power
+        unit_of_measurement: W
+        state_class: measurement
+        state: "{{ states('input_number.grid_import_power') }}"
+        availability: "{{ is_state('input_boolean.grid_available', 'on') }}"
+      - name: Grid Export Power
+        unique_id: e2e_grid_export_power
+        icon: mdi:transmission-tower-export
+        device_class: power
+        unit_of_measurement: W
+        state_class: measurement
+        state: "{{ states('input_number.grid_export_power') }}"
+        availability: "{{ is_state('input_boolean.grid_available', 'on') }}"
+      - name: Solar Power
+        unique_id: e2e_solar_power
+        icon: mdi:solar-power
+        device_class: power
+        unit_of_measurement: W
+        state_class: measurement
+        state: "{{ states('input_number.solar_power') }}"
+        availability: "{{ is_state('input_boolean.solar_available', 'on') }}"
+      - name: Battery Charge Power
+        unique_id: e2e_battery_charge_power
+        icon: mdi:battery-arrow-down
+        device_class: power
+        unit_of_measurement: W
+        state_class: measurement
+        state: "{{ states('input_number.battery_charge_power') }}"
+        availability: "{{ is_state('input_boolean.battery_available', 'on') }}"
+      - name: Battery Discharge Power
+        unique_id: e2e_battery_discharge_power
+        icon: mdi:battery-arrow-up
+        device_class: power
+        unit_of_measurement: W
+        state_class: measurement
+        state: "{{ states('input_number.battery_discharge_power') }}"
+        availability: "{{ is_state('input_boolean.battery_available', 'on') }}"
+      - name: Home Power
+        unique_id: e2e_home_power
+        icon: mdi:home
+        device_class: power
+        unit_of_measurement: W
+        state_class: measurement
+        state: "{{ states('input_number.home_power') }}"
+        availability: "{{ is_state('input_boolean.home_available', 'on') }}"
+      - name: Generator Power
+        unique_id: e2e_generator_power
+        icon: mdi:generator-portable
+        device_class: power
+        unit_of_measurement: W
+        state_class: measurement
+        state: "{{ states('input_number.generator_power') }}"
+        availability: "{{ is_state('input_boolean.grid_available', 'on') }}"
+      - name: EV Charger Power
+        unique_id: e2e_ev_charger_power
+        icon: mdi:car-electric
+        device_class: power
+        unit_of_measurement: W
+        state_class: measurement
+        state: "{{ states('input_number.ev_charger_power') }}"
+        availability: "{{ is_state('input_boolean.devices_available', 'on') }}"
+      - name: Heat Pump Power
+        unique_id: e2e_heat_pump_power
+        icon: mdi:heat-pump
+        device_class: power
+        unit_of_measurement: W
+        state_class: measurement
+        state: "{{ states('input_number.heat_pump_power') }}"
+        availability: "{{ is_state('input_boolean.devices_available', 'on') }}"
+      - name: Washing Machine Power
+        unique_id: e2e_washing_machine_power
+        icon: mdi:washing-machine
+        device_class: power
+        unit_of_measurement: W
+        state_class: measurement
+        state: "{{ states('input_number.washing_machine_power') }}"
+        availability: "{{ is_state('input_boolean.devices_available', 'on') }}"
+      - name: Dryer Power
+        unique_id: e2e_dryer_power
+        icon: mdi:tumble-dryer
+        device_class: power
+        unit_of_measurement: W
+        state_class: measurement
+        state: "{{ states('input_number.dryer_power') }}"
+        availability: "{{ is_state('input_boolean.devices_available', 'on') }}"
+      - name: Dishwasher Power
+        unique_id: e2e_dishwasher_power
+        icon: mdi:dishwasher
+        device_class: power
+        unit_of_measurement: W
+        state_class: measurement
+        state: "{{ states('input_number.dishwasher_power') }}"
+        availability: "{{ is_state('input_boolean.devices_available', 'on') }}"
+      - name: Fridge Power
+        unique_id: e2e_fridge_power
+        icon: mdi:fridge
+        device_class: power
+        unit_of_measurement: W
+        state_class: measurement
+        state: "{{ states('input_number.fridge_power') }}"
+        availability: "{{ is_state('input_boolean.devices_available', 'on') }}"
+      - name: Battery SoC
+        unique_id: e2e_battery_soc
+        icon: mdi:battery-50
+        device_class: battery
+        unit_of_measurement: "%"
+        state_class: measurement
+        state: "{{ states('input_number.battery_soc') }}"
+        availability: "{{ is_state('input_boolean.battery_available', 'on') }}"
+      - name: Fossil Percentage
+        unique_id: e2e_fossil_percentage
+        icon: mdi:factory
+        unit_of_measurement: "%"
+        state_class: measurement
+        state: "{{ states('input_number.fossil_percentage') }}"
+        availability: "{{ is_state('input_boolean.grid_available', 'on') }}"
+      - name: Non Fossil Percentage
+        unique_id: e2e_non_fossil_percentage
+        icon: mdi:leaf
+        unit_of_measurement: "%"
+        state_class: measurement
+        state: "{{ 100 - states('input_number.fossil_percentage') | float(0) }}"
+        availability: "{{ is_state('input_boolean.grid_available', 'on') }}"

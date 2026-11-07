@@ -1,0 +1,7 @@
+# Read-back entity for the sortable list card; the card writes the new order here.
+input_text:
+  device_priority:
+    name: Device Priority
+    icon: mdi:sort
+    max: 255
+    initial: ev_charger,heat_pump,washing_machine,dryer

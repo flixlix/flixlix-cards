@@ -1,8 +1,38 @@
 mode: storage
+resource_mode: yaml
+resources:
+  - url: /local/power-flow-card-plus/power-flow-card-plus.js
+    type: module
+  - url: /local/energy-flow-card-plus/energy-flow-card-plus.js
+    type: module
+  - url: /local/energy-breakdown-card/energy-breakdown-card.js
+    type: module
+  - url: /local/sortable-list-card/sortable-list-card.js
+    type: module
+# One YAML dashboard per card: the card under test in a few configurations next to the knobs
+# (sliders, availability toggles) and scenario scripts that drive it.
 dashboards:
-  lovelace-pfcp-showcase:
+  power-flow:
     mode: yaml
-    title: Showcase
+    title: Power Flow
     icon: mdi:flash
     show_in_sidebar: true
-    filename: lovelace-pfcp-showcase.yaml
+    filename: dashboards/power-flow.yaml
+  energy-flow:
+    mode: yaml
+    title: Energy Flow
+    icon: mdi:lightning-bolt-circle
+    show_in_sidebar: true
+    filename: dashboards/energy-flow.yaml
+  energy-breakdown:
+    mode: yaml
+    title: Energy Breakdown
+    icon: mdi:chart-donut
+    show_in_sidebar: true
+    filename: dashboards/energy-breakdown.yaml
+  sortable-list:
+    mode: yaml
+    title: Sortable List
+    icon: mdi:sort
+    show_in_sidebar: true
+    filename: dashboards/sortable-list.yaml

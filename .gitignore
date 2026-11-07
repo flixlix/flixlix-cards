@@ -45,16 +45,14 @@ custom-elements.json
 .env.local
 
 
-# hass dev
+# hass dev: only the committed config; everything Home Assistant generates stays ignored
 .hass_dev/*
 !.hass_dev/configuration.yaml
 !.hass_dev/lovelace.yaml
-!.hass_dev/lovelace-pfcp-showcase.yaml
-!.hass_dev/lovelace.yaml
-!.hass_dev/automations.yaml
-!.hass_dev/scripts.yaml
-!.hass_dev/scenes.yaml
-!.hass_dev/views
-!.hass_dev/www
+!.hass_dev/dashboards
 !.hass_dev/packages
-.hass_dev/www/community/*
+
+# playwright
+/e2e/.auth/
+/e2e/test-results/
+/e2e/playwright-report/
