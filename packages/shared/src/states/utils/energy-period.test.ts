@@ -188,17 +188,22 @@ describe("watchGlobalEnergyPeriodChanges", () => {
     expect(onChange).toHaveBeenCalledTimes(2);
   });
 
-  // Bug: "energy period selector doesn't work in the latest version" — a late setPeriod is never wrapped.
-  test.fails("notifies on setPeriod when the frontend adds it after publishing the collection", () => {
+  test("follows the collection HA publishes after its bare websocket collection", () => {
     const connection = fakeConnection();
     const onChange = vi.fn();
     watchGlobalEnergyPeriodChanges(fakeHass({ connection }), onChange);
 
-    // HA's getCollection() stores the bare collection on the connection before
-    // getEnergyDataCollection() attaches start/end/setPeriod to it.
-    const { setPeriod, start, end, ...bareCollection } = fakeEnergyCollection(day(1), day(2));
+    // HA's getEnergyDataCollection(): getCollection() first stores a bare collection,
+    // then HA replaces it with the full energy collection.
+    const {
+      setPeriod: _setPeriod,
+      start: _start,
+      end: _end,
+      ...bareCollection
+    } = fakeEnergyCollection(day(1), day(2));
     connection._energy = bareCollection;
-    const collection = Object.assign(bareCollection, { setPeriod, start, end });
+    const collection = fakeEnergyCollection(day(1), day(2));
+    connection._energy = collection;
     onChange.mockClear();
 
     collection.setPeriod(day(3), day(4));

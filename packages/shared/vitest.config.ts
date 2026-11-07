@@ -8,7 +8,7 @@ export default mergeConfig(baseConfig, {
     name: packageName,
     coverage: {
       // Ratchet: raise these when coverage grows, never lower them.
-      thresholds: { lines: 36, branches: 24, functions: 27, statements: 37 },
+      thresholds: { lines: 53, branches: 47, functions: 43, statements: 54 },
     },
   },
 });
