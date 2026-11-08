@@ -236,6 +236,18 @@ describe("layout", () => {
     expect(rtl[".grid .circle"]?.x).toBeLessThan(rtl[".home .circle"]?.x ?? 0);
     expect(rtl).toEqual(ltr);
   });
+
+  test("stays under a fixed overlay earlier on the page, like a floating nav bar", async () => {
+    const { circle } = await mountGrid();
+    const overlay = document.createElement("div");
+    overlay.style.cssText = "position: fixed; inset: 0; z-index: 1;";
+    document.body.prepend(overlay);
+    onTestFinished(() => overlay.remove());
+
+    const box = circle.getBoundingClientRect();
+    const hit = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2);
+    expect(hit).toBe(overlay);
+  });
 });
 
 const centerOf = (element: Element | null) => {
