@@ -7,7 +7,7 @@ type Vector = readonly [number, number, number];
 
 export const CAR = {
   /** House units per metre. */
-  scale: 1.1,
+  scale: 1.21,
   length: 4.8,
   halfWidth: 0.95,
   /** Where the glass starts and ends along the car. */
@@ -16,7 +16,7 @@ export const CAR = {
   wheelRadius: 0.39,
   wheels: [0.86, 3.88],
   /** Its tail's corner on the ground, in house space: in front of the front wall, at its left. */
-  at: [2.3, 8.6],
+  at: [2.75, 8.9],
 } as const;
 
 /** Catmull-Rom through (u, value) knots, clamped at the ends. */

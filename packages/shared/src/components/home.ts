@@ -14,7 +14,7 @@ export const homeElement = (
   { home, ring, showLabel }: { home: HomeObject; ring: HomeRing; showLabel: boolean }
 ) => {
   const { entities } = config;
-  const isHomeEntityDefined = entities.home?.entity !== undefined;
+  const isHomeEntityDefined = !!entities.home?.entity;
   const noActionSet = new Set(["none", undefined]);
   const staticAction =
     !noActionSet.has(entities.home?.tap_action?.action) ||

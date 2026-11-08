@@ -3,6 +3,7 @@ import cognitiveComplexity from "./rules/cognitive-complexity.js";
 import noCamelcaseEventBinding from "./rules/no-camelcase-event-binding.js";
 import noCardResizeObserver from "./rules/no-card-resize-observer.js";
 import noCardTypeSniffing from "./rules/no-card-type-sniffing.js";
+import noEntityUndefinedCheck from "./rules/no-entity-undefined-check.js";
 import noIdentityArithmetic from "./rules/no-identity-arithmetic.js";
 import noIndexFallback from "./rules/no-index-fallback.js";
 import noMutation from "./rules/no-mutation.js";
@@ -22,6 +23,7 @@ export default definePlugin({
     "no-camelcase-event-binding": noCamelcaseEventBinding,
     "no-card-resize-observer": noCardResizeObserver,
     "no-card-type-sniffing": noCardTypeSniffing,
+    "no-entity-undefined-check": noEntityUndefinedCheck,
     "no-identity-arithmetic": noIdentityArithmetic,
     "no-index-fallback": noIndexFallback,
     "no-mutation": noMutation,

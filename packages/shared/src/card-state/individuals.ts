@@ -74,15 +74,14 @@ const individualSecondary = (
   return {
     entity: nonEmpty(info?.entity),
     icon: nonEmpty(info?.icon),
-    text:
-      info?.entity === undefined
-        ? undefined
-        : format(state, {
-            unit: nonEmpty(info.unit_of_measurement),
-            unitWhiteSpace: info.unit_white_space !== false,
-            decimals: info.decimals ?? 0,
-            accept_negative: info.accept_negative ?? false,
-          }),
+    text: !info?.entity
+      ? undefined
+      : format(state, {
+          unit: nonEmpty(info.unit_of_measurement),
+          unitWhiteSpace: info.unit_white_space !== false,
+          decimals: info.decimals ?? 0,
+          accept_negative: info.accept_negative ?? false,
+        }),
     templateResult: nonEmpty(templateResult),
     show: secondaryShown(info, state, templateResult),
     tap_action: info?.tap_action,

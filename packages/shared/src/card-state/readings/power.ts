@@ -21,7 +21,7 @@ const twoWay = (hass: HomeAssistant, entity: string | ComboEntity | undefined): 
 
 const solarReading = (hass: HomeAssistant, config: FlowCardPlusConfig) => {
   const solar = config.entities.solar;
-  if (solar?.entity === undefined) {
+  if (!solar?.entity) {
     return { total: null, secondary: 0 };
   }
   const secondaryEntity = solar.secondary_info?.entity;

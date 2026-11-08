@@ -357,7 +357,7 @@ export const LABEL_ANCHORS: Record<LabelledNode, { at: Point; leader: number }> 
   // above the generator, right of the battery and below its label
   generator: { at: [GENERATOR_X, GENERATOR_Y, GENERATOR.height], leader: -22 },
   // down from the car's tail, left of the home's label
-  car: { at: CAR_LABEL_AT, leader: 26 },
+  car: { at: CAR_LABEL_AT, leader: 24 },
 };
 
 /** The house's leftmost and rightmost points: its front eave and its gable's back corner. */
