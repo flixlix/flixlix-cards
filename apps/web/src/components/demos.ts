@@ -44,7 +44,7 @@ export const powerDemo: Demo = {
   },
 };
 
-const energyFlowCard: CardConfig = {
+export const energyFlowCard: CardConfig = {
   type: "custom:energy-flow-card-plus",
   energy_date_selection: true,
   entities: {
@@ -73,7 +73,7 @@ const energyFlowCard: CardConfig = {
  * An average day: solar runs the home and fills the battery, the battery covers the evening, the
  * surplus goes to the grid and the grid covers the night.
  */
-const energyStates: StateFixtures = {
+export const energyStates: StateFixtures = {
   "sensor.grid_import_energy": kilowattHours("5.2"),
   "sensor.grid_export_energy": kilowattHours("3.8"),
   "sensor.solar_energy": kilowattHours("21.4"),

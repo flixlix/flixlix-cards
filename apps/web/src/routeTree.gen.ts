@@ -25,6 +25,7 @@ import { Route as DocsEnergyPeriodSelectorPlusIndexRouteImport } from './routes/
 import { Route as DocsEnergyPeriodSelectorPlusConfigurationRouteImport } from './routes/_docs/energy-period-selector-plus/configuration'
 import { Route as DocsEnergyPeriodSelectorPlusExamplesRouteImport } from './routes/_docs/energy-period-selector-plus/examples'
 import { Route as DocsEnergyPeriodSelectorPlusInstallationRouteImport } from './routes/_docs/energy-period-selector-plus/installation'
+import { Route as DocsEnergyPeriodSelectorPlusPlaygroundRouteImport } from './routes/_docs/energy-period-selector-plus/playground'
 import { Route as DocsPowerFlowCardPlusIndexRouteImport } from './routes/_docs/power-flow-card-plus/index'
 import { Route as DocsPowerFlowCardPlusConfigurationRouteImport } from './routes/_docs/power-flow-card-plus/configuration'
 import { Route as DocsPowerFlowCardPlusExamplesRouteImport } from './routes/_docs/power-flow-card-plus/examples'
@@ -127,6 +128,12 @@ const DocsEnergyPeriodSelectorPlusInstallationRoute =
     path: '/energy-period-selector-plus/installation',
     getParentRoute: () => DocsRoute,
   } as any)
+const DocsEnergyPeriodSelectorPlusPlaygroundRoute =
+  DocsEnergyPeriodSelectorPlusPlaygroundRouteImport.update({
+    id: '/energy-period-selector-plus/playground',
+    path: '/energy-period-selector-plus/playground',
+    getParentRoute: () => DocsRoute,
+  } as any)
 const DocsPowerFlowCardPlusIndexRoute =
   DocsPowerFlowCardPlusIndexRouteImport.update({
     id: '/power-flow-card-plus/',
@@ -195,6 +202,7 @@ export interface FileRoutesByFullPath {
   '/energy-period-selector-plus/configuration': typeof DocsEnergyPeriodSelectorPlusConfigurationRoute
   '/energy-period-selector-plus/examples': typeof DocsEnergyPeriodSelectorPlusExamplesRoute
   '/energy-period-selector-plus/installation': typeof DocsEnergyPeriodSelectorPlusInstallationRoute
+  '/energy-period-selector-plus/playground': typeof DocsEnergyPeriodSelectorPlusPlaygroundRoute
   '/power-flow-card-plus/configuration': typeof DocsPowerFlowCardPlusConfigurationRoute
   '/power-flow-card-plus/examples': typeof DocsPowerFlowCardPlusExamplesRoute
   '/power-flow-card-plus/installation': typeof DocsPowerFlowCardPlusInstallationRoute
@@ -221,6 +229,7 @@ export interface FileRoutesByTo {
   '/energy-period-selector-plus/configuration': typeof DocsEnergyPeriodSelectorPlusConfigurationRoute
   '/energy-period-selector-plus/examples': typeof DocsEnergyPeriodSelectorPlusExamplesRoute
   '/energy-period-selector-plus/installation': typeof DocsEnergyPeriodSelectorPlusInstallationRoute
+  '/energy-period-selector-plus/playground': typeof DocsEnergyPeriodSelectorPlusPlaygroundRoute
   '/power-flow-card-plus/configuration': typeof DocsPowerFlowCardPlusConfigurationRoute
   '/power-flow-card-plus/examples': typeof DocsPowerFlowCardPlusExamplesRoute
   '/power-flow-card-plus/installation': typeof DocsPowerFlowCardPlusInstallationRoute
@@ -249,6 +258,7 @@ export interface FileRoutesById {
   '/_docs/energy-period-selector-plus/configuration': typeof DocsEnergyPeriodSelectorPlusConfigurationRoute
   '/_docs/energy-period-selector-plus/examples': typeof DocsEnergyPeriodSelectorPlusExamplesRoute
   '/_docs/energy-period-selector-plus/installation': typeof DocsEnergyPeriodSelectorPlusInstallationRoute
+  '/_docs/energy-period-selector-plus/playground': typeof DocsEnergyPeriodSelectorPlusPlaygroundRoute
   '/_docs/power-flow-card-plus/configuration': typeof DocsPowerFlowCardPlusConfigurationRoute
   '/_docs/power-flow-card-plus/examples': typeof DocsPowerFlowCardPlusExamplesRoute
   '/_docs/power-flow-card-plus/installation': typeof DocsPowerFlowCardPlusInstallationRoute
@@ -277,6 +287,7 @@ export interface FileRouteTypes {
     | '/energy-period-selector-plus/configuration'
     | '/energy-period-selector-plus/examples'
     | '/energy-period-selector-plus/installation'
+    | '/energy-period-selector-plus/playground'
     | '/power-flow-card-plus/configuration'
     | '/power-flow-card-plus/examples'
     | '/power-flow-card-plus/installation'
@@ -303,6 +314,7 @@ export interface FileRouteTypes {
     | '/energy-period-selector-plus/configuration'
     | '/energy-period-selector-plus/examples'
     | '/energy-period-selector-plus/installation'
+    | '/energy-period-selector-plus/playground'
     | '/power-flow-card-plus/configuration'
     | '/power-flow-card-plus/examples'
     | '/power-flow-card-plus/installation'
@@ -330,6 +342,7 @@ export interface FileRouteTypes {
     | '/_docs/energy-period-selector-plus/configuration'
     | '/_docs/energy-period-selector-plus/examples'
     | '/_docs/energy-period-selector-plus/installation'
+    | '/_docs/energy-period-selector-plus/playground'
     | '/_docs/power-flow-card-plus/configuration'
     | '/_docs/power-flow-card-plus/examples'
     | '/_docs/power-flow-card-plus/installation'
@@ -462,6 +475,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocsEnergyPeriodSelectorPlusInstallationRouteImport
       parentRoute: typeof DocsRoute
     }
+    '/_docs/energy-period-selector-plus/playground': {
+      id: '/_docs/energy-period-selector-plus/playground'
+      path: '/energy-period-selector-plus/playground'
+      fullPath: '/energy-period-selector-plus/playground'
+      preLoaderRoute: typeof DocsEnergyPeriodSelectorPlusPlaygroundRouteImport
+      parentRoute: typeof DocsRoute
+    }
     '/_docs/power-flow-card-plus/': {
       id: '/_docs/power-flow-card-plus/'
       path: '/power-flow-card-plus'
@@ -541,6 +561,7 @@ interface DocsRouteChildren {
   DocsEnergyPeriodSelectorPlusConfigurationRoute: typeof DocsEnergyPeriodSelectorPlusConfigurationRoute
   DocsEnergyPeriodSelectorPlusExamplesRoute: typeof DocsEnergyPeriodSelectorPlusExamplesRoute
   DocsEnergyPeriodSelectorPlusInstallationRoute: typeof DocsEnergyPeriodSelectorPlusInstallationRoute
+  DocsEnergyPeriodSelectorPlusPlaygroundRoute: typeof DocsEnergyPeriodSelectorPlusPlaygroundRoute
   DocsPowerFlowCardPlusConfigurationRoute: typeof DocsPowerFlowCardPlusConfigurationRoute
   DocsPowerFlowCardPlusExamplesRoute: typeof DocsPowerFlowCardPlusExamplesRoute
   DocsPowerFlowCardPlusInstallationRoute: typeof DocsPowerFlowCardPlusInstallationRoute
@@ -575,6 +596,8 @@ const DocsRouteChildren: DocsRouteChildren = {
     DocsEnergyPeriodSelectorPlusExamplesRoute,
   DocsEnergyPeriodSelectorPlusInstallationRoute:
     DocsEnergyPeriodSelectorPlusInstallationRoute,
+  DocsEnergyPeriodSelectorPlusPlaygroundRoute:
+    DocsEnergyPeriodSelectorPlusPlaygroundRoute,
   DocsPowerFlowCardPlusConfigurationRoute:
     DocsPowerFlowCardPlusConfigurationRoute,
   DocsPowerFlowCardPlusExamplesRoute: DocsPowerFlowCardPlusExamplesRoute,
