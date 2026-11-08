@@ -111,11 +111,6 @@ export const styles = css`
     opacity: 0.35;
   }
 
-  /* Opaque line and dot faded as one, so they do not darken where they overlap. */
-  .leader {
-    opacity: 0.75;
-  }
-
   .pulse {
     stroke: var(--wire-color);
     stroke-width: 1.8;
