@@ -25,12 +25,15 @@
     "@tanstack/router-plugin": "^1.167.32",
     "@vercel/analytics": "^2.0.1",
     "cn": "^0.5.2",
+    "custom-card-helpers": "catalog:packages",
+    "lit": "catalog:packages",
     "lucide-react": "catalog:",
     "nitro": "3.0.260311-beta",
     "power-flow-card-plus": "workspace:*",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "tailwindcss": "catalog:"
+    "tailwindcss": "catalog:",
+    "yaml": "^2.9.1"
   },
   "devDependencies": {
     "@flixlix-cards/typescript-config": "workspace:*",
@@ -45,7 +48,7 @@
     "jsdom": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:packages",
-    "vite-tsconfig-paths": "catalog:",
-    "vite-plus": "catalog:packages"
+    "vite-plus": "catalog:packages",
+    "vite-tsconfig-paths": "catalog:"
   }
 }

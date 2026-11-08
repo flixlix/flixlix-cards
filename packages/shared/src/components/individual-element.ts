@@ -5,6 +5,8 @@ import {
   type IndividualObject,
 } from "@flixlix-cards/shared/types";
 import { html, nothing, svg, type SVGTemplateResult, type TemplateResult } from "lit";
+import { keyed } from "lit/directives/keyed.js";
+import { type FlowLine } from "./flows/geometry";
 import { reversePath } from "./reverse-path";
 import { spacer } from "./spacer";
 import { type IndividualKey, individualSecondarySpan } from "./spans/individual-secondary-span";
@@ -77,31 +79,35 @@ const individualCircle = (
   </div>`;
 };
 
-/** Each slot's line, drawn from the device to the home. */
-const linePaths: Record<IndividualKey, (hasBottomRow: boolean) => string> = {
-  "left-top": () => "M40 -10 v50",
-  "left-bottom": () => "M40 40 v-40",
-  "right-top": (hasBottomRow) =>
-    hasBottomRow ? "M45,0 v15 c0,30 -10,30 -30,30 h-20" : "M47,0 v15 c0,35 -10,35 -30,35 h-20",
-  "right-bottom": () => "M45,100 v-15 c0,-30 -10,-30 -30,-30 h-20",
+type LeftKey = "left-top" | "left-bottom";
+type RightKey = "right-top" | "right-bottom";
+
+/** The left slots' lines, drawn from the device to the home inside their 80×30 boxes. */
+const leftLines: Record<LeftKey, string> = {
+  "left-top": "M40 -10 v50",
+  "left-bottom": "M40 40 v-40",
 };
 
 /**
  * The dot runs along the line drawn in its direction of travel instead of using `keyPoints`:
  * older Chromium ignores `keyPoints` with `calcMode="paced"`, and `linear` speeds up on straight parts.
+ * `line` is drawn from the device to the home.
  */
-const flowDot = (slot: IndividualSlot, key: IndividualKey, animate: boolean, line: string) => {
+const flowDot = (
+  slot: IndividualSlot,
+  key: IndividualKey,
+  { animate, line, radius }: { animate: boolean; line: FlowLine; radius: number }
+) => {
   if (!animate || !isFlowing(slot.node)) {
     return nothing;
   }
-  const radius = key.startsWith("left") ? 1.75 : 1;
   const vertical = key.endsWith("top") ? "top" : "bottom";
   return svg`<circle r="${radius}" class="individual-${vertical}" vector-effect="non-scaling-stroke">
     <animateMotion
       dur="${slot.flow.durationSeconds}s"
       repeatCount="indefinite"
       calcMode="paced"
-      path="${slot.node.invertAnimation ? line : reversePath(line)}"
+      path="${slot.node.invertAnimation ? line.d : line.reversed}"
     ></animateMotion>
   </circle>`;
 };
@@ -113,18 +119,6 @@ type Parts = {
   circle: TemplateResult;
   dot: SVGTemplateResult | typeof nothing;
 };
-
-const rightFlow = (path: SVGTemplateResult, dot: Parts["dot"]) =>
-  html`<div class="right-individual-flow-container">
-    <svg
-      viewBox="0 0 100 100"
-      xmlns="http://www.w3.org/2000/svg"
-      preserveAspectRatio="xMidYMid slice"
-      class="right-individual-flow"
-    >
-      ${path} ${dot}
-    </svg>
-  </div>`;
 
 /** Where label, circle and line sit for each slot around the home. */
 const layouts: Record<IndividualKey, (parts: Parts) => TemplateResult> = {
@@ -152,40 +146,31 @@ const layouts: Record<IndividualKey, (parts: Parts) => TemplateResult> = {
       }
       ${circle} ${label}
     </div>`,
-  "right-top": ({ slot, line, label, circle, dot }) =>
+  "right-top": ({ label, circle }) =>
     html`<div class="circle-container individual-top individual-right individual-right-top">
       ${label} ${circle}
-      ${
-        slot.flow.visible
-          ? rightFlow(
-              svg`<path
-                id="individual-top-right-home"
-                class="${slot.flow.lineClass}"
-                d="${line}"
-                vector-effect="non-scaling-stroke"
-              />`,
-              dot
-            )
-          : nothing
-      }
     </div>`,
-  "right-bottom": ({ slot, line, label, circle, dot }) =>
+  "right-bottom": ({ label, circle }) =>
     html`<div class="circle-container individual-bottom individual-right individual-right-bottom">
       ${circle} ${label}
-      ${
-        slot.flow.visible
-          ? rightFlow(
-              svg`<path
-                id="individual-bottom-right-home"
-                class="${slot.flow.lineClass}"
-                d="${line}"
-                vector-effect="non-scaling-stroke"
-              />`,
-              dot
-            )
-          : nothing
-      }
     </div>`,
+};
+
+/** The line from a right-column individual into the home; drawn in the card's flow overlay. */
+export const rightIndividualFlow = (
+  slot: IndividualSlot | undefined,
+  key: RightKey,
+  line: FlowLine | undefined,
+  { animate, scale, viewBox }: { animate: boolean; scale: number; viewBox: string }
+) => {
+  if (!slot?.flow.visible || !line) {
+    return nothing;
+  }
+  const id = key === "right-top" ? "individual-top-right-home" : "individual-bottom-right-home";
+  return html`<svg class="flow individual-${key}" id="${id}-flow" viewBox=${viewBox}>
+    <path id=${id} class="${slot.flow.lineClass}" d=${line.d} vector-effect="non-scaling-stroke" />
+    ${keyed(line.d, flowDot(slot, key, { animate, line, radius: scale }))}
+  </svg>`;
 };
 
 /** An individual device in one of the four slots around the home, with its line to the home. */
@@ -193,21 +178,24 @@ export const individualElement = (
   main: CardMainContext,
   config: FlowCardPlusConfig,
   key: IndividualKey,
-  {
-    slot,
-    animate,
-    hasBottomRow = false,
-  }: { slot: IndividualSlot | undefined; animate: boolean; hasBottomRow?: boolean }
+  { slot, animate }: { slot: IndividualSlot | undefined; animate: boolean }
 ) => {
   if (!slot) {
     return spacer;
   }
-  const line = linePaths[key](hasBottomRow);
+  // The right slots' lines are drawn in the card's flow overlay (`rightIndividualFlow`).
+  const line = key === "left-top" || key === "left-bottom" ? leftLines[key] : "";
   return layouts[key]({
     slot,
     line,
     label: html`<span class="label">${slot.node.name}</span>`,
     circle: individualCircle(main, config, slot.node, key),
-    dot: flowDot(slot, key, animate, line),
+    dot: line
+      ? flowDot(slot, key, {
+          animate,
+          line: { d: line, reversed: reversePath(line) },
+          radius: 1.75,
+        })
+      : nothing,
   });
 };

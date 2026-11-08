@@ -15,6 +15,7 @@
     "./utils/*": "./src/utils/*.ts",
     "./const/*": "./src/const/*.ts",
     "./ui-editor/*": "./src/ui-editor/*.ts",
+    "./preview/*": "./src/preview/*.ts",
     "./testing/*": "./src/testing/*.ts"
   },
   "peerDependencies": {

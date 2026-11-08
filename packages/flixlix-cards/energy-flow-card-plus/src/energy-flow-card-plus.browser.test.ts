@@ -6,11 +6,8 @@ import {
   type StateFixtures,
   withStates,
 } from "@flixlix-cards/shared/testing/fake-hass";
-import {
-  asEnergyUnits,
-  expectFlowCard,
-  flowScenarios,
-} from "@flixlix-cards/shared/testing/flow-scenarios";
+import { expectFlowCard } from "@flixlix-cards/shared/testing/expect-flow-card";
+import { asEnergyUnits, flowScenarios } from "@flixlix-cards/shared/testing/flow-scenarios";
 import { mountCard } from "@flixlix-cards/shared/testing/mount-card";
 import { EnergyFlowCardPlus } from "./energy-flow-card-plus";
 

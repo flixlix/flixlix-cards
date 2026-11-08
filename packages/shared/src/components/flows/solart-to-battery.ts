@@ -1,46 +1,32 @@
 import { html, nothing, svg } from "lit";
-import { classMap } from "lit/directives/class-map.js";
+import { keyed } from "lit/directives/keyed.js";
 import { type Flows } from "./index";
 
-const solarToBatteryDot = (animate: boolean, solar: Flows["solar"], flows: Flows["flows"]) => {
+const solarToBatteryDot = ({ animate, solar, flows, paths }: Flows) => {
   if (!animate || !solar.state.toBattery) {
     return nothing;
   }
 
-  return svg`<circle r="1" class="battery-solar" vector-effect="non-scaling-stroke">
+  return svg`<circle r=${paths.scale} class="battery-solar" vector-effect="non-scaling-stroke">
       <animateMotion dur="${flows.solarToBattery.durationSeconds}s" repeatCount="indefinite" calcMode="paced">
         <mpath xlink:href="#battery-solar" />
       </animateMotion>
     </circle>`;
 };
 
-type FlowSolarToBatteryFlows = Pick<Flows, Exclude<keyof Flows, "grid">>;
-
-export const flowSolarToBattery = ({
-  solar,
-  lineClasses,
-  animate,
-  flows,
-}: FlowSolarToBatteryFlows) => {
-  if (!flows.solarToBattery.visible) {
+export const flowSolarToBattery = (context: Flows) => {
+  const { flows, paths } = context;
+  if (!flows.solarToBattery.visible || !paths.solarToBattery) {
     return nothing;
   }
 
-  return html`<div class="lines ${classMap(lineClasses)}">
-    <svg
-      viewBox="0 0 100 100"
-      xmlns="http://www.w3.org/2000/svg"
-      preserveAspectRatio="xMidYMid slice"
-      id="solar-battery-flow"
-      class="flat-line"
-    >
-      <path
-        id="battery-solar"
-        class="battery-solar ${flows.solarToBattery.lineClass}"
-        d="M50,0 V100"
-        vector-effect="non-scaling-stroke"
-      ></path>
-      ${solarToBatteryDot(animate, solar, flows)}
-    </svg>
-  </div>`;
+  return html`<svg class="flow" id="solar-battery-flow" viewBox=${context.viewBox}>
+    <path
+      id="battery-solar"
+      class="battery-solar ${flows.solarToBattery.lineClass}"
+      d=${paths.solarToBattery.d}
+      vector-effect="non-scaling-stroke"
+    ></path>
+    ${keyed(paths.solarToBattery.d, solarToBatteryDot(context))}
+  </svg>`;
 };

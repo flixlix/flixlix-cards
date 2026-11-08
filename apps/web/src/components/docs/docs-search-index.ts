@@ -739,6 +739,15 @@ const CONTRIBUTING_SECTIONS: SearchEntry[] = [
 export const SEARCH_ENTRIES: SearchEntry[] = [
   ...PAGES,
   ...cardPages("power", "/power-flow-card-plus", POWER),
+  {
+    title: "Playground",
+    description: "Try the card live: edit the config and move the sensors.",
+    to: "/power-flow-card-plus/playground",
+    breadcrumb: "Power Flow Card Plus",
+    card: "power",
+    type: "page",
+    keywords: ["demo", "live", "preview", "try", "scenario"],
+  },
   ...cardPages("energy", "/energy-flow-card-plus", ENERGY),
   ...breakdownPages(),
   ...sortablePages(),

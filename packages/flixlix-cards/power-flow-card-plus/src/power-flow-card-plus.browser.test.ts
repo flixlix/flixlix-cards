@@ -2,7 +2,8 @@ import { type HomeAssistant } from "custom-card-helpers";
 import { describe, expect, onTestFinished, test } from "vite-plus/test";
 import { userEvent } from "vite-plus/test/browser/context";
 import { emitTemplate, fakeHass, withStates } from "@flixlix-cards/shared/testing/fake-hass";
-import { expectFlowCard, flowScenarios } from "@flixlix-cards/shared/testing/flow-scenarios";
+import { expectFlowCard } from "@flixlix-cards/shared/testing/expect-flow-card";
+import { flowScenarios } from "@flixlix-cards/shared/testing/flow-scenarios";
 import { type MountedCard, mountCard } from "@flixlix-cards/shared/testing/mount-card";
 import { PowerFlowCardPlus } from "./power-flow-card-plus";
 

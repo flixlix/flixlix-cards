@@ -61,7 +61,7 @@ export function computeCardState(input: CardStateInput, previous?: CardState): C
     flows,
     animate,
     animationRescale: animationRescale(flows, animate, previous),
-    cssVars: computeCssVars(config, nodes, homeRing.largestSource, placement.sorted, input.width),
+    cssVars: computeCssVars(config, nodes, homeRing.largestSource, placement.sorted),
     layout: {
       showTopRow: nodes.solar.has || visible.length > 0 || nodes.nonFossil.hasPercentage,
       showBottomRow,

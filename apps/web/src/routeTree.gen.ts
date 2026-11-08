@@ -24,6 +24,7 @@ import { Route as DocsPowerFlowCardPlusIndexRouteImport } from './routes/_docs/p
 import { Route as DocsPowerFlowCardPlusConfigurationRouteImport } from './routes/_docs/power-flow-card-plus/configuration'
 import { Route as DocsPowerFlowCardPlusExamplesRouteImport } from './routes/_docs/power-flow-card-plus/examples'
 import { Route as DocsPowerFlowCardPlusInstallationRouteImport } from './routes/_docs/power-flow-card-plus/installation'
+import { Route as DocsPowerFlowCardPlusPlaygroundRouteImport } from './routes/_docs/power-flow-card-plus/playground'
 import { Route as DocsSortableListCardIndexRouteImport } from './routes/_docs/sortable-list-card/index'
 import { Route as DocsSortableListCardConfigurationRouteImport } from './routes/_docs/sortable-list-card/configuration'
 import { Route as DocsSortableListCardExamplesRouteImport } from './routes/_docs/sortable-list-card/examples'
@@ -115,6 +116,12 @@ const DocsPowerFlowCardPlusInstallationRoute =
     path: '/power-flow-card-plus/installation',
     getParentRoute: () => DocsRoute,
   } as any)
+const DocsPowerFlowCardPlusPlaygroundRoute =
+  DocsPowerFlowCardPlusPlaygroundRouteImport.update({
+    id: '/power-flow-card-plus/playground',
+    path: '/power-flow-card-plus/playground',
+    getParentRoute: () => DocsRoute,
+  } as any)
 const DocsSortableListCardIndexRoute =
   DocsSortableListCardIndexRouteImport.update({
     id: '/sortable-list-card/',
@@ -152,6 +159,7 @@ export interface FileRoutesByFullPath {
   '/power-flow-card-plus/configuration': typeof DocsPowerFlowCardPlusConfigurationRoute
   '/power-flow-card-plus/examples': typeof DocsPowerFlowCardPlusExamplesRoute
   '/power-flow-card-plus/installation': typeof DocsPowerFlowCardPlusInstallationRoute
+  '/power-flow-card-plus/playground': typeof DocsPowerFlowCardPlusPlaygroundRoute
   '/sortable-list-card/configuration': typeof DocsSortableListCardConfigurationRoute
   '/sortable-list-card/examples': typeof DocsSortableListCardExamplesRoute
   '/sortable-list-card/installation': typeof DocsSortableListCardInstallationRoute
@@ -172,6 +180,7 @@ export interface FileRoutesByTo {
   '/power-flow-card-plus/configuration': typeof DocsPowerFlowCardPlusConfigurationRoute
   '/power-flow-card-plus/examples': typeof DocsPowerFlowCardPlusExamplesRoute
   '/power-flow-card-plus/installation': typeof DocsPowerFlowCardPlusInstallationRoute
+  '/power-flow-card-plus/playground': typeof DocsPowerFlowCardPlusPlaygroundRoute
   '/sortable-list-card/configuration': typeof DocsSortableListCardConfigurationRoute
   '/sortable-list-card/examples': typeof DocsSortableListCardExamplesRoute
   '/sortable-list-card/installation': typeof DocsSortableListCardInstallationRoute
@@ -194,6 +203,7 @@ export interface FileRoutesById {
   '/_docs/power-flow-card-plus/configuration': typeof DocsPowerFlowCardPlusConfigurationRoute
   '/_docs/power-flow-card-plus/examples': typeof DocsPowerFlowCardPlusExamplesRoute
   '/_docs/power-flow-card-plus/installation': typeof DocsPowerFlowCardPlusInstallationRoute
+  '/_docs/power-flow-card-plus/playground': typeof DocsPowerFlowCardPlusPlaygroundRoute
   '/_docs/sortable-list-card/configuration': typeof DocsSortableListCardConfigurationRoute
   '/_docs/sortable-list-card/examples': typeof DocsSortableListCardExamplesRoute
   '/_docs/sortable-list-card/installation': typeof DocsSortableListCardInstallationRoute
@@ -216,6 +226,7 @@ export interface FileRouteTypes {
     | '/power-flow-card-plus/configuration'
     | '/power-flow-card-plus/examples'
     | '/power-flow-card-plus/installation'
+    | '/power-flow-card-plus/playground'
     | '/sortable-list-card/configuration'
     | '/sortable-list-card/examples'
     | '/sortable-list-card/installation'
@@ -236,6 +247,7 @@ export interface FileRouteTypes {
     | '/power-flow-card-plus/configuration'
     | '/power-flow-card-plus/examples'
     | '/power-flow-card-plus/installation'
+    | '/power-flow-card-plus/playground'
     | '/sortable-list-card/configuration'
     | '/sortable-list-card/examples'
     | '/sortable-list-card/installation'
@@ -257,6 +269,7 @@ export interface FileRouteTypes {
     | '/_docs/power-flow-card-plus/configuration'
     | '/_docs/power-flow-card-plus/examples'
     | '/_docs/power-flow-card-plus/installation'
+    | '/_docs/power-flow-card-plus/playground'
     | '/_docs/sortable-list-card/configuration'
     | '/_docs/sortable-list-card/examples'
     | '/_docs/sortable-list-card/installation'
@@ -377,6 +390,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocsPowerFlowCardPlusInstallationRouteImport
       parentRoute: typeof DocsRoute
     }
+    '/_docs/power-flow-card-plus/playground': {
+      id: '/_docs/power-flow-card-plus/playground'
+      path: '/power-flow-card-plus/playground'
+      fullPath: '/power-flow-card-plus/playground'
+      preLoaderRoute: typeof DocsPowerFlowCardPlusPlaygroundRouteImport
+      parentRoute: typeof DocsRoute
+    }
     '/_docs/sortable-list-card/': {
       id: '/_docs/sortable-list-card/'
       path: '/sortable-list-card'
@@ -420,6 +440,7 @@ interface DocsRouteChildren {
   DocsPowerFlowCardPlusConfigurationRoute: typeof DocsPowerFlowCardPlusConfigurationRoute
   DocsPowerFlowCardPlusExamplesRoute: typeof DocsPowerFlowCardPlusExamplesRoute
   DocsPowerFlowCardPlusInstallationRoute: typeof DocsPowerFlowCardPlusInstallationRoute
+  DocsPowerFlowCardPlusPlaygroundRoute: typeof DocsPowerFlowCardPlusPlaygroundRoute
   DocsSortableListCardConfigurationRoute: typeof DocsSortableListCardConfigurationRoute
   DocsSortableListCardExamplesRoute: typeof DocsSortableListCardExamplesRoute
   DocsSortableListCardInstallationRoute: typeof DocsSortableListCardInstallationRoute
@@ -447,6 +468,7 @@ const DocsRouteChildren: DocsRouteChildren = {
   DocsPowerFlowCardPlusExamplesRoute: DocsPowerFlowCardPlusExamplesRoute,
   DocsPowerFlowCardPlusInstallationRoute:
     DocsPowerFlowCardPlusInstallationRoute,
+  DocsPowerFlowCardPlusPlaygroundRoute: DocsPowerFlowCardPlusPlaygroundRoute,
   DocsSortableListCardConfigurationRoute:
     DocsSortableListCardConfigurationRoute,
   DocsSortableListCardExamplesRoute: DocsSortableListCardExamplesRoute,

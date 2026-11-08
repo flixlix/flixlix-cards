@@ -3,6 +3,8 @@ import { fileURLToPath } from "node:url";
 
 export const HASS_URL = process.env.HASS_URL ?? "http://localhost:8123";
 export const CLIENT_ID = `${HASS_URL}/`;
+/** The docs site (`apps/web`), which renders the cards with a fake `hass`. */
+export const DOCS_URL = process.env.DOCS_URL ?? "http://localhost:3000";
 /** Dev-only credentials of the onboarded owner; the instance never leaves localhost. */
 export const DEV_USER = { name: "Dev", username: "dev", password: "dev" } as const;
 /** Long-lived access token written by the bootstrap; `.hass_dev/*` is gitignored. */
