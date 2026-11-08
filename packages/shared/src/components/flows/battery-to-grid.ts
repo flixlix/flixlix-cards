@@ -1,6 +1,10 @@
 import { html, nothing, svg } from "lit";
 import { classMap } from "lit/directives/class-map.js";
+import { reversePath } from "../reverse-path";
 import { type Flows } from "./index";
+
+/** Drawn from the battery to the grid. */
+const batteryGridLine = "M45,100 v-15 c0,-30 -10,-30 -30,-30 h-20";
 
 const batteryFromGridDot = (animate: boolean, grid: Flows["grid"], flows: Flows["flows"]) => {
   if (!animate || !grid.state.toBattery) {
@@ -11,12 +15,9 @@ const batteryFromGridDot = (animate: boolean, grid: Flows["grid"], flows: Flows[
       <animateMotion
         dur="${flows.batteryGrid.durationSeconds}s"
         repeatCount="indefinite"
-        keyPoints="1;0"
-        keyTimes="0;1"
         calcMode="paced"
-      >
-        <mpath xlink:href="#battery-grid" />
-      </animateMotion>
+        path="${reversePath(batteryGridLine)}"
+      ></animateMotion>
     </circle>`;
 };
 
@@ -56,7 +57,7 @@ export const flowBatteryToGrid = ({
       <path
         id="battery-grid"
         class="${flows.batteryGrid.lineClass}"
-        d="M45,100 v-15 c0,-30 -10,-30 -30,-30 h-20"
+        d="${batteryGridLine}"
         vector-effect="non-scaling-stroke"
       ></path>
       ${batteryFromGridDot(animate, grid, flows)} ${batteryToGridDot(animate, battery, flows)}

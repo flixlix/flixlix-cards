@@ -215,6 +215,74 @@ describe("layout", () => {
   });
 });
 
+const centerOf = (element: Element | null) => {
+  const box = element?.getBoundingClientRect();
+  if (!box) {
+    throw new Error("element to measure from is not rendered");
+  }
+  return new DOMPoint(box.x + box.width / 2, box.y + box.height / 2);
+};
+
+/** Where a dot's motion path starts and ends on screen, and its length next to the line it follows. */
+const motionOf = (root: ShadowRoot, selector: string) => {
+  const motion = root.querySelector(selector);
+  const svg = motion?.closest("svg");
+  const line = svg?.querySelector("path");
+  const d = motion?.getAttribute("path");
+  if (!svg || !line || !d) {
+    throw new Error(`${selector} has no motion path of its own`);
+  }
+  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  path.setAttribute("d", d);
+  svg.append(path);
+  const toScreen = (length: number) => {
+    const point = path.getPointAtLength(length);
+    return new DOMPoint(point.x, point.y).matrixTransform(path.getScreenCTM() ?? undefined);
+  };
+  const result = {
+    start: toScreen(0),
+    end: toScreen(path.getTotalLength()),
+    length: path.getTotalLength(),
+    lineLength: line.getTotalLength(),
+  };
+  path.remove();
+  return result;
+};
+
+const distance = (a: DOMPoint, b: DOMPoint) => Math.hypot(a.x - b.x, a.y - b.y);
+
+/** Whether the dot ends closer to the target than it starts, along a path as long as its line. */
+const runsTowards = (root: ShadowRoot, selector: string, target: string) => {
+  const { start, end, length, lineLength } = motionOf(root, selector);
+  expect(length).toBeCloseTo(lineLength, 3);
+  const center = centerOf(root.querySelector(target));
+  return distance(end, center) < distance(start, center);
+};
+
+/** Older Chromium ignores `keyPoints` with `calcMode="paced"` and runs the dot backwards (#102). */
+const expectNoKeyPoints = (root: ShadowRoot) => {
+  expect(root.querySelectorAll("animateMotion").length).toBeGreaterThan(0);
+  expect(root.querySelectorAll("animateMotion[keyPoints]")).toHaveLength(0);
+};
+
+describe("dot direction", () => {
+  test("a battery charging from the grid has its dot run from the grid to the battery", async () => {
+    const scenario = flowScenarios.find(({ name }) => name === "battery charging from the grid");
+    if (!scenario) {
+      throw new Error("battery charging scenario missing");
+    }
+    const { root } = await mountCard(
+      PowerFlowCardPlus,
+      { type: "custom:power-flow-card-plus", entities: scenario.entities },
+      fakeHass({ states: scenario.states })
+    );
+    expectNoKeyPoints(root);
+    const dot = "#battery-grid-flow circle.battery-from-grid animateMotion";
+    expect(runsTowards(root, dot, ".battery .circle")).toBe(true);
+    expect(runsTowards(root, dot, ".grid .circle")).toBe(false);
+  });
+});
+
 const slots = ["left-top", "left-bottom", "right-top", "right-bottom"] as const;
 
 const linePaths = {
@@ -251,11 +319,9 @@ const mountDirections = async (states: string[], individual: object = {}) => {
     const icon = card.root.querySelector(`span.individual-${slot} ha-icon`);
     return icon && "icon" in icon ? icon.icon : undefined;
   };
-  const keyPoints = (slot: (typeof slots)[number]) =>
-    card.root
-      .querySelector(`#${linePaths[slot]} ~ circle animateMotion`)
-      ?.getAttribute("keyPoints");
-  return { card, arrow, keyPoints };
+  const runsIntoHome = (slot: (typeof slots)[number]) =>
+    runsTowards(card.root, `#${linePaths[slot]} ~ circle animateMotion`, ".home .circle");
+  return { card, arrow, runsIntoHome };
 };
 
 describe("individual direction", () => {
@@ -269,8 +335,14 @@ describe("individual direction", () => {
     ]);
   });
 
+  test("each slot's dot runs from the home to the device", async () => {
+    const { card, runsIntoHome } = await mountDirections(["40", "30", "20", "10"]);
+    expectNoKeyPoints(card.root);
+    expect(slots.map(runsIntoHome)).toEqual([false, false, false, false]);
+  });
+
   test("with accept_negative, a device feeding power shows its sign and flows into the home", async () => {
-    const { card, arrow, keyPoints } = await mountDirections(["-40", "30", "20", "-10"], {
+    const { card, arrow, runsIntoHome } = await mountDirections(["-40", "30", "20", "-10"], {
       accept_negative: true,
     });
     expect(slots.map((slot) => card.text(`span.individual-${slot}`))).toEqual([
@@ -285,11 +357,12 @@ describe("individual direction", () => {
       "mdi:arrow-up",
       "mdi:arrow-up",
     ]);
-    expect(slots.map(keyPoints)).toEqual(["0;1", "1;0", "1;0", "0;1"]);
+    expectNoKeyPoints(card.root);
+    expect(slots.map(runsIntoHome)).toEqual([true, false, false, true]);
   });
 
   test("without accept_negative, a negative reading keeps its magnitude and direction", async () => {
-    const { card, arrow, keyPoints } = await mountDirections(["-40", "30", "20", "-10"]);
+    const { card, arrow, runsIntoHome } = await mountDirections(["-40", "30", "20", "-10"]);
     expect(card.text("span.individual-left-top")).toBe("40 W");
     expect(card.text("span.individual-right-bottom")).toBe("10 W");
     expect(slots.map(arrow)).toEqual([
@@ -298,7 +371,7 @@ describe("individual direction", () => {
       "mdi:arrow-up",
       "mdi:arrow-down",
     ]);
-    expect(slots.map(keyPoints)).toEqual(["1;0", "1;0", "1;0", "1;0"]);
+    expect(slots.map(runsIntoHome)).toEqual([false, false, false, false]);
   });
 });
 
