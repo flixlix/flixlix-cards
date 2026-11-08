@@ -406,6 +406,25 @@ export const flowScenarios: FlowScenario[] = [
     },
   },
   {
+    name: "an individual's text secondary info",
+    entities: {
+      grid: { entity: "sensor.grid" },
+      individual: [
+        {
+          entity: "sensor.heat_pump",
+          name: "Heat pump",
+          secondary_info: { entity: "sensor.heat_pump_mode" },
+        },
+      ],
+    },
+    states: {
+      "sensor.grid": "500",
+      "sensor.heat_pump": "500",
+      "sensor.heat_pump_mode": sensor("heating", { unit: undefined }),
+    },
+    expect: { text: { ".individual-top .secondary-info": "heating" } },
+  },
+  {
     name: "zero lines greyed out",
     visual: true,
     entities: combinedEntities,
