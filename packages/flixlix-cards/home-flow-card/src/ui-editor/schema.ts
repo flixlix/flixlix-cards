@@ -45,6 +45,7 @@ export const NODE_SCHEMAS = {
   grid: [
     entity,
     getEntitySeparatedSelectionSchema(),
+    name,
     {
       type: "expandable",
       title: localize("editor.power_outage"),
@@ -57,6 +58,7 @@ export const NODE_SCHEMAS = {
           schema: [
             { name: "entity", selector: { entity: {} } },
             { name: "state_alert", selector: { text: {} } },
+            { name: "label_alert", selector: { text: {} } },
           ],
         },
       ],

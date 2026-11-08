@@ -133,12 +133,10 @@ describe("editor", () => {
     await open("grid");
 
     expect(fields()).not.toEqual(
-      expect.arrayContaining([
-        expect.stringMatching(/^(color_icon|color_circle|display_state|name|label_alert)$/),
-      ])
+      expect.arrayContaining([expect.stringMatching(/^(color_icon|color_circle|display_state)$/)])
     );
     expect(fields()).toEqual(
-      expect.arrayContaining(["entity", "state_alert", "invert_state", "decimals"])
+      expect.arrayContaining(["entity", "name", "state_alert", "label_alert", "decimals"])
     );
     editor.remove();
   });
