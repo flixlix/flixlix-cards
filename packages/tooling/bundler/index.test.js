@@ -16,3 +16,22 @@ it("emits a bundle that Chrome 67 (Chromecast, Nest Hub) can parse", async () =>
 
   expect(() => parse(code, { ecmaVersion: 2019, sourceType: "module" })).not.toThrow();
 }, 30_000);
+
+it("stamps the build id into the card bundle", async () => {
+  const code = await buildCard("fixtures/build-id.ts");
+
+  expect(code).toMatch(/[0-9a-f]{7,}(\+dirty)? · built \d{4}-\d{2}-\d{2} \d{2}:\d{2} UTC/);
+  expect(code).not.toContain("__FLIXLIX_BUILD__");
+}, 30_000);
+
+it("leaves the build id out of release bundles", async () => {
+  globalThis.process.env.RELEASE_BUILD = "true";
+  try {
+    const code = await buildCard("fixtures/build-id.ts");
+
+    expect(code).not.toMatch(/built \d{4}-\d{2}-\d{2}/);
+    expect(code).not.toContain("__FLIXLIX_BUILD__");
+  } finally {
+    delete globalThis.process.env.RELEASE_BUILD;
+  }
+}, 30_000);
