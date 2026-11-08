@@ -462,11 +462,40 @@ describe("home ring", () => {
 });
 
 describe("flow durations", () => {
-  test("map the expected power range linearly onto the flow rate range", () => {
+  test("map the expected power range linearly onto dot speed, not duration", () => {
+    const speed = (fromGrid: number) => 1 / gridToHome(fromGrid);
+    const slowest = 1 / 10;
+    const fastest = 1;
+
     expect(gridToHome(0)).toBe(10);
-    expect(gridToHome(50)).toBeCloseTo(5.5, 10);
     expect(gridToHome(100)).toBe(1);
     expect(gridToHome(101)).toBe(1);
+    for (const fraction of [0.1, 0.25, 0.5, 0.75, 0.9]) {
+      expect(speed(fraction * 100)).toBeCloseTo(slowest + fraction * (fastest - slowest), 10);
+    }
+  });
+
+  test("clamp to max_flow_rate below min_expected_power", () => {
+    expect(gridToHome(10, { min_expected_power: 20 })).toBe(10);
+  });
+
+  test("more power never moves dots slower, and stays within the flow rate range", () => {
+    fc.assert(
+      fc.property(amount, amount, (a, b) => {
+        const [low, high] = [Math.min(a, b), Math.max(a, b)];
+        expect(gridToHome(high)).toBeLessThanOrEqual(gridToHome(low));
+        expect(gridToHome(low)).toBeLessThanOrEqual(10);
+        expect(gridToHome(high)).toBeGreaterThanOrEqual(1);
+      }),
+      RUNS
+    );
+  });
+
+  test("stay positive and finite when min_flow_rate is 0", () => {
+    const duration = gridToHome(50, { min_flow_rate: 0 });
+
+    expect(duration).toBeGreaterThan(0);
+    expect(Number.isFinite(duration)).toBe(true);
   });
 
   test("fall back to max_flow_rate when the expected power range is empty", () => {
@@ -484,7 +513,7 @@ describe("flow durations", () => {
     expect(flows.solarToHome.durationSeconds).toBeCloseTo(7.75, 10);
   });
 
-  test("individual devices use their own rate unless calculate_flow_rate is off", () => {
+  test("individual devices use their own rate unless calculate_flow_rate is off or a number", () => {
     const { flows, individualSlots } = ready(
       compute({
         config: rateConfig({
@@ -492,15 +521,17 @@ describe("flow durations", () => {
             individual: [
               { entity: "sensor.a" },
               { entity: "sensor.b", calculate_flow_rate: false },
+              { entity: "sensor.c", calculate_flow_rate: 4 },
             ],
           },
         }),
-        readings: readings({ individuals: [50, 50] }),
+        readings: readings({ individuals: [50, 50, 50] }),
       })
     );
+    const calculated = gridToHome(50);
 
-    expect(flows.individual.map((flow) => flow.durationSeconds)).toEqual([5.5, 1.66]);
-    expect(individualSlots.leftTop?.flow.durationSeconds).toBe(5.5);
+    expect(flows.individual.map((flow) => flow.durationSeconds)).toEqual([calculated, 1.66, 4]);
+    expect(individualSlots.leftTop?.flow.durationSeconds).toBe(calculated);
     expect(individualSlots.leftBottom?.flow.durationSeconds).toBe(1.66);
   });
 
@@ -516,7 +547,7 @@ describe("animation rescale", () => {
     const previous = compute(at(0));
     const { animationRescale } = ready(compute(at(50), previous));
 
-    expect(animationRescale).toEqual({ gridToHome: 0.55 });
+    expect(animationRescale).toEqual({ gridToHome: gridToHome(50) / gridToHome(0) });
   });
 
   test("is empty without a previous state or when the previous duration is unusable", () => {

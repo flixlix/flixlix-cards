@@ -82,7 +82,7 @@ export type IndividualDeviceType = BaseConfigEntity & {
   display_zero_state?: boolean;
   color_value?: boolean;
   color_label?: boolean;
-  calculate_flow_rate?: boolean;
+  calculate_flow_rate?: boolean | number;
   use_metadata?: boolean;
   decimals?: number;
   show_direction?: boolean;

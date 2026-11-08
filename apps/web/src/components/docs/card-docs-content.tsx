@@ -1553,8 +1553,9 @@ entities:
               </p>
               <CodeBlock
                 language="js"
-                code={`if (value > maxIn) return maxOut;
-return ((value - minIn) * (maxOut - minOut)) / (maxIn - minIn) + minOut;`}
+                code={`progress = clamp((value - minIn) / (maxIn - minIn), 0, 1);
+speed = 1 / minOut + progress * (1 / maxOut - 1 / minOut);
+return 1 / speed;`}
               />
             </div>
           </div>

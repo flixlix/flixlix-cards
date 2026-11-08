@@ -5,17 +5,24 @@ import { type CardState, type Flow, type FlowName, type Flows } from "./types";
 /** Seconds per dot when a flow's rate is not calculated from its value. */
 const FIXED_FLOW_DURATION = 1.66;
 
-const mapRange = (
-  value: number,
-  minOut: number,
-  maxOut: number,
-  minIn: number,
-  maxIn: number
-): number => {
-  if (value > maxIn) {
-    return maxOut;
-  }
-  return ((value - minIn) * (maxOut - minOut)) / (maxIn - minIn) + minOut;
+/** Floor for `min_flow_rate`/`max_flow_rate`, so a 0 still gives a finite dot speed. */
+const SHORTEST_DURATION = 0.01;
+
+const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+
+/**
+ * Seconds per dot in the new model. Dot speed (1 / duration), not duration, moves linearly
+ * across the expected power range, so twice the power looks about twice as fast.
+ */
+const linearSpeedDuration = (config: FlowCardPlusConfig, value: number): number => {
+  const slowest = 1 / Math.max(config.max_flow_rate, SHORTEST_DURATION);
+  const fastest = 1 / Math.max(config.min_flow_rate, SHORTEST_DURATION);
+  const progress = clamp(
+    (value - config.min_expected_power) / (config.max_expected_power - config.min_expected_power),
+    0,
+    1
+  );
+  return 1 / (slowest + progress * (fastest - slowest));
 };
 
 /** Seconds per dot: faster for larger values, absolute or relative to `total`. */
@@ -27,21 +34,19 @@ const flowRate = (config: FlowCardPlusConfig, value: number, total: number): num
     return max - (value / denominator) * (max - min);
   };
   const result =
-    (config.use_new_flow_rate_model ?? true)
-      ? mapRange(value, max, min, config.min_expected_power, config.max_expected_power)
-      : relative();
+    (config.use_new_flow_rate_model ?? true) ? linearSpeedDuration(config, value) : relative();
   return Number.isFinite(result) ? result : max;
 };
 
 /**
- * `calculate_flow_rate: false` animates at a fixed pace; a number is the fallback pace used
- * when the calculated rate is unusable.
+ * `calculate_flow_rate`: a number pins the dot to that many seconds, `false` animates at a fixed
+ * pace, anything else uses the calculated rate.
  */
 const configuredDuration = (calculateFlowRate: boolean | number | undefined, rate: number) => {
-  if (calculateFlowRate !== false && rate) {
-    return rate;
+  if (typeof calculateFlowRate === "number") {
+    return calculateFlowRate;
   }
-  return typeof calculateFlowRate === "number" ? calculateFlowRate : FIXED_FLOW_DURATION;
+  return calculateFlowRate !== false && rate ? rate : FIXED_FLOW_DURATION;
 };
 
 /** Lines with nothing flowing are hidden, greyed out or faded per `display_zero_lines`. */
