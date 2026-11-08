@@ -18,18 +18,31 @@
   "changesets": [
     "breakdown-energy-units",
     "card-state-fixes",
+    "console-build-id",
+    "display-zero-editor-default",
     "energy-period-selector-plus",
+    "eps-date-picker-option",
+    "eps-ha-date-picker",
     "fix-negative-flow-tolerance",
+    "flow-rate-docs-defaults",
+    "flow-rate-model-option",
     "home-assistant-dependencies",
+    "individual-accept-negative",
+    "individual-right-bottom-arrow",
+    "individual-text-secondary",
     "keyboard-and-hold-actions",
+    "legacy-browser-targets",
+    "legacy-chromium-dots",
     "linear-flow-dot-speed",
     "main-node-unit-options",
     "monorepo-hygiene-circle-constant",
     "non-fossil-grid-share",
     "non-fossil-grid-zero-tolerance",
     "one-flow-allocation-order",
+    "rtl-flow-lines",
     "skip-unrelated-updates",
     "sort-individuals-by-default",
-    "template-subscriptions-cleanup"
+    "template-subscriptions-cleanup",
+    "unit-prefix-parsing"
   ]
 }
