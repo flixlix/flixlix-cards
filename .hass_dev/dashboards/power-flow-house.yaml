@@ -1,0 +1,84 @@
+# Power Flow House Card playground. It reads the same sensors as the Power Flow dashboard, so the
+# scenarios and sliders there drive these cards too.
+title: Power Flow House
+views:
+  - title: Power Flow House
+    path: power-flow-house
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Scenarios
+            icon: mdi:play-box-multiple
+          - type: entities
+            title: Run a scenario
+            show_header_toggle: false
+            entities:
+              - script.scenario_default
+              - script.scenario_all_zero
+              - script.scenario_solar_exporting
+              - script.scenario_battery_charging_from_grid
+              - script.scenario_battery_discharging_to_grid
+              - script.scenario_grid_outage_generator
+          - type: entities
+            title: Knobs
+            show_header_toggle: false
+            entities:
+              - input_number.solar_power
+              - input_number.battery_charge_power
+              - input_number.battery_discharge_power
+              - input_number.battery_soc
+              - input_number.grid_import_power
+              - input_number.grid_export_power
+              - input_number.fossil_percentage
+              - input_boolean.power_outage
+      - type: grid
+        cards:
+          - type: heading
+            heading: Solar, battery and grid
+            icon: mdi:home-lightning-bolt
+          - type: custom:power-flow-house-card
+            title: Combined entities
+            clickable_entities: true
+            entities:
+              grid:
+                entity: sensor.grid_power
+                power_outage:
+                  entity: input_boolean.power_outage
+                  state_alert: "on"
+              solar:
+                entity: sensor.solar_power
+              battery:
+                entity: sensor.battery_power
+                state_of_charge: sensor.battery_soc
+              home:
+                entity: sensor.home_power
+              fossil_fuel_percentage:
+                entity: sensor.fossil_percentage
+                state_type: percentage
+          - type: custom:power-flow-house-card
+            title: Split entities, plain numbers
+            animate_numbers: false
+            entities:
+              grid:
+                entity:
+                  consumption: sensor.grid_import_power
+                  production: sensor.grid_export_power
+              solar:
+                entity: sensor.solar_power
+              battery:
+                entity:
+                  consumption: sensor.battery_discharge_power
+                  production: sensor.battery_charge_power
+                state_of_charge: sensor.battery_soc
+      - type: grid
+        cards:
+          - type: heading
+            heading: Grid only
+            icon: mdi:transmission-tower
+          - type: custom:power-flow-house-card
+            entities:
+              grid:
+                entity: sensor.grid_power

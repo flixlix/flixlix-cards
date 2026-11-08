@@ -76,6 +76,26 @@ const scaleFor = (
   return base;
 };
 
+/** A reading as a card shows it: rounded, scaled to its k/M unit, with the decimals it was rounded to. */
+export type ScaledReading = { value: number; unit: string; decimals: number };
+
+/** `value` scaled and rounded like the formatted text, for showing number and unit apart. */
+export const scaledReading = (
+  config: FlowCardPlusConfig,
+  family: UnitFamily,
+  value: number,
+  options: FormatOptions = {}
+): ScaledReading => {
+  const baseUnit = family === "energy" ? "Wh" : "W";
+  const scale = scaleFor(config, baseUnit, value, options);
+  const decimals = options.decimals ?? scale.decimals ?? scale.fallbackDecimals;
+  return {
+    value: round(value / scale.divisor, decimals),
+    unit: nonEmpty(options.unit) ?? scale.unit,
+    decimals,
+  };
+};
+
 const displayValue = (
   hass: HomeAssistant,
   config: FlowCardPlusConfig,
@@ -83,7 +103,7 @@ const displayValue = (
   value: number | string | null,
   options: FormatOptions
 ): string => {
-  const { unit, unitWhiteSpace, decimals, accept_negative } = options;
+  const { unit, unitWhiteSpace, accept_negative } = options;
   const whiteSpace = unitWhiteSpace === false ? "" : `\u2009`;
   const baseUnit = family === "energy" ? "Wh" : "W";
 
@@ -95,13 +115,8 @@ const displayValue = (
     return value.toString();
   }
 
-  const valueInNumber = Number(value);
-  const scale = scaleFor(config, baseUnit, valueInNumber, options);
-  const rounded = round(
-    valueInNumber / scale.divisor,
-    decimals ?? scale.decimals ?? scale.fallbackDecimals
-  );
-  const v = formatNumber(accept_negative ? rounded : Math.abs(rounded), hass.locale);
+  const reading = scaledReading(config, family, Number(value), options);
+  const v = formatNumber(accept_negative ? reading.value : Math.abs(reading.value), hass.locale);
 
-  return `${v}${whiteSpace}${nonEmpty(unit) ?? scale.unit}`;
+  return `${v}${whiteSpace}${reading.unit}`;
 };

@@ -25,6 +25,7 @@
     "rollup-plugin-serve": "catalog:packages"
   },
   "devDependencies": {
+    "esm-env": "catalog:packages",
     "rollup": "catalog:packages",
     "vite-plus": "catalog:packages"
   },

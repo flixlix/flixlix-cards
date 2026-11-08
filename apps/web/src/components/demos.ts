@@ -44,6 +44,32 @@ export const powerDemo: Demo = {
   },
 };
 
+/** The same afternoon on the house: solar on the roof charging the battery, the surplus exported. */
+export const houseDemo: Demo = {
+  configs: [
+    {
+      type: "custom:power-flow-house-card",
+      entities: {
+        grid: { entity: "sensor.grid_power" },
+        solar: { entity: "sensor.solar_power" },
+        battery: { entity: "sensor.battery_power", state_of_charge: "sensor.battery_soc" },
+        fossil_fuel_percentage: {
+          entity: "sensor.grid_fossil_fuel_percentage",
+          state_type: "percentage",
+        },
+      },
+    },
+  ],
+  states: {
+    "sensor.grid_power": "-1150",
+    "sensor.solar_power": "4200",
+    "sensor.battery_power": "-1600",
+    "sensor.battery_soc": percent("68"),
+    "sensor.grid_fossil_fuel_percentage": percent("34"),
+  },
+  width: 440,
+};
+
 const energyFlowCard: CardConfig = {
   type: "custom:energy-flow-card-plus",
   energy_date_selection: true,

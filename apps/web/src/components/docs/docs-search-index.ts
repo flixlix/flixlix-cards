@@ -6,7 +6,7 @@ export type SearchEntry = {
   to: string;
   /** Breadcrumb shown to the right of the title. */
   breadcrumb: string;
-  card?: "power" | "energy" | "breakdown" | "sortable" | "period" | "general";
+  card?: "power" | "house" | "energy" | "breakdown" | "sortable" | "period" | "general";
   type: "page" | "section" | "option" | "example";
   /** Extra strings used for matching but not shown. */
   keywords?: string[];
@@ -18,6 +18,8 @@ const BREAKDOWN = "Energy Breakdown Card";
 const BREAKDOWN_BASE = "/energy-breakdown-card" as const;
 const PERIOD = "Energy Period Selector Plus";
 const PERIOD_BASE = "/energy-period-selector-plus" as const;
+const HOUSE = "Power Flow House Card";
+const HOUSE_BASE = "/power-flow-house-card" as const;
 const SORTABLE = "Sortable List Card";
 const SORTABLE_BASE = "/sortable-list-card" as const;
 
@@ -771,6 +773,91 @@ function periodExamples(): SearchEntry[] {
   ];
 }
 
+const houseEntry = (
+  to: string,
+  breadcrumb: string,
+  type: SearchEntry["type"],
+  title: string,
+  description: string,
+  keywords?: string[]
+): SearchEntry => ({ title, description, to, breadcrumb, card: "house", type, keywords });
+
+function houseEntries(): SearchEntry[] {
+  const configuration = `${HOUSE} → Configuration`;
+  const option = (name: string, description: string, sectionId: string, keywords?: string[]) =>
+    houseEntry(
+      `${HOUSE_BASE}/configuration#${sectionId}`,
+      configuration,
+      "option",
+      name,
+      description,
+      keywords
+    );
+  const example = (id: string, title: string, description: string) =>
+    houseEntry(
+      `${HOUSE_BASE}/examples#${id}`,
+      `${HOUSE} → Examples`,
+      "example",
+      title,
+      description
+    );
+  return [
+    houseEntry(HOUSE_BASE, HOUSE, "page", "Overview", `What ${HOUSE} is and what it can do.`, [
+      "isometric",
+      "house",
+      "solar",
+      "battery",
+      "inverter",
+    ]),
+    houseEntry(
+      `${HOUSE_BASE}/installation`,
+      HOUSE,
+      "page",
+      "Installation",
+      "HACS custom repository and manual installation instructions.",
+      ["hacs", "custom repository", "install", "resource", "lovelace"]
+    ),
+    houseEntry(
+      `${HOUSE_BASE}/configuration`,
+      HOUSE,
+      "page",
+      "Configuration",
+      "The card's own options.",
+      ["yaml", "options", "reference"]
+    ),
+    houseEntry(`${HOUSE_BASE}/examples`, HOUSE, "page", "Examples", "Copy-pastable configs.", [
+      "yaml",
+      "snippet",
+    ]),
+    houseEntry(
+      `${HOUSE_BASE}/configuration#card-options`,
+      configuration,
+      "section",
+      "Card options",
+      "Entities, title, animations."
+    ),
+    houseEntry(
+      `${HOUSE_BASE}/configuration#numbers`,
+      configuration,
+      "section",
+      "Numbers and pulses",
+      "Decimals, kW threshold, pulse speed."
+    ),
+    option("animate_numbers", "Roll numbers to their new value.", "card-options", [
+      "number-flow",
+      "animation",
+    ]),
+    option("clickable_entities", "Tap a value to open its entity.", "card-options"),
+    option("disable_dots", "Keep the wires still.", "card-options", ["pulses"]),
+    option("kilo_threshold", "From how many watts values are in kW.", "numbers"),
+    option("kilo_decimals", "Decimals of values in kW.", "numbers"),
+    example("solar-battery", "Solar and a battery", "The full house."),
+    example("split", "Separate import and export sensors", "Split entities, low-carbon, outage."),
+    example("grid-only", "Grid only", "No solar or battery."),
+    example("still", "Still numbers and wires", "animate_numbers and disable_dots off."),
+  ];
+}
+
 const CONTRIBUTING_SECTIONS: SearchEntry[] = [
   {
     title: "Prerequisites",
@@ -894,6 +981,7 @@ export const SEARCH_ENTRIES: SearchEntry[] = [
   ...breakdownExamples(),
   ...sortableExamples(),
   ...periodExamples(),
+  ...houseEntries(),
   ...CONTRIBUTING_SECTIONS,
 ];
 

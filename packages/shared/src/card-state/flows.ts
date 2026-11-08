@@ -59,7 +59,7 @@ const linearSpeedDuration = (config: FlowCardPlusConfig, value: number): number 
 };
 
 /** Seconds per dot: faster for larger values, absolute or relative to `total`. */
-const flowRate = (config: FlowCardPlusConfig, value: number, total: number): number => {
+export const flowRate = (config: FlowCardPlusConfig, value: number, total: number): number => {
   const min = config.min_flow_rate;
   const max = config.max_flow_rate;
   const relative = () => {

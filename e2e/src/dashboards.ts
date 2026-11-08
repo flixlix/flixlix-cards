@@ -1,6 +1,7 @@
 /** YAML dashboards of `.hass_dev/lovelace.yaml`, one per card. */
 export const CARD_DASHBOARDS = {
   "power-flow-card-plus": "power-flow",
+  "power-flow-house-card": "power-flow-house",
   "energy-flow-card-plus": "energy-flow",
   "energy-breakdown-card": "energy-breakdown",
   "sortable-list-card": "sortable-list",

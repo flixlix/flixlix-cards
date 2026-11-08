@@ -1,0 +1,74 @@
+{
+  "name": "power-flow-house-card",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "An isometric house power flow card for Home Assistant",
+  "keywords": [
+    "home-assistant",
+    "homeassistant",
+    "hass",
+    "dashboard",
+    "custom-cards",
+    "energy",
+    "power",
+    "solar",
+    "battery"
+  ],
+  "main": "./dist/power-flow-house-card.js",
+  "exports": {
+    ".": "./dist/power-flow-house-card.js",
+    "./source": "./src/power-flow-house-card.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/flixlix/flixlix-cards.git"
+  },
+  "author": "flixlix",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/flixlix/flixlix-cards/issues"
+  },
+  "homepage": "https://github.com/flixlix/flixlix-cards#readme",
+  "scripts": {
+    "build": "rollup -c",
+    "release": "pnpm build && pnpm changeset tag",
+    "clean": "rimraf dist node_modules",
+    "start": "rollup -wc",
+    "dev": "rollup -c --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vp test run --coverage && vp test run --config vitest.browser.config.ts --project dom",
+    "test:visual": "vp test run --config vitest.browser.config.ts --project visual",
+    "test:watch": "vp test"
+  },
+  "dependencies": {
+    "@flixlix-cards/shared": "workspace:*",
+    "@mdi/js": "catalog:packages",
+    "custom-card-helpers": "catalog:packages",
+    "home-assistant-js-websocket": "catalog:packages",
+    "lit": "catalog:packages",
+    "number-flow": "catalog:packages"
+  },
+  "devDependencies": {
+    "@babel/core": "catalog:packages",
+    "@babel/preset-env": "catalog:packages",
+    "@flixlix-cards/bundler": "workspace:*",
+    "@flixlix-cards/testing": "workspace:*",
+    "@flixlix-cards/typescript-config": "workspace:*",
+    "@rollup/plugin-babel": "catalog:packages",
+    "@rollup/plugin-commonjs": "catalog:packages",
+    "@rollup/plugin-json": "catalog:packages",
+    "@rollup/plugin-node-resolve": "catalog:packages",
+    "@rollup/plugin-terser": "catalog:packages",
+    "@rollup/plugin-typescript": "catalog:packages",
+    "@types/node": "catalog:",
+    "@vitest/browser-playwright": "catalog:packages",
+    "playwright": "catalog:packages",
+    "rollup": "catalog:packages",
+    "rollup-plugin-minify-html-literals": "catalog:packages",
+    "rollup-plugin-serve": "catalog:packages",
+    "typescript": "catalog:",
+    "vite-tsconfig-paths": "catalog:",
+    "vite-plus": "catalog:packages"
+  }
+}

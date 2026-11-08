@@ -35,3 +35,9 @@ it("leaves the build id out of release bundles", async () => {
     delete globalThis.process.env.RELEASE_BUILD;
   }
 }, 30_000);
+
+it("keeps code that only runs in a browser", async () => {
+  const code = await buildCard("fixtures/browser-only.ts");
+
+  expect(code).toContain("browser-only code kept");
+}, 30_000);

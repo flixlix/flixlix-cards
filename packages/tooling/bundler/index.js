@@ -113,7 +113,9 @@ export function createCardConfig(options) {
         filterRoot: false,
         include: ["**/*.ts", "**/*.tsx", "../../shared/src/**/*.ts", "../../shared/src/**/*.tsx"],
       }),
-      nodeResolve(),
+      // Cards run in a browser: packages that branch on it (esm-env, used by number-flow) must
+      // resolve their browser build, or their browser-only code is folded away as dead.
+      nodeResolve({ exportConditions: ["browser"] }),
       json({ compact: true }),
       commonjs(),
       babel({
