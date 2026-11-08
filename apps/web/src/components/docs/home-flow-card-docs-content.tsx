@@ -40,6 +40,7 @@ import {
   Section,
   type OptionRow,
 } from "./doc-primitives";
+import { InstallFromLink } from "./install-from-link";
 import { OptionList } from "./option-list";
 import { PageTOC, type TocItem } from "./page-toc";
 
@@ -49,7 +50,7 @@ const CARD_TYPE = "custom:home-flow-card";
 const BASE_PATH = "/home-flow-card";
 const REPO_URL = "https://github.com/flixlix/home-flow-card";
 const HACS_REDIRECT =
-  "https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=home-flow-card&category=Dashboard";
+  "https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=home-flow-card&category=plugin";
 const RELEASE_URL = "https://github.com/flixlix/home-flow-card/releases/latest";
 
 const MINIMAL_CONFIG = `type: ${CARD_TYPE}
@@ -178,7 +179,7 @@ export function OverviewPage() {
       <div className="mt-5 mb-12 flex flex-wrap justify-center gap-2">
         <Button asChild>
           <a href={HACS_REDIRECT} target="_blank" rel="noopener noreferrer">
-            <Download className="size-4" /> Get it in HACS
+            <Download className="size-4" /> Install in Home Assistant
           </a>
         </Button>
         <Button asChild variant="outline">
@@ -230,7 +231,7 @@ export function OverviewPage() {
             to={`${BASE_PATH}/installation`}
             icon={Package}
             title="Installation"
-            description="HACS custom repository or manual install."
+            description="Marketplace, HACS custom repository or manual install."
           />
           <SectionCard
             to={`${BASE_PATH}/configuration`}
@@ -295,40 +296,10 @@ export function InstallationPage() {
       <PageHeader
         eyebrow={TITLE}
         title="Installation"
-        description="This card is not in the default HACS store — add it as a custom repository first. Manual installation is also supported."
+        description="Install it from its link in Home Assistant's Marketplace, or as a custom repository in HACS before 2026.11. Manual installation is also supported."
       />
 
-      <Callout variant="info" title="Custom repository required">
-        <strong>{TITLE}</strong> is not part of the default HACS index. Add the repository URL below
-        as a <em>Custom repository</em> in HACS to install it.
-      </Callout>
-
-      <Section title="HACS (custom repository)" id="hacs">
-        <Prose>
-          <ol>
-            <li>
-              In Home Assistant, open <strong>HACS</strong>.
-            </li>
-            <li>
-              Click the <strong>⋮</strong> menu in the top-right and choose{" "}
-              <strong>Custom repositories</strong>.
-            </li>
-            <li>
-              Add the repository URL <code>{REPO_URL}</code> with category{" "}
-              <strong>Dashboard</strong>, then click <strong>Add</strong>.
-            </li>
-            <li>
-              Search for <strong>{TITLE}</strong> in HACS and click <strong>Download</strong>.
-            </li>
-            <li>Reload your dashboard / clear browser cache.</li>
-          </ol>
-        </Prose>
-        <Button asChild variant="outline" size="sm">
-          <a href={HACS_REDIRECT} target="_blank" rel="noopener noreferrer">
-            Open in HACS
-          </a>
-        </Button>
-      </Section>
+      <InstallFromLink title={TITLE} repoUrl={REPO_URL} redirect={HACS_REDIRECT} />
 
       <Section title="Manual installation" id="manual">
         <Prose>
@@ -347,12 +318,16 @@ export function InstallationPage() {
     - url: /local/${PKG}.js
       type: module`}
         />
-        <Callout variant="tip" title="HACS users">
-          When installed via HACS the path becomes{" "}
+        <Callout variant="tip" title="Installed from the Marketplace or HACS?">
+          It registers the resource for you. The Marketplace serves it from
+          <code>
+            /local/community/{PKG}/{PKG}.js
+          </code>
+          ; HACS used
           <code>
             /hacsfiles/{PKG}/{PKG}.js
           </code>
-          . HACS usually registers it automatically.
+          , which keeps working.
         </Callout>
       </Section>
 

@@ -32,6 +32,7 @@ import {
   Section,
   type OptionRow,
 } from "./doc-primitives";
+import { InstallFromLink } from "./install-from-link";
 import { OptionList } from "./option-list";
 import { PageTOC, type TocItem } from "./page-toc";
 
@@ -41,7 +42,7 @@ const CARD_TYPE = "custom:energy-period-selector-plus";
 const BASE_PATH = "/energy-period-selector-plus";
 const REPO_URL = "https://github.com/flixlix/energy-period-selector-plus";
 const HACS_REDIRECT =
-  "https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=energy-period-selector-plus&category=Dashboard";
+  "https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=energy-period-selector-plus&category=plugin";
 const RELEASE_URL = "https://github.com/flixlix/energy-period-selector-plus/releases/latest";
 
 function HighlightItem({ children }: { children: React.ReactNode }) {
@@ -146,7 +147,7 @@ export function OverviewPage() {
             to={`${BASE_PATH}/installation`}
             icon={Package}
             title="Installation"
-            description="HACS custom repository or manual install."
+            description="Marketplace, HACS custom repository or manual install."
           />
           <SectionCard
             to={`${BASE_PATH}/configuration`}
@@ -205,47 +206,10 @@ export function InstallationPage() {
       <PageHeader
         eyebrow={TITLE}
         title="Installation"
-        description="This card is not in the default HACS store right now — add it as a custom repository first. Manual installation is also supported."
+        description="Install it from its link in Home Assistant's Marketplace, or as a custom repository in HACS before 2026.11. Manual installation is also supported."
       />
 
-      <Callout variant="info" title="Custom repository required">
-        <strong>{TITLE}</strong> is not part of the default HACS index at the moment. Add the
-        repository URL below as a <em>Custom repository</em> in HACS to install it.
-      </Callout>
-
-      <Section title="HACS (custom repository)" id="hacs">
-        <Prose>
-          <ol>
-            <li>
-              In Home Assistant, open <strong>HACS</strong>.
-            </li>
-            <li>
-              Click the <strong>⋮</strong> menu in the top-right and choose{" "}
-              <strong>Custom repositories</strong>.
-            </li>
-            <li>
-              Add the repository URL <code>{REPO_URL}</code> with category{" "}
-              <strong>Dashboard</strong>, then click <strong>Add</strong>.
-            </li>
-            <li>
-              Search for <strong>{TITLE}</strong> in HACS and click <strong>Download</strong>.
-            </li>
-            <li>Reload your dashboard / clear browser cache.</li>
-          </ol>
-          <p>
-            The button below opens the repository inside HACS and pre-fills the dialog if you have{" "}
-            <a href="https://my.home-assistant.io" target="_blank" rel="noopener noreferrer">
-              My Home Assistant
-            </a>{" "}
-            set up.
-          </p>
-        </Prose>
-        <Button asChild variant="outline" size="sm">
-          <a href={HACS_REDIRECT} target="_blank" rel="noopener noreferrer">
-            Open in HACS
-          </a>
-        </Button>
-      </Section>
+      <InstallFromLink title={TITLE} repoUrl={REPO_URL} redirect={HACS_REDIRECT} />
 
       <Section title="Manual installation" id="manual">
         <Prose>
@@ -273,12 +237,16 @@ export function InstallationPage() {
           </p>
         </Prose>
         <CodeBlock language="text" code={`/local/${PKG}.js`} />
-        <Callout variant="tip" title="HACS users">
-          When installed via HACS the path becomes{" "}
+        <Callout variant="tip" title="Installed from the Marketplace or HACS?">
+          It registers the resource for you. The Marketplace serves it from
+          <code>
+            /local/community/{PKG}/{PKG}.js
+          </code>
+          ; HACS used
           <code>
             /hacsfiles/{PKG}/{PKG}.js
           </code>
-          . HACS usually registers it automatically.
+          , which keeps working.
         </Callout>
       </Section>
 

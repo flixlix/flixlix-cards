@@ -68,12 +68,11 @@ In case you want to watch a tutorial instead of reading through this very long r
 
 ## Installation
 
-### HACS (recommended)
+### Marketplace or HACS (recommended)
 
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=power-flow-card-plus&category=Dashboard)
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=power-flow-card-plus&category=plugin)
 
-This card is directly available through [HACS](https://hacs.xyz). To install HACS, follow these [instructions](https://hacs.xyz/docs/setup/prerequisites).
-After having HACS installed, simply search for "Power Flow Card Plus" and download it using the UI 🙂
+This card is in the default catalog. On Home Assistant 2026.11 and newer, go to **Settings → Marketplace**, search for "Power Flow Card Plus" and install it. Before 2026.11, search for it in [HACS](https://hacs.xyz) and download it 🙂
 
 <details>
 <summary>Manual install</summary>

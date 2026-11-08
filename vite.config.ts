@@ -170,6 +170,12 @@ export default defineConfig({
         },
       },
       {
+        // links people follow to install a card; the rule's own tests hold bad links on purpose
+        files: ["**/*"],
+        excludeFiles: ["packages/tooling/lint-rules/**"],
+        rules: { "flixlix/hacs-link-category": "error" },
+      },
+      {
         files: ["packages/shared/src/utils/logging.ts"],
         rules: { "no-console": "off" },
       },
