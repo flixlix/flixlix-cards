@@ -1,5 +1,5 @@
 import { type HomeAssistant } from "custom-card-helpers";
-import { describe, expect, test } from "vite-plus/test";
+import { describe, expect, onTestFinished, test } from "vite-plus/test";
 import { userEvent } from "vite-plus/test/browser/context";
 import { emitTemplate, fakeHass, withStates } from "@flixlix-cards/shared/testing/fake-hass";
 import { expectFlowCard, flowScenarios } from "@flixlix-cards/shared/testing/flow-scenarios";
@@ -144,6 +144,34 @@ describe("node actions", () => {
   });
 });
 
+/** Where the nodes and lines sit inside the card when the page has the given direction. */
+const nodePositions = async (dir: "ltr" | "rtl") => {
+  document.documentElement.dir = dir;
+  const { card, root } = await mountCard(
+    PowerFlowCardPlus,
+    {
+      type: "custom:power-flow-card-plus",
+      entities: {
+        grid: { entity: "sensor.grid" },
+        solar: { entity: "sensor.solar" },
+        battery: { entity: "sensor.battery" },
+      },
+    },
+    fakeHass({
+      states: { "sensor.grid": "300", "sensor.solar": "100", "sensor.battery": "50" },
+    })
+  );
+  const origin = card.getBoundingClientRect();
+  return Object.fromEntries(
+    [".grid .circle", ".home .circle", ".solar .circle", ".battery .circle", ".lines svg"].map(
+      (selector) => {
+        const box = root.querySelector(selector)?.getBoundingClientRect();
+        return [selector, box && { x: box.x - origin.x, y: box.y - origin.y }];
+      }
+    )
+  );
+};
+
 describe("layout", () => {
   test("resizing between narrow and wide moves individuals in and out of the right slots", async () => {
     const individual = [1, 2, 3, 4].map((index) => ({ entity: `sensor.device_${index}` }));
@@ -173,6 +201,17 @@ describe("layout", () => {
     await card.resize(500);
     expect(card.text("span.individual-right-top")).toBe("2 W");
     expect(card.text("span.individual-right-bottom")).toBe("1 W");
+  });
+
+  test("a right-to-left page keeps circles where the lines meet them", async () => {
+    onTestFinished(() => {
+      document.documentElement.dir = "";
+    });
+    const ltr = await nodePositions("ltr");
+    const rtl = await nodePositions("rtl");
+
+    expect(rtl[".grid .circle"]?.x).toBeLessThan(rtl[".home .circle"]?.x ?? 0);
+    expect(rtl).toEqual(ltr);
   });
 });
 
