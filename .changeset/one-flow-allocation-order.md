@@ -1,6 +1,6 @@
 ---
-"power-flow-card-plus": patch
-"energy-flow-card-plus": patch
+"power-flow-card-plus": minor
+"energy-flow-card-plus": minor
 ---
 
 Flows are now worked out the same way on both cards, in the order the Home Assistant energy dashboard uses, so the same readings always draw the same lines. Flows never go negative and never carry more than a source produces or a sink takes: for example, solar can no longer appear to export more than it generates. When the grid is hidden or during a power outage, solar and battery flows are recalculated instead of losing the part that went to the grid, and Energy Flow Card Plus now shows battery flows during an outage too. With a home entity using `override_state`, the card still shows its reading, while the lines and the home circle stay balanced.
