@@ -1,5 +1,6 @@
 import { CIRCLE_CIRCUMFERENCE } from "@flixlix-cards/shared/const/circle";
 import { type IndividualObject } from "@flixlix-cards/shared/types";
+import { isDeviceOnly } from "@flixlix-cards/shared/utils/flow-card-config";
 import { type Formatter } from "./format";
 import { type Balance } from "./nodes";
 import { type NodeFlows } from "./solve";
@@ -66,5 +67,6 @@ export const computeHomeRing = (
     ...segments,
     largestSource,
     usageText: usageText(input, balance, individuals, format),
+    plain: isDeviceOnly(input.config.entities),
   };
 };

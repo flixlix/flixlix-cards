@@ -40,8 +40,8 @@ const singleGridTotals = (value: number) =>
 
 const measured = (override: boolean) =>
   normalize(
-    input({ home: { entity: "sensor.home", override_state: override } }),
-    readings({ home: 420 })
+    input({ grid, home: { entity: "sensor.home", override_state: override } }),
+    readings({ grid: single(300), home: 420 })
   ).totals.measuredHome;
 
 const fraction = (percentage: string) =>
@@ -300,5 +300,51 @@ describe("normalize properties", () => {
       }),
       RUNS
     );
+  });
+});
+
+describe("device-only mode (no grid, solar or battery)", () => {
+  const plugs = [{ entity: "sensor.a" }, { entity: "sensor.b", display_zero: false }];
+
+  test("measured home is the home entity's reading, even without override_state", () => {
+    const totals = normalize(
+      input({ home: { entity: "sensor.home" }, individual: plugs }),
+      readings({ home: 420, individuals: [100, 50] })
+    ).totals;
+    expect(totals.measuredHome).toBe(420);
+  });
+
+  test("without a home entity it is the sum of the shown devices", () => {
+    const totals = normalize(
+      input({ individual: plugs }),
+      readings({ individuals: [100, 0] })
+    ).totals;
+    expect(totals.measuredHome).toBe(100);
+  });
+
+  test("an unavailable home entity falls back to the sum of the devices", () => {
+    const totals = normalize(
+      input({ home: { entity: "sensor.home" }, individual: plugs }),
+      readings({ home: null, individuals: [100, 30] })
+    ).totals;
+    expect(totals.measuredHome).toBe(130);
+  });
+
+  test("a source keeps the old rule: measured only with override_state", () => {
+    expect(measured(true)).toBe(420);
+    expect(measured(false)).toBeUndefined();
+    const withGrid = normalize(
+      input({ grid, home: { entity: "sensor.home" } }),
+      readings({ grid: single(300), home: 420 })
+    ).totals;
+    expect(withGrid.measuredHome).toBeUndefined();
+  });
+
+  test("nothing flows from sources, so balanced home is 0", () => {
+    const { totals } = normalize(
+      input({ individual: plugs }),
+      readings({ individuals: [100, 50] })
+    );
+    expect(solve(totals).home).toBe(0);
   });
 });

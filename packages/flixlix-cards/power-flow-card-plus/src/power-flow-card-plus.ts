@@ -58,7 +58,7 @@ export class PowerFlowCardPlus extends LitElement {
   };
 
   setConfig(config: PowerFlowCardPlusConfig): void {
-    assertRenderableFlowCardConfig(config);
+    assertRenderableFlowCardConfig(config, { allowDeviceOnly: true });
     this._config = {
       ...config,
       min_flow_rate: coerceNumber(config.min_flow_rate, defaultValues.minFlowRate),

@@ -86,6 +86,8 @@ export type HomeRing = {
   nonFossil: number;
   largestSource: "battery" | "solar" | "grid" | "gridNonFossil";
   usageText: string;
+  /** No source supplies the home, so it has no segments and gets a plain border instead. */
+  plain: boolean;
 };
 
 export type CardLayout = {

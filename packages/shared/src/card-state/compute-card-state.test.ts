@@ -423,6 +423,53 @@ describe("zero tolerance and display_zero", () => {
   });
 });
 
+describe("device-only mode", () => {
+  const noSources = {
+    grid: undefined,
+    solar: undefined,
+    battery: undefined,
+  } as const;
+  const devices = [
+    { entity: "sensor.plug_a", name: "Plug A" },
+    { entity: "sensor.plug_b", name: "Plug B" },
+  ];
+
+  test("shows the home entity's reading and a plain home circle", () => {
+    const { homeRing, nodes, flows } = ready(
+      compute({
+        config: config({
+          entities: { ...noSources, home: { entity: "sensor.home" }, individual: devices },
+        }),
+        readings: readings({ home: 1500, individuals: [900, 200] }),
+      })
+    );
+
+    expect(homeRing.usageText).toBe(`1.5${thinSpace}kW`);
+    expect(homeRing).toMatchObject({ plain: true, battery: 0, solar: 0, grid: 0, nonFossil: 0 });
+    expect(nodes.grid.has).toBe(false);
+    expect(nodes.individuals.map((device) => device.entity)).toEqual([
+      "sensor.plug_a",
+      "sensor.plug_b",
+    ]);
+    expect(flows.individual.map((flow) => flow.visible)).toEqual([true, true]);
+  });
+
+  test("sums the devices when there is no home entity", () => {
+    const { homeRing } = ready(
+      compute({
+        config: config({ entities: { ...noSources, individual: devices } }),
+        readings: readings({ individuals: [900, 200] }),
+      })
+    );
+
+    expect(homeRing.usageText).toBe(`1.1${thinSpace}kW`);
+  });
+
+  test("a card with a source keeps the segmented ring", () => {
+    expect(ready(compute({})).homeRing.plain).toBe(false);
+  });
+});
+
 describe("home ring", () => {
   test("has no NaN segments when nothing is consumed", () => {
     const { homeRing } = ready(compute({}));

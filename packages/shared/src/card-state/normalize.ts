@@ -1,6 +1,7 @@
 import { computeNonFossilFromCollection } from "@flixlix-cards/shared/states/utils/energy-period";
 import { getEntityState } from "@flixlix-cards/shared/states/utils/get-entity-state";
 import { type ConfigEntities } from "@flixlix-cards/shared/types";
+import { isDeviceOnly } from "@flixlix-cards/shared/utils/flow-card-config";
 import { type HomeAssistant } from "custom-card-helpers";
 import { adjustZeroTolerance } from "./tolerance";
 import { type CardStateInput, type ReadyReadings, type TwoWayReading } from "./types";
@@ -14,7 +15,10 @@ export type NodeTotals = Readonly<{
   solar: number;
   batteryCharge: number;
   batteryDischarge: number;
-  /** The home entity's reading, present only with `override_state`. */
+  /**
+   * The home entity's reading, present with `override_state`. Without grid, solar or battery it is
+   * always present: the home entity's reading, or the sum of the shown devices without one.
+   */
   measuredHome?: number;
   individuals: ReadonlyArray<number>;
   /** Share of grid import from low-carbon sources, in [0, 1]; 0 while the node is hidden. */
@@ -175,8 +179,15 @@ const gridDuringOutage = (input: NormalizeInput, readings: ReadyReadings): Direc
   ),
 });
 
-const measuredHome = (input: NormalizeInput, readings: ReadyReadings): number | undefined => {
+const measuredHome = (
+  input: NormalizeInput,
+  readings: ReadyReadings,
+  shownDevices: number
+): number | undefined => {
   const home = input.config.entities.home;
+  if (isDeviceOnly(input.config.entities)) {
+    return home?.entity && readings.home !== null ? magnitude(readings.home) : shownDevices;
+  }
   return home?.override_state && home.entity ? magnitude(readings.home) : undefined;
 };
 
@@ -198,6 +209,10 @@ export const normalize = (input: NormalizeInput, readings: ReadyReadings): Norma
     nonFossil: nonFossilShown(input, visible.grid, outage, nodes.toleratedGrid.outOf * fraction),
   };
   const grid = outage ? gridDuringOutage(input, readings) : nodes.toleratedGrid;
+  const shownDevices = individuals.reduce(
+    (sum, total, index) => sum + (presence.individuals[index] ? total : 0),
+    0
+  );
   return {
     totals: {
       gridImport: shown(presence.grid, grid.outOf),
@@ -205,7 +220,7 @@ export const normalize = (input: NormalizeInput, readings: ReadyReadings): Norma
       solar: shown(presence.solar, nodes.toleratedSolar),
       batteryCharge: shown(presence.battery, nodes.battery.into),
       batteryDischarge: shown(presence.battery, nodes.battery.outOf),
-      measuredHome: measuredHome(input, readings),
+      measuredHome: measuredHome(input, readings, shownDevices),
       individuals,
       nonFossilFraction: shown(presence.nonFossil, fraction),
     },

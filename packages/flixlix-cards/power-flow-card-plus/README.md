@@ -156,7 +156,7 @@ If none of these actions are configured for a clickable entity surface, the card
 
 #### Entities object
 
-At least one of _grid_, _battery_, or _solar_ is required. All entites (except _battery_charge_) should have a `unit_of_measurement` attribute of W(watts) or kW(kilowatts). Entities in other units, e.g. `m³`, are read as they are, without scaling.
+At least one of _grid_, _battery_, _solar_ or _home_ (with an `entity`), or one _individual_ device, is required. Without grid, solar and battery the card runs in **device-only mode**: the home circle shows the `home` entity's reading (or, without one, the sum of the shown individual devices) and has a plain border instead of coloured segments. All entites (except _battery_charge_) should have a `unit_of_measurement` attribute of W(watts) or kW(kilowatts). Entities in other units, e.g. `m³`, are read as they are, without scaling.
 
 | Name                   | Type     | Description                                                                      |
 | ---------------------- | :------- | -------------------------------------------------------------------------------- |
