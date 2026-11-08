@@ -17,7 +17,8 @@
   ],
   "main": "./dist/energy-period-selector-plus.js",
   "exports": {
-    ".": "./dist/energy-period-selector-plus.js"
+    ".": "./dist/energy-period-selector-plus.js",
+    "./source": "./src/energy-period-selector-plus.ts"
   },
   "repository": {
     "type": "git",

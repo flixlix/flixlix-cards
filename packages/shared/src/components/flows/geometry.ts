@@ -60,8 +60,11 @@ export const nominalLayout = (width: number, nodes: LayoutNodes): FlowLayout => 
 type Segment = { to: Point; c1?: Point; c2?: Point };
 type Path = { start: Point; segments: Segment[] };
 
-/** Lines end this far inside the outer edge of a ring: on its 2px border, never in the circle. */
-export const RING_INSET = 0.5;
+/**
+ * How far inside its outer edge a line meets a ring: a quarter of the 2px border of an 80px
+ * circle (0.5px), scaled with the circle, so a scaled-down card keeps its lines on the border too.
+ */
+export const ringInset = (ring: Ring) => ring.r / 80;
 
 /** Straight run kept between a curve and the ring it leads into, in pixels. */
 const MIN_STRAIGHT = 3;
@@ -92,7 +95,7 @@ const split = (from: Point, segment: Segment, t: number): [Segment, Segment, Poi
 };
 
 const isInside = (point: Point, ring: Ring) =>
-  Math.hypot(point.x - ring.cx, point.y - ring.cy) < ring.r - RING_INSET;
+  Math.hypot(point.x - ring.cx, point.y - ring.cy) < ring.r - ringInset(ring);
 
 /** The path from where it first leaves the ring; a path that starts outside is kept whole. */
 const trimStart = ({ start, segments }: Path, ring: Ring): Path => {
@@ -266,8 +269,8 @@ const gridLines = ({ hub, home, grid, solar, battery }: FlowLayout, scale: numbe
   if (!grid) {
     return {};
   }
-  // The grid line enters the home below the solar line when there is no battery line under it.
-  const below = battery ? 0 : solar ? 6 : 3;
+  // Without a battery, the solar line enters the home on its axis, so the grid line goes below it.
+  const below = solar && !battery ? 6 : 0;
   return { gridToHome: straightLine(grid, home, { y: hub.y + below * scale }) };
 };
 

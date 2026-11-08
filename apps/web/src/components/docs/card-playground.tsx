@@ -3,7 +3,15 @@ import * as React from "react";
 import { parse, stringify } from "yaml";
 
 import { CardPreview, type CardConfig } from "@/components/card-preview";
-import { type StateFixtures } from "@flixlix-cards/shared/preview/fake-hass";
+import {
+  type Demo,
+  energyDemo,
+  energyFlowCard,
+  energyStates,
+  periodSelector,
+  powerDemo,
+} from "@/components/demos";
+import { sensor, type StateFixtures } from "@flixlix-cards/shared/preview/fake-hass";
 import { flowScenarios } from "@flixlix-cards/shared/testing/flow-scenarios";
 import { Input } from "@flixlix-cards/ui/components/input";
 import {
@@ -24,24 +32,124 @@ export type PlaygroundState = {
   width: number;
 };
 
-const CARD_TYPE = "custom:power-flow-card-plus";
+/**
+ * Power: live readings in W. Energy: daily usage, over a period picked above the card. Period:
+ * the period selector itself, driving an Energy Flow Card Plus below it.
+ */
+export type PlaygroundKind = "power" | "energy" | "period";
 
-const fromScenario = (scenario: (typeof flowScenarios)[number]): PlaygroundState => ({
-  yaml: stringify({ type: CARD_TYPE, ...scenario.options, entities: scenario.entities }),
-  states: scenario.states,
-  templates: scenario.templates,
-  width: scenario.width ?? 500,
-});
+type FlowKind = Exclude<PlaygroundKind, "period">;
 
-export const defaultPlayground = (): PlaygroundState => {
-  const scenario =
-    flowScenarios.find((candidate) => candidate.name.startsWith("solver regression")) ??
-    flowScenarios[0];
-  if (!scenario) {
-    throw new Error("no flow scenarios");
-  }
-  return fromScenario(scenario);
+const CARD_TYPES: Record<FlowKind, string> = {
+  power: "custom:power-flow-card-plus",
+  energy: "custom:energy-flow-card-plus",
 };
+
+const DEMOS: Record<FlowKind, Demo> = { power: powerDemo, energy: energyDemo };
+
+/** The period selector's README examples and the options worth trying. */
+const periodPresets = (): Preset[] =>
+  [
+    { name: "every period, on a card", config: periodSelector },
+    {
+      name: "titled, icon buttons, month / year / custom",
+      config: {
+        type: "custom:energy-period-selector-plus",
+        card_background: true,
+        title: "Energy period",
+        today_button_type: "icon",
+        compare_button_type: "icon",
+        period_buttons: ["month", "year", "custom"],
+      },
+    },
+    {
+      name: "compare as text",
+      config: { ...periodSelector, compare_button_type: "text" },
+    },
+    {
+      name: "date picker in every period",
+      config: {
+        ...periodSelector,
+        date_picker: true,
+        period_buttons: ["day", "week", "month", "year", "custom"],
+      },
+    },
+    {
+      name: "bare, without a card",
+      config: { type: "custom:energy-period-selector-plus", prev_next_buttons: false },
+    },
+  ].map(({ name, config }) => ({
+    name,
+    state: { yaml: stringify(config), states: energyStates, width: 500 },
+  }));
+
+/** A test scenario's power readings as daily energy: the same numbers, in Wh. */
+const asDailyEnergy = (states: StateFixtures): StateFixtures =>
+  Object.fromEntries(
+    Object.entries(states).map(([id, fixture]) => {
+      const state = typeof fixture === "string" ? fixture : fixture.state;
+      const unit = typeof fixture === "string" ? "W" : fixture.attributes.unit_of_measurement;
+      return [id, unit === "W" ? sensor(state, { unit: "Wh" }) : fixture];
+    })
+  );
+
+type Preset = { name: string; state: PlaygroundState };
+
+const presets = (kind: PlaygroundKind): Preset[] => {
+  if (kind === "period") {
+    return periodPresets();
+  }
+  const demo = DEMOS[kind];
+  const realistic: Preset = {
+    name: kind === "power" ? "a sunny afternoon" : "an average day",
+    state: {
+      yaml: stringify(demo.configs[demo.configs.length - 1]),
+      states: demo.states,
+      width: 500,
+    },
+  };
+  const scenarios = flowScenarios
+    .filter((scenario) => kind === "power" || scenario.energy)
+    .map((scenario) => ({
+      name: scenario.name,
+      state: {
+        yaml: stringify({
+          type: CARD_TYPES[kind],
+          ...(kind === "energy" ? { energy_date_selection: true } : {}),
+          ...scenario.options,
+          entities: scenario.entities,
+        }),
+        states: kind === "energy" ? asDailyEnergy(scenario.states) : scenario.states,
+        templates: scenario.templates,
+        width: scenario.width ?? 500,
+      },
+    }));
+  return [realistic, ...scenarios];
+};
+
+export const defaultPlayground = (kind: PlaygroundKind): PlaygroundState => {
+  const [first] = presets(kind);
+  if (!first) {
+    throw new Error("no playground presets");
+  }
+  return first.state;
+};
+
+const isPlaygroundState = (value: unknown): value is PlaygroundState =>
+  typeof value === "object" &&
+  value !== null &&
+  "yaml" in value &&
+  typeof value.yaml === "string" &&
+  "states" in value &&
+  typeof value.states === "object" &&
+  value.states !== null &&
+  "width" in value &&
+  typeof value.width === "number";
+
+/** Route search for a playground: a broken or missing setup in the link means the default one. */
+export const validatePlaygroundSearch = (
+  search: Record<string, unknown>
+): { s?: PlaygroundState } => (isPlaygroundState(search.s) ? { s: search.s } : {});
 
 const isCardConfig = (value: unknown): value is CardConfig =>
   typeof value === "object" && value !== null && "type" in value && typeof value.type === "string";
@@ -85,14 +193,17 @@ function StateControl({
   entityId,
   value,
   onChange,
+  signed,
 }: {
   entityId: string;
   value: string;
   onChange: (value: string) => void;
+  /** Whether the reading can go negative, like a combined grid or battery sensor. */
+  signed: boolean;
 }) {
   const number = Number.parseFloat(value);
   // ponytail: the range is fixed around the first value; type a number for anything outside it.
-  const [range] = React.useState(() => Math.max(1000, Math.abs(number) * 2 || 0));
+  const [range] = React.useState(() => Math.abs(number) * 2 || 1000);
   const inputId = `state-${entityId}`;
   return (
     <div className="flex flex-col gap-2.5">
@@ -110,7 +221,7 @@ function StateControl({
       {Number.isFinite(number) ? (
         <Slider
           aria-label={entityId}
-          min={-range}
+          min={signed ? -range : 0}
           max={range}
           step={range / 200}
           value={[number]}
@@ -121,8 +232,17 @@ function StateControl({
   );
 }
 
-/** A live power-flow-card-plus with an editable config and sliders for every sensor. */
-export function CardPlayground({ initial }: { initial: PlaygroundState }) {
+/**
+ * A live flow card with an editable config and sliders for every sensor. The energy card sits
+ * under a period selector, as on a dashboard, and follows the period picked there.
+ */
+export function CardPlayground({
+  kind,
+  initial,
+}: {
+  kind: PlaygroundKind;
+  initial: PlaygroundState;
+}) {
   const [state, setState] = React.useState(initial);
   const update = (next: Partial<PlaygroundState>) =>
     setState((previous) => ({ ...previous, ...next }));
@@ -142,16 +262,25 @@ export function CardPlayground({ initial }: { initial: PlaygroundState }) {
   if (parsed.config && parsed.config !== config) {
     setConfig(parsed.config);
   }
+  const configs = React.useMemo(() => {
+    if (!config) {
+      return [];
+    }
+    return { power: [config], energy: [periodSelector, config], period: [config, energyFlowCard] }[
+      kind
+    ];
+  }, [config, kind]);
+  const scenarios = React.useMemo(() => presets(kind), [kind]);
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       <div className="flex flex-col gap-6">
         <Panel title="Scenario">
           <Select
             onValueChange={(index) => {
-              const scenario = flowScenarios[Number(index)];
-              if (scenario) {
-                update(fromScenario(scenario));
+              const preset = scenarios[Number(index)];
+              if (preset) {
+                update(preset.state);
               }
             }}
           >
@@ -159,9 +288,9 @@ export function CardPlayground({ initial }: { initial: PlaygroundState }) {
               <SelectValue placeholder="Load a scenario…" />
             </SelectTrigger>
             <SelectContent>
-              {flowScenarios.map((scenario, index) => (
-                <SelectItem key={scenario.name} value={String(index)}>
-                  {scenario.name}
+              {scenarios.map((preset, index) => (
+                <SelectItem key={preset.name} value={String(index)}>
+                  {preset.name}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -185,13 +314,21 @@ export function CardPlayground({ initial }: { initial: PlaygroundState }) {
             </p>
           ) : null}
         </Panel>
-        <Panel title="Sensor states">
+        <Panel
+          title="Sensor states"
+          aside={
+            <span className="text-muted-foreground font-mono text-xs">
+              {kind === "power" ? "W" : "on an average day"}
+            </span>
+          }
+        >
           <div className="flex flex-col gap-5">
             {Object.entries(state.states).map(([entityId, fixture]) => (
               <StateControl
                 key={entityId}
                 entityId={entityId}
                 value={stateOf(fixture)}
+                signed={kind === "power"}
                 onChange={(value) =>
                   setState((previous) => ({
                     ...previous,
@@ -224,9 +361,10 @@ export function CardPlayground({ initial }: { initial: PlaygroundState }) {
           <CardPreview
             // A new fake connection when the templates change.
             key={JSON.stringify(state.templates ?? {})}
-            config={config}
+            configs={configs}
             states={state.states}
             templates={state.templates}
+            energy={kind !== "power"}
             width={state.width}
             className="rounded-xl border"
           />

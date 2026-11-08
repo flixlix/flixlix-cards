@@ -71,6 +71,7 @@ export default defineConfig({
       "flixlix/no-camelcase-event-binding": "error",
       "flixlix/no-mwc-elements": "error",
       "flixlix/no-sliced-svg": "error",
+      "flixlix/ha-localize-keys": "error",
       "flixlix/no-native-date-input": "error",
       "flixlix/no-paced-key-points": "error",
       "vite-plus/prefer-vite-plus-imports": "error",
@@ -130,6 +131,11 @@ export default defineConfig({
             { max: 120, skipBlankLines: true, skipComments: true },
           ],
         },
+      },
+      {
+        // Stands in for HA's date range picker in the docs, where HA's picker does not exist.
+        files: ["packages/shared/src/preview/date-range-picker.ts"],
+        rules: { "flixlix/no-native-date-input": "off" },
       },
       {
         files: ["packages/shared/src/card-state/**"],

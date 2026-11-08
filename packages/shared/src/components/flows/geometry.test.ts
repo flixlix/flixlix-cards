@@ -5,7 +5,7 @@ import {
   flowPaths,
   nominalLayout,
   type Point,
-  RING_INSET,
+  ringInset,
   type Ring,
 } from "./geometry";
 
@@ -69,6 +69,13 @@ const nodeSets = fc.record({
   right: fc.boolean(),
 });
 
+/** How far the grid line runs from the home's axis. */
+const axisOf = (nodes: { solar: boolean; battery: boolean }) => {
+  const layout = nominalLayout(400, { grid: true, right: false, ...nodes });
+  const start = sample(flowPaths(layout, { hasBottomRow: nodes.battery }).gridToHome?.d ?? "")[0];
+  return (start?.y ?? Number.NaN) - layout.home.cy;
+};
+
 const startX = (line: { d: string } | undefined) => sample(line?.d ?? "")[0]?.x ?? Number.NaN;
 
 describe("flow paths", () => {
@@ -89,8 +96,10 @@ describe("flow paths", () => {
           if (!first || !last) {
             throw new Error(`${flow}: empty path`);
           }
-          expect(Math.abs(distance(first, from) - (from.r - RING_INSET))).toBeLessThan(ROUNDING);
-          expect(Math.abs(distance(last, to) - (to.r - RING_INSET))).toBeLessThan(ROUNDING);
+          expect(Math.abs(distance(first, from) - (from.r - ringInset(from)))).toBeLessThan(
+            ROUNDING
+          );
+          expect(Math.abs(distance(last, to) - (to.r - ringInset(to)))).toBeLessThan(ROUNDING);
         }
       })
     );
@@ -113,7 +122,7 @@ describe("flow paths", () => {
           for (const point of sample(d)) {
             for (const circle of rings) {
               expect(distance(point, circle), flow).toBeGreaterThan(
-                circle.r - RING_INSET - ROUNDING
+                circle.r - ringInset(circle) - ROUNDING
               );
             }
           }
@@ -129,6 +138,13 @@ describe("flow paths", () => {
     expect(startX(paths.solarToBattery)).toBeCloseTo(hub, 2);
     expect(startX(paths.solarToHome) - hub).toBeCloseTo(hub - startX(paths.solarToGrid), 2);
     expect(startX(paths.batteryToHome) - hub).toBeCloseTo(hub - startX(paths.batteryToGrid), 2);
+  });
+
+  test("the grid line runs on the home's axis unless a solar line takes it", () => {
+    expect(axisOf({ solar: false, battery: false })).toBeCloseTo(0, 2);
+    expect(axisOf({ solar: false, battery: true })).toBeCloseTo(0, 2);
+    expect(axisOf({ solar: true, battery: true })).toBeCloseTo(0, 2);
+    expect(axisOf({ solar: true, battery: false })).toBeGreaterThan(5);
   });
 
   test("a reversed line is the same line, run from its other end", () => {

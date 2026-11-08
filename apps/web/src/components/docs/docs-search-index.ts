@@ -6,7 +6,7 @@ export type SearchEntry = {
   to: string;
   /** Breadcrumb shown to the right of the title. */
   breadcrumb: string;
-  card?: "power" | "energy" | "breakdown" | "sortable" | "general";
+  card?: "power" | "energy" | "breakdown" | "sortable" | "period" | "general";
   type: "page" | "section" | "option" | "example";
   /** Extra strings used for matching but not shown. */
   keywords?: string[];
@@ -16,6 +16,8 @@ const POWER = "Power Flow Card Plus";
 const ENERGY = "Energy Flow Card Plus";
 const BREAKDOWN = "Energy Breakdown Card";
 const BREAKDOWN_BASE = "/energy-breakdown-card" as const;
+const PERIOD = "Energy Period Selector Plus";
+const PERIOD_BASE = "/energy-period-selector-plus" as const;
 const SORTABLE = "Sortable List Card";
 const SORTABLE_BASE = "/sortable-list-card" as const;
 
@@ -653,6 +655,122 @@ function sortableExamples(): SearchEntry[] {
   ];
 }
 
+const periodEntry = (
+  to: string,
+  breadcrumb: string,
+  type: SearchEntry["type"],
+  title: string,
+  description: string,
+  keywords?: string[]
+): SearchEntry => ({ title, description, to, breadcrumb, card: "period", type, keywords });
+
+function periodPages(): SearchEntry[] {
+  return [
+    periodEntry(PERIOD_BASE, PERIOD, "page", "Overview", `What ${PERIOD} is and what it can do.`, [
+      "date",
+      "period",
+      "picker",
+      "selector",
+      "energy collection",
+    ]),
+    periodEntry(
+      `${PERIOD_BASE}/installation`,
+      PERIOD,
+      "page",
+      "Installation",
+      "HACS custom repository and manual installation instructions.",
+      ["hacs", "custom repository", "install", "resource", "lovelace"]
+    ),
+    periodEntry(
+      `${PERIOD_BASE}/configuration`,
+      PERIOD,
+      "page",
+      "Configuration",
+      "Full reference of every option.",
+      ["yaml", "options", "reference"]
+    ),
+    periodEntry(
+      `${PERIOD_BASE}/examples`,
+      PERIOD,
+      "page",
+      "Examples",
+      "Copy-pastable configs, including one paired with Energy Flow Card Plus.",
+      ["yaml", "snippet", "vertical-stack"]
+    ),
+  ];
+}
+
+const periodSection = (id: string, title: string, description: string) =>
+  periodEntry(
+    `${PERIOD_BASE}/configuration#${id}`,
+    `${PERIOD} → Configuration`,
+    "section",
+    title,
+    description
+  );
+
+function periodConfigSections(): SearchEntry[] {
+  return [
+    periodSection("card-options", "Card options", "Card background, title and energy collection."),
+    periodSection("buttons", "Buttons", "Period buttons, previous/next, today and the calendar."),
+    periodSection("compare", "Compare", "Compare with the previous period."),
+  ];
+}
+
+const periodOption = (name: string, description: string, sectionId: string, keywords?: string[]) =>
+  periodEntry(
+    `${PERIOD_BASE}/configuration#${sectionId}`,
+    `${PERIOD} → Configuration`,
+    "option",
+    name,
+    description,
+    keywords
+  );
+
+function periodConfigOptions(): SearchEntry[] {
+  return [
+    periodOption("card_background", "Show the selector on a card.", "card-options"),
+    periodOption("title", "Card title, with card_background.", "card-options"),
+    periodOption("collection_key", "Drive another energy collection.", "card-options", [
+      "dashboard",
+    ]),
+    periodOption("period_buttons", "Period buttons and their order.", "buttons", [
+      "day",
+      "week",
+      "month",
+      "year",
+      "custom",
+    ]),
+    periodOption("custom_period_label", "Label of the custom button.", "buttons"),
+    periodOption("prev_next_buttons", "Show the previous and next buttons.", "buttons"),
+    periodOption("today_button_type", "Style of the today button, or hide it.", "buttons"),
+    periodOption("date_picker", "Open HA's calendar from the date in every period.", "buttons", [
+      "calendar",
+      "range",
+    ]),
+    periodOption("compare_button_type", "Show a compare button.", "compare"),
+    periodOption("compare_button_label", "Label of the text compare button.", "compare"),
+  ];
+}
+
+const periodExample = (id: string, title: string, description: string) =>
+  periodEntry(
+    `${PERIOD_BASE}/examples#${id}`,
+    `${PERIOD} → Examples`,
+    "example",
+    title,
+    description
+  );
+
+function periodExamples(): SearchEntry[] {
+  return [
+    periodExample("minimal", "On a card", "Default buttons on a card background."),
+    periodExample("icons", "Icons, compare and custom periods", "Icon buttons and custom ranges."),
+    periodExample("date-picker", "Pick any range from the date", "date_picker in every period."),
+    periodExample("with-energy-flow", "With Energy Flow Card Plus", "Drive energy_date_selection."),
+  ];
+}
+
 const CONTRIBUTING_SECTIONS: SearchEntry[] = [
   {
     title: "Prerequisites",
@@ -749,20 +867,42 @@ export const SEARCH_ENTRIES: SearchEntry[] = [
     keywords: ["demo", "live", "preview", "try", "scenario"],
   },
   ...cardPages("energy", "/energy-flow-card-plus", ENERGY),
+  {
+    title: "Playground",
+    description: "Try the card live under the period selector: pick a period, edit the config.",
+    to: "/energy-flow-card-plus/playground",
+    breadcrumb: "Energy Flow Card Plus",
+    card: "energy",
+    type: "page",
+    keywords: ["demo", "live", "preview", "try", "scenario", "period", "date"],
+  },
+  {
+    title: "Playground",
+    description: "Try the period selector live, driving Energy Flow Card Plus.",
+    to: "/energy-period-selector-plus/playground",
+    breadcrumb: "Energy Period Selector Plus",
+    card: "period",
+    type: "page",
+    keywords: ["demo", "live", "preview", "try", "period", "date", "compare"],
+  },
   ...breakdownPages(),
   ...sortablePages(),
+  ...periodPages(),
   ...configSections("power", "/power-flow-card-plus", POWER),
   ...configSections("energy", "/energy-flow-card-plus", ENERGY),
   ...breakdownConfigSections(),
   ...sortableConfigSections(),
+  ...periodConfigSections(),
   ...configOptions("power", "/power-flow-card-plus", POWER),
   ...configOptions("energy", "/energy-flow-card-plus", ENERGY),
   ...breakdownConfigOptions(),
   ...sortableConfigOptions(),
+  ...periodConfigOptions(),
   ...exampleEntries("power", "/power-flow-card-plus", POWER),
   ...exampleEntries("energy", "/energy-flow-card-plus", ENERGY),
   ...breakdownExamples(),
   ...sortableExamples(),
+  ...periodExamples(),
   ...CONTRIBUTING_SECTIONS,
 ];
 

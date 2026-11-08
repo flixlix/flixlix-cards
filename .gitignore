@@ -62,3 +62,6 @@ custom-elements.json
 # Screenshot baselines come from the Playwright Docker image only (`pnpm test:visual`).
 **/__screenshots__/**/*-darwin.png
 **/__screenshots__/**/*-win32.png
+
+# Claude Code worktrees: separate checkouts, never part of this repo
+.claude/worktrees/

@@ -330,7 +330,11 @@ export const nonFossilNode = (context: NodeContext): NonFossilObject => {
   const has = balance.presence.nonFossil;
   return {
     entity: fossil?.entity,
-    name: computeFieldName(hass, fossil, hass.localize("card.label.non_fossil_fuel_percentage")),
+    name: computeFieldName(
+      hass,
+      fossil,
+      hass.localize("ui.panel.lovelace.cards.energy.energy_distribution.low_carbon")
+    ),
     icon: computeFieldIcon(hass, fossil, "mdi:leaf"),
     has,
     hasPercentage: has,
