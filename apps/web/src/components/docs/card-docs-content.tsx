@@ -582,9 +582,10 @@ const GRID_OPTIONS: OptionRow[] = [
   },
   {
     name: "name",
-    type: "string",
+    type: "string | list",
     default: "Grid",
-    description: "Override the auto-translated label.",
+    description:
+      "Override the auto-translated label. A list of name parts (area, device, entity, floor, text) composes it from the registries (Home Assistant 2026.4+).",
   },
   {
     name: "icon",
@@ -640,7 +641,13 @@ const SOLAR_OPTIONS: OptionRow[] = [
     required: true,
     description: "Sensor providing solar production.",
   },
-  { name: "name", type: "string", default: "Solar", description: "Override the label." },
+  {
+    name: "name",
+    type: "string | list",
+    default: "Solar",
+    description:
+      "Override the label. A list of name parts (area, device, entity, floor, text) composes it from the registries (Home Assistant 2026.4+).",
+  },
   { name: "icon", type: "string", default: "mdi:solar-power", description: "Solar circle icon." },
   { name: "color", type: "string", description: "HEX color for solar circle, label and lines." },
   {
@@ -710,7 +717,13 @@ const BATTERY_OPTIONS: OptionRow[] = [
     default: "0",
     description: "Decimals for the SoC.",
   },
-  { name: "name", type: "string", default: "Battery", description: "Override the label." },
+  {
+    name: "name",
+    type: "string | list",
+    default: "Battery",
+    description:
+      "Override the label. A list of name parts (area, device, entity, floor, text) composes it from the registries (Home Assistant 2026.4+).",
+  },
   {
     name: "icon",
     type: "string",
@@ -792,7 +805,13 @@ const HOME_OPTIONS: OptionRow[] = [
     description:
       "Sensor for home consumption. Used only for the more-info dialog, the value is calculated from the other sources.",
   },
-  { name: "name", type: "string", default: "Home", description: "Override the label." },
+  {
+    name: "name",
+    type: "string | list",
+    default: "Home",
+    description:
+      "Override the label. A list of name parts (area, device, entity, floor, text) composes it from the registries (Home Assistant 2026.4+).",
+  },
   { name: "icon", type: "string", default: "mdi:home", description: "Home circle icon." },
   {
     name: "color_icon",
@@ -828,7 +847,12 @@ const INDIVIDUAL_OPTIONS: OptionRow[] = [
     required: true,
     description: "Sensor for the individual device.",
   },
-  { name: "name", type: "string", description: "Label shown above the circle." },
+  {
+    name: "name",
+    type: "string | list",
+    description:
+      "Label shown above the circle. A list of name parts (area, device, entity, floor, text) composes it from the registries (Home Assistant 2026.4+).",
+  },
   { name: "icon", type: "string", description: "Icon path (e.g. mdi:car-electric)." },
   { name: "color", type: "string", description: "HEX color for circle, label and line." },
   {
@@ -886,7 +910,13 @@ const FOSSIL_OPTIONS: OptionRow[] = [
     required: true,
     description: "Sensor giving the fossil-fuel percentage (CO2 Signal works out of the box).",
   },
-  { name: "name", type: "string", default: "Low-carbon", description: "Label above the circle." },
+  {
+    name: "name",
+    type: "string | list",
+    default: "Low-carbon",
+    description:
+      "Label above the circle. A list of name parts (area, device, entity, floor, text) composes it from the registries (Home Assistant 2026.4+).",
+  },
   { name: "icon", type: "string", default: "mdi:leaf", description: "Icon inside the circle." },
   {
     name: "color",
