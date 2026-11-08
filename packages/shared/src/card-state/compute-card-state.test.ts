@@ -419,8 +419,8 @@ describe("zero tolerance and display_zero", () => {
     );
 
     expect(nodes.individuals.map((individual) => individual.entity)).toEqual([
-      "sensor.idle",
       "sensor.large",
+      "sensor.idle",
     ]);
   });
 });
@@ -536,19 +536,23 @@ describe("animation rescale", () => {
   });
 });
 
+const order = (state: ReadyCardState) =>
+  state.nodes.individuals.map((individual) => individual.entity);
+
 describe("individual device slots", () => {
   const four = config({
     entities: {
       individual: ["a", "b", "c", "d"].map((name) => ({ entity: `sensor.${name}` })),
     },
   });
+  const unsorted = { ...four, sort_individual_devices: false };
   const slots = (overrides: Partial<CardStateInput>) =>
     ready(
       compute({ config: four, readings: readings({ individuals: [10, 40, 30, 20] }), ...overrides })
     );
 
   test("narrow cards show two devices on the left", () => {
-    const state = slots({ width: 358 });
+    const state = slots({ config: unsorted, width: 358 });
 
     expect(state.individualSlots.leftTop?.node.entity).toBe("sensor.a");
     expect(state.individualSlots.leftBottom?.node.entity).toBe("sensor.b");
@@ -557,20 +561,27 @@ describe("individual device slots", () => {
   });
 
   test("cards at least 359px wide, or allowing layout breaks, show four", () => {
-    expect(slots({ width: 359 }).individualSlots.rightBottom?.node.entity).toBe("sensor.d");
+    expect(slots({ config: unsorted, width: 359 }).individualSlots.rightBottom?.node.entity).toBe(
+      "sensor.d"
+    );
     expect(
       slots({ width: 0, config: { ...four, allow_layout_break: true } }).layout.hasRightIndividual
     ).toBe(true);
   });
 
-  test("sort_individual_devices orders by reading, largest first", () => {
-    const state = slots({ config: { ...four, sort_individual_devices: true } });
+  test("devices are sorted by reading, largest first, when sort_individual_devices is unset", () => {
+    const sorted = ["sensor.b", "sensor.c", "sensor.d", "sensor.a"];
 
-    expect(state.nodes.individuals.map((individual) => individual.entity)).toEqual([
+    expect(order(slots({}))).toEqual(sorted);
+    expect(order(slots({ config: { ...four, sort_individual_devices: true } }))).toEqual(sorted);
+  });
+
+  test("sort_individual_devices: false keeps the configured order", () => {
+    expect(order(slots({ config: unsorted }))).toEqual([
+      "sensor.a",
       "sensor.b",
       "sensor.c",
       "sensor.d",
-      "sensor.a",
     ]);
   });
 });

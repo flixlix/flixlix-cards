@@ -283,11 +283,30 @@ export const flowScenarios: FlowScenario[] = [
       battery: { entity: "sensor.battery" },
       individual: individuals(5),
     },
+    options: { sort_individual_devices: false },
     states: { "sensor.grid": "200", "sensor.battery": "0", ...individualStates(5) },
     width: 340,
     expect: {
       text: { "span.individual-left-top": "10 W", "span.individual-left-bottom": "20 W" },
       hidden: [".individual-right-top", ".individual-right-bottom", ".lines.multi-individual"],
+    },
+  },
+  {
+    name: "individuals are sorted by power across W and kW by default",
+    entities: {
+      grid: { entity: "sensor.grid" },
+      individual: [
+        { entity: "sensor.lights", name: "Lights" },
+        { entity: "sensor.charger", name: "Charger" },
+      ],
+    },
+    states: {
+      "sensor.grid": "4000",
+      "sensor.lights": "20.63",
+      "sensor.charger": sensor("3.848", { unit: "kW" }),
+    },
+    expect: {
+      text: { ".individual-top .label": "Charger", ".individual-bottom .label": "Lights" },
     },
   },
   {

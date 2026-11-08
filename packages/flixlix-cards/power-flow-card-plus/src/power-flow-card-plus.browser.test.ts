@@ -171,8 +171,8 @@ describe("layout", () => {
     expect(card.root.querySelector(".individual-right-bottom")).toBeNull();
 
     await card.resize(500);
-    expect(card.text("span.individual-right-top")).toBe("3 W");
-    expect(card.text("span.individual-right-bottom")).toBe("4 W");
+    expect(card.text("span.individual-right-top")).toBe("2 W");
+    expect(card.text("span.individual-right-bottom")).toBe("1 W");
   });
 });
 

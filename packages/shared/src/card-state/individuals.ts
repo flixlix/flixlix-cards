@@ -136,11 +136,12 @@ const byStateThenEntity = (a: IndividualSlot, b: IndividualSlot) =>
 /** Cards narrower than this show two individual devices unless `allow_layout_break` is set. */
 const WIDTH_FOR_FOUR_INDIVIDUALS = 359;
 
-/** Sorts individual devices if configured and places the visible ones into the four slots. */
+/** Sorts individual devices unless `sort_individual_devices` is false, then places the visible ones into the four slots. */
 export const placeIndividuals = (input: CardStateInput, devices: IndividualSlot[]) => {
-  const sorted = input.config.sort_individual_devices
-    ? sortedCopy(devices, byStateThenEntity)
-    : devices;
+  const sorted =
+    input.config.sort_individual_devices === false
+      ? devices
+      : sortedCopy(devices, byStateThenEntity);
   const maxVisible =
     input.config.allow_layout_break || input.width >= WIDTH_FOR_FOUR_INDIVIDUALS ? 4 : 2;
   const visible = sorted.filter((device) => device.node.has).slice(0, maxVisible);

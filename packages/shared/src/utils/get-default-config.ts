@@ -100,6 +100,6 @@ export function getDefaultConfig(hass: HomeAssistant, cardType: "power" | "energ
     kilo_threshold: defaultValues.kiloThreshold,
     mega_threshold: defaultValues.megaThreshold,
     transparency_zero_lines: defaultValues.transparencyZeroLines,
-    sort_individual_devices: false,
+    sort_individual_devices: true,
   };
 }
