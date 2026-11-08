@@ -5,7 +5,8 @@ import {
   type FlowCardPlusConfig,
   type NonFossilObject,
 } from "@flixlix-cards/shared/types";
-import { html, nothing, svg, type TemplateResult } from "lit";
+import { html, nothing, type TemplateResult } from "lit";
+import { flowDot } from "./flow-dot";
 import { generalSecondarySpan } from "./spans/general-secondary-span";
 
 export const nonFossilElement = (
@@ -82,20 +83,17 @@ export const nonFossilElement = (
         ? html`
             <svg width="80" height="30">
               <path d="M40 -10 v40" class="low-carbon ${flow.lineClass}" id="low-carbon" />
-              ${
-                animate && nonFossil.has && (nonFossil.state.power ?? 0) > 0
-                  ? svg`<circle r="1.75" class="low-carbon" vector-effect="non-scaling-stroke">
-                    <animateMotion
-                      dur="${flow.durationSeconds}s"
-                      repeatCount="indefinite"
-                      calcMode="paced"
-                    >
-                      <mpath xlink:href="#low-carbon" />
-                    </animateMotion>
-                  </circle>`
-                  : nothing
-              }
             </svg>
+            ${
+              animate && nonFossil.has && (nonFossil.state.power ?? 0) > 0
+                ? flowDot({
+                    path: "low-carbon",
+                    className: "low-carbon",
+                    durationSeconds: flow.durationSeconds,
+                    radius: 1.75,
+                  })
+                : nothing
+            }
           `
         : nothing
     }

@@ -101,20 +101,16 @@ const config = (overrides: Partial<FlowCardPlusConfig> = {}): FlowCardPlusConfig
 });
 
 const compute = (
-  input: Partial<Omit<CardStateInput, "readings">> & { readings?: CardStateInput["readings"] },
-  previous?: CardState
+  input: Partial<Omit<CardStateInput, "readings">> & { readings?: CardStateInput["readings"] }
 ) =>
-  computeCardState(
-    {
-      config: config(),
-      hass: hassWith(),
-      readings: readings(),
-      templates: noTemplates,
-      width: 400,
-      ...input,
-    },
-    previous
-  );
+  computeCardState({
+    config: config(),
+    hass: hassWith(),
+    readings: readings(),
+    templates: noTemplates,
+    width: 400,
+    ...input,
+  });
 
 const ready = (state: CardState): ReadyCardState => {
   if (state.status !== "ready") {
@@ -156,21 +152,6 @@ const solarToHome = (overrides: Partial<FlowCardPlusConfig>) =>
       readings: readings({ grid: { fromGrid: 60 }, solar: { total: 20 } }),
     })
   ).flows.solarToHome.durationSeconds;
-
-const at = (fromGrid: number) => ({
-  config: config({
-    max_expected_power: 100,
-    min_expected_power: 0,
-    max_flow_rate: 10,
-    min_flow_rate: 1,
-  }),
-  readings: readings({ grid: { fromGrid } }),
-});
-
-const withGridDuration = (state: ReadyCardState, durationSeconds: number): ReadyCardState => ({
-  ...state,
-  flows: { ...state.flows, gridToHome: { ...state.flows.gridToHome, durationSeconds } },
-});
 
 const gridImportText = (family: "power" | "energy") =>
   ready(compute({ readings: readings({ family, grid: { fromGrid: 300 } }) })).nodes.grid.display
@@ -623,31 +604,6 @@ describe("flow durations", () => {
     expect(ready(compute({})).animate).toBe(true);
     expect(ready(compute({ config: config({ disable_dots: true }) })).animate).toBe(false);
     expect(ready(compute({ pageHidden: true })).animate).toBe(false);
-  });
-});
-
-describe("animation rescale", () => {
-  test("is the new/previous ratio for flows whose duration changed", () => {
-    const previous = compute(at(0));
-    const { animationRescale } = ready(compute(at(50), previous));
-
-    expect(animationRescale).toEqual({ gridToHome: gridToHome(50) / gridToHome(0) });
-  });
-
-  test("is empty without a previous state or when the previous duration is unusable", () => {
-    const previous = ready(compute(at(0)));
-
-    expect(ready(compute(at(50))).animationRescale).toEqual({});
-    expect(ready(compute(at(50), withGridDuration(previous, 0))).animationRescale).toEqual({});
-    expect(ready(compute(at(50), withGridDuration(previous, Number.NaN))).animationRescale).toEqual(
-      {}
-    );
-  });
-
-  test("is empty while dots are not animated", () => {
-    const previous = compute(at(0));
-
-    expect(ready(compute({ ...at(50), pageHidden: true }, previous)).animationRescale).toEqual({});
   });
 });
 

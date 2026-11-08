@@ -5,7 +5,7 @@ import { sensor, type StateFixtures } from "../preview/fake-hass";
 export type FlowExpectation = {
   /** Whitespace-collapsed text per selector, with units as the power card shows them (W, kW). */
   text?: Record<string, string>;
-  /** Selectors that must match: nodes, flow lines, dots (`#<flow> circle`), individual slots. */
+  /** Selectors that must match: nodes, flow lines, dots (`.flow-dot[data-path=<line>] circle`), individual slots. */
   shown?: string[];
   /** Selectors that must not match. */
   hidden?: string[];
@@ -39,7 +39,17 @@ const flows = {
   batteryGrid: "#battery-grid-flow",
 } as const;
 
-const dot = (flow: string) => `${flow} circle`;
+/** Each flow's line path, which its dots name in `data-path`. */
+const linePaths: Record<string, string> = {
+  [flows.solarToHome]: "solar",
+  [flows.solarToGrid]: "return",
+  [flows.solarToBattery]: "battery-solar",
+  [flows.gridToHome]: "grid",
+  [flows.batteryToHome]: "battery-home",
+  [flows.batteryGrid]: "battery-grid",
+};
+
+const dot = (flow: string) => `.flow-dot[data-path="${linePaths[flow]}"] circle`;
 
 const nodes = {
   grid: ".circle-container.grid",
@@ -128,9 +138,9 @@ export const flowScenarios: FlowScenario[] = [
         ".battery .battery-in": "500 W",
         "#home-circle": "300 W",
       },
-      shown: [`${flows.batteryGrid} circle.battery-from-grid`, dot(flows.gridToHome)],
-      hidden: [`${flows.batteryGrid} circle.battery-to-grid`, dot(flows.batteryToHome)],
-      fastestFirst: [`${flows.batteryGrid} circle.battery-from-grid`, dot(flows.gridToHome)],
+      shown: [`${dot(flows.batteryGrid)}.battery-from-grid`, dot(flows.gridToHome)],
+      hidden: [`${dot(flows.batteryGrid)}.battery-to-grid`, dot(flows.batteryToHome)],
+      fastestFirst: [`${dot(flows.batteryGrid)}.battery-from-grid`, dot(flows.gridToHome)],
     },
   },
   {
@@ -144,9 +154,9 @@ export const flowScenarios: FlowScenario[] = [
     },
     expect: {
       text: { ".grid .return": "400 W", ".battery .battery-out": "600 W", "#home-circle": "200 W" },
-      shown: [`${flows.batteryGrid} circle.battery-to-grid`, dot(flows.batteryToHome)],
-      hidden: [`${flows.batteryGrid} circle.battery-from-grid`, dot(flows.gridToHome)],
-      fastestFirst: [`${flows.batteryGrid} circle.battery-to-grid`, dot(flows.batteryToHome)],
+      shown: [`${dot(flows.batteryGrid)}.battery-to-grid`, dot(flows.batteryToHome)],
+      hidden: [`${dot(flows.batteryGrid)}.battery-from-grid`, dot(flows.gridToHome)],
+      fastestFirst: [`${dot(flows.batteryGrid)}.battery-to-grid`, dot(flows.batteryToHome)],
     },
   },
   {
@@ -525,11 +535,11 @@ export const flowScenarios: FlowScenario[] = [
       },
       // solar→grid 450, battery↔grid 150 each way, solar→battery 50 and grid→home 50, solar→home 0.
       shown: [
-        `${flows.batteryGrid} circle.battery-from-grid`,
-        `${flows.batteryGrid} circle.battery-to-grid`,
+        `${dot(flows.batteryGrid)}.battery-from-grid`,
+        `${dot(flows.batteryGrid)}.battery-to-grid`,
       ],
       hidden: [dot(flows.solarToHome), dot(flows.batteryToHome)],
-      fastestFirst: [dot(flows.solarToGrid), `${flows.batteryGrid} circle`, dot(flows.gridToHome)],
+      fastestFirst: [dot(flows.solarToGrid), dot(flows.batteryGrid), dot(flows.gridToHome)],
     },
   },
 ];

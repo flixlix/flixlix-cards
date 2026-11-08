@@ -15,14 +15,14 @@ frozenMotion.replaceSync(`*, *::before, *::after {
   transition: none !important;
 }`);
 
-/** Stops CSS motion and parks every SVG dot at the start of its path. */
+/** Stops CSS motion and parks every flow dot at the start of its loop. */
 const freezeMotion = (root: ShadowRoot) => {
   if (!root.adoptedStyleSheets.includes(frozenMotion)) {
     root.adoptedStyleSheets = [...root.adoptedStyleSheets, frozenMotion];
   }
-  root.querySelectorAll("svg").forEach((svg) => {
-    svg.pauseAnimations();
-    svg.setCurrentTime(0);
+  root.getAnimations().forEach((animation) => {
+    animation.pause();
+    animation.currentTime = 0;
   });
 };
 

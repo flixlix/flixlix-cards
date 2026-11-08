@@ -115,17 +115,14 @@ export class PowerFlowCardPlus extends LitElement {
     if (!this._config || !this.hass) {
       return;
     }
-    this._cardState = computeCardState(
-      {
-        config: this._config,
-        hass: this.hass,
-        readings: powerReadings(this.hass, this._config),
-        templates: this._templates.templates(this._config),
-        width: this._width,
-        pageHidden: this._pageHidden,
-      },
-      this._cardState
-    );
+    this._cardState = computeCardState({
+      config: this._config,
+      hass: this.hass,
+      readings: powerReadings(this.hass, this._config),
+      templates: this._templates.templates(this._config),
+      width: this._width,
+      pageHidden: this._pageHidden,
+    });
   }
 
   protected render(): TemplateResult | typeof nothing {

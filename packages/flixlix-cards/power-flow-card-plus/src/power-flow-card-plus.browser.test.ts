@@ -224,46 +224,26 @@ const centerOf = (element: Element | null) => {
   return new DOMPoint(box.x + box.width / 2, box.y + box.height / 2);
 };
 
-/** Where a dot's motion path starts and ends on screen, and its length next to the line it follows. */
-const motionOf = (root: ShadowRoot, selector: string) => {
-  const motion = root.querySelector(selector);
-  const svg = motion?.closest("svg");
-  const line = svg?.querySelector("path");
-  const d = motion?.getAttribute("path");
-  if (!svg || !line || !d) {
-    throw new Error(`${selector} has no motion path of its own`);
+/** Where a dot is on screen at a fraction of its loop. */
+const dotAt = (root: ShadowRoot, selector: string, fraction: number) => {
+  const dot = root.querySelector(selector);
+  const [animation] = dot?.getAnimations() ?? [];
+  if (!dot || !animation) {
+    throw new Error(`${selector} is not a moving dot`);
   }
-  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  path.setAttribute("d", d);
-  svg.append(path);
-  const toScreen = (length: number) => {
-    const point = path.getPointAtLength(length);
-    return new DOMPoint(point.x, point.y).matrixTransform(path.getScreenCTM() ?? undefined);
-  };
-  const result = {
-    start: toScreen(0),
-    end: toScreen(path.getTotalLength()),
-    length: path.getTotalLength(),
-    lineLength: line.getTotalLength(),
-  };
-  path.remove();
-  return result;
+  animation.pause();
+  animation.currentTime = Number(animation.effect?.getTiming().duration) * fraction;
+  return centerOf(dot.querySelector("circle"));
 };
 
 const distance = (a: DOMPoint, b: DOMPoint) => Math.hypot(a.x - b.x, a.y - b.y);
 
-/** Whether the dot ends closer to the target than it starts, along a path as long as its line. */
+/** Whether the dot ends its loop closer to the target than it starts it. */
 const runsTowards = (root: ShadowRoot, selector: string, target: string) => {
-  const { start, end, length, lineLength } = motionOf(root, selector);
-  expect(length).toBeCloseTo(lineLength, 3);
+  const start = dotAt(root, selector, 0.05);
+  const end = dotAt(root, selector, 0.95);
   const center = centerOf(root.querySelector(target));
   return distance(end, center) < distance(start, center);
-};
-
-/** Older Chromium ignores `keyPoints` with `calcMode="paced"` and runs the dot backwards (#102). */
-const expectNoKeyPoints = (root: ShadowRoot) => {
-  expect(root.querySelectorAll("animateMotion").length).toBeGreaterThan(0);
-  expect(root.querySelectorAll("animateMotion[keyPoints]")).toHaveLength(0);
 };
 
 describe("dot direction", () => {
@@ -277,8 +257,7 @@ describe("dot direction", () => {
       { type: "custom:power-flow-card-plus", entities: scenario.entities },
       fakeHass({ states: scenario.states })
     );
-    expectNoKeyPoints(root);
-    const dot = "#battery-grid-flow circle.battery-from-grid animateMotion";
+    const dot = '.flow-dot[data-path="battery-grid"]:has(circle.battery-from-grid)';
     expect(runsTowards(root, dot, ".battery .circle")).toBe(true);
     expect(runsTowards(root, dot, ".grid .circle")).toBe(false);
   });
@@ -321,7 +300,7 @@ const mountDirections = async (states: string[], individual: object = {}) => {
     return icon && "icon" in icon ? icon.icon : undefined;
   };
   const runsIntoHome = (slot: (typeof slots)[number]) =>
-    runsTowards(card.root, `#${linePaths[slot]} ~ circle animateMotion`, ".home .circle");
+    runsTowards(card.root, `.flow-dot[data-path="${linePaths[slot]}"]`, ".home .circle");
   return { card, arrow, runsIntoHome };
 };
 
@@ -337,8 +316,7 @@ describe("individual direction", () => {
   });
 
   test("each slot's dot runs from the home to the device", async () => {
-    const { card, runsIntoHome } = await mountDirections(["40", "30", "20", "10"]);
-    expectNoKeyPoints(card.root);
+    const { runsIntoHome } = await mountDirections(["40", "30", "20", "10"]);
     expect(slots.map(runsIntoHome)).toEqual([false, false, false, false]);
   });
 
@@ -358,7 +336,6 @@ describe("individual direction", () => {
       "mdi:arrow-up",
       "mdi:arrow-up",
     ]);
-    expectNoKeyPoints(card.root);
     expect(slots.map(runsIntoHome)).toEqual([true, false, false, true]);
   });
 
