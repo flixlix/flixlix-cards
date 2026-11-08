@@ -71,6 +71,7 @@ export default defineConfig({
       "flixlix/no-camelcase-event-binding": "error",
       "flixlix/no-mwc-elements": "error",
       "flixlix/no-sliced-svg": "error",
+      "flixlix/ha-localize-keys": "error",
       "flixlix/no-native-date-input": "error",
       "flixlix/no-paced-key-points": "error",
       "vite-plus/prefer-vite-plus-imports": "error",

@@ -1,7 +1,12 @@
 import { type HomeAssistant } from "custom-card-helpers";
 import { describe, expect, onTestFinished, test } from "vite-plus/test";
 import { userEvent } from "vite-plus/test/browser/context";
-import { emitTemplate, fakeHass, withStates } from "@flixlix-cards/shared/testing/fake-hass";
+import {
+  emitTemplate,
+  fakeHass,
+  sensor,
+  withStates,
+} from "@flixlix-cards/shared/testing/fake-hass";
 import { expectFlowCard } from "@flixlix-cards/shared/testing/expect-flow-card";
 import { flowScenarios } from "@flixlix-cards/shared/testing/flow-scenarios";
 import { type MountedCard, mountCard } from "@flixlix-cards/shared/testing/mount-card";
@@ -172,6 +177,23 @@ const nodePositions = async (dir: "ltr" | "rtl") => {
     )
   );
 };
+
+describe("labels", () => {
+  test("the non-fossil node is labelled like Home Assistant's energy distribution card", async () => {
+    const { text } = await mountCard(
+      PowerFlowCardPlus,
+      {
+        type: "custom:power-flow-card-plus",
+        entities: {
+          grid: { entity: "sensor.grid" },
+          fossil_fuel_percentage: { entity: "sensor.fossil" },
+        },
+      },
+      fakeHass({ states: { "sensor.grid": "800", "sensor.fossil": sensor("40", { unit: "%" }) } })
+    );
+    expect(text(".circle-container.low-carbon .label")).toBe("Low-carbon");
+  });
+});
 
 describe("layout", () => {
   test("resizing between narrow and wide moves individuals in and out of the right slots", async () => {

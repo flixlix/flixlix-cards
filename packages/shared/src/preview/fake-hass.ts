@@ -99,6 +99,7 @@ const translations: Record<string, string> = {
   "ui.panel.lovelace.cards.energy.energy_distribution.battery": "Battery",
   "ui.panel.lovelace.cards.energy.energy_distribution.grid": "Grid",
   "ui.panel.lovelace.cards.energy.energy_distribution.solar": "Solar",
+  "ui.panel.lovelace.cards.energy.energy_distribution.low_carbon": "Low-carbon",
   "ui.panel.lovelace.cards.energy.energy_distribution.go_to_energy_dashboard":
     "Go to the energy dashboard",
   "ui.panel.lovelace.cards.energy.loading": "Loading…",
@@ -199,7 +200,8 @@ export const fakeHass = (options: FakeHassOptions = {}): HomeAssistant => {
       time_format: TimeFormat.twenty_four,
     },
     language: options.language ?? "en",
-    localize: (key: string) => translations[key] ?? key,
+    // Like Home Assistant: an unknown key translates to an empty string.
+    localize: (key: string) => translations[key] ?? "",
     user: {
       id: "test-user",
       name: "Test User",
