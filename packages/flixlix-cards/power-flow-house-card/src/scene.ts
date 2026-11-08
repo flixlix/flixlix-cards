@@ -182,11 +182,9 @@ export const sceneGroups = ({ solar, battery: hasBattery, soc }: ScenePresence):
   { node: "inverter", shapes: inverter() },
 ];
 
-/** Where the grid cable fades out on the ground. */
-export const GRID_CABLE_END = 19;
-/** Where the cable starts fading: just clear of the gable wall. */
-export const GRID_FADE_START = LENGTH + 0.5;
-export const GRID_CABLE_Y = INVERTER_Y;
+/** The grid cable runs on past the card's edge; its label sits on it at GRID_LABEL_X. */
+const GRID_CABLE_END = 40;
+const GRID_LABEL_X = 16;
 const ON_FRONT = FRONT + 0.07;
 const ON_GABLE = LENGTH + 0.07;
 
@@ -196,8 +194,10 @@ const ON_GABLE = LENGTH + 0.07;
  * the grid from below.
  */
 export const WIRE_ROUTES: Record<HouseNode, Point[]> = {
+  // straight from the panels over the gable's edge, then down the wall: one bend
   solar: [
-    [ON_GABLE, INVERTER_Y, 7.1],
+    onRoof(PANELS.x1, INVERTER_Y),
+    [ON_GABLE, INVERTER_Y, roofHeight(INVERTER_Y) - FASCIA - 0.2],
     [ON_GABLE, INVERTER_Y, INVERTER.z1],
   ],
   battery: [
@@ -219,13 +219,14 @@ export const WIRE_ROUTES: Record<HouseNode, Point[]> = {
 
 /**
  * Where each node's label hangs: the leader line starts at `at` and runs `leader` screen units up
- * (negative) or down. The anchors keep leaders clear of the wires and the panels.
+ * (negative) or down; with no leader the label sits centred on `at`. The anchors keep leaders
+ * clear of the wires and the panels.
  */
 export const LABEL_ANCHORS: Record<HouseNode, { at: Point; leader: number }> = {
   solar: { at: onRoof(4.2, PANELS.y0), leader: -40 },
   home: { at: [8.1, FRONT + 0.13, 2.35], leader: 44 },
   battery: { at: onBattery(1.8, 3.3), leader: -50 },
-  grid: { at: [GRID_CABLE_END, INVERTER_Y, 0], leader: 12 },
+  grid: { at: [GRID_LABEL_X, INVERTER_Y, 0], leader: 0 },
 };
 
 /** The house's footprint and the shadow it casts towards the back right. */

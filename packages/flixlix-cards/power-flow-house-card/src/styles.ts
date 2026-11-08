@@ -25,8 +25,7 @@ export const styles = css`
     --house-soc-track: #e1e2e6;
     --house-soc: #3fc28a;
     --house-soc-low: var(--error-color, #db4437);
-    --house-wire: #ffffff;
-    --house-wire-edge: #d8dade;
+    --house-track: #c9ccd2;
     --house-ground: #eceef1;
     --house-shadow: rgba(60, 65, 80, 0.22);
     --house-leader: #9a9ea6;
@@ -56,8 +55,11 @@ export const styles = css`
       --house-box-side: color-mix(in srgb, #000 4%, var(--house-surface));
       --house-icon: var(--secondary-text-color, #8a8e96);
       --house-soc-track: color-mix(in srgb, #000 8%, var(--house-surface));
-      --house-wire: color-mix(in srgb, #fff 75%, var(--house-surface));
-      --house-wire-edge: color-mix(in srgb, #000 12%, var(--house-surface));
+      --house-track: color-mix(
+        in srgb,
+        var(--primary-text-color, #212121) 22%,
+        var(--house-surface)
+      );
       --house-ground: var(--house-surface);
       --house-leader: color-mix(in srgb, var(--secondary-text-color, #727272) 75%, transparent);
     }
@@ -80,7 +82,6 @@ export const styles = css`
 
   .stage {
     position: relative;
-    padding: 8px 4px 4px;
   }
 
   svg {
@@ -89,10 +90,29 @@ export const styles = css`
     height: auto;
   }
 
+  .track,
+  .flow,
   .pulse {
     fill: none;
     stroke-linecap: round;
-    stroke-dasharray: 12 58;
+    stroke-linejoin: round;
+  }
+
+  .track {
+    stroke: var(--house-track);
+    stroke-width: 0.8;
+  }
+
+  .flow {
+    stroke: var(--wire-color);
+    stroke-width: 1;
+    opacity: 0.3;
+  }
+
+  .pulse {
+    stroke: var(--wire-color);
+    stroke-width: 1.4;
+    stroke-dasharray: 22 48;
     animation: pulse linear infinite;
   }
 
@@ -110,7 +130,7 @@ export const styles = css`
 
   .labels {
     position: absolute;
-    inset: 8px 4px 4px;
+    inset: 0;
     pointer-events: none;
   }
 
@@ -125,6 +145,15 @@ export const styles = css`
 
   .label.down {
     transform: translate(calc(var(--house-unit, 1px) * -10), 0);
+  }
+
+  /* Sits on its line; a halo in the card's colour keeps the text readable over it. */
+  .label.on-line {
+    transform: translate(-50%, -50%);
+    text-shadow:
+      0 0 3px var(--ha-card-background, var(--card-background-color, #fff)),
+      0 0 6px var(--ha-card-background, var(--card-background-color, #fff)),
+      0 0 10px var(--ha-card-background, var(--card-background-color, #fff));
   }
 
   .label.clickable {
@@ -163,13 +192,6 @@ export const styles = css`
     font-size: calc(var(--house-unit, 1px) * 9.5);
     font-weight: 500;
     color: var(--secondary-text-color);
-  }
-
-  .dot {
-    width: 0.5em;
-    height: 0.5em;
-    border-radius: 50%;
-    flex: none;
   }
 
   .name svg {

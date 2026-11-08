@@ -35,10 +35,7 @@ import NumberFlow, { canAnimate } from "number-flow";
 import packageJson from "../package.json" with { type: "json" };
 import {
   faceTransform,
-  GRID_CABLE_END,
-  GRID_FADE_START,
   LABEL_ANCHORS,
-  GRID_CABLE_Y,
   panelSeams,
   type Point,
   project,
@@ -106,8 +103,17 @@ class Extent {
 const reversed = (points: readonly Point[]): Point[] =>
   points.reduceRight<Point[]>((list, point) => list.concat([point]), []);
 
-/** The grid cable fades out along the ground. */
-const mask = (wire: HouseWire) => (wire.node === "grid" ? "url(#house-grid-cable)" : nothing);
+/** A wire's path in the direction its power flows. */
+const route = (wire: HouseWire) => {
+  const fromNode = WIRE_ROUTES[wire.node];
+  const points = wire.intoInverter ? fromNode : reversed(fromNode);
+  return points
+    .map((point, index) => `${index === 0 ? "M" : "L"}${project(point).join(" ")}`)
+    .join("");
+};
+
+/** Pulses travel this many times slower than the flow rate's seconds per dot. */
+const PULSE_SLOWDOWN = 2.5;
 
 /** Fills that are gradients defined in the scene's <defs>; every other fill is a colour token. */
 const GRADIENT_FILLS = new Set(["wall", "gable", "panel", "box-front"]);
@@ -130,7 +136,6 @@ type Label = {
   node: HouseNode;
   reading: ScaledReading | null;
   name: string;
-  color: string;
   /** Shown after the name, e.g. the state of charge. */
   inline?: TemplateResult;
   /** A second line under the name, e.g. the low-carbon share. */
@@ -261,7 +266,7 @@ export class PowerFlowHouseCard extends LitElement {
             ${labels.map((label) => {
               const anchor = LABEL_ANCHORS[label.node];
               const [x, y] = project(anchor.at);
-              return this._label(label, at([x, y + anchor.leader]), anchor.leader > 0);
+              return this._label(label, at([x, y + anchor.leader]), anchor.leader);
             })}
           </div>
         </div>
@@ -315,8 +320,6 @@ export class PowerFlowHouseCard extends LitElement {
           .join("")} stroke="var(--house-panel-seam)" stroke-width="1"></path>`
       : nothing;
     const [groundX, groundY] = project([4, 6, 0]);
-    const [fadeFromX, fadeFromY] = project([GRID_FADE_START, GRID_CABLE_Y, 0]);
-    const [fadeToX, fadeToY] = project([GRID_CABLE_END, GRID_CABLE_Y, 0]);
     return svg`
       <defs>
         ${["wall", "gable", "panel", "box-front"].map(gradient)}
@@ -325,13 +328,6 @@ export class PowerFlowHouseCard extends LitElement {
           <stop offset="0.7" style="stop-color: var(--house-ground); stop-opacity: 0.6"></stop>
           <stop offset="1" style="stop-color: var(--house-ground); stop-opacity: 0"></stop>
         </radialGradient>
-        <linearGradient id="house-grid-fade" gradientUnits="userSpaceOnUse" x1=${fadeFromX} y1=${fadeFromY} x2=${fadeToX} y2=${fadeToY}>
-          <stop offset="0" stop-color="#fff"></stop>
-          <stop offset="1" stop-color="#fff" stop-opacity="0"></stop>
-        </linearGradient>
-        <mask id="house-grid-cable" maskUnits="userSpaceOnUse" x="-2000" y="-2000" width="4000" height="4000">
-          <rect x="-2000" y="-2000" width="4000" height="4000" fill="url(#house-grid-fade)"></rect>
-        </mask>
         <filter id="house-blur" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="8"></feGaussianBlur></filter>
       </defs>
       <ellipse cx=${groundX} cy=${groundY + 30} rx="260" ry="150" fill="url(#house-ground)"></ellipse>
@@ -340,33 +336,26 @@ export class PowerFlowHouseCard extends LitElement {
         (group) =>
           svg`<g class="node ${group.node}">${group.shapes.map(shape)}${group.node === "solar" ? seams : nothing}</g>`
       )}
-      ${this._wires(wires, cardState.animate, path)}
+      ${this._wires(wires, cardState.animate)}
     `;
   }
 
   /** Wires under-to-over in layers, so they meet cleanly at the inverter. */
-  private _wires(wires: HouseWire[], animate: boolean, path: (list: readonly Point[]) => string) {
-    const route = (wire: HouseWire) => {
-      const fromNode = WIRE_ROUTES[wire.node];
-      return path(wire.intoInverter ? fromNode : reversed(fromNode));
-    };
-    const cable = (stroke: string, width: number) => (wire: HouseWire) =>
-      svg`<path d=${route(wire)} stroke=${stroke} stroke-width=${width} fill="none" stroke-linejoin="round" stroke-linecap="round" mask=${mask(wire)}></path>`;
+  /**
+   * Every wire as a neutral track; one carrying power also gets its colour and moving pulses.
+   * Wires are not part of the extent: the grid cable runs on past the card's edge.
+   */
+  private _wires(wires: HouseWire[], animate: boolean) {
     const power = (wire: HouseWire) => {
       const d = route(wire);
-      const duration = `animation-duration: ${wire.durationSeconds}s`;
-      return svg`<g class="power ${wire.node}" mask=${mask(wire)}>
-        <path d=${d} stroke=${wire.color} stroke-width="1.6" opacity="0.6" fill="none" stroke-linejoin="round" stroke-linecap="round"></path>
-        ${
-          animate
-            ? svg`<path class="pulse" d=${d} stroke=${wire.color} stroke-width="2.6" style=${duration}></path>`
-            : nothing
-        }
+      const duration = `animation-duration: ${wire.durationSeconds * PULSE_SLOWDOWN}s`;
+      return svg`<g class="power ${wire.node}" style=${`--wire-color: ${wire.color}`}>
+        <path class="flow" d=${d}></path>
+        ${animate ? svg`<path class="pulse" d=${d} style=${duration}></path>` : nothing}
       </g>`;
     };
     return svg`
-      ${wires.map(cable("var(--house-wire-edge)", 5))}
-      ${wires.map(cable("var(--house-wire)", 3.4))}
+      ${wires.map((wire) => svg`<path class="track ${wire.node}" d=${route(wire)}></path>`)}
       ${wires.filter((wire) => wire.power > 0).map(power)}
     `;
   }
@@ -383,7 +372,6 @@ export class PowerFlowHouseCard extends LitElement {
         node: "solar" as const,
         reading: solar.reading,
         name: nodes.solar.name,
-        color: solar.color,
         actions: nodes.solar,
         entity: nodes.solar.entity,
       },
@@ -391,7 +379,6 @@ export class PowerFlowHouseCard extends LitElement {
         node: "home" as const,
         reading: home.reading,
         name: nodes.home.name,
-        color: home.color,
         actions: nodes.home,
         entity: nodes.home.entity,
       },
@@ -405,7 +392,6 @@ export class PowerFlowHouseCard extends LitElement {
       node: "battery",
       reading: wire.reading,
       name: nodes.battery.name,
-      color: wire.color,
       inline: this._stateOfCharge(
         wire,
         nodes.battery.state_of_charge.state,
@@ -426,7 +412,6 @@ export class PowerFlowHouseCard extends LitElement {
       return {
         ...base,
         reading: null,
-        color: "var(--error-color, #db4437)",
         extra: html`<span class="outage">${alert}</span>`,
         nameClass: "outage",
         entity: nodes.grid.mainEntity,
@@ -435,7 +420,6 @@ export class PowerFlowHouseCard extends LitElement {
     return {
       ...base,
       reading: wire.reading,
-      color: wire.color,
       extra: nodes.nonFossil.has
         ? html`<svg viewBox="0 0 24 24"><path d=${mdiLeaf}></path></svg>${nodes.nonFossil.display}
             ${nodes.nonFossil.name}`
@@ -463,17 +447,24 @@ export class PowerFlowHouseCard extends LitElement {
     const [x, y] = project(anchor.at);
     const end = y + anchor.leader;
     const height = LABEL_HEIGHT + (label.extra ? EXTRA_LINE_HEIGHT : 0);
+    if (anchor.leader === 0) {
+      extent.include([x - LABEL_WIDTH / 2, y - height / 2], 4);
+      extent.include([x + LABEL_WIDTH / 2, y + height / 2], 4);
+      return nothing;
+    }
     extent.include([x, end + Math.sign(anchor.leader) * height], 4);
     extent.include([x - 10 + LABEL_WIDTH, end], 4);
     return svg`<path d="M${x} ${y}V${end}" stroke="var(--house-leader)" stroke-width="0.8"></path>
       <circle cx=${x} cy=${y} r="1.6" fill="var(--house-leader)"></circle>`;
   }
 
-  private _label(label: Label, position: string, below: boolean) {
+  /** A label above (`leader` < 0), below (> 0) or centred on its anchor (0). */
+  private _label(label: Label, position: string, leader: number) {
+    const placement = leader === 0 ? "on-line" : leader > 0 ? "down" : "up";
     const clickable = this._config.clickable_entities;
     const { actions, entity } = label;
     return html`<div
-      class="label ${below ? "down" : "up"} ${clickable ? "clickable" : ""} ${label.node}"
+      class="label ${placement} ${clickable ? "clickable" : ""} ${label.node}"
       style=${position}
       role=${clickable ? "button" : nothing}
       tabindex=${clickable ? 0 : nothing}
@@ -498,10 +489,7 @@ export class PowerFlowHouseCard extends LitElement {
       }}
     >
       <div class="value">${this._value(label.reading)}</div>
-      <div class="name ${label.nameClass ?? ""}">
-        <i class="dot" style=${`background: ${label.color}`}></i
-        >${label.name}${label.inline ?? nothing}
-      </div>
+      <div class="name ${label.nameClass ?? ""}">${label.name}${label.inline ?? nothing}</div>
       ${label.extra ? html`<div class="name extra">${label.extra}</div>` : nothing}
     </div>`;
   }
