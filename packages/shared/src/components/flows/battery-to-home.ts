@@ -1,5 +1,5 @@
-import { html, nothing, svg } from "lit";
-import { keyed } from "lit/directives/keyed.js";
+import { html, nothing } from "lit";
+import { flowDot } from "../flow-dot";
 import { type Flows } from "./index";
 
 const batteryToHomeDot = ({ animate, battery, flows, paths }: Flows) => {
@@ -7,11 +7,12 @@ const batteryToHomeDot = ({ animate, battery, flows, paths }: Flows) => {
     return nothing;
   }
 
-  return svg`<circle r=${paths.scale} class="battery-home" vector-effect="non-scaling-stroke">
-      <animateMotion dur="${flows.batteryToHome.durationSeconds}s" repeatCount="indefinite" calcMode="paced">
-        <mpath xlink:href="#battery-home" />
-      </animateMotion>
-    </circle>`;
+  return flowDot({
+    path: "battery-home",
+    className: "battery-home",
+    durationSeconds: flows.batteryToHome.durationSeconds,
+    radius: paths.scale,
+  });
 };
 
 export const flowBatteryToHome = (context: Flows) => {
@@ -21,12 +22,12 @@ export const flowBatteryToHome = (context: Flows) => {
   }
 
   return html`<svg class="flow" id="battery-home-flow" viewBox=${context.viewBox}>
-    <path
-      id="battery-home"
-      class="battery-home ${flows.batteryToHome.lineClass}"
-      d=${paths.batteryToHome.d}
-      vector-effect="non-scaling-stroke"
-    ></path>
-    ${keyed(paths.batteryToHome.d, batteryToHomeDot(context))}
-  </svg>`;
+      <path
+        id="battery-home"
+        class="battery-home ${flows.batteryToHome.lineClass}"
+        d=${paths.batteryToHome.d}
+        vector-effect="non-scaling-stroke"
+      ></path>
+    </svg>
+    ${batteryToHomeDot(context)}`;
 };

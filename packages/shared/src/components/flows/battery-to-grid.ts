@@ -1,24 +1,20 @@
-import { html, nothing, svg } from "lit";
-import { keyed } from "lit/directives/keyed.js";
+import { html, nothing } from "lit";
+import { flowDot } from "../flow-dot";
 import { type Flows } from "./index";
 
-/**
- * Runs from the grid to the battery, against the line's drawing direction: it follows the line
- * drawn backwards instead of `keyPoints`, which older Chromium ignores with `calcMode="paced"`.
- */
+/** Runs from the grid to the battery, against the line's drawing direction. */
 const batteryFromGridDot = ({ animate, grid, flows, paths }: Flows) => {
   if (!animate || !grid.state.toBattery || !paths.batteryToGrid) {
     return nothing;
   }
 
-  return svg`<circle r=${paths.scale} class="battery-from-grid" vector-effect="non-scaling-stroke">
-      <animateMotion
-        dur="${flows.batteryGrid.durationSeconds}s"
-        repeatCount="indefinite"
-        calcMode="paced"
-        path="${paths.batteryToGrid.reversed}"
-      ></animateMotion>
-    </circle>`;
+  return flowDot({
+    path: "battery-grid",
+    className: "battery-from-grid",
+    durationSeconds: flows.batteryGrid.durationSeconds,
+    radius: paths.scale,
+    reverse: true,
+  });
 };
 
 const batteryToGridDot = ({ animate, battery, flows, paths }: Flows) => {
@@ -26,13 +22,12 @@ const batteryToGridDot = ({ animate, battery, flows, paths }: Flows) => {
     return nothing;
   }
 
-  return svg`
-    <circle r=${paths.scale} class="battery-to-grid" vector-effect="non-scaling-stroke">
-      <animateMotion dur="${flows.batteryGrid.durationSeconds}s" repeatCount="indefinite" calcMode="paced">
-        <mpath xlink:href="#battery-grid" />
-      </animateMotion>
-    </circle>
-  `;
+  return flowDot({
+    path: "battery-grid",
+    className: "battery-to-grid",
+    durationSeconds: flows.batteryGrid.durationSeconds,
+    radius: paths.scale,
+  });
 };
 
 export const flowBatteryToGrid = (context: Flows) => {
@@ -41,15 +36,12 @@ export const flowBatteryToGrid = (context: Flows) => {
     return nothing;
   }
   return html`<svg class="flow" id="battery-grid-flow" viewBox=${context.viewBox}>
-    <path
-      id="battery-grid"
-      class="${flows.batteryGrid.lineClass}"
-      d=${paths.batteryToGrid.d}
-      vector-effect="non-scaling-stroke"
-    ></path>
-    ${keyed(
-      paths.batteryToGrid.d,
-      svg`${batteryFromGridDot(context)} ${batteryToGridDot(context)}`
-    )}
-  </svg>`;
+      <path
+        id="battery-grid"
+        class="${flows.batteryGrid.lineClass}"
+        d=${paths.batteryToGrid.d}
+        vector-effect="non-scaling-stroke"
+      ></path>
+    </svg>
+    ${batteryFromGridDot(context)} ${batteryToGridDot(context)}`;
 };

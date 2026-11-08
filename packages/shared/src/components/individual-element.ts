@@ -4,10 +4,9 @@ import {
   type FlowCardPlusConfig,
   type IndividualObject,
 } from "@flixlix-cards/shared/types";
-import { html, nothing, svg, type SVGTemplateResult, type TemplateResult } from "lit";
-import { keyed } from "lit/directives/keyed.js";
+import { html, nothing, type TemplateResult } from "lit";
 import { type FlowLine } from "./flows/geometry";
-import { reversePath } from "./reverse-path";
+import { flowDot } from "./flow-dot";
 import { spacer } from "./spacer";
 import { type IndividualKey, individualSecondarySpan } from "./spans/individual-secondary-span";
 
@@ -88,28 +87,31 @@ const leftLines: Record<LeftKey, string> = {
   "left-bottom": "M40 40 v-40",
 };
 
-/**
- * The dot runs along the line drawn in its direction of travel instead of using `keyPoints`:
- * older Chromium ignores `keyPoints` with `calcMode="paced"`, and `linear` speeds up on straight parts.
- * `line` is drawn from the device to the home.
- */
-const flowDot = (
+const dotPaths: Record<IndividualKey, string> = {
+  "left-top": "individual-top",
+  "left-bottom": "individual-bottom",
+  "right-top": "individual-top-right-home",
+  "right-bottom": "individual-bottom-right-home",
+};
+
+/** Lines are drawn from the device to the home, so a dot flowing to the device runs in reverse. */
+const individualDot = (
   slot: IndividualSlot,
   key: IndividualKey,
-  { animate, line, radius }: { animate: boolean; line: FlowLine; radius: number }
+  animate: boolean,
+  radius: number
 ) => {
   if (!animate || !isFlowing(slot.node)) {
     return nothing;
   }
-  const vertical = key.endsWith("top") ? "top" : "bottom";
-  return svg`<circle r="${radius}" class="individual-${vertical}" vector-effect="non-scaling-stroke">
-    <animateMotion
-      dur="${slot.flow.durationSeconds}s"
-      repeatCount="indefinite"
-      calcMode="paced"
-      path="${slot.node.invertAnimation ? line.d : line.reversed}"
-    ></animateMotion>
-  </circle>`;
+  return flowDot({
+    path: dotPaths[key],
+    className: `individual-${key.endsWith("top") ? "top" : "bottom"}`,
+    hostClass: key.startsWith("right") ? `individual-${key}` : "",
+    durationSeconds: slot.flow.durationSeconds,
+    radius,
+    reverse: !slot.node.invertAnimation,
+  });
 };
 
 type Parts = {
@@ -117,7 +119,7 @@ type Parts = {
   line: string;
   label: TemplateResult;
   circle: TemplateResult;
-  dot: SVGTemplateResult | typeof nothing;
+  dot: TemplateResult | typeof nothing;
 };
 
 /** Where label, circle and line sit for each slot around the home. */
@@ -128,9 +130,9 @@ const layouts: Record<IndividualKey, (parts: Parts) => TemplateResult> = {
       ${
         slot.flow.visible
           ? html`<svg width="80" height="30">
-              <path d="${line}" id="individual-top" class="${slot.flow.lineClass}" />
-              ${dot}
-            </svg>`
+                <path d="${line}" id="individual-top" class="${slot.flow.lineClass}" />
+              </svg>
+              ${dot}`
           : nothing
       }
     </div>`,
@@ -139,9 +141,9 @@ const layouts: Record<IndividualKey, (parts: Parts) => TemplateResult> = {
       ${
         slot.flow.visible
           ? html`<svg width="80" height="30">
-              <path d="${line}" id="individual-bottom" class="${slot.flow.lineClass}" />
-              ${dot}
-            </svg>`
+                <path d="${line}" id="individual-bottom" class="${slot.flow.lineClass}" />
+              </svg>
+              ${dot}`
           : html` <svg width="80" height="30"></svg> `
       }
       ${circle} ${label}
@@ -168,9 +170,14 @@ export const rightIndividualFlow = (
   }
   const id = key === "right-top" ? "individual-top-right-home" : "individual-bottom-right-home";
   return html`<svg class="flow individual-${key}" id="${id}-flow" viewBox=${viewBox}>
-    <path id=${id} class="${slot.flow.lineClass}" d=${line.d} vector-effect="non-scaling-stroke" />
-    ${keyed(line.d, flowDot(slot, key, { animate, line, radius: scale }))}
-  </svg>`;
+      <path
+        id=${id}
+        class="${slot.flow.lineClass}"
+        d=${line.d}
+        vector-effect="non-scaling-stroke"
+      />
+    </svg>
+    ${individualDot(slot, key, animate, scale)}`;
 };
 
 /** An individual device in one of the four slots around the home, with its line to the home. */
@@ -190,12 +197,6 @@ export const individualElement = (
     line,
     label: html`<span class="label">${slot.node.name}</span>`,
     circle: individualCircle(main, config, slot.node, key),
-    dot: line
-      ? flowDot(slot, key, {
-          animate,
-          line: { d: line, reversed: reversePath(line) },
-          radius: 1.75,
-        })
-      : nothing,
+    dot: line ? individualDot(slot, key, animate, 1.75) : nothing,
   });
 };

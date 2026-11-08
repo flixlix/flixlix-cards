@@ -155,22 +155,19 @@ export class EnergyFlowCardPlus extends LitElement {
     if (changedProps.has("_config")) {
       void this._refreshEnergyData();
     }
-    this._cardState = computeCardState(
-      {
-        config: this._config,
-        hass: this.hass,
-        readings: energyReadings(
-          this.hass,
-          this._config,
-          this._energyDataLoaded ? this._energyGrowthMap : undefined,
-          this._fossilEnergyData.fossilEnergyConsumption
-        ),
-        templates: this._templates.templates(this._config),
-        width: this._width,
-        pageHidden: this._pageHidden,
-      },
-      this._cardState
-    );
+    this._cardState = computeCardState({
+      config: this._config,
+      hass: this.hass,
+      readings: energyReadings(
+        this.hass,
+        this._config,
+        this._energyDataLoaded ? this._energyGrowthMap : undefined,
+        this._fossilEnergyData.fossilEnergyConsumption
+      ),
+      templates: this._templates.templates(this._config),
+      width: this._width,
+      pageHidden: this._pageHidden,
+    });
   }
 
   protected render(): TemplateResult | typeof nothing {

@@ -1,5 +1,5 @@
 import { translate } from "@flixlix-cards/shared/i18n";
-import { animationRescale, computeFlows } from "./flows";
+import { computeFlows } from "./flows";
 import { formatter } from "./format";
 import { computeHomeRing } from "./home-ring";
 import { individualNodes, placeIndividuals } from "./individuals";
@@ -11,11 +11,8 @@ import { type CardState, type CardStateInput, type Flow } from "./types";
 
 const HIDDEN_FLOW: Flow = { value: 0, durationSeconds: 0, visible: false, lineClass: "" };
 
-/**
- * Everything a flow card renders, derived from its config and readings. `previous` is the state
- * the card rendered last, used to keep running dot animations in place when their pace changes.
- */
-export function computeCardState(input: CardStateInput, previous?: CardState): CardState {
+/** Everything a flow card renders, derived from its config and readings. */
+export function computeCardState(input: CardStateInput): CardState {
   const { readings, config } = input;
   if (readings.status === "loading") {
     return { status: "loading" };
@@ -60,7 +57,6 @@ export function computeCardState(input: CardStateInput, previous?: CardState): C
     },
     flows,
     animate,
-    animationRescale: animationRescale(flows, animate, previous),
     cssVars: computeCssVars(config, nodes, homeRing.largestSource, placement.sorted),
     layout: {
       showTopRow: nodes.solar.has || visible.length > 0 || nodes.nonFossil.hasPercentage,

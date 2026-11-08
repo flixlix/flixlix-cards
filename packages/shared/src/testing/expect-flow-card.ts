@@ -3,7 +3,10 @@ import { type FlowExpectation } from "./flow-scenarios";
 import { type MountedCard } from "./mount-card";
 
 const durationSeconds = (root: ShadowRoot, selector: string) => {
-  const duration = root.querySelector(`${selector} animateMotion`)?.getAttribute("dur");
+  const duration = root
+    .querySelector(selector)
+    ?.closest(".flow-dot")
+    ?.getAttribute("data-duration");
   if (!duration) {
     throw new Error(`no moving dot at ${selector}`);
   }

@@ -1,5 +1,5 @@
-import { html, nothing, svg } from "lit";
-import { keyed } from "lit/directives/keyed.js";
+import { html, nothing } from "lit";
+import { flowDot } from "../flow-dot";
 import { type Flows } from "./index";
 
 const solarToHomeDot = ({ animate, solar, flows, paths }: Flows) => {
@@ -7,11 +7,12 @@ const solarToHomeDot = ({ animate, solar, flows, paths }: Flows) => {
     return nothing;
   }
 
-  return svg`<circle r=${paths.scale} class="solar" vector-effect="non-scaling-stroke">
-      <animateMotion dur="${flows.solarToHome.durationSeconds}s" repeatCount="indefinite" calcMode="paced">
-        <mpath xlink:href="#solar" />
-      </animateMotion>
-    </circle>`;
+  return flowDot({
+    path: "solar",
+    className: "solar",
+    durationSeconds: flows.solarToHome.durationSeconds,
+    radius: paths.scale,
+  });
 };
 
 export const flowSolarToHome = (context: Flows) => {
@@ -21,12 +22,12 @@ export const flowSolarToHome = (context: Flows) => {
   }
 
   return html`<svg class="flow" id="solar-home-flow" viewBox=${context.viewBox}>
-    <path
-      id="solar"
-      class="solar ${flows.solarToHome.lineClass}"
-      d=${paths.solarToHome.d}
-      vector-effect="non-scaling-stroke"
-    ></path>
-    ${keyed(paths.solarToHome.d, solarToHomeDot(context))}
-  </svg>`;
+      <path
+        id="solar"
+        class="solar ${flows.solarToHome.lineClass}"
+        d=${paths.solarToHome.d}
+        vector-effect="non-scaling-stroke"
+      ></path>
+    </svg>
+    ${solarToHomeDot(context)}`;
 };
