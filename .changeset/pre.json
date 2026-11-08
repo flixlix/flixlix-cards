@@ -12,7 +12,24 @@
     "@flixlix-cards/lint-rules": "0.0.0",
     "@flixlix-cards/testing": "0.0.0",
     "@flixlix-cards/typescript-config": "0.0.0",
-    "@flixlix-cards/ui": "0.0.1"
+    "@flixlix-cards/ui": "0.0.1",
+    "energy-period-selector-plus": "0.2.3"
   },
-  "changesets": []
+  "changesets": [
+    "breakdown-energy-units",
+    "card-state-fixes",
+    "energy-period-selector-plus",
+    "fix-negative-flow-tolerance",
+    "home-assistant-dependencies",
+    "keyboard-and-hold-actions",
+    "linear-flow-dot-speed",
+    "main-node-unit-options",
+    "monorepo-hygiene-circle-constant",
+    "non-fossil-grid-share",
+    "non-fossil-grid-zero-tolerance",
+    "one-flow-allocation-order",
+    "skip-unrelated-updates",
+    "sort-individuals-by-default",
+    "template-subscriptions-cleanup"
+  ]
 }
