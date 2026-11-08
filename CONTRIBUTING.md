@@ -19,6 +19,7 @@ Each card is located in its own folder inside [`packages/flixlix-cards`](package
 - `energy-flow-card-plus`
 - `energy-breakdown-card`
 - `sortable-list-card`
+- `energy-period-selector-plus`
 
 Shared logic, components and types live in [`packages/shared`](packages/shared/).
 

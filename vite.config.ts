@@ -69,6 +69,7 @@ export default defineConfig({
       "flixlix/no-reactive-mutation": "error",
       "flixlix/no-card-type-sniffing": "error",
       "flixlix/no-camelcase-event-binding": "error",
+      "flixlix/no-mwc-elements": "error",
       "vite-plus/prefer-vite-plus-imports": "error",
     },
     overrides: [

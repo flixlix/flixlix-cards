@@ -5,7 +5,9 @@ import { afterEach, describe, expect, test, vi } from "vite-plus/test";
 import {
   computeNonFossilFromCollection,
   type EnergyPeriodWindow,
+  energyDefaultPeriodStorageKey,
   fetchEnergyPeriodGrowth,
+  findEnergyCollection,
   getEntityEnergyFromGrowthMap,
   getGlobalEnergyPeriodWindow,
   subscribeEnergyCollectionData,
@@ -117,6 +119,19 @@ describe("getGlobalEnergyPeriodWindow", () => {
       key: "month",
       start: day(1),
       end: new Date(2024, 4, 15, 23, 59, 59, 999),
+    });
+  });
+
+  test("understands the `this_month` preset name current HA versions store", () => {
+    vi.useFakeTimers({ now: day(15, 12) });
+    vi.stubGlobal("window", {});
+    vi.stubGlobal("localStorage", {
+      getItem: (key: string) => (key === "energy-default-period-_energy" ? "this_month" : null),
+    });
+
+    expect(getGlobalEnergyPeriodWindow(hassWithConnection({}))).toMatchObject({
+      key: "month",
+      start: day(1),
     });
   });
 
@@ -412,5 +427,45 @@ describe("computeNonFossilFromCollection", () => {
 
   test("reports 0% without grid consumption", () => {
     expect(computeNonFossilFromCollection({}, 0).nonFossilPercentage).toBe(0);
+  });
+});
+
+describe("findEnergyCollection", () => {
+  test("finds the collection of the current dashboard", () => {
+    const collection = fakeEnergyCollection(day(1), day(2));
+    const hass = hassWithConnection(
+      { _energy_my_dashboard: collection },
+      { panelUrl: "my_dashboard" }
+    );
+
+    expect(findEnergyCollection(hass)).toBe(collection);
+  });
+
+  test("skips the bare websocket collection HA stores before the energy collection", () => {
+    const { setPeriod: _setPeriod, ...bareCollection } = fakeEnergyCollection(day(1), day(2));
+    const fallback = fakeEnergyCollection(day(3), day(4));
+    const hass = hassWithConnection({ _energy_custom: bareCollection, _energy: fallback });
+
+    expect(findEnergyCollection(hass, "energy_custom")).toBe(fallback);
+  });
+
+  test("is null, and creates nothing, before HA's energy cards created a collection", () => {
+    const hass = hassWithConnection({});
+
+    expect(findEnergyCollection(hass)).toBeNull();
+    expect(Object.keys(hass.connection)).toEqual([]);
+  });
+});
+
+describe("energyDefaultPeriodStorageKey", () => {
+  test("matches the key HA reads the remembered preset from", () => {
+    const hass = fakeHass({ panelUrl: "dashboard-energy" });
+
+    expect(energyDefaultPeriodStorageKey(hass)).toBe(
+      "energy-default-period-_energy_dashboard-energy"
+    );
+    expect(energyDefaultPeriodStorageKey(hass, "energy_custom")).toBe(
+      "energy-default-period-_energy_custom"
+    );
   });
 });

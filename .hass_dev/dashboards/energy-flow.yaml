@@ -13,6 +13,10 @@ views:
             heading: Period
             icon: mdi:calendar
           - type: energy-date-selection
+          - type: custom:energy-period-selector-plus
+            card_background: true
+            compare_button_type: icon
+            period_buttons: [day, week, month, year, custom]
           - type: custom:energy-flow-card-plus
             title: Energy flow
             clickable_entities: true

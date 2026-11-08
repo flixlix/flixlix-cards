@@ -9,6 +9,8 @@ resources:
     type: module
   - url: /local/sortable-list-card/sortable-list-card.js
     type: module
+  - url: /local/energy-period-selector-plus/energy-period-selector-plus.js
+    type: module
 # One YAML dashboard per card: the card under test in a few configurations next to the knobs
 # (sliders, availability toggles) and scenario scripts that drive it.
 dashboards:
