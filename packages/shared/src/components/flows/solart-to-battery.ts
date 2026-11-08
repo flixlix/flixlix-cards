@@ -1,5 +1,5 @@
-import { html, nothing, svg } from "lit";
-import { keyed } from "lit/directives/keyed.js";
+import { html, nothing } from "lit";
+import { flowDot } from "../flow-dot";
 import { type Flows } from "./index";
 
 const solarToBatteryDot = ({ animate, solar, flows, paths }: Flows) => {
@@ -7,11 +7,12 @@ const solarToBatteryDot = ({ animate, solar, flows, paths }: Flows) => {
     return nothing;
   }
 
-  return svg`<circle r=${paths.scale} class="battery-solar" vector-effect="non-scaling-stroke">
-      <animateMotion dur="${flows.solarToBattery.durationSeconds}s" repeatCount="indefinite" calcMode="paced">
-        <mpath xlink:href="#battery-solar" />
-      </animateMotion>
-    </circle>`;
+  return flowDot({
+    path: "battery-solar",
+    className: "battery-solar",
+    durationSeconds: flows.solarToBattery.durationSeconds,
+    radius: paths.scale,
+  });
 };
 
 export const flowSolarToBattery = (context: Flows) => {
@@ -21,12 +22,12 @@ export const flowSolarToBattery = (context: Flows) => {
   }
 
   return html`<svg class="flow" id="solar-battery-flow" viewBox=${context.viewBox}>
-    <path
-      id="battery-solar"
-      class="battery-solar ${flows.solarToBattery.lineClass}"
-      d=${paths.solarToBattery.d}
-      vector-effect="non-scaling-stroke"
-    ></path>
-    ${keyed(paths.solarToBattery.d, solarToBatteryDot(context))}
-  </svg>`;
+      <path
+        id="battery-solar"
+        class="battery-solar ${flows.solarToBattery.lineClass}"
+        d=${paths.solarToBattery.d}
+        vector-effect="non-scaling-stroke"
+      ></path>
+    </svg>
+    ${solarToBatteryDot(context)}`;
 };

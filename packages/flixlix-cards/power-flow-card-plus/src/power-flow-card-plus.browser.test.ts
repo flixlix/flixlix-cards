@@ -246,46 +246,26 @@ const centerOf = (element: Element | null) => {
   return new DOMPoint(box.x + box.width / 2, box.y + box.height / 2);
 };
 
-/** Where a dot's motion path starts and ends on screen, and its length next to the line it follows. */
-const motionOf = (root: ShadowRoot, selector: string) => {
-  const motion = root.querySelector(selector);
-  const svg = motion?.closest("svg");
-  const line = svg?.querySelector("path");
-  const d = motion?.getAttribute("path");
-  if (!svg || !line || !d) {
-    throw new Error(`${selector} has no motion path of its own`);
+/** Where a dot is on screen at a fraction of its loop. */
+const dotAt = (root: ShadowRoot, selector: string, fraction: number) => {
+  const dot = root.querySelector(selector);
+  const [animation] = dot?.getAnimations() ?? [];
+  if (!dot || !animation) {
+    throw new Error(`${selector} is not a moving dot`);
   }
-  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  path.setAttribute("d", d);
-  svg.append(path);
-  const toScreen = (length: number) => {
-    const point = path.getPointAtLength(length);
-    return new DOMPoint(point.x, point.y).matrixTransform(path.getScreenCTM() ?? undefined);
-  };
-  const result = {
-    start: toScreen(0),
-    end: toScreen(path.getTotalLength()),
-    length: path.getTotalLength(),
-    lineLength: line.getTotalLength(),
-  };
-  path.remove();
-  return result;
+  animation.pause();
+  animation.currentTime = Number(animation.effect?.getTiming().duration) * fraction;
+  return centerOf(dot.querySelector("circle"));
 };
 
 const distance = (a: DOMPoint, b: DOMPoint) => Math.hypot(a.x - b.x, a.y - b.y);
 
-/** Whether the dot ends closer to the target than it starts, along a path as long as its line. */
+/** Whether the dot ends its loop closer to the target than it starts it. */
 const runsTowards = (root: ShadowRoot, selector: string, target: string) => {
-  const { start, end, length, lineLength } = motionOf(root, selector);
-  expect(length).toBeCloseTo(lineLength, 3);
+  const start = dotAt(root, selector, 0.05);
+  const end = dotAt(root, selector, 0.95);
   const center = centerOf(root.querySelector(target));
   return distance(end, center) < distance(start, center);
-};
-
-/** Older Chromium ignores `keyPoints` with `calcMode="paced"` and runs the dot backwards (#102). */
-const expectNoKeyPoints = (root: ShadowRoot) => {
-  expect(root.querySelectorAll("animateMotion").length).toBeGreaterThan(0);
-  expect(root.querySelectorAll("animateMotion[keyPoints]")).toHaveLength(0);
 };
 
 describe("dot direction", () => {
@@ -299,8 +279,7 @@ describe("dot direction", () => {
       { type: "custom:power-flow-card-plus", entities: scenario.entities },
       fakeHass({ states: scenario.states })
     );
-    expectNoKeyPoints(root);
-    const dot = "#battery-grid-flow circle.battery-from-grid animateMotion";
+    const dot = '.flow-dot[data-path="battery-grid"]:has(circle.battery-from-grid)';
     expect(runsTowards(root, dot, ".battery .circle")).toBe(true);
     expect(runsTowards(root, dot, ".grid .circle")).toBe(false);
   });
@@ -343,7 +322,7 @@ const mountDirections = async (states: string[], individual: object = {}) => {
     return icon && "icon" in icon ? icon.icon : undefined;
   };
   const runsIntoHome = (slot: (typeof slots)[number]) =>
-    runsTowards(card.root, `#${linePaths[slot]} ~ circle animateMotion`, ".home .circle");
+    runsTowards(card.root, `.flow-dot[data-path="${linePaths[slot]}"]`, ".home .circle");
   return { card, arrow, runsIntoHome };
 };
 
@@ -359,8 +338,7 @@ describe("individual direction", () => {
   });
 
   test("each slot's dot runs from the home to the device", async () => {
-    const { card, runsIntoHome } = await mountDirections(["40", "30", "20", "10"]);
-    expectNoKeyPoints(card.root);
+    const { runsIntoHome } = await mountDirections(["40", "30", "20", "10"]);
     expect(slots.map(runsIntoHome)).toEqual([false, false, false, false]);
   });
 
@@ -380,7 +358,6 @@ describe("individual direction", () => {
       "mdi:arrow-up",
       "mdi:arrow-up",
     ]);
-    expectNoKeyPoints(card.root);
     expect(slots.map(runsIntoHome)).toEqual([true, false, false, true]);
   });
 
@@ -464,5 +441,68 @@ describe("updates", () => {
     card.setConfig({ ...watchedConfig, entities: { ...watchedConfig.entities, solar } });
     await setHass(withStates(hass, { "sensor.roof": "400" }));
     expect(text(".solar .solar")).toBe("400 W");
+  });
+});
+
+/** HA's name formatter, composing `area` and `entity` parts; a plain string is kept. */
+const nameFormatter = (area: string) => (_stateObj: unknown, name: unknown) => {
+  if (typeof name === "string") {
+    return name;
+  }
+  const parts: { type: string }[] = Array.isArray(name) ? name : [{ type: "entity" }];
+  return parts.map((part) => (part.type === "area" ? area : "Grid power")).join(" ");
+};
+
+/** A Home Assistant of `version` with a name formatter and an entity registry. */
+const namingHass = (version: string): HomeAssistant => {
+  const hass = fakeHass({
+    states: { "sensor.grid": sensor("100", { name: "Utility room Shelly EM Grid power" }) },
+  });
+  return Object.assign(hass, {
+    config: { ...hass.config, version },
+    entities: {},
+    formatEntityName: nameFormatter("Utility room"),
+  });
+};
+
+const mountNamed = (grid: object, hass: HomeAssistant) =>
+  mountCard(
+    PowerFlowCardPlus,
+    {
+      type: "custom:power-flow-card-plus",
+      entities: { grid: { entity: "sensor.grid", ...grid } },
+    },
+    hass
+  );
+
+describe("entity names", () => {
+  test("from HA 2026.4, use_metadata takes the composed name", async () => {
+    const { text } = await mountNamed({ use_metadata: true }, namingHass("2026.4.0"));
+    expect(text(".grid .label")).toBe("Grid power");
+  });
+
+  test("from HA 2026.4, a structured name is composed from its parts", async () => {
+    const name = [{ type: "area" }, { type: "entity" }];
+    const { text } = await mountNamed({ name }, namingHass("2026.4.0"));
+    expect(text(".grid .label")).toBe("Utility room Grid power");
+  });
+
+  test("before HA 2026.4, names come from friendly_name and a plain name is kept", async () => {
+    const hass = namingHass("2026.3.0");
+    const structured = await mountNamed({ name: [{ type: "area" }] }, hass);
+    expect(structured.text(".grid .label")).toBe("Utility room Shelly EM Grid power");
+    const plain = await mountNamed({ name: "Netz" }, hass);
+    expect(plain.text(".grid .label")).toBe("Netz");
+  });
+
+  test("a renamed area updates the label without a state change", async () => {
+    const name = [{ type: "area" }, { type: "entity" }];
+    const hass = namingHass("2026.4.0");
+    const { setHass, text } = await mountNamed({ name }, hass);
+    // Only the registries and the formatter are new, as when HA renames an area.
+    await setHass(
+      Object.assign({ ...hass }, { entities: {}, formatEntityName: nameFormatter("Basement") })
+    );
+    expect(text(".grid .label")).toBe("Basement Grid power");
   });
 });

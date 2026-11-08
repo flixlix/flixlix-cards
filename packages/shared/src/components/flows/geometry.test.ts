@@ -5,7 +5,7 @@ import {
   flowPaths,
   nominalLayout,
   type Point,
-  RING_INSET,
+  ringInset,
   type Ring,
 } from "./geometry";
 
@@ -96,8 +96,10 @@ describe("flow paths", () => {
           if (!first || !last) {
             throw new Error(`${flow}: empty path`);
           }
-          expect(Math.abs(distance(first, from) - (from.r - RING_INSET))).toBeLessThan(ROUNDING);
-          expect(Math.abs(distance(last, to) - (to.r - RING_INSET))).toBeLessThan(ROUNDING);
+          expect(Math.abs(distance(first, from) - (from.r - ringInset(from)))).toBeLessThan(
+            ROUNDING
+          );
+          expect(Math.abs(distance(last, to) - (to.r - ringInset(to)))).toBeLessThan(ROUNDING);
         }
       })
     );
@@ -120,7 +122,7 @@ describe("flow paths", () => {
           for (const point of sample(d)) {
             for (const circle of rings) {
               expect(distance(point, circle), flow).toBeGreaterThan(
-                circle.r - RING_INSET - ROUNDING
+                circle.r - ringInset(circle) - ROUNDING
               );
             }
           }

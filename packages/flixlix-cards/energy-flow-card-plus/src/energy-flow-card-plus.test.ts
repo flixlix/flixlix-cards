@@ -141,7 +141,7 @@ describe("rendered values", () => {
       );
 
       const seconds = Number.parseFloat(
-        root.querySelector("#solar-home-flow animateMotion")?.getAttribute("dur") ?? ""
+        root.querySelector('.flow-dot[data-path="solar"]')?.getAttribute("data-duration") ?? ""
       );
       // Solar is 70% of all flows: 6 s - 0.7 × (6 s - 0.75 s) with the default flow rates.
       expect(seconds).toBeCloseTo(2.325, 3);

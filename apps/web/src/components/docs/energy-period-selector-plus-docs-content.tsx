@@ -99,7 +99,7 @@ export function OverviewPage() {
       <p className="text-muted-foreground mt-2 mb-8 text-center text-sm">
         The real card, live, driving an Energy Flow Card Plus below it.{" "}
         <Link
-          to="/energy-flow-card-plus/playground"
+          to="/energy-period-selector-plus/playground"
           className="text-primary underline-offset-4 hover:underline"
         >
           Try it in the playground
@@ -632,8 +632,9 @@ cards:
         entity: sensor.solar_energy`}
         />
         <Callout variant="tip" title="Try it live">
-          Pick periods in the{" "}
-          <Link to="/energy-flow-card-plus/playground">Energy Flow Card Plus playground</Link>.
+          Try these options in the{" "}
+          <Link to="/energy-period-selector-plus/playground">playground</Link>, with an Energy Flow
+          Card Plus following the period you pick.
         </Callout>
       </Section>
 

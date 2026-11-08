@@ -159,7 +159,7 @@ describe("home flow card", () => {
   });
 
   test("a pulse keeps its place in its cycle when its speed changes", async () => {
-    const { root, card, setHass } = await mountHouse();
+    const { root, card } = await mountHouse();
     // The test browser asks for reduced motion, which hides pulses; this test is about their motion.
     thawMotion(root);
     const moving = new CSSStyleSheet();
@@ -174,7 +174,9 @@ describe("home flow card", () => {
       animation.currentTime = duration * 0.25;
     }
 
-    await setHass(withStates(card.hass ?? fakeHass(), { "sensor.battery": "300" }));
+    // updated directly: the harness's setHass rewinds every animation once the card settles
+    card.hass = withStates(card.hass ?? fakeHass(), { "sensor.battery": "300" });
+    await card.updateComplete;
 
     expect(root.querySelector(".power.battery .pulse")).toBe(pulse);
     expect(Number(animation?.effect?.getComputedTiming().duration)).not.toBe(duration);

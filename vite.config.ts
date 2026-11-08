@@ -147,6 +147,11 @@ export default defineConfig({
         },
       },
       {
+        // Stands in for HA's date range picker in the docs, where HA's picker does not exist.
+        files: ["packages/shared/src/preview/date-range-picker.ts"],
+        rules: { "flixlix/no-native-date-input": "off" },
+      },
+      {
         files: ["packages/shared/src/card-state/**"],
         excludeFiles: ["**/*.test.ts"],
         rules: {

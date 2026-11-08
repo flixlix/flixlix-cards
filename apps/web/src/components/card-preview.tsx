@@ -13,13 +13,15 @@ const loadPreview = () =>
   Promise.all([
     import("@flixlix-cards/shared/preview/ha-elements"),
     import("@flixlix-cards/shared/preview/fake-hass"),
+    import("@flixlix-cards/shared/preview/date-range-picker"),
     import("power-flow-card-plus/source"),
     import("home-flow-card/source"),
     import("energy-flow-card-plus/source"),
     import("energy-breakdown-card/source"),
     import("energy-period-selector-plus/source"),
-  ]).then(([elements, hass]) => {
+  ]).then(([elements, hass, picker]) => {
     elements.defineHaElements();
+    picker.defineDateRangePicker();
     return { haDashboardStyle: elements.haDashboardStyle, ...hass };
   });
 

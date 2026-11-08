@@ -121,8 +121,6 @@ export type ReadyCardState = {
   flows: Flows;
   /** Whether flow dots are animated. */
   animate: boolean;
-  /** New/previous duration ratio for each flow whose duration changed since the previous state. */
-  animationRescale: Partial<Record<FlowName, number>>;
   cssVars: Record<`--${string}`, string>;
   layout: CardLayout;
 };

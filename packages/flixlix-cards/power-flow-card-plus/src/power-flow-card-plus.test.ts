@@ -97,8 +97,8 @@ describe("rendered values", () => {
 
     expect(text(".grid .consumption")).toBe(`0${thinSpace}W`);
     expect(text("#home-circle")).toContain(`1${thinSpace}kW`);
-    expect(root.querySelector("#grid-home-flow circle")).toBeNull();
-    expect(root.querySelector("#solar-home-flow circle")).not.toBeNull();
+    expect(root.querySelector('.flow-dot[data-path="grid"]')).toBeNull();
+    expect(root.querySelector('.flow-dot[data-path="solar"]')).not.toBeNull();
   });
 
   test("grid below its zero tolerance shows as 0", async () => {

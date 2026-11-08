@@ -100,6 +100,7 @@ const SECTIONS: DocSection[] = [
       { label: "Installation", to: "/energy-period-selector-plus/installation" },
       { label: "Configuration", to: "/energy-period-selector-plus/configuration" },
       { label: "Examples", to: "/energy-period-selector-plus/examples" },
+      { label: "Playground", to: "/energy-period-selector-plus/playground" },
     ],
   },
   {

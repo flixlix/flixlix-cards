@@ -3,7 +3,14 @@ import * as React from "react";
 import { parse, stringify } from "yaml";
 
 import { CardPreview, type CardConfig } from "@/components/card-preview";
-import { type Demo, energyDemo, periodSelector, powerDemo } from "@/components/demos";
+import {
+  type Demo,
+  energyDemo,
+  energyFlowCard,
+  energyStates,
+  periodSelector,
+  powerDemo,
+} from "@/components/demos";
 import { sensor, type StateFixtures } from "@flixlix-cards/shared/preview/fake-hass";
 import { flowScenarios } from "@flixlix-cards/shared/testing/flow-scenarios";
 import { Input } from "@flixlix-cards/ui/components/input";
@@ -25,15 +32,56 @@ export type PlaygroundState = {
   width: number;
 };
 
-/** Power: live readings in W. Energy: daily usage in Wh, over a period picked above the card. */
-export type PlaygroundKind = "power" | "energy";
+/**
+ * Power: live readings in W. Energy: daily usage, over a period picked above the card. Period:
+ * the period selector itself, driving an Energy Flow Card Plus below it.
+ */
+export type PlaygroundKind = "power" | "energy" | "period";
 
-const CARD_TYPES: Record<PlaygroundKind, string> = {
+type FlowKind = Exclude<PlaygroundKind, "period">;
+
+const CARD_TYPES: Record<FlowKind, string> = {
   power: "custom:power-flow-card-plus",
   energy: "custom:energy-flow-card-plus",
 };
 
-const DEMOS: Record<PlaygroundKind, Demo> = { power: powerDemo, energy: energyDemo };
+const DEMOS: Record<FlowKind, Demo> = { power: powerDemo, energy: energyDemo };
+
+/** The period selector's README examples and the options worth trying. */
+const periodPresets = (): Preset[] =>
+  [
+    { name: "every period, on a card", config: periodSelector },
+    {
+      name: "titled, icon buttons, month / year / custom",
+      config: {
+        type: "custom:energy-period-selector-plus",
+        card_background: true,
+        title: "Energy period",
+        today_button_type: "icon",
+        compare_button_type: "icon",
+        period_buttons: ["month", "year", "custom"],
+      },
+    },
+    {
+      name: "compare as text",
+      config: { ...periodSelector, compare_button_type: "text" },
+    },
+    {
+      name: "date picker in every period",
+      config: {
+        ...periodSelector,
+        date_picker: true,
+        period_buttons: ["day", "week", "month", "year", "custom"],
+      },
+    },
+    {
+      name: "bare, without a card",
+      config: { type: "custom:energy-period-selector-plus", prev_next_buttons: false },
+    },
+  ].map(({ name, config }) => ({
+    name,
+    state: { yaml: stringify(config), states: energyStates, width: 500 },
+  }));
 
 /** A test scenario's power readings as daily energy: the same numbers, in Wh. */
 const asDailyEnergy = (states: StateFixtures): StateFixtures =>
@@ -48,6 +96,9 @@ const asDailyEnergy = (states: StateFixtures): StateFixtures =>
 type Preset = { name: string; state: PlaygroundState };
 
 const presets = (kind: PlaygroundKind): Preset[] => {
+  if (kind === "period") {
+    return periodPresets();
+  }
   const demo = DEMOS[kind];
   const realistic: Preset = {
     name: kind === "power" ? "a sunny afternoon" : "an average day",
@@ -211,14 +262,18 @@ export function CardPlayground({
   if (parsed.config && parsed.config !== config) {
     setConfig(parsed.config);
   }
-  const configs = React.useMemo(
-    () => (config ? (kind === "energy" ? [periodSelector, config] : [config]) : []),
-    [config, kind]
-  );
+  const configs = React.useMemo(() => {
+    if (!config) {
+      return [];
+    }
+    return { power: [config], energy: [periodSelector, config], period: [config, energyFlowCard] }[
+      kind
+    ];
+  }, [config, kind]);
   const scenarios = React.useMemo(() => presets(kind), [kind]);
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       <div className="flex flex-col gap-6">
         <Panel title="Scenario">
           <Select
@@ -263,7 +318,7 @@ export function CardPlayground({
           title="Sensor states"
           aside={
             <span className="text-muted-foreground font-mono text-xs">
-              {kind === "energy" ? "on an average day" : "W"}
+              {kind === "power" ? "W" : "on an average day"}
             </span>
           }
         >
@@ -309,7 +364,7 @@ export function CardPlayground({
             configs={configs}
             states={state.states}
             templates={state.templates}
-            energy={kind === "energy"}
+            energy={kind !== "power"}
             width={state.width}
             className="rounded-xl border"
           />

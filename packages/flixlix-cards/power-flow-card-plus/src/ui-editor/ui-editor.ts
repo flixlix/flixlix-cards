@@ -13,6 +13,7 @@ import { nonFossilSchema } from "@flixlix-cards/shared/ui-editor/schema/fossil-f
 import { gridSchema } from "@flixlix-cards/shared/ui-editor/schema/grid";
 import { homeSchema } from "@flixlix-cards/shared/ui-editor/schema/home";
 import { solarSchema } from "@flixlix-cards/shared/ui-editor/schema/solar";
+import { dropSpreadEntity } from "@flixlix-cards/shared/ui-editor/utils/drop-spread-entity";
 import { loadHaForm } from "@flixlix-cards/shared/ui-editor/utils/load-ha-form";
 import { defaultValues } from "@flixlix-cards/shared/utils/get-default-config";
 import { nonEmpty } from "@flixlix-cards/shared/utils/utils";
@@ -276,7 +277,7 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
     }
     const config = {
       ...this._config,
-      entities: { ...this._config.entities, [page]: ev.detail.value },
+      entities: { ...this._config.entities, [page]: dropSpreadEntity(ev.detail.value) },
     };
     fireEvent(this, "config-changed", { config });
   }

@@ -5,7 +5,7 @@ import {
   type IndividualObject,
 } from "@flixlix-cards/shared/types";
 import { type Balance } from "./nodes";
-import { type CardState, type Flow, type FlowName, type Flows } from "./types";
+import { type Flow, type Flows } from "./types";
 
 /** Seconds per dot when a flow's rate is not calculated from its value. */
 const FIXED_FLOW_DURATION = 1.66;
@@ -200,32 +200,4 @@ const batteryGridLine = (
     ...line(config, value, total, { visible: presence.grid && presence.battery }),
     lineClass: zeroLine(config, styledBy, true).lineClass,
   };
-};
-
-const ANIMATED_FLOWS = [
-  "batteryGrid",
-  "batteryToHome",
-  "gridToHome",
-  "solarToBattery",
-  "solarToGrid",
-  "solarToHome",
-] as const satisfies FlowName[];
-
-/** Ratio by which running dot animations are rescaled so dots keep their place on the line. */
-export const animationRescale = (
-  flows: Flows,
-  animate: boolean,
-  previous: CardState | undefined
-): Partial<Record<FlowName, number>> => {
-  if (!animate || previous?.status !== "ready" || !previous.animate) {
-    return {};
-  }
-  return Object.fromEntries(
-    ANIMATED_FLOWS.flatMap((name): [FlowName, number][] => {
-      const before = previous.flows[name].durationSeconds;
-      const after = flows[name].durationSeconds;
-      const ratio = after / before;
-      return before > 0 && before !== after && Number.isFinite(ratio) ? [[name, ratio]] : [];
-    })
-  );
 };

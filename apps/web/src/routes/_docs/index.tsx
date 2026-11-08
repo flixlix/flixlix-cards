@@ -209,10 +209,14 @@ const CARDS: CardEntry[] = [
   },
 ];
 
-/** A live card, shrunk to fit a card tile; the tile links to its docs, so the card itself is inert. */
+/**
+ * A live card, scaled down to fit a card tile; the tile links to its docs, so the card is inert.
+ * A transform, not CSS `zoom`: Chrome draws a zoomed card's flow dots and line ends off their
+ * lines. The scaled card keeps its layout size, centred in the fixed-height tile.
+ */
 function Thumbnail({ zoom, children }: { zoom: number; children: React.ReactNode }) {
   return (
-    <div style={{ zoom }} className="pointer-events-none" inert>
+    <div style={{ transform: `scale(${zoom})` }} className="pointer-events-none shrink-0" inert>
       {children}
     </div>
   );
@@ -281,7 +285,7 @@ function IndexPage() {
               card.accent.border
             )}
           >
-            <div className="bg-muted/50 flex h-44 items-center justify-center border-b">
+            <div className="bg-muted/50 flex h-44 items-center justify-center overflow-hidden border-b">
               {card.media}
             </div>
             <div className="flex flex-1 flex-col gap-3 p-5">

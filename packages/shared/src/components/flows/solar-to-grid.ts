@@ -1,5 +1,5 @@
-import { html, nothing, svg } from "lit";
-import { keyed } from "lit/directives/keyed.js";
+import { html, nothing } from "lit";
+import { flowDot } from "../flow-dot";
 import { type Flows } from "./index";
 
 const solarToGridDot = ({ animate, solar, flows, paths }: Flows) => {
@@ -7,11 +7,12 @@ const solarToGridDot = ({ animate, solar, flows, paths }: Flows) => {
     return nothing;
   }
 
-  return svg`<circle r=${paths.scale} class="return" vector-effect="non-scaling-stroke">
-      <animateMotion dur="${flows.solarToGrid.durationSeconds}s" repeatCount="indefinite" calcMode="paced">
-        <mpath xlink:href="#return" />
-      </animateMotion>
-    </circle>`;
+  return flowDot({
+    path: "return",
+    className: "return",
+    durationSeconds: flows.solarToGrid.durationSeconds,
+    radius: paths.scale,
+  });
 };
 
 export const flowSolarToGrid = (context: Flows) => {
@@ -21,12 +22,12 @@ export const flowSolarToGrid = (context: Flows) => {
   }
 
   return html`<svg class="flow" id="solar-grid-flow" viewBox=${context.viewBox}>
-    <path
-      id="return"
-      class="return ${flows.solarToGrid.lineClass}"
-      d=${paths.solarToGrid.d}
-      vector-effect="non-scaling-stroke"
-    ></path>
-    ${keyed(paths.solarToGrid.d, solarToGridDot(context))}
-  </svg>`;
+      <path
+        id="return"
+        class="return ${flows.solarToGrid.lineClass}"
+        d=${paths.solarToGrid.d}
+        vector-effect="non-scaling-stroke"
+      ></path>
+    </svg>
+    ${solarToGridDot(context)}`;
 };
