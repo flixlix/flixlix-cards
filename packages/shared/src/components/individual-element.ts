@@ -5,6 +5,7 @@ import {
   type IndividualObject,
 } from "@flixlix-cards/shared/types";
 import { html, nothing, svg, type SVGTemplateResult, type TemplateResult } from "lit";
+import { reversePath } from "./reverse-path";
 import { spacer } from "./spacer";
 import { type IndividualKey, individualSecondarySpan } from "./spans/individual-secondary-span";
 
@@ -76,15 +77,20 @@ const individualCircle = (
   </div>`;
 };
 
-/** Each slot's line has its own path id, which `xlink:href` must name statically. */
-const dotPaths: Record<IndividualKey, SVGTemplateResult> = {
-  "left-top": svg`<mpath xlink:href="#individual-top" />`,
-  "left-bottom": svg`<mpath xlink:href="#individual-bottom" />`,
-  "right-top": svg`<mpath xlink:href="#individual-top-right-home" />`,
-  "right-bottom": svg`<mpath xlink:href="#individual-bottom-right-home" />`,
+/** Each slot's line, drawn from the device to the home. */
+const linePaths: Record<IndividualKey, (hasBottomRow: boolean) => string> = {
+  "left-top": () => "M40 -10 v50",
+  "left-bottom": () => "M40 40 v-40",
+  "right-top": (hasBottomRow) =>
+    hasBottomRow ? "M45,0 v15 c0,30 -10,30 -30,30 h-20" : "M47,0 v15 c0,35 -10,35 -30,35 h-20",
+  "right-bottom": () => "M45,100 v-15 c0,-30 -10,-30 -30,-30 h-20",
 };
 
-const flowDot = (slot: IndividualSlot, key: IndividualKey, animate: boolean) => {
+/**
+ * The dot runs along the line drawn in its direction of travel instead of using `keyPoints`:
+ * older Chromium ignores `keyPoints` with `calcMode="paced"`, and `linear` speeds up on straight parts.
+ */
+const flowDot = (slot: IndividualSlot, key: IndividualKey, animate: boolean, line: string) => {
   if (!animate || !isFlowing(slot.node)) {
     return nothing;
   }
@@ -94,21 +100,18 @@ const flowDot = (slot: IndividualSlot, key: IndividualKey, animate: boolean) => 
     <animateMotion
       dur="${slot.flow.durationSeconds}s"
       repeatCount="indefinite"
-      calcMode="linear"
-      keyPoints="${slot.node.invertAnimation ? "0;1" : "1;0"}"
-      keyTimes="0;1"
-    >
-      ${dotPaths[key]}
-    </animateMotion>
+      calcMode="paced"
+      path="${slot.node.invertAnimation ? line : reversePath(line)}"
+    ></animateMotion>
   </circle>`;
 };
 
 type Parts = {
   slot: IndividualSlot;
+  line: string;
   label: TemplateResult;
   circle: TemplateResult;
   dot: SVGTemplateResult | typeof nothing;
-  hasBottomRow: boolean;
 };
 
 const rightFlow = (path: SVGTemplateResult, dot: Parts["dot"]) =>
@@ -125,31 +128,31 @@ const rightFlow = (path: SVGTemplateResult, dot: Parts["dot"]) =>
 
 /** Where label, circle and line sit for each slot around the home. */
 const layouts: Record<IndividualKey, (parts: Parts) => TemplateResult> = {
-  "left-top": ({ slot, label, circle, dot }) =>
+  "left-top": ({ slot, line, label, circle, dot }) =>
     html`<div class="circle-container individual-top">
       ${label} ${circle}
       ${
         slot.flow.visible
           ? html`<svg width="80" height="30">
-              <path d="M40 -10 v50" id="individual-top" class="${slot.flow.lineClass}" />
+              <path d="${line}" id="individual-top" class="${slot.flow.lineClass}" />
               ${dot}
             </svg>`
           : nothing
       }
     </div>`,
-  "left-bottom": ({ slot, label, circle, dot }) =>
+  "left-bottom": ({ slot, line, label, circle, dot }) =>
     html`<div class="circle-container individual-bottom bottom">
       ${
         slot.flow.visible
           ? html`<svg width="80" height="30">
-              <path d="M40 40 v-40" id="individual-bottom" class="${slot.flow.lineClass}" />
+              <path d="${line}" id="individual-bottom" class="${slot.flow.lineClass}" />
               ${dot}
             </svg>`
           : html` <svg width="80" height="30"></svg> `
       }
       ${circle} ${label}
     </div>`,
-  "right-top": ({ slot, label, circle, dot, hasBottomRow }) =>
+  "right-top": ({ slot, line, label, circle, dot }) =>
     html`<div class="circle-container individual-top individual-right individual-right-top">
       ${label} ${circle}
       ${
@@ -158,9 +161,7 @@ const layouts: Record<IndividualKey, (parts: Parts) => TemplateResult> = {
               svg`<path
                 id="individual-top-right-home"
                 class="${slot.flow.lineClass}"
-                d="M${hasBottomRow ? 45 : 47},0 v15 c0,${
-                  hasBottomRow ? "30 -10,30 -30,30" : "35 -10,35 -30,35"
-                } h-20"
+                d="${line}"
                 vector-effect="non-scaling-stroke"
               />`,
               dot
@@ -168,7 +169,7 @@ const layouts: Record<IndividualKey, (parts: Parts) => TemplateResult> = {
           : nothing
       }
     </div>`,
-  "right-bottom": ({ slot, label, circle, dot }) =>
+  "right-bottom": ({ slot, line, label, circle, dot }) =>
     html`<div class="circle-container individual-bottom individual-right individual-right-bottom">
       ${circle} ${label}
       ${
@@ -177,7 +178,7 @@ const layouts: Record<IndividualKey, (parts: Parts) => TemplateResult> = {
               svg`<path
                 id="individual-bottom-right-home"
                 class="${slot.flow.lineClass}"
-                d="M45,100 v-15 c0,-30 -10,-30 -30,-30 h-20"
+                d="${line}"
                 vector-effect="non-scaling-stroke"
               />`,
               dot
@@ -201,11 +202,12 @@ export const individualElement = (
   if (!slot) {
     return spacer;
   }
+  const line = linePaths[key](hasBottomRow);
   return layouts[key]({
     slot,
+    line,
     label: html`<span class="label">${slot.node.name}</span>`,
     circle: individualCircle(main, config, slot.node, key),
-    dot: flowDot(slot, key, animate),
-    hasBottomRow,
+    dot: flowDot(slot, key, animate, line),
   });
 };

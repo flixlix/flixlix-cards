@@ -12,7 +12,7 @@ const noPacedKeyPoints = defineRule({
     },
     messages: {
       noPacedKeyPoints:
-        '`keyPoints` is ignored with `calcMode="paced"` on older Chromium (e.g. Fire tablets), so the dot runs the wrong way. Use `calcMode="linear"` with `keyTimes`.',
+        '`keyPoints` is ignored with `calcMode="paced"` on older Chromium (e.g. Fire tablets), so the dot runs the wrong way. Keep `paced` and drop `keyPoints`: give `animateMotion` a `path` drawn in the direction of travel (`reversePath` in shared/components). `calcMode="linear"` is not a fix: dots rush along straight parts and crawl through curves.',
     },
   },
   create(context) {
