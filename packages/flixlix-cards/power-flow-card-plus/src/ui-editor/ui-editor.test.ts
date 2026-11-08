@@ -67,6 +67,41 @@ function ownFieldNames(schema: unknown): string[] {
   });
 }
 
+/**
+ * The value a boolean field shows the way Home Assistant's ha-form draws it: the config value,
+ * else the schema's `default` as the toggle's placeholder.
+ */
+function shownBoolean(form: HTMLElement, name: string): boolean {
+  const data = "data" in form && typeof form.data === "object" ? form.data : undefined;
+  const value = data && name in data ? Reflect.get(data, name) : undefined;
+  if (typeof value === "boolean") {
+    return value;
+  }
+  return fieldDefault("schema" in form ? form.schema : undefined, name) === true;
+}
+
+function fieldDefault(schema: unknown, name: string): unknown {
+  if (!Array.isArray(schema)) {
+    return undefined;
+  }
+  for (const item of schema) {
+    if (typeof item !== "object" || item === null) {
+      continue;
+    }
+    if ("name" in item && item.name === name && "default" in item) {
+      return item.default;
+    }
+    const nested =
+      "schema" in item && !("name" in item && item.name)
+        ? fieldDefault(item.schema, name)
+        : undefined;
+    if (nested !== undefined) {
+      return nested;
+    }
+  }
+  return undefined;
+}
+
 describe("power flow ui editor", () => {
   beforeEach(() => {
     loadHaFormMock.mockReset();
@@ -242,6 +277,32 @@ describe("power flow ui editor", () => {
       expect(lastConfig()?.entities).toEqual({ [page]: value });
     }
   );
+
+  test("an individual device without display_zero shows the toggle off, as the card hides it at zero", async () => {
+    const { editor } = await mountEditor({ entities: { individual: [{ entity: "sensor.ev" }] } });
+    query(editor, 'link-subpage[path="individual"]').dispatchEvent(
+      new CustomEvent("open-sub-element-editor", { detail: { open: true } })
+    );
+    await editor.updateComplete;
+    const devices = await rendered(editor, "individual-devices-editor");
+    const rows = await rendered(devices, "individual-row-editor");
+    query(rows, ".edit-icon").click();
+    await rendered(devices, "individual-row-editor");
+
+    expect(shownBoolean(query(rows, "ha-form"), "display_zero")).toBe(false);
+  });
+
+  test("the non-fossil page without display_zero shows the toggle off, as the card hides it at zero", async () => {
+    const { editor } = await mountEditor({
+      entities: { fossil_fuel_percentage: { entity: "sensor.fossil" } },
+    });
+    query(editor, 'link-subpage[path="fossil_fuel_percentage"]').dispatchEvent(
+      new CustomEvent("open-sub-element-editor", { detail: { open: true } })
+    );
+    await editor.updateComplete;
+
+    expect(shownBoolean(query(editor, "ha-form"), "display_zero")).toBe(false);
+  });
 
   test("the general form passes its value through as the whole config", async () => {
     const { editor, lastConfig } = await mountEditor({ entities: {} });

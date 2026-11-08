@@ -889,7 +889,7 @@ const FOSSIL_OPTIONS: OptionRow[] = [
   {
     name: "display_zero",
     type: "boolean",
-    default: "true",
+    default: "false",
     description: "Show even when the state is 0 / unavailable.",
   },
   {
