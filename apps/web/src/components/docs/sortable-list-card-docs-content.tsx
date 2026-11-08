@@ -41,7 +41,7 @@ const CARD_TYPE = "custom:sortable-list-card";
 const BASE_PATH = "/sortable-list-card";
 const REPO_URL = "https://github.com/flixlix/sortable-list-card";
 const HACS_REDIRECT =
-  "https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=sortable-list-card&category=Dashboard";
+  "https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=sortable-list-card&category=plugin";
 const RELEASE_URL = "https://github.com/flixlix/sortable-list-card/releases/latest";
 
 function HighlightItem({ children }: { children: React.ReactNode }) {

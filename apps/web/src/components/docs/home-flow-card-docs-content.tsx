@@ -49,7 +49,7 @@ const CARD_TYPE = "custom:home-flow-card";
 const BASE_PATH = "/home-flow-card";
 const REPO_URL = "https://github.com/flixlix/home-flow-card";
 const HACS_REDIRECT =
-  "https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=home-flow-card&category=Dashboard";
+  "https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=home-flow-card&category=plugin";
 const RELEASE_URL = "https://github.com/flixlix/home-flow-card/releases/latest";
 
 const MINIMAL_CONFIG = `type: ${CARD_TYPE}

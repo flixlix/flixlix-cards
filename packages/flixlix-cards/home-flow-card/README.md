@@ -1,7 +1,7 @@
 # Home Flow Card
 
 [![ko-fi support](https://img.shields.io/badge/support-me-ff5e5b?style=flat-square&logo=ko-fi)](https://ko-fi.com/flixlix)
-[![HACS custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=flat-square)](https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=home-flow-card&category=Dashboard)
+[![HACS custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=flat-square)](https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=home-flow-card&category=plugin)
 ![GitHub release](https://img.shields.io/github/v/release/flixlix/home-flow-card?style=flat-square)
 ![GitHub total downloads](https://img.shields.io/github/downloads/flixlix/home-flow-card/total?style=flat-square)
 
@@ -34,7 +34,7 @@ for those.
 
 ## Installation
 
-[![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=home-flow-card&category=Dashboard)
+[![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=home-flow-card&category=plugin)
 
 Or in HACS, open **⋮ → Custom repositories**, add `https://github.com/flixlix/home-flow-card` with
 category **Dashboard**, and download **Home Flow Card**.

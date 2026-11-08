@@ -8,6 +8,7 @@ import noIndexFallback from "./rules/no-index-fallback.js";
 import noMutation from "./rules/no-mutation.js";
 import noMwcElements from "./rules/no-mwc-elements.js";
 import haLocalizeKeys from "./rules/ha-localize-keys.js";
+import hacsLinkCategory from "./rules/hacs-link-category.js";
 import noSlicedSvg from "./rules/no-sliced-svg.js";
 import noNativeDateInput from "./rules/no-native-date-input.js";
 import noPacedKeyPoints from "./rules/no-paced-key-points.js";
@@ -27,6 +28,7 @@ export default definePlugin({
     "no-mwc-elements": noMwcElements,
     "no-sliced-svg": noSlicedSvg,
     "ha-localize-keys": haLocalizeKeys,
+    "hacs-link-category": hacsLinkCategory,
     "no-native-date-input": noNativeDateInput,
     "no-paced-key-points": noPacedKeyPoints,
     "no-reactive-mutation": noReactiveMutation,

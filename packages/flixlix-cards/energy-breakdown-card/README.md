@@ -17,7 +17,7 @@ Both variants support an optional **legend** (names + values + percentages) and 
 
 This card is **not yet in the default HACS store** — you need to add it as a custom repository first.
 
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=energy-breakdown-card&category=Dashboard)
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=energy-breakdown-card&category=plugin)
 
 1. In Home Assistant, open **HACS**.
 2. Click the **⋮** menu in the top-right → **Custom repositories**.

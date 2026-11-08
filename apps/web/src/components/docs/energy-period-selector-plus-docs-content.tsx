@@ -41,7 +41,7 @@ const CARD_TYPE = "custom:energy-period-selector-plus";
 const BASE_PATH = "/energy-period-selector-plus";
 const REPO_URL = "https://github.com/flixlix/energy-period-selector-plus";
 const HACS_REDIRECT =
-  "https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=energy-period-selector-plus&category=Dashboard";
+  "https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=energy-period-selector-plus&category=plugin";
 const RELEASE_URL = "https://github.com/flixlix/energy-period-selector-plus/releases/latest";
 
 function HighlightItem({ children }: { children: React.ReactNode }) {

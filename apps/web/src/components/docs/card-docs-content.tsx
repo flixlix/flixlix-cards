@@ -94,7 +94,7 @@ const VARIANTS: Record<CardKey, Variant> = {
     thresholdDescription:
       "Number of watts before converting to and displaying in kilowatts. Setting 0 always displays in kW.",
     hacsRedirect:
-      "https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=power-flow-card-plus&category=Dashboard",
+      "https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=power-flow-card-plus&category=plugin",
     releaseUrl: "https://github.com/flixlix/power-flow-card-plus/releases/latest",
     basePath: "/power-flow-card-plus",
     demo: "power",
@@ -117,7 +117,7 @@ const VARIANTS: Record<CardKey, Variant> = {
     thresholdDescription:
       "Number of watt-hours before converting to and displaying in kilowatt-hours. Setting 0 always displays in kWh.",
     hacsRedirect:
-      "https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=energy-flow-card-plus&category=Dashboard",
+      "https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=energy-flow-card-plus&category=plugin",
     releaseUrl: "https://github.com/flixlix/energy-flow-card-plus/releases/latest",
     basePath: "/energy-flow-card-plus",
     demo: "period",

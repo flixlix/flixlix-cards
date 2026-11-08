@@ -47,7 +47,7 @@ const CARD_TYPE = "custom:energy-breakdown-card";
 const BASE_PATH = "/energy-breakdown-card";
 const REPO_URL = "https://github.com/flixlix/energy-breakdown-card";
 const HACS_REDIRECT =
-  "https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=energy-breakdown-card&category=Dashboard";
+  "https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=energy-breakdown-card&category=plugin";
 const RELEASE_URL = "https://github.com/flixlix/energy-breakdown-card/releases/latest";
 
 function HighlightItem({ children }: { children: React.ReactNode }) {
