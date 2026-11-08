@@ -8,12 +8,12 @@ interface UseIsInViewOptions {
 }
 
 function useIsInView<T extends HTMLElement = HTMLElement>(
-  ref: React.Ref<T>,
+  ref: React.Ref<T | null>,
   options: UseIsInViewOptions = {}
 ) {
   const { inView, inViewOnce = false, inViewMargin = "0px" } = options;
   const localRef = React.useRef<T>(null);
-  React.useImperativeHandle(ref, () => localRef.current as T);
+  React.useImperativeHandle<T | null, T | null>(ref, () => localRef.current);
   const inViewResult = useInView(localRef, {
     once: inViewOnce,
     margin: inViewMargin,

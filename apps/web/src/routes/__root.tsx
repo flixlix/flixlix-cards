@@ -32,6 +32,7 @@ export const Route = createRootRoute({
         rel: "stylesheet",
         href: globalsCss,
       },
+      { rel: "stylesheet", href: "/fonts/roboto/roboto.css" },
     ],
   }),
   shellComponent: RootDocument,

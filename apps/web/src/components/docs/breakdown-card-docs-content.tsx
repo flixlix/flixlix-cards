@@ -26,6 +26,8 @@ import {
 } from "@flixlix-cards/ui/components/card";
 import { Checkbox } from "@flixlix-cards/ui/components/checkbox";
 
+import { CardDemo } from "@/components/card-demo";
+
 import { CategorySection } from "./category-section";
 import {
   Callout,
@@ -68,6 +70,11 @@ export function OverviewPage() {
         description="A custom Home Assistant Lovelace card that visualizes how your energy use is broken down across sources — as a donut or stacked bar."
         badges={[{ label: "HACS custom" }, { label: "YAML & UI editor" }, { label: "Donut + bar" }]}
       />
+
+      <CardDemo demo="breakdown" className="mx-auto w-fit max-w-full rounded-xl border" />
+      <p className="text-muted-foreground mt-2 text-center text-sm">
+        The real card, live, under Energy Period Selector Plus: pick a period to see it change.
+      </p>
 
       <Prose className="mt-4">
         <p>

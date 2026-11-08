@@ -14,23 +14,23 @@ jobs:
         with:
           script: |
             const issueBody = context.payload.issue.body;
-            
+
             // This regex finds the value selected in the dropdown 
             // from the Issue Form's rendered markdown
             const cardMatch = issueBody.match(/### Which card is this for\?\s*\n\n([^\n]+)/);
-            
+
             if (!cardMatch) return;
-            
+
             const selectedCard = cardMatch[1].trim();
             const labels = [];
-            
+
             // Map the dropdown text to your actual GitHub labels
             const labelMap = {
               "Power Flow Card Plus": "card:power-flow-card-plus",
               "Energy Flow Card Plus": "card:energy-flow-card-plus",
               "Energy Period Selector Plus": "card:energy-period-selector-plus"
             };
-            
+
             if (labelMap[selectedCard]) {
               labels.push(labelMap[selectedCard]);
             }

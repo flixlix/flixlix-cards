@@ -1,5 +1,10 @@
 import localize from "@flixlix-cards/shared/i18n";
-import { actionSchema, getBaseMainConfigSchema, secondaryInfoSchema } from "./_schema-base";
+import {
+  actionSchema,
+  getBaseMainConfigSchema,
+  secondaryInfoSchema,
+  unitSchema,
+} from "./_schema-base";
 
 const mainSchema = {
   ...getBaseMainConfigSchema(),
@@ -42,6 +47,7 @@ const mainSchema = {
       label: "Use Metadata",
       selector: { boolean: {} },
     },
+    ...unitSchema,
   ],
 };
 

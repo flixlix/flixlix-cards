@@ -15,7 +15,7 @@ import * as React from "react";
 import { createPortal } from "react-dom";
 
 import { setThemeMode } from "#/lib/theme";
-import { cn } from "@flixlix-cards/cn";
+import { cn } from "cn";
 
 import { searchDocs, SUGGESTED_GROUPS, type SearchEntry } from "./docs-search-index";
 
@@ -72,7 +72,9 @@ const THEME_COMMANDS: Command[] = [
 
 function matchCommands(query: string): Command[] {
   const tokens = query.toLowerCase().split(/\s+/).filter(Boolean);
-  if (tokens.length === 0) return THEME_COMMANDS;
+  if (tokens.length === 0) {
+    return THEME_COMMANDS;
+  }
   return THEME_COMMANDS.filter((c) => {
     const haystack = `${c.title} ${c.keywords}`.toLowerCase();
     return tokens.every((t) => haystack.includes(t));
@@ -80,9 +82,13 @@ function matchCommands(query: string): Command[] {
 }
 
 function highlight(text: string, query: string): React.ReactNode {
-  if (!query) return text;
+  if (!query) {
+    return text;
+  }
   const idx = text.toLowerCase().indexOf(query.toLowerCase());
-  if (idx === -1) return text;
+  if (idx === -1) {
+    return text;
+  }
   return (
     <>
       {text.slice(0, idx)}
@@ -98,15 +104,12 @@ type MenuItem = { kind: "doc"; entry: SearchEntry } | { kind: "command"; command
 
 type Group = { label: string; items: MenuItem[] };
 
+const subscribeToNothing = () => () => {};
+const isMacPlatform = () => /(Mac|iPhone|iPad|iPod)/i.test(navigator.platform);
+
 export function DocsSearch({ className }: { className?: string }) {
   const [open, setOpen] = React.useState(false);
-  const [mounted, setMounted] = React.useState(false);
-  const [isMac, setIsMac] = React.useState(false);
-
-  React.useEffect(() => {
-    setMounted(true);
-    setIsMac(/(Mac|iPhone|iPad|iPod)/i.test(navigator.platform));
-  }, []);
+  const isMac = React.useSyncExternalStore(subscribeToNothing, isMacPlatform, () => false);
 
   React.useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -121,7 +124,9 @@ export function DocsSearch({ className }: { className?: string }) {
 
   // Lock body scroll when open
   React.useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      return undefined;
+    }
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
@@ -147,9 +152,7 @@ export function DocsSearch({ className }: { className?: string }) {
         </kbd>
       </button>
 
-      {mounted && open
-        ? createPortal(<CommandMenu onClose={() => setOpen(false)} />, document.body)
-        : null}
+      {open ? createPortal(<CommandMenu onClose={() => setOpen(false)} />, document.body) : null}
     </>
   );
 }
@@ -169,7 +172,7 @@ function CommandMenu({ onClose }: { onClose: () => void }) {
         ? [
             {
               label: "Commands",
-              items: commands.map((command) => ({ kind: "command", command }) as MenuItem),
+              items: commands.map((command): MenuItem => ({ kind: "command", command })),
             },
           ]
         : [];
@@ -178,7 +181,7 @@ function CommandMenu({ onClose }: { onClose: () => void }) {
       return [
         ...SUGGESTED_GROUPS.filter((g) => g.entries.length > 0).map((g) => ({
           label: g.label,
-          items: g.entries.map((entry) => ({ kind: "doc", entry }) as MenuItem),
+          items: g.entries.map((entry): MenuItem => ({ kind: "doc", entry })),
         })),
         ...commandGroup(THEME_COMMANDS),
       ];
@@ -186,7 +189,9 @@ function CommandMenu({ onClose }: { onClose: () => void }) {
 
     const results = searchDocs(query, 24);
     const commands = commandGroup(matchCommands(trimmed));
-    if (results.length === 0) return commands;
+    if (results.length === 0) {
+      return commands;
+    }
     // group by type for a richer command-menu feel
     const order: SearchEntry["type"][] = ["page", "section", "option", "example"];
     const buckets = new Map<SearchEntry["type"], SearchEntry[]>();
@@ -201,7 +206,7 @@ function CommandMenu({ onClose }: { onClose: () => void }) {
           label: { page: "Pages", section: "Sections", option: "Options", example: "Examples" }[
             type
           ],
-          items: (buckets.get(type) ?? []).map((entry) => ({ kind: "doc", entry }) as MenuItem),
+          items: (buckets.get(type) ?? []).map((entry): MenuItem => ({ kind: "doc", entry })),
         }))
         .filter((g) => g.items.length > 0),
       ...commands,
@@ -210,8 +215,6 @@ function CommandMenu({ onClose }: { onClose: () => void }) {
 
   const flatEntries = React.useMemo(() => groups.flatMap((g) => g.items), [groups]);
 
-  React.useEffect(() => setActiveIndex(0), [query]);
-
   // Focus input on mount
   React.useEffect(() => {
     inputRef.current?.focus();
@@ -219,7 +222,9 @@ function CommandMenu({ onClose }: { onClose: () => void }) {
 
   // Keep the active item visible
   React.useEffect(() => {
-    if (!listRef.current) return;
+    if (!listRef.current) {
+      return;
+    }
     const node = listRef.current.querySelector<HTMLElement>(`[data-index="${activeIndex}"]`);
     node?.scrollIntoView({ block: "nearest" });
   }, [activeIndex]);
@@ -228,6 +233,11 @@ function CommandMenu({ onClose }: { onClose: () => void }) {
     const [pathname, hash] = entry.to.split("#");
     void router.navigate({ to: pathname, hash: hash ?? undefined });
     onClose();
+  }
+
+  function updateQuery(next: string) {
+    setQuery(next);
+    setActiveIndex(0);
   }
 
   function runItem(item: MenuItem) {
@@ -264,11 +274,11 @@ function CommandMenu({ onClose }: { onClose: () => void }) {
   let runningIndex = 0;
 
   return (
-    <div
-      role="dialog"
+    <dialog
+      open
       aria-modal="true"
       aria-label="Search documentation"
-      className="fixed inset-0 z-50 flex items-start justify-center px-4 pt-[10vh] sm:pt-[15vh]"
+      className="fixed inset-0 z-50 flex size-full max-h-none max-w-none items-start justify-center bg-transparent px-4 pt-[10vh] text-inherit sm:pt-[15vh]"
     >
       <button
         type="button"
@@ -285,7 +295,7 @@ function CommandMenu({ onClose }: { onClose: () => void }) {
             type="search"
             placeholder="Search docs…"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => updateQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             aria-autocomplete="list"
             aria-controls="docs-command-list"
@@ -300,7 +310,7 @@ function CommandMenu({ onClose }: { onClose: () => void }) {
               aria-label="Clear search"
               className="text-muted-foreground hover:text-foreground rounded-sm p-1"
               onClick={() => {
-                setQuery("");
+                updateQuery("");
                 inputRef.current?.focus();
               }}
             >
@@ -318,17 +328,12 @@ function CommandMenu({ onClose }: { onClose: () => void }) {
         </div>
 
         {/* Results / suggestions */}
-        <div
-          ref={listRef}
-          id="docs-command-list"
-          role="listbox"
-          className="flex-1 overflow-y-auto py-2"
-        >
+        <div ref={listRef} id="docs-command-list" className="flex-1 overflow-y-auto py-2">
           {groups.length === 0 ? (
             <EmptyState query={query} />
           ) : (
             groups.map((group, gi) => (
-              <div key={`${group.label}-${gi}`} className="px-1 py-1">
+              <div key={group.label} className="px-1 py-1">
                 <div className="text-muted-foreground flex items-center gap-1.5 px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider">
                   {!query && gi === 0 ? <Sparkles className="size-3" /> : null}
                   {group.label}
@@ -349,8 +354,6 @@ function CommandMenu({ onClose }: { onClose: () => void }) {
                       <li key={`${key}-${idx}`}>
                         <button
                           type="button"
-                          role="option"
-                          aria-selected={active}
                           id={`command-item-${idx}`}
                           data-index={idx}
                           onMouseEnter={() => setActiveIndex(idx)}
@@ -424,7 +427,7 @@ function CommandMenu({ onClose }: { onClose: () => void }) {
           )}
         </div>
       </div>
-    </div>
+    </dialog>
   );
 }
 

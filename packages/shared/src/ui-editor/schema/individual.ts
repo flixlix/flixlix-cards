@@ -21,7 +21,6 @@ const mainSchema = {
       name: "display_zero",
       label: "Display Zero",
       selector: { boolean: {} },
-      default: true,
     },
     {
       name: "display_zero_tolerance",
@@ -52,6 +51,11 @@ const mainSchema = {
     {
       name: "inverted_animation",
       label: "Invert Animation",
+      selector: { boolean: {} },
+    },
+    {
+      name: "accept_negative",
+      label: "Accept Negative",
       selector: { boolean: {} },
     },
     {

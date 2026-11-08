@@ -1,7 +1,5 @@
 import { css } from "lit";
 
-export { allDynamicStyles } from "./all";
-export { computeColor } from "./colors";
 export { convertColorListToHex } from "./convert-color";
 
 export const styles = css`
@@ -36,19 +34,6 @@ export const styles = css`
     --secondary-text-grid-color: var(--primary-text-color);
     --secondary-text-home-color: var(--primary-text-color);
     --secondary-text-non-fossil-color: var(--primary-text-color);
-    --lines-svg-not-flat-line-height: 106%;
-    --lines-svg-not-flat-line-top: -2%;
-    --lines-svg-flat-width: calc(100% - 160px);
-    --lines-svg-not-flat-width: calc(103% - 165px);
-    --lines-svg-not-flat-multi-indiv-height: 104%;
-    --lines-svg-not-flat-multi-indiv-width: calc(103% - var(--size-circle-entity) * 3.7);
-    --lines-svg-not-flat-multi-indiv-width: calc(((106% - 165px) * 0.5));
-    --lines-svg-not-flat-multi-indiv-width: calc(((130% - 246px) * 0.5));
-    --lines-svg-not-flat-multi-indiv-right-indiv-width: calc(((130% - 210px) * 0.5));
-    --lines-svg-not-flat-multi-indiv-right-indiv-height: 103%;
-    --lines-svg-flat-multi-indiv-width: calc((129% - 242px) * 0.5);
-    --lines-svg-flat-left: 0;
-    --lines-svg-not-flat-left: 0;
     --dot-size: 3.5px;
 
     --transparency: var(--transparency-unused-lines);
@@ -97,6 +82,15 @@ export const styles = css`
     overflow: hidden;
   }
 
+  /* The flow lines are drawn left to right, so the nodes they connect must not mirror. */
+  .row {
+    direction: ltr;
+  }
+
+  .circle:dir(rtl) {
+    direction: rtl;
+  }
+
   .circle > ha-ripple {
     position: absolute;
     inset: 0;
@@ -114,67 +108,15 @@ export const styles = css`
   .row {
     max-width: 470px;
   }
-  .lines {
+  /* Every flow line, in the content's pixels; drawn by flows/geometry.ts to the measured circles. */
+  .flows,
+  .flows > svg {
     position: absolute;
-    bottom: 0;
-    left: var(--size-circle-entity);
+    inset: 0;
     width: 100%;
-    height: 146px;
-    display: flex;
-    justify-content: flex-start;
-    padding: 0 16px 16px;
-    box-sizing: border-box;
-    pointer-events: none;
-  }
-
-  :dir(rtl) .lines {
-    justify-content: flex-end;
-  }
-
-  .lines:not(.multi-individual) svg.flat-line {
-    left: var(--lines-svg-flat-left);
-  }
-
-  .lines:not(.multi-individual) svg:not(.flat-line) {
-    left: var(--lines-svg-not-flat-left);
-  }
-
-  .lines:has(svg:not(.flat-line)) {
-    margin-left: -1%;
-  }
-  .lines.individual-bottom-individual-top {
-    bottom: 110px;
-  }
-  .lines.high {
-    bottom: 100px;
-    height: 156px;
-  }
-  .lines svg {
-    width: var(--lines-svg-flat-width);
     height: 100%;
-    max-width: 340px;
-    position: relative;
-  }
-
-  .lines svg:not(.flat-line) {
-    width: var(--lines-svg-not-flat-width);
-    height: var(--lines-svg-not-flat-line-height);
-    top: var(--lines-svg-not-flat-line-top);
-  }
-
-  .multi-individual {
-    left: calc(var(--size-circle-entity) + 2%);
-    margin-left: -2.2% !important;
-  }
-
-  .multi-individual svg {
-    width: var(--lines-svg-flat-multi-indiv-width);
-  }
-
-  .multi-individual svg:not(.flat-line) {
-    width: var(--lines-svg-not-flat-multi-indiv-width);
-    margin-top: 1px;
-    height: var(--lines-svg-not-flat-multi-indiv-height);
+    overflow: visible;
+    pointer-events: none;
   }
 
   .row {
@@ -241,11 +183,6 @@ export const styles = css`
   .card-content.no-labels .circle-container.low-carbon,
   .card-content.no-labels .circle-container.individual-top {
     height: 110px !important;
-  }
-
-  .card-content.no-labels .right-individual-flow-container,
-  .card-content.no-labels .lines {
-    transform: translateY(20px);
   }
 
   line,
@@ -347,31 +284,6 @@ export const styles = css`
     stroke: var(--individual-right-bottom-color);
   }
 
-  .right-individual-flow-container {
-    position: absolute;
-    right: calc(var(--size-circle-entity) - 27% * 1.1 + 6px);
-    width: 100%;
-    display: flex;
-    justify-content: flex-end;
-    height: 156px;
-    bottom: 100px;
-    padding: 0 16px 16px;
-    margin-right: -1.2%;
-    box-sizing: border-box;
-    pointer-events: none;
-  }
-  .right-individual-flow-container > svg {
-    width: var(--lines-svg-not-flat-multi-indiv-right-indiv-width);
-  }
-
-  .right-individual-flow {
-    height: var(--lines-svg-not-flat-multi-indiv-right-indiv-height);
-    margin-top: 2px;
-    width: var(--lines-svg-not-flat-multi-indiv-width);
-    top: var(--lines-svg-not-flat-line-top);
-    max-width: 340px;
-    position: relative;
-  }
   .circle-container.low-carbon {
     height: 130px;
   }

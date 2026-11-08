@@ -1,4 +1,4 @@
-import { type ActionConfig, type HomeAssistant } from "custom-card-helpers";
+import { type ActionConfig } from "custom-card-helpers";
 import { type TemplateResult } from "lit";
 
 export type ActionConfigSet = {
@@ -8,7 +8,6 @@ export type ActionConfigSet = {
 };
 
 export interface CardMainContext {
-  hass: HomeAssistant;
   openDetails: (
     event: { stopPropagation: () => void; key?: string; target: HTMLElement },
     config?: ActionConfig | ActionConfigSet,
@@ -62,12 +61,13 @@ export interface BaseConfigEntity extends ActionConfigSet {
   entity: string | ComboEntity;
   name?: EntityName;
   icon?: string;
-  color?: ComboEntity | string;
+  color?: ComboEntity | ColorValue;
   color_icon?: boolean | string;
   display_state?: "two_way" | "one_way" | "one_way_no_zero";
   display_zero_tolerance?: number;
   unit_of_measurement?: string;
   unit_white_space?: boolean;
+  decimals?: number;
   use_metadata?: boolean;
   secondary_info?: SecondaryInfoType;
   invert_state?: boolean;
@@ -83,17 +83,17 @@ export type GridPowerOutage = {
 
 export type IndividualDeviceType = BaseConfigEntity & {
   entity: string;
-  color?: string;
+  color?: ColorValue;
   color_icon?: boolean;
   inverted_animation?: boolean;
   display_zero?: boolean;
   display_zero_state?: boolean;
   color_value?: boolean;
   color_label?: boolean;
-  calculate_flow_rate?: boolean;
+  calculate_flow_rate?: boolean | number;
   use_metadata?: boolean;
-  decimals?: number;
   show_direction?: boolean;
+  accept_negative?: boolean;
 };
 
 export type EntityType =
@@ -113,46 +113,40 @@ export type TemplatesObj = {
   nonFossilFuelSecondary: string | undefined;
 };
 
-export type HomeSources = {
-  battery: {
-    value: number;
-    color: string;
-  };
-  solar: {
-    value: number;
-    color: string;
-  };
-  grid: {
-    value: number;
-    color: string;
-  };
-  gridNonFossil: {
-    value: number;
-    color: string;
-  };
+export type ColorValue = string | number[];
+
+type CircleColorType = "color_dynamically" | "production" | "consumption" | "no_color";
+
+export type NodeState = number | null;
+
+export type SecondaryInfoObject = ActionConfigSet & {
+  entity?: string;
+  decimals?: number;
+  template?: string;
+  has: boolean;
+  state: string | number | null;
+  icon?: string;
+  unit?: string;
+  unit_white_space?: boolean;
+  accept_negative?: boolean;
+  /** The formatted state. */
+  text: string;
+  /** The rendered secondary-info template, when one is configured. */
+  templateResult: string | undefined;
+  show: boolean;
 };
 
-export type NewDur = {
-  batteryGrid: number;
-  batteryToHome: number;
-  gridToHome: number;
-  solarToBattery: number;
-  solarToGrid: number;
-  solarToHome: number;
-  individual: number[];
-  nonFossil: number;
-};
-
-export type GridObject = {
+export type GridObject = ActionConfigSet & {
   entity: string | ComboEntity | undefined;
   has: boolean;
   hasReturnToGrid: boolean;
   state: {
-    fromGrid: number | null;
-    toGrid: number | null;
-    toBattery: number | null;
-    toHome: number | null;
+    fromGrid: NodeState;
+    toGrid: NodeState;
+    toBattery: NodeState;
+    toHome: NodeState;
   };
+  display: { fromGrid: string; toGrid: string };
   powerOutage: {
     has: boolean;
     isOutage: boolean;
@@ -164,30 +158,107 @@ export type GridObject = {
   name: string;
   mainEntity: string | undefined;
   color: {
-    fromGrid?: string;
-    toGrid?: string;
+    fromGrid?: ColorValue;
+    toGrid?: ColorValue;
     icon_type?: "color_dynamically" | "no_color" | "production" | "consumption";
-    circle_type?: "color_dynamically" | "production" | "consumption";
+    circle_type?: CircleColorType;
   };
-  tap_action?: ActionConfig;
-  hold_action?: ActionConfig;
-  double_tap_action?: ActionConfig;
-  secondary: {
-    entity?: string;
-    decimals?: number;
-    template?: string;
-    has: boolean;
-    state: string | number | null;
-    icon?: string;
-    unit?: string;
-    unit_white_space?: boolean;
-    accept_negative?: boolean;
-    tap_action?: ActionConfig;
-    hold_action?: ActionConfig;
-    double_tap_action?: ActionConfig;
-    color?: {
+  secondary: SecondaryInfoObject & {
+    color: {
       type?: boolean | "production" | "consumption";
     };
+  };
+};
+
+export type SolarObject = ActionConfigSet & {
+  entity: string | undefined;
+  has: boolean;
+  state: {
+    total: NodeState;
+    toHome: NodeState;
+    toGrid: NodeState;
+    toBattery: NodeState;
+  };
+  /** The formatted production, or undefined when it is hidden. */
+  display: string | undefined;
+  icon: string;
+  name: string;
+  secondary: SecondaryInfoObject;
+};
+
+export type BatteryObject = ActionConfigSet & {
+  entity: string | ComboEntity | undefined;
+  has: boolean;
+  mainEntity: string | undefined;
+  name: string;
+  icon: string;
+  state_of_charge: {
+    state: NodeState;
+    unit: string;
+    unit_white_space: boolean;
+    decimals: number;
+  };
+  state: {
+    toBattery: NodeState;
+    fromBattery: NodeState;
+    toGrid: NodeState;
+    toHome: NodeState;
+  };
+  display: { toBattery: string; fromBattery: string; stateOfCharge: string };
+  color: {
+    fromBattery?: ColorValue;
+    toBattery?: ColorValue;
+    icon_type?: string | boolean;
+    circle_type?: CircleColorType;
+  };
+};
+
+export type HomeObject = ActionConfigSet & {
+  entity: string | undefined;
+  has: boolean;
+  state: NodeState;
+  icon: string;
+  name: string;
+  secondary: SecondaryInfoObject;
+};
+
+export type NonFossilObject = ActionConfigSet & {
+  entity: string | undefined;
+  name: string;
+  icon: string;
+  has: boolean;
+  hasPercentage: boolean;
+  state: {
+    power: NodeState;
+  };
+  display: string;
+  color?: ColorValue;
+  color_value?: boolean;
+  secondary: SecondaryInfoObject & {
+    color_value?: SecondaryInfoType["color_value"];
+  };
+};
+
+export type IndividualObject = {
+  field: IndividualDeviceType | undefined;
+  entity: string;
+  has: boolean;
+  state: number | null;
+  displayZero: boolean;
+  displayZeroTolerance: number;
+  icon: string;
+  name: string;
+  color: string | null;
+  invertAnimation: boolean;
+  showDirection: boolean;
+  /** The formatted state. */
+  displayState: string;
+  secondary: ActionConfigSet & {
+    entity: string | undefined;
+    icon: string | undefined;
+    text: string | undefined;
+    templateResult: string | undefined;
+    show: boolean;
   };
 };
 

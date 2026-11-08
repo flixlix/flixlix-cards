@@ -181,17 +181,31 @@ const batteryOrGridMainConfigSchema = [
   },
 ] as const;
 
-export function getBaseMainConfigSchema(field?: string) {
-  const result: any = {
+/** A main node's own unit, unit white space and decimals; a unit keeps the value unscaled. */
+export const unitSchema = [
+  { name: "unit_of_measurement", label: "Unit of Measurement", selector: { text: {} } },
+  {
+    name: "unit_white_space",
+    label: "Unit White Space",
+    default: true,
+    selector: { boolean: {} },
+  },
+  {
+    name: "decimals",
+    label: "Decimals",
+    selector: { number: { mode: "box", min: 0, max: 10, step: 1 } },
+  },
+] as const;
+
+const nameAndIconSchema = [
+  { name: "name", selector: { text: {} } },
+  { name: "icon", selector: { icon: {} } },
+] as const;
+
+export function getBaseMainConfigSchema(field?: "battery" | "grid") {
+  return {
     type: "grid",
     column_min_width: "200px",
-    schema: [
-      { name: "name", selector: { text: {} } },
-      { name: "icon", selector: { icon: {} } },
-    ],
-  };
-  if (field === "battery" || field === "grid") {
-    result.schema.push(...batteryOrGridMainConfigSchema);
-  }
-  return result;
+    schema: field ? [...nameAndIconSchema, ...batteryOrGridMainConfigSchema] : nameAndIconSchema,
+  } as const;
 }

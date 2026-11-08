@@ -5,6 +5,7 @@
   "license": "MIT",
   "type": "module",
   "exports": {
+    "./card-state": "./src/card-state/index.ts",
     "./i18n": "./src/i18n/index.ts",
     "./style": "./src/style/index.ts",
     "./types": "./src/types/index.ts",
@@ -13,7 +14,9 @@
     "./states/*": "./src/states/*.ts",
     "./utils/*": "./src/utils/*.ts",
     "./const/*": "./src/const/*.ts",
-    "./ui-editor/*": "./src/ui-editor/*.ts"
+    "./ui-editor/*": "./src/ui-editor/*.ts",
+    "./preview/*": "./src/preview/*.ts",
+    "./testing/*": "./src/testing/*.ts"
   },
   "peerDependencies": {
     "custom-card-helpers": "catalog:packages",
@@ -21,33 +24,26 @@
     "lit": "catalog:packages"
   },
   "scripts": {
-    "clean": "rimraf dist node_modules .turbo",
-    "lint": "eslint .",
+    "clean": "rimraf dist node_modules",
     "typecheck": "tsc --noEmit",
-    "format": "prettier --write . --ignore-path ../../.prettierignore",
-    "format:check": "prettier --check . --ignore-path ../../.prettierignore",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "precommit": "pnpm typecheck && pnpm format:check && pnpm test && pnpm lint"
+    "test": "vp test run --coverage",
+    "test:watch": "vp test"
   },
   "devDependencies": {
-    "@flixlix-cards/eslint-config": "workspace:*",
-    "@flixlix-cards/prettier-config": "workspace:*",
     "@flixlix-cards/testing": "workspace:*",
     "@flixlix-cards/typescript-config": "workspace:*",
     "@types/node": "catalog:",
     "@types/sortablejs": "catalog:packages",
-    "eslint": "catalog:packages",
-    "tsup": "catalog:packages",
+    "@vitest/browser-playwright": "catalog:packages",
+    "fast-check": "catalog:packages",
+    "playwright": "catalog:packages",
     "typescript": "catalog:",
-    "vitest": "catalog:packages"
+    "vite-plus": "catalog:packages"
   },
   "dependencies": {
     "@mdi/js": "catalog:packages",
-    "lit-element": "catalog:packages",
-    "lit-html": "catalog:packages",
     "memoize-one": "catalog:packages",
-    "sortablejs": "^1.15.7",
+    "sortablejs": "catalog:packages",
     "superstruct": "catalog:packages",
     "tslib": "^2.8.1"
   }

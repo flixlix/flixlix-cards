@@ -36,6 +36,10 @@
     "display_zero_tolerance": "Допустимая погрешность нуля",
     "double_tap_action": "действие двойного касания",
     "entity_generator": "Генератор",
+    "flow_rate_model": "Модель скорости потока",
+    "flow_rate_model_duration": "Длительность (по умолчанию)",
+    "flow_rate_model_relative": "Относительная",
+    "flow_rate_model_speed": "Скорость",
     "fossil_fuel_percentage": "Полный объем ископаемого топлива",
     "grey_color": "Серый цвет",
     "grey_out": "Серый",
@@ -84,7 +88,6 @@
     "transparency": "Прозрачность",
     "unit_of_measurement": "Единица измерения",
     "unit_white_space": "Пробел единицы измерения",
-    "use_metadata": "Использовать метаданные",
-    "use_new_flow_rate_model": "Использовать новую модель скорости потока"
+    "use_metadata": "Использовать метаданные"
   }
 }

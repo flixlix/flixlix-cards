@@ -1,6 +1,7 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import {
   ArrowRight,
+  CalendarRange,
   ChartPie,
   Compass,
   Github,
@@ -12,8 +13,8 @@ import {
 } from "lucide-react";
 import * as React from "react";
 
-import { HeroFlow } from "@/components/hero-flow";
-import { cn } from "@flixlix-cards/cn";
+import { CardDemo } from "@/components/card-demo";
+import { cn } from "cn";
 import { Button } from "@flixlix-cards/ui/components/button";
 
 export const Route = createFileRoute("/_docs/")({
@@ -27,7 +28,7 @@ type CardEntry = {
   accent: { chip: string; border: string };
   media: React.ReactNode;
   description: React.ReactNode;
-  bullets: React.ReactNode[];
+  bullets: { id: string; content: React.ReactNode }[];
 };
 
 const CARDS: CardEntry[] = [
@@ -40,16 +41,9 @@ const CARDS: CardEntry[] = [
       border: "hover:border-amber-500/40",
     },
     media: (
-      <video
-        key="/videos/power-demo.mp4"
-        src="/videos/power-demo.mp4"
-        autoPlay
-        loop
-        muted
-        playsInline
-        aria-label="Power Flow Card Plus demo"
-        className="mx-auto block h-44 w-full object-contain"
-      />
+      <Thumbnail zoom={0.4}>
+        <CardDemo demo="power" width={420} />
+      </Thumbnail>
     ),
     description: (
       <>
@@ -58,10 +52,10 @@ const CARDS: CardEntry[] = [
       </>
     ),
     bullets: [
-      "UI editor & YAML support",
-      "Up to 4 individual devices",
-      <>Bidirectional grid &amp; battery flows</>,
-      "Power outage handling and templates",
+      { id: "editor", content: "UI editor & YAML support" },
+      { id: "devices", content: "Up to 4 individual devices" },
+      { id: "bidirectional", content: "Bidirectional grid & battery flows" },
+      { id: "outage", content: "Power outage handling and templates" },
     ],
   },
   {
@@ -73,16 +67,9 @@ const CARDS: CardEntry[] = [
       border: "hover:border-sky-500/40",
     },
     media: (
-      <video
-        key="/videos/energy-demo.mp4"
-        src="/videos/energy-demo.mp4"
-        autoPlay
-        loop
-        muted
-        playsInline
-        aria-label="Energy Flow Card Plus demo"
-        className="mx-auto block h-44 w-full object-contain"
-      />
+      <Thumbnail zoom={0.4}>
+        <CardDemo demo="energy" width={420} />
+      </Thumbnail>
     ),
     description: (
       <>
@@ -91,12 +78,17 @@ const CARDS: CardEntry[] = [
       </>
     ),
     bullets: [
-      "Binds to Home Assistant energy collections",
-      "Same flexible config style as Power Flow",
-      <>
-        Multiple dashboard support via <code>collection_key</code>
-      </>,
-      "Translatable labels in 14+ languages",
+      { id: "collections", content: "Binds to Home Assistant energy collections" },
+      { id: "config-style", content: "Same flexible config style as Power Flow" },
+      {
+        id: "dashboards",
+        content: (
+          <>
+            Multiple dashboard support via <code>collection_key</code>
+          </>
+        ),
+      },
+      { id: "translations", content: "Translatable labels in 14+ languages" },
     ],
   },
   {
@@ -108,11 +100,9 @@ const CARDS: CardEntry[] = [
       border: "hover:border-emerald-500/40",
     },
     media: (
-      <img
-        src="/images/energy-breakdown-demo.png"
-        alt="Energy Breakdown Card"
-        className="h-full w-full max-w-60 object-contain"
-      />
+      <Thumbnail zoom={0.24}>
+        <CardDemo demo="breakdown" width={420} />
+      </Thumbnail>
     ),
     description: (
       <>
@@ -121,12 +111,51 @@ const CARDS: CardEntry[] = [
       </>
     ),
     bullets: [
-      "Donut and stacked-bar variants",
-      "Optional legend with values & percentages",
+      { id: "variants", content: "Donut and stacked-bar variants" },
+      { id: "legend", content: "Optional legend with values & percentages" },
+      {
+        id: "grouping",
+        content: (
+          <>
+            <code>group_others</code> + <code>max_items</code> to keep things tidy
+          </>
+        ),
+      },
+      { id: "hacs", content: "Custom HACS repository (not yet in the default index)" },
+    ],
+  },
+  {
+    to: "/energy-period-selector-plus",
+    title: "Energy Period Selector Plus",
+    icon: CalendarRange,
+    accent: {
+      chip: "bg-rose-500/10 text-rose-600 ring-rose-500/25 dark:text-rose-400",
+      border: "hover:border-rose-500/40",
+    },
+    media: (
+      <Thumbnail zoom={0.28}>
+        <CardDemo demo="period" width={420} />
+      </Thumbnail>
+    ),
+    description: (
       <>
-        <code>group_others</code> + <code>max_items</code> to keep things tidy
-      </>,
-      "Custom HACS repository (not yet in the default index)",
+        Picks the <strong>period</strong> every energy card on the dashboard shows: day, week,
+        month, year or a custom range, like Home Assistant's energy date picker.
+      </>
+    ),
+    bullets: [
+      { id: "buttons", content: "Period buttons in the order you list them" },
+      { id: "picker", content: "Custom ranges in Home Assistant's own calendar" },
+      { id: "compare", content: "Previous, next, today and compare buttons" },
+      {
+        id: "cards",
+        content: (
+          <>
+            Drives Energy Flow Card Plus and Energy Breakdown Card with{" "}
+            <code>energy_date_selection</code>
+          </>
+        ),
+      },
     ],
   },
   {
@@ -145,13 +174,26 @@ const CARDS: CardEntry[] = [
       </>
     ),
     bullets: [
-      "Drag or use arrows to reorder",
-      "Persist via any service with placeholders",
-      "Entity-backed items (name, icon, state)",
-      "Custom HACS repository (not yet in the default index)",
+      { id: "reorder", content: "Drag or use arrows to reorder" },
+      { id: "persist", content: "Persist via any service with placeholders" },
+      { id: "entities", content: "Entity-backed items (name, icon, state)" },
+      { id: "hacs", content: "Custom HACS repository (not yet in the default index)" },
     ],
   },
 ];
+
+/**
+ * A live card, scaled down to fit a card tile; the tile links to its docs, so the card is inert.
+ * A transform, not CSS `zoom`: Chrome draws a zoomed card's flow dots and line ends off their
+ * lines. The scaled card keeps its layout size, centred in the fixed-height tile.
+ */
+function Thumbnail({ zoom, children }: { zoom: number; children: React.ReactNode }) {
+  return (
+    <div style={{ transform: `scale(${zoom})` }} className="pointer-events-none shrink-0" inert>
+      {children}
+    </div>
+  );
+}
 
 function IndexPage() {
   return (
@@ -194,13 +236,17 @@ function IndexPage() {
             </div>
           </div>
 
-          <HeroFlow className="mx-auto w-full max-w-105 lg:max-w-none" />
+          <CardDemo
+            demo="power"
+            width={400}
+            className="mx-auto w-fit max-w-full rounded-2xl border shadow-sm"
+          />
         </div>
       </section>
 
       <h2 className="mb-1 text-2xl font-semibold tracking-tight">The cards</h2>
       <p className="text-muted-foreground mb-6 text-sm">
-        Four cards, one goal: making your dashboard worth looking at.
+        Five cards, one goal: making your dashboard worth looking at.
       </p>
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -212,7 +258,7 @@ function IndexPage() {
               card.accent.border
             )}
           >
-            <div className="bg-muted/50 flex h-44 items-center justify-center border-b">
+            <div className="bg-muted/50 flex h-44 items-center justify-center overflow-hidden border-b">
               {card.media}
             </div>
             <div className="flex flex-1 flex-col gap-3 p-5">
@@ -231,8 +277,8 @@ function IndexPage() {
               </h3>
               <p className="text-muted-foreground text-sm leading-relaxed">{card.description}</p>
               <ul className="text-muted-foreground mb-2 list-disc space-y-1 pl-5 text-sm leading-relaxed">
-                {card.bullets.map((bullet, i) => (
-                  <li key={i}>{bullet}</li>
+                {card.bullets.map((bullet) => (
+                  <li key={bullet.id}>{bullet.content}</li>
                 ))}
               </ul>
               <span className="text-primary mt-auto inline-flex items-center gap-1 text-sm font-medium">

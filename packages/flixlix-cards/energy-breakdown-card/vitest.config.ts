@@ -1,7 +1,7 @@
 import baseConfig from "@flixlix-cards/testing";
 import path from "node:path";
 import tsconfigPaths from "vite-tsconfig-paths";
-import { mergeConfig } from "vitest/config";
+import { mergeConfig } from "vite-plus";
 import packageJson from "./package.json";
 const packageName = packageJson.name;
 
@@ -17,6 +17,10 @@ export default mergeConfig(baseConfig, {
   },
   test: {
     name: packageName,
+    coverage: {
+      // Ratchet: raise these when coverage grows, never lower them.
+      thresholds: { lines: 47, branches: 39, functions: 41, statements: 48 },
+    },
     environment: "jsdom",
     alias: [
       {

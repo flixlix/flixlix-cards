@@ -36,6 +36,10 @@
     "display_zero_tolerance": "Tolerância de Zero",
     "double_tap_action": "Ação de Toque Duplo",
     "entity_generator": "Gerador",
+    "flow_rate_model": "Modelo de Velocidade",
+    "flow_rate_model_duration": "Duração (padrão)",
+    "flow_rate_model_relative": "Relativo",
+    "flow_rate_model_speed": "Velocidade",
     "fossil_fuel_percentage": "Combustíveis Fósseis",
     "grey_color": "Cor do Cinza",
     "grey_out": "Cinza",
@@ -84,7 +88,6 @@
     "transparency": "Transparência",
     "unit_of_measurement": "Unidade",
     "unit_white_space": "Espaçamento da Unidade",
-    "use_metadata": "Utilizar Metadados",
-    "use_new_flow_rate_model": "Utilizar Novo Modelo de Velocidade"
+    "use_metadata": "Utilizar Metadados"
   }
 }

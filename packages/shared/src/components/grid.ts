@@ -1,57 +1,71 @@
 import {
   type CardMainContext,
-  type ConfigEntities,
+  type ComboEntity,
   type FlowCardPlusConfig,
-  type TemplatesObj,
+  type GridObject,
 } from "@flixlix-cards/shared/types";
-import { displayValue } from "@flixlix-cards/shared/utils/display-value";
 import { html, nothing } from "lit";
+import { type DisplayState, directionShown } from "./display-state";
 import { generalSecondarySpan } from "./spans/general-secondary-span";
+
+const gridEntityId = (grid: GridObject, direction: keyof ComboEntity) =>
+  typeof grid.entity === "object" ? grid.entity[direction] : grid.entity;
+
+const returnShown = (grid: GridObject, displayState: DisplayState): boolean => {
+  const { fromGrid, toGrid } = grid.state;
+  if (toGrid === null || grid.powerOutage.isOutage) {
+    return false;
+  }
+  return directionShown(displayState, {
+    nonZero: toGrid > 0,
+    oneWay: (fromGrid === null || fromGrid === 0) && toGrid !== 0,
+  });
+};
+
+/** During an outage, consumption shows the generator's output if there is one. */
+const consumptionShown = (grid: GridObject, displayState: DisplayState): boolean => {
+  const { fromGrid, toGrid } = grid.state;
+  if (grid.powerOutage.isOutage) {
+    return !!grid.powerOutage.entityGenerator;
+  }
+  if (fromGrid === null) {
+    return false;
+  }
+  return directionShown(displayState, {
+    nonZero: fromGrid > 0,
+    oneWay: toGrid === null || toGrid === 0,
+  });
+};
 
 export const gridElement = (
   main: CardMainContext,
   config: FlowCardPlusConfig,
-  {
-    entities,
-    grid,
-    templatesObj,
-  }: { entities: ConfigEntities; grid: any; templatesObj: TemplatesObj }
+  grid: GridObject
 ) => {
-  const disableEntityClick = config.clickable_entities === false;
+  const { entities } = config;
+  const displayState = entities.grid?.display_state;
+  const disableEntityClick = !config.clickable_entities;
+  const circleTarget = () => {
+    const outageTarget = grid.powerOutage.entityGenerator ?? entities.grid?.power_outage?.entity;
+    return grid.powerOutage.isOutage && outageTarget
+      ? outageTarget
+      : gridEntityId(grid, "consumption");
+  };
   return html`<div class="circle-container grid">
     <div
       class="circle ${disableEntityClick ? "pointer-events-none" : ""}"
+      tabindex=${disableEntityClick ? nothing : 0}
+      role=${disableEntityClick ? nothing : "button"}
       @click=${(e: MouseEvent) => {
-        const outageTarget =
-          grid.powerOutage?.entityGenerator ?? entities.grid?.power_outage?.entity;
-        const target =
-          grid.powerOutage?.isOutage && outageTarget
-            ? outageTarget
-            : typeof entities.grid!.entity === "string"
-              ? entities.grid!.entity
-              : entities.grid!.entity.consumption!;
+        const target = circleTarget();
         main.onEntityClick(e, grid, target);
       }}
       @dblclick=${(e: MouseEvent) => {
-        const outageTarget =
-          grid.powerOutage?.entityGenerator ?? entities.grid?.power_outage?.entity;
-        const target =
-          grid.powerOutage?.isOutage && outageTarget
-            ? outageTarget
-            : typeof entities.grid!.entity === "string"
-              ? entities.grid!.entity
-              : entities.grid!.entity.consumption!;
+        const target = circleTarget();
         main.onEntityDoubleClick(e, grid, target);
       }}
       @pointerdown=${(e: PointerEvent) => {
-        const outageTarget =
-          grid.powerOutage?.entityGenerator ?? entities.grid?.power_outage?.entity;
-        const target =
-          grid.powerOutage?.isOutage && outageTarget
-            ? outageTarget
-            : typeof entities.grid!.entity === "string"
-              ? entities.grid!.entity
-              : entities.grid!.entity.consumption!;
+        const target = circleTarget();
         main.onEntityPointerDown(e, entities.grid, target);
       }}
       @pointerup=${(e: PointerEvent) => {
@@ -60,137 +74,90 @@ export const gridElement = (
       @pointercancel=${(e: PointerEvent) => {
         main.onEntityPointerUp(e);
       }}
-      @keyDown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
+      @keydown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
         if (e.key === "Enter") {
-          const outageTarget =
-            grid.powerOutage?.entityGenerator ?? entities.grid?.power_outage?.entity;
-          const target =
-            grid.powerOutage?.isOutage && outageTarget
-              ? outageTarget
-              : typeof entities.grid!.entity === "string"
-                ? entities.grid!.entity
-                : entities.grid!.entity.consumption!;
+          const target = circleTarget();
           main.openDetails(e, entities.grid, target, "tap");
         }
       }}
     >
       <ha-ripple .disabled=${disableEntityClick}></ha-ripple>
-      ${generalSecondarySpan(main.hass, main, config, templatesObj, grid, "grid")}
+      ${generalSecondarySpan(main, grid.secondary, "grid")}
       ${grid.icon !== " " ? html` <ha-icon id="grid-icon" .icon=${grid.icon}></ha-icon>` : nothing}
-      ${(entities.grid?.display_state === "two_way" ||
-        entities.grid?.display_state === undefined ||
-        (entities.grid?.display_state === "one_way_no_zero" && (grid.state.toGrid ?? 0) > 0) ||
-        (entities.grid?.display_state === "one_way" &&
-          (grid.state.fromGrid === null || grid.state.fromGrid === 0) &&
-          grid.state.toGrid !== 0)) &&
-      grid.state.toGrid !== null &&
-      !grid.powerOutage.isOutage
-        ? html`<span
-            class="return"
-            @click=${(e: MouseEvent) => {
-              const target =
-                typeof entities.grid!.entity === "string"
-                  ? entities.grid!.entity
-                  : entities.grid!.entity.production!;
-              main.onEntityClick(e, grid, target);
-            }}
-            @dblclick=${(e: MouseEvent) => {
-              const target =
-                typeof entities.grid!.entity === "string"
-                  ? entities.grid!.entity
-                  : entities.grid!.entity.production!;
-              main.onEntityDoubleClick(e, grid, target);
-            }}
-            @pointerdown=${(e: PointerEvent) => {
-              const target =
-                typeof entities.grid!.entity === "string"
-                  ? entities.grid!.entity
-                  : entities.grid!.entity.production!;
-              main.onEntityPointerDown(e, entities.grid, target);
-            }}
-            @pointerup=${(e: PointerEvent) => {
-              main.onEntityPointerUp(e);
-            }}
-            @pointercancel=${(e: PointerEvent) => {
-              main.onEntityPointerUp(e);
-            }}
-            @keyDown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
-              if (e.key === "Enter") {
-                const target =
-                  typeof entities.grid!.entity === "string"
-                    ? entities.grid!.entity
-                    : entities.grid!.entity.production!;
-                main.openDetails(e, entities.grid, target, "tap");
-              }
-            }}
-          >
-            <ha-icon class="small" .icon=${"mdi:arrow-left"}></ha-icon>
+      ${
+        returnShown(grid, displayState)
+          ? html`<span
+              class="return"
+              @click=${(e: MouseEvent) => {
+                const target = gridEntityId(grid, "production");
+                main.onEntityClick(e, grid, target);
+              }}
+              @dblclick=${(e: MouseEvent) => {
+                const target = gridEntityId(grid, "production");
+                main.onEntityDoubleClick(e, grid, target);
+              }}
+              @pointerdown=${(e: PointerEvent) => {
+                const target = gridEntityId(grid, "production");
+                main.onEntityPointerDown(e, entities.grid, target);
+              }}
+              @pointerup=${(e: PointerEvent) => {
+                main.onEntityPointerUp(e);
+              }}
+              @pointercancel=${(e: PointerEvent) => {
+                main.onEntityPointerUp(e);
+              }}
+              @keydown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
+                if (e.key === "Enter") {
+                  const target = gridEntityId(grid, "production");
+                  main.openDetails(e, entities.grid, target, "tap");
+                }
+              }}
+            >
+              <ha-icon class="small" .icon=${"mdi:arrow-left"}></ha-icon>
 
-            ${displayValue(main.hass, config, grid.state.toGrid, {
-              unit: grid.unit,
-              unitWhiteSpace: grid.unit_white_space,
-              decimals: grid.decimals,
-            })}
-          </span>`
-        : nothing}
-      ${((entities.grid?.display_state === "two_way" ||
-        entities.grid?.display_state === undefined ||
-        (entities.grid?.display_state === "one_way_no_zero" && grid.state.fromGrid > 0) ||
-        (entities.grid?.display_state === "one_way" &&
-          (grid.state.toGrid === null || grid.state.toGrid === 0))) &&
-        grid.state.fromGrid !== null &&
-        !grid.powerOutage.isOutage) ||
-      (grid.powerOutage.isOutage && !!grid.powerOutage.entityGenerator)
-        ? html` <span
-            class="consumption"
-            @click=${(e: MouseEvent) => {
-              const target =
-                typeof entities.grid!.entity === "string"
-                  ? entities.grid!.entity
-                  : entities.grid!.entity.consumption!;
-              main.onEntityClick(e, grid, target);
-            }}
-            @dblclick=${(e: MouseEvent) => {
-              const target =
-                typeof entities.grid!.entity === "string"
-                  ? entities.grid!.entity
-                  : entities.grid!.entity.consumption!;
-              main.onEntityDoubleClick(e, grid, target);
-            }}
-            @pointerdown=${(e: PointerEvent) => {
-              const target =
-                typeof entities.grid!.entity === "string"
-                  ? entities.grid!.entity
-                  : entities.grid!.entity.consumption!;
-              main.onEntityPointerDown(e, entities.grid, target);
-            }}
-            @pointerup=${(e: PointerEvent) => {
-              main.onEntityPointerUp(e);
-            }}
-            @pointercancel=${(e: PointerEvent) => {
-              main.onEntityPointerUp(e);
-            }}
-            @keyDown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
-              if (e.key === "Enter") {
-                const target =
-                  typeof entities.grid!.entity === "string"
-                    ? entities.grid!.entity
-                    : entities.grid!.entity.consumption!;
-                main.openDetails(e, entities.grid, target, "tap");
-              }
-            }}
-          >
-            <ha-icon class="small" .icon=${"mdi:arrow-right"}></ha-icon>
-            ${displayValue(main.hass, config, grid.state.fromGrid, {
-              unit: grid.unit,
-              unitWhiteSpace: grid.unit_white_space,
-              decimals: grid.decimals,
-            })}
-          </span>`
-        : nothing}
-      ${grid.powerOutage?.isOutage && !grid.powerOutage?.entityGenerator
-        ? html`<span class="grid power-outage">${grid.powerOutage.name}</span>`
-        : nothing}
+              ${grid.display.toGrid}
+            </span>`
+          : nothing
+      }
+      ${
+        consumptionShown(grid, displayState)
+          ? html` <span
+              class="consumption"
+              @click=${(e: MouseEvent) => {
+                const target = gridEntityId(grid, "consumption");
+                main.onEntityClick(e, grid, target);
+              }}
+              @dblclick=${(e: MouseEvent) => {
+                const target = gridEntityId(grid, "consumption");
+                main.onEntityDoubleClick(e, grid, target);
+              }}
+              @pointerdown=${(e: PointerEvent) => {
+                const target = gridEntityId(grid, "consumption");
+                main.onEntityPointerDown(e, entities.grid, target);
+              }}
+              @pointerup=${(e: PointerEvent) => {
+                main.onEntityPointerUp(e);
+              }}
+              @pointercancel=${(e: PointerEvent) => {
+                main.onEntityPointerUp(e);
+              }}
+              @keydown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
+                if (e.key === "Enter") {
+                  const target = gridEntityId(grid, "consumption");
+                  main.openDetails(e, entities.grid, target, "tap");
+                }
+              }}
+            >
+              <ha-icon class="small" .icon=${"mdi:arrow-right"}></ha-icon>
+              ${grid.display.fromGrid}
+            </span>`
+          : nothing
+      }
+      ${
+        grid.powerOutage.isOutage && !grid.powerOutage.entityGenerator
+          ? html`<span class="grid power-outage">${grid.powerOutage.name}</span>`
+          : nothing
+      }
     </div>
     <span class="label">${grid.name}</span>
   </div>`;

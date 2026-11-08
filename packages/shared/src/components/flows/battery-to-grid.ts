@@ -1,83 +1,47 @@
-import { type FlowCardPlusConfig } from "@flixlix-cards/shared/types";
-import { checkShouldShowDots } from "@flixlix-cards/shared/utils/check-should-show-dots";
-import {
-  checkHasBottomIndividual,
-  checkHasRightIndividual,
-} from "@flixlix-cards/shared/utils/compute-individual-position";
-import { showLine } from "@flixlix-cards/shared/utils/show-line";
-import { styleLine } from "@flixlix-cards/shared/utils/style-line";
-import { html, nothing, svg } from "lit";
-import { classMap } from "lit/directives/class-map.js";
+import { html, nothing } from "lit";
+import { flowDot } from "../flow-dot";
 import { type Flows } from "./index";
 
-const batteryFromGridDot = (
-  config: FlowCardPlusConfig,
-  grid: Flows["grid"],
-  newDur: Flows["newDur"]
-) => {
-  if (!checkShouldShowDots(config) || !grid.state.toBattery) return nothing;
+/** Runs from the grid to the battery, against the line's drawing direction. */
+const batteryFromGridDot = ({ animate, grid, flows, paths }: Flows) => {
+  if (!animate || !grid.state.toBattery || !paths.batteryToGrid) {
+    return nothing;
+  }
 
-  return svg`<circle r="1" class="battery-from-grid" vector-effect="non-scaling-stroke">
-      <animateMotion
-        dur="${newDur.batteryGrid}s"
-        repeatCount="indefinite"
-        keyPoints="1;0"
-        keyTimes="0;1"
-        calcMode="paced"
-      >
-        <mpath xlink:href="#battery-grid" />
-      </animateMotion>
-    </circle>`;
+  return flowDot({
+    path: "battery-grid",
+    className: "battery-from-grid",
+    durationSeconds: flows.batteryGrid.durationSeconds,
+    radius: paths.scale,
+    reverse: true,
+  });
 };
 
-const batteryToGridDot = (
-  config: FlowCardPlusConfig,
-  battery: Flows["battery"],
-  newDur: Flows["newDur"]
-) => {
-  if (!checkShouldShowDots(config) || !battery.state.toGrid) return nothing;
+const batteryToGridDot = ({ animate, battery, flows, paths }: Flows) => {
+  if (!animate || !battery.state.toGrid) {
+    return nothing;
+  }
 
-  return svg`
-    <circle r="1" class="battery-to-grid" vector-effect="non-scaling-stroke">
-      <animateMotion dur="${newDur.batteryGrid}s" repeatCount="indefinite" calcMode="paced">
-        <mpath xlink:href="#battery-grid" />
-      </animateMotion>
-    </circle>
-  `;
+  return flowDot({
+    path: "battery-grid",
+    className: "battery-to-grid",
+    durationSeconds: flows.batteryGrid.durationSeconds,
+    radius: paths.scale,
+  });
 };
 
-type FlowBatteryToGridFlows = Pick<Flows, Exclude<keyof Flows, "solar">>;
-
-export const flowBatteryToGrid = (
-  config: FlowCardPlusConfig,
-  { battery, grid, individual, newDur }: FlowBatteryToGridFlows
-) => {
-  const shouldShow =
-    grid.has &&
-    battery.has &&
-    showLine(config, Math.max(grid.state.toBattery || 0, battery.state.toGrid || 0));
-  if (!shouldShow) return nothing;
-
-  return html`<div
-    class="lines ${classMap({
-      high: battery.has || checkHasBottomIndividual(individual),
-      "individual1-individual2": !battery.has && individual.every((i) => i?.has),
-      "multi-individual": checkHasRightIndividual(individual),
-    })}"
-  >
-    <svg
-      viewBox="0 0 100 100"
-      xmlns="http://www.w3.org/2000/svg"
-      preserveAspectRatio="xMidYMid slice"
-      id="battery-grid-flow"
-    >
+export const flowBatteryToGrid = (context: Flows) => {
+  const { flows, paths } = context;
+  if (!flows.batteryGrid.visible || !paths.batteryToGrid) {
+    return nothing;
+  }
+  return html`<svg class="flow" id="battery-grid-flow" viewBox=${context.viewBox}>
       <path
         id="battery-grid"
-        class="${styleLine(battery.state.toGrid || grid.state.toBattery || 0, config)}"
-        d="M45,100 v-15 c0,-30 -10,-30 -30,-30 h-20"
+        class="${flows.batteryGrid.lineClass}"
+        d=${paths.batteryToGrid.d}
         vector-effect="non-scaling-stroke"
       ></path>
-      ${batteryFromGridDot(config, grid, newDur)} ${batteryToGridDot(config, battery, newDur)}
     </svg>
-  </div>`;
+    ${batteryFromGridDot(context)} ${batteryToGridDot(context)}`;
 };

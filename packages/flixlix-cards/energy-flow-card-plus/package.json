@@ -1,7 +1,7 @@
 {
   "name": "energy-flow-card-plus",
   "private": true,
-  "version": "0.2.3",
+  "version": "0.3.0-beta.1",
   "type": "module",
   "description": "A power flow card for Home Assistant",
   "keywords": [
@@ -13,7 +13,8 @@
   ],
   "main": "./dist/energy-flow-card-plus.js",
   "exports": {
-    ".": "./dist/energy-flow-card-plus.js"
+    ".": "./dist/energy-flow-card-plus.js",
+    "./source": "./src/energy-flow-card-plus.ts"
   },
   "repository": {
     "type": "git",
@@ -26,19 +27,15 @@
   },
   "homepage": "https://github.com/flixlix/energy-flow-card-plus#readme",
   "scripts": {
-    "build": "pnpm dlx rollup -c",
-    "lint": "eslint \"src/**/*.{ts,tsx}\"",
+    "build": "rollup -c",
     "release": "pnpm build && pnpm changeset tag",
     "clean": "rimraf dist node_modules",
     "start": "rollup -wc",
     "dev": "rollup -c --watch",
     "typecheck": "tsc --noEmit",
-    "format": "prettier --write . --ignore-path ../../../.prettierignore",
-    "format:check": "prettier --check . --ignore-path ../../../.prettierignore",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "precommit": "pnpm typecheck && pnpm format:check && pnpm test && pnpm lint",
-    "start:hass": "docker run --rm -p8123:8123 -v ./.hass_dev:/config homeassistant/home-assistant:beta"
+    "test": "vp test run --coverage && vp test run --config vitest.browser.config.ts --project dom",
+    "test:visual": "vp test run --config vitest.browser.config.ts --project visual",
+    "test:watch": "vp test"
   },
   "dependencies": {
     "@flixlix-cards/shared": "workspace:*",
@@ -46,23 +43,17 @@
     "custom-card-helpers": "catalog:packages",
     "home-assistant-js-websocket": "catalog:packages",
     "lit": "catalog:packages",
-    "lit-element": "catalog:packages",
-    "lit-html": "catalog:packages",
     "memoize-one": "catalog:packages",
     "superstruct": "catalog:packages"
   },
   "devDependencies": {
     "@babel/core": "catalog:packages",
     "@babel/preset-env": "catalog:packages",
-    "@babel/preset-typescript": "catalog:packages",
     "@changesets/changelog-github": "catalog:packages",
     "@changesets/cli": "catalog:packages",
     "@flixlix-cards/bundler": "workspace:*",
-    "@flixlix-cards/eslint-config": "workspace:*",
-    "@flixlix-cards/prettier-config": "workspace:*",
     "@flixlix-cards/testing": "workspace:*",
     "@flixlix-cards/typescript-config": "workspace:*",
-    "@jest/globals": "catalog:packages",
     "@rollup/plugin-babel": "catalog:packages",
     "@rollup/plugin-commonjs": "catalog:packages",
     "@rollup/plugin-json": "catalog:packages",
@@ -71,21 +62,14 @@
     "@rollup/plugin-typescript": "catalog:packages",
     "@types/node": "catalog:",
     "@types/sortablejs": "catalog:packages",
-    "@typescript-eslint/eslint-plugin": "catalog:packages",
-    "@typescript-eslint/parser": "catalog:packages",
+    "@vitest/browser-playwright": "catalog:packages",
     "conventional-changelog-conventionalcommits": "catalog:packages",
-    "eslint": "catalog:packages",
-    "eslint-config-prettier": "catalog:packages",
-    "eslint-plugin-lit": "catalog:packages",
-    "eslint-plugin-wc": "catalog:packages",
-    "jest": "catalog:packages",
-    "prettier": "catalog:",
-    "prettier-plugin-embed": "catalog:packages",
+    "playwright": "catalog:packages",
     "rollup": "catalog:packages",
     "rollup-plugin-minify-html-literals": "catalog:packages",
     "rollup-plugin-serve": "catalog:packages",
     "typescript": "catalog:",
     "vite-tsconfig-paths": "catalog:",
-    "vitest": "catalog:packages"
+    "vite-plus": "catalog:packages"
   }
 }

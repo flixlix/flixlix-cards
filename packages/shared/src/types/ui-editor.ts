@@ -41,7 +41,7 @@ export interface TextConfig {
 export interface CallServiceConfig extends EntityConfig {
   type: "call-service";
   service: string;
-  service_data?: Record<string, any>;
+  service_data?: Record<string, unknown>;
   action_name?: string;
 }
 export interface ButtonRowConfig extends EntityConfig {

@@ -24,7 +24,9 @@ export const baseSecondarySpan = ({
   icon,
   actions,
 }: BaseSecondarySpan) => {
-  if (value && offlineStr.includes(value)) return nothing;
+  if (value && offlineStr.includes(value)) {
+    return nothing;
+  }
   if (value || template) {
     return html`<span
       class="secondary-info ${className}"
@@ -48,7 +50,7 @@ export const baseSecondarySpan = ({
         e.stopPropagation();
         main.onEntityPointerUp(e);
       }}
-      @keyDown=${(e: {
+      @keydown=${(e: {
         stopPropagation: () => void;
         key?: string | undefined;
         target: HTMLElement;

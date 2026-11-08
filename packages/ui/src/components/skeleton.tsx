@@ -1,4 +1,4 @@
-import { cn } from "@flixlix-cards/cn";
+import { cn } from "cn";
 
 function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
   return (

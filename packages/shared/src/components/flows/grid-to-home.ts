@@ -1,58 +1,33 @@
-import { type FlowCardPlusConfig } from "@flixlix-cards/shared/types";
-import { checkShouldShowDots } from "@flixlix-cards/shared/utils/check-should-show-dots";
-import {
-  checkHasBottomIndividual,
-  checkHasRightIndividual,
-} from "@flixlix-cards/shared/utils/compute-individual-position";
-import { showLine } from "@flixlix-cards/shared/utils/show-line";
-import { styleLine } from "@flixlix-cards/shared/utils/style-line";
-import { html, nothing, svg } from "lit";
-import { classMap } from "lit/directives/class-map.js";
+import { html, nothing } from "lit";
+import { flowDot } from "../flow-dot";
 import { type Flows } from "./index";
 
-const gridToHomeDot = (
-  config: FlowCardPlusConfig,
-  grid: Flows["grid"],
-  newDur: Flows["newDur"]
-) => {
-  if (!checkShouldShowDots(config) || !grid.state.toHome) return nothing;
+const gridToHomeDot = ({ animate, grid, flows, paths }: Flows) => {
+  if (!animate || !grid.state.toHome) {
+    return nothing;
+  }
 
-  return svg`<circle r="1" class="grid" vector-effect="non-scaling-stroke">
-      <animateMotion dur="${newDur.gridToHome}s" repeatCount="indefinite" calcMode="paced">
-        <mpath xlink:href="#grid" />
-      </animateMotion>
-    </circle>`;
+  return flowDot({
+    path: "grid",
+    className: "grid",
+    durationSeconds: flows.gridToHome.durationSeconds,
+    radius: paths.scale,
+  });
 };
 
-export const flowGridToHome = (
-  config: FlowCardPlusConfig,
-  { battery, grid, individual, solar, newDur }: Flows
-) => {
-  const shouldShow =
-    grid.has && showLine(config, grid.state.fromGrid) && !config.entities.home?.hide;
-  if (!shouldShow) return nothing;
+export const flowGridToHome = (context: Flows) => {
+  const { flows, paths } = context;
+  if (!flows.gridToHome.visible || !paths.gridToHome) {
+    return nothing;
+  }
 
-  return html`<div
-    class="lines ${classMap({
-      high: battery.has || checkHasBottomIndividual(individual),
-      "individual1-individual2": !battery.has && individual.every((i) => i?.has),
-      "multi-individual": checkHasRightIndividual(individual),
-    })}"
-  >
-    <svg
-      viewBox="0 0 100 100"
-      xmlns="http://www.w3.org/2000/svg"
-      preserveAspectRatio="xMidYMid slice"
-      id="grid-home-flow"
-      class="flat-line"
-    >
+  return html`<svg class="flow" id="grid-home-flow" viewBox=${context.viewBox}>
       <path
-        class="grid ${styleLine(grid.state.toHome || 0, config)}"
+        class="grid ${flows.gridToHome.lineClass}"
         id="grid"
-        d="M0,${battery.has ? 50 : solar.has ? 56 : 53} H100"
+        d=${paths.gridToHome.d}
         vector-effect="non-scaling-stroke"
       ></path>
-      ${gridToHomeDot(config, grid, newDur)}
     </svg>
-  </div>`;
+    ${gridToHomeDot(context)}`;
 };

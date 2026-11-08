@@ -1,0 +1,303 @@
+# Scenario scripts: each one sets every power knob, so they can be run in any order.
+# set_power_readings derives the signed combined sensors and the home from the split ones.
+script:
+  set_power_readings:
+    alias: Set power readings
+    mode: queued
+    fields:
+      grid_import_power:
+        selector:
+          number:
+            min: -10000
+            max: 10000
+            unit_of_measurement: W
+      grid_export_power:
+        selector:
+          number:
+            min: -10000
+            max: 10000
+            unit_of_measurement: W
+      solar_power:
+        selector:
+          number:
+            min: -10000
+            max: 10000
+            unit_of_measurement: W
+      battery_charge_power:
+        selector:
+          number:
+            min: -10000
+            max: 10000
+            unit_of_measurement: W
+      battery_discharge_power:
+        selector:
+          number:
+            min: -10000
+            max: 10000
+            unit_of_measurement: W
+      generator_power:
+        selector:
+          number:
+            min: -10000
+            max: 10000
+            unit_of_measurement: W
+      ev_charger_power:
+        selector:
+          number:
+            min: -10000
+            max: 10000
+            unit_of_measurement: W
+      heat_pump_power:
+        selector:
+          number:
+            min: -10000
+            max: 10000
+            unit_of_measurement: W
+      washing_machine_power:
+        selector:
+          number:
+            min: -10000
+            max: 10000
+            unit_of_measurement: W
+      dryer_power:
+        selector:
+          number:
+            min: -10000
+            max: 10000
+            unit_of_measurement: W
+      dishwasher_power:
+        selector:
+          number:
+            min: -10000
+            max: 10000
+            unit_of_measurement: W
+      fridge_power:
+        selector:
+          number:
+            min: -10000
+            max: 10000
+            unit_of_measurement: W
+      battery_soc:
+        selector:
+          number:
+            min: 0
+            max: 100
+            unit_of_measurement: "%"
+      fossil_percentage:
+        selector:
+          number:
+            min: 0
+            max: 100
+            unit_of_measurement: "%"
+      home_power:
+        selector:
+          number:
+            min: -10000
+            max: 10000
+            unit_of_measurement: W
+      unavailable:
+        description: Nodes to make unavailable (grid, solar, battery, home, devices)
+        selector:
+          object:
+      outage:
+        selector:
+          boolean:
+    variables:
+      grid_import_power_value: "{{ grid_import_power | default(0) }}"
+      grid_export_power_value: "{{ grid_export_power | default(0) }}"
+      solar_power_value: "{{ solar_power | default(0) }}"
+      battery_charge_power_value: "{{ battery_charge_power | default(0) }}"
+      battery_discharge_power_value: "{{ battery_discharge_power | default(0) }}"
+      generator_power_value: "{{ generator_power | default(0) }}"
+      ev_charger_power_value: "{{ ev_charger_power | default(0) }}"
+      heat_pump_power_value: "{{ heat_pump_power | default(0) }}"
+      washing_machine_power_value: "{{ washing_machine_power | default(0) }}"
+      dryer_power_value: "{{ dryer_power | default(0) }}"
+      dishwasher_power_value: "{{ dishwasher_power | default(0) }}"
+      fridge_power_value: "{{ fridge_power | default(0) }}"
+      soc_value: "{{ battery_soc | default(50) }}"
+      fossil_value: "{{ fossil_percentage | default(30) }}"
+      home_value: >-
+        {{ home_power | default(grid_import_power_value + solar_power_value + battery_discharge_power_value
+        + generator_power_value - grid_export_power_value - battery_charge_power_value) }}
+      unavailable_nodes: "{{ unavailable | default([]) }}"
+    sequence:
+      - action: input_number.set_value
+        target: { entity_id: input_number.grid_import_power }
+        data: { value: "{{ grid_import_power_value }}" }
+      - action: input_number.set_value
+        target: { entity_id: input_number.grid_export_power }
+        data: { value: "{{ grid_export_power_value }}" }
+      - action: input_number.set_value
+        target: { entity_id: input_number.solar_power }
+        data: { value: "{{ solar_power_value }}" }
+      - action: input_number.set_value
+        target: { entity_id: input_number.battery_charge_power }
+        data: { value: "{{ battery_charge_power_value }}" }
+      - action: input_number.set_value
+        target: { entity_id: input_number.battery_discharge_power }
+        data: { value: "{{ battery_discharge_power_value }}" }
+      - action: input_number.set_value
+        target: { entity_id: input_number.generator_power }
+        data: { value: "{{ generator_power_value }}" }
+      - action: input_number.set_value
+        target: { entity_id: input_number.ev_charger_power }
+        data: { value: "{{ ev_charger_power_value }}" }
+      - action: input_number.set_value
+        target: { entity_id: input_number.heat_pump_power }
+        data: { value: "{{ heat_pump_power_value }}" }
+      - action: input_number.set_value
+        target: { entity_id: input_number.washing_machine_power }
+        data: { value: "{{ washing_machine_power_value }}" }
+      - action: input_number.set_value
+        target: { entity_id: input_number.dryer_power }
+        data: { value: "{{ dryer_power_value }}" }
+      - action: input_number.set_value
+        target: { entity_id: input_number.dishwasher_power }
+        data: { value: "{{ dishwasher_power_value }}" }
+      - action: input_number.set_value
+        target: { entity_id: input_number.fridge_power }
+        data: { value: "{{ fridge_power_value }}" }
+      - action: input_number.set_value
+        target: { entity_id: input_number.grid_power }
+        data: { value: "{{ grid_import_power_value - grid_export_power_value }}" }
+      - action: input_number.set_value
+        target: { entity_id: input_number.battery_power }
+        data: { value: "{{ battery_discharge_power_value - battery_charge_power_value }}" }
+      - action: input_number.set_value
+        target: { entity_id: input_number.home_power }
+        data: { value: "{{ home_value }}" }
+      - action: input_number.set_value
+        target: { entity_id: input_number.battery_soc }
+        data: { value: "{{ soc_value }}" }
+      - action: input_number.set_value
+        target: { entity_id: input_number.fossil_percentage }
+        data: { value: "{{ fossil_value }}" }
+      - repeat:
+          for_each: [grid, solar, battery, home, devices]
+          sequence:
+            - action: "input_boolean.turn_{{ 'off' if repeat.item in unavailable_nodes else 'on' }}"
+              target: { entity_id: "input_boolean.{{ repeat.item }}_available" }
+      - action: "input_boolean.turn_{{ 'on' if outage | default(false) else 'off' }}"
+        target: { entity_id: input_boolean.power_outage }
+
+  scenario_default:
+    alias: "Scenario: default (a sunny afternoon)"
+    icon: mdi:weather-partly-cloudy
+    sequence:
+      - action: script.set_power_readings
+        data:
+          grid_import_power: 400
+          solar_power: 2400
+          battery_charge_power: 800
+          ev_charger_power: 1100
+          heat_pump_power: 600
+          washing_machine_power: 300
+  scenario_all_zero:
+    alias: "Scenario: all zero"
+    icon: mdi:numeric-0-circle
+    sequence:
+      - action: script.set_power_readings
+        data: {}
+  scenario_solar_exporting:
+    alias: "Scenario: solar exporting"
+    icon: mdi:solar-power-variant
+    sequence:
+      - action: script.set_power_readings
+        data:
+          solar_power: 4200
+          grid_export_power: 2600
+          battery_charge_power: 400
+          heat_pump_power: 500
+          fridge_power: 120
+          battery_soc: 95
+  scenario_battery_charging_from_grid:
+    alias: "Scenario: battery charging from grid"
+    icon: mdi:battery-charging
+    sequence:
+      - action: script.set_power_readings
+        data:
+          grid_import_power: 3200
+          battery_charge_power: 2500
+          fridge_power: 120
+          battery_soc: 20
+          fossil_percentage: 60
+  scenario_battery_discharging_to_grid:
+    alias: "Scenario: battery discharging to grid"
+    icon: mdi:battery-arrow-up
+    sequence:
+      - action: script.set_power_readings
+        data:
+          battery_discharge_power: 3000
+          grid_export_power: 2000
+          heat_pump_power: 700
+          battery_soc: 80
+  scenario_grid_outage_generator:
+    alias: "Scenario: grid outage with generator"
+    icon: mdi:generator-portable
+    sequence:
+      - action: script.set_power_readings
+        data:
+          generator_power: 1500
+          battery_discharge_power: 500
+          heat_pump_power: 900
+          fridge_power: 120
+          outage: true
+  scenario_below_tolerance:
+    alias: "Scenario: readings below zero tolerance"
+    icon: mdi:sine-wave
+    sequence:
+      - action: script.set_power_readings
+        data:
+          grid_import_power: 4
+          grid_export_power: 3
+          solar_power: 6
+          battery_charge_power: 2
+          battery_discharge_power: 5
+          ev_charger_power: 3
+  scenario_negative_individual:
+    alias: "Scenario: negative individual (EV feeding the home)"
+    icon: mdi:car-electric
+    sequence:
+      - action: script.set_power_readings
+        data:
+          grid_import_power: 300
+          ev_charger_power: -1200
+          heat_pump_power: 900
+          home_power: 1500
+  scenario_unavailable_sensors:
+    alias: "Scenario: unavailable sensors"
+    icon: mdi:help-circle
+    sequence:
+      - action: script.set_power_readings
+        data:
+          grid_import_power: 500
+          solar_power: 1500
+          battery_charge_power: 200
+          heat_pump_power: 400
+          unavailable: [solar, battery, devices]
+  scenario_more_than_four_individuals:
+    alias: "Scenario: more than four individuals"
+    icon: mdi:devices
+    sequence:
+      - action: script.set_power_readings
+        data:
+          grid_import_power: 2000
+          solar_power: 1800
+          ev_charger_power: 1100
+          heat_pump_power: 900
+          washing_machine_power: 700
+          dryer_power: 500
+          dishwasher_power: 300
+          fridge_power: 120
+  scenario_solver_regression:
+    alias: "Scenario: solver regression (import 200 / export 600 / solar 500 / discharge 150 / charge 200)"
+    icon: mdi:bug
+    sequence:
+      - action: script.set_power_readings
+        data:
+          grid_import_power: 200
+          grid_export_power: 600
+          solar_power: 500
+          battery_discharge_power: 150
+          battery_charge_power: 200

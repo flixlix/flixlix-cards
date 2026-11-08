@@ -18,23 +18,24 @@ export type EnergyPeriodWindow = {
 
 const ENERGY_COLLECTION_KEY_PREFIX = "energy_";
 
-type EnergyCollectionLike = {
-  start?: Date;
-  end?: Date;
-  setPeriod?: (newStart: Date, newEnd?: Date) => void;
-  setCompare?: (compare: unknown) => void;
-  refresh?: () => void;
-};
+type PropertyWatcher = { listeners: Set<() => void>; cleanup?: () => void };
 
-type ListenerCollection = EnergyCollectionLike & {
-  __efcpListeners?: Set<() => void>;
-  __efcpOriginalSetPeriod?: EnergyCollectionLike["setPeriod"];
-  __efcpOriginalSetCompare?: EnergyCollectionLike["setCompare"];
-  __efcpOriginalRefresh?: EnergyCollectionLike["refresh"];
-};
+const isObject = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
 
-type WatchableConnection = Record<string, unknown> & {
-  __efcpPropertyWatchers?: Record<string, { listeners: Set<() => void>; cleanup?: () => void }>;
+// The listener set and the watcher map are only ever written by this module (possibly from
+// another card bundle running the same code), so their element shapes are known.
+const isListenerSet = (value: unknown): value is Set<() => void> => value instanceof Set;
+const isPropertyWatchers = (value: unknown): value is Record<string, PropertyWatcher> =>
+  isObject(value);
+
+const isFossilEnergyConsumption = (value: unknown): value is FossilEnergyConsumption =>
+  isObject(value) && Object.values(value).every((amount) => typeof amount === "number");
+
+/** The HA frontend attaches energy collections as ad-hoc properties of the websocket connection. */
+const getConnection = (hass: HomeAssistant): Record<string, unknown> | null => {
+  const connection: unknown = hass.connection;
+  return isObject(connection) ? connection : null;
 };
 
 const getStartOfDay = (date: Date): Date =>
@@ -116,17 +117,74 @@ const getSuggestedPeriod = (start: Date, end: Date): "hour" | "day" | "month" =>
   return "hour";
 };
 
+/** HA stores its presets as `today`, `this_week`, …; older versions stored `week`, … */
+const toEnergyPeriodKey = (stored: string | null): EnergyPeriodKey | undefined => {
+  const key = stored?.replace(/^this_/, "");
+  return key === "today" ||
+    key === "yesterday" ||
+    key === "week" ||
+    key === "month" ||
+    key === "year"
+    ? key
+    : undefined;
+};
+
+/** The localStorage key under which HA remembers the last picked preset of a collection. */
+export const energyDefaultPeriodStorageKey = (hass: HomeAssistant, collectionKey?: string) =>
+  `energy-default-period-${resolveConnectionKey(hass, collectionKey)}`;
+
+/** The parts of HA's energy collection a period selector drives. */
+export type EnergyPeriodControls = {
+  start: Date;
+  end?: Date;
+  /** `"previous"`/`"yoy"` while comparing, `""` otherwise; a boolean in older HA. */
+  compare?: unknown;
+  setPeriod: (start: Date, end?: Date) => void;
+  setCompare: (mode: string) => void;
+  refresh: () => unknown;
+};
+
+const isEnergyPeriodControls = (value: unknown): value is EnergyPeriodControls =>
+  isObject(value) &&
+  value.start instanceof Date &&
+  typeof value.setPeriod === "function" &&
+  typeof value.setCompare === "function" &&
+  typeof value.refresh === "function";
+
+/**
+ * The energy collection HA's own energy cards created for this dashboard. Never creates one:
+ * a collection created by a card bundles a copy of HA's data loader, which breaks as soon as
+ * HA changes its energy preferences.
+ */
+export const findEnergyCollection = (
+  hass: HomeAssistant,
+  collectionKey?: string
+): EnergyPeriodControls | null => {
+  const connection = getConnection(hass);
+  for (const key of [resolveConnectionKey(hass, collectionKey), "_energy"]) {
+    const candidate = connection?.[key];
+    if (isEnergyPeriodControls(candidate)) {
+      return candidate;
+    }
+  }
+  return null;
+};
+
 export const getGlobalEnergyPeriodWindow = (
   hass: HomeAssistant,
   collectionKey?: string
 ): EnergyPeriodWindow | null => {
-  const connection = hass.connection as unknown as Record<string, unknown>;
+  const connection = getConnection(hass);
   const connectionKey = resolveConnectionKey(hass, collectionKey);
   const collectionKeysToCheck = [connectionKey, "_energy"];
 
   for (const key of collectionKeysToCheck) {
-    const maybeCollection = connection?.[key] as EnergyCollectionLike | undefined;
-    if (maybeCollection?.start instanceof Date && maybeCollection?.end instanceof Date) {
+    const maybeCollection = connection?.[key];
+    if (
+      isObject(maybeCollection) &&
+      maybeCollection.start instanceof Date &&
+      maybeCollection.end instanceof Date
+    ) {
       return {
         key: "today",
         start: maybeCollection.start,
@@ -141,14 +199,8 @@ export const getGlobalEnergyPeriodWindow = (
 
   let period: EnergyPeriodKey = "today";
   for (const key of collectionKeysToCheck) {
-    const stored = localStorage.getItem(`energy-default-period-${key}`);
-    if (
-      stored === "today" ||
-      stored === "yesterday" ||
-      stored === "week" ||
-      stored === "month" ||
-      stored === "year"
-    ) {
+    const stored = toEnergyPeriodKey(localStorage.getItem(`energy-default-period-${key}`));
+    if (stored) {
       period = stored;
       break;
     }
@@ -164,14 +216,47 @@ export const getGlobalEnergyPeriodWindow = (
 const getEnergyCollection = (
   hass: HomeAssistant,
   collectionKey?: string
-): ListenerCollection | null => {
-  const connection = hass.connection as unknown as Record<string, unknown>;
+): Record<string, unknown> | null => {
+  const connection = getConnection(hass);
   const keysToCheck = [resolveConnectionKey(hass, collectionKey), "_energy"];
   for (const key of keysToCheck) {
-    const candidate = connection?.[key] as ListenerCollection | undefined;
-    if (candidate) return candidate;
+    const candidate = connection?.[key];
+    if (isObject(candidate)) {
+      return candidate;
+    }
   }
   return null;
+};
+
+const notifyCollectionListeners = (collection: Record<string, unknown>) => {
+  const listeners = collection.__efcpListeners;
+  if (isListenerSet(listeners)) {
+    listeners.forEach((listener) => listener());
+  }
+};
+
+const wrapCollectionMethod = (
+  collection: Record<string, unknown>,
+  method: "setPeriod" | "setCompare" | "refresh",
+  originalKey: string
+) => {
+  const original = collection[method];
+  if (typeof original !== "function" || collection[originalKey]) {
+    return;
+  }
+  collection[originalKey] = original;
+  collection[method] = function (this: unknown, ...args: unknown[]): unknown {
+    const result: unknown = original.apply(this, args);
+    notifyCollectionListeners(collection);
+    return result;
+  };
+};
+
+const getPropertyWatchers = (
+  connection: Record<string, unknown>
+): Record<string, PropertyWatcher> | undefined => {
+  const watchers = connection.__efcpPropertyWatchers;
+  return isPropertyWatchers(watchers) ? watchers : undefined;
 };
 
 export const watchGlobalEnergyPeriodChanges = (
@@ -179,42 +264,25 @@ export const watchGlobalEnergyPeriodChanges = (
   callback: () => void,
   collectionKey?: string
 ): (() => void) | null => {
-  const connection = hass.connection as unknown as WatchableConnection;
+  const connection = getConnection(hass);
+  if (!connection) {
+    return null;
+  }
   const keysToWatch = [resolveConnectionKey(hass, collectionKey), "_energy"];
   const unsubs: Array<() => void> = [];
-  const attachedCollections = new WeakSet<ListenerCollection>();
+  const attachedCollections = new WeakSet<Record<string, unknown>>();
 
-  const attachToCollection = (collection: ListenerCollection) => {
-    if (!collection.__efcpListeners) {
-      collection.__efcpListeners = new Set();
-    }
-    if (collection.setPeriod && !collection.__efcpOriginalSetPeriod) {
-      collection.__efcpOriginalSetPeriod = collection.setPeriod;
-      collection.setPeriod = function (newStart: Date, newEnd?: Date) {
-        const result = collection.__efcpOriginalSetPeriod?.call(this, newStart, newEnd);
-        collection.__efcpListeners?.forEach((listener) => listener());
-        return result;
-      };
-    }
-    if (collection.setCompare && !collection.__efcpOriginalSetCompare) {
-      collection.__efcpOriginalSetCompare = collection.setCompare;
-      collection.setCompare = function (compare: unknown) {
-        const result = collection.__efcpOriginalSetCompare?.call(this, compare);
-        collection.__efcpListeners?.forEach((listener) => listener());
-        return result;
-      };
-    }
-    if (collection.refresh && !collection.__efcpOriginalRefresh) {
-      collection.__efcpOriginalRefresh = collection.refresh;
-      collection.refresh = function () {
-        const result = collection.__efcpOriginalRefresh?.call(this);
-        collection.__efcpListeners?.forEach((listener) => listener());
-        return result;
-      };
-    }
-    collection.__efcpListeners.add(callback);
+  const attachToCollection = (collection: Record<string, unknown>) => {
+    const listeners = isListenerSet(collection.__efcpListeners)
+      ? collection.__efcpListeners
+      : new Set<() => void>();
+    collection.__efcpListeners = listeners;
+    wrapCollectionMethod(collection, "setPeriod", "__efcpOriginalSetPeriod");
+    wrapCollectionMethod(collection, "setCompare", "__efcpOriginalSetCompare");
+    wrapCollectionMethod(collection, "refresh", "__efcpOriginalRefresh");
+    listeners.add(callback);
     return () => {
-      collection.__efcpListeners?.delete(callback);
+      listeners.delete(callback);
     };
   };
 
@@ -227,18 +295,17 @@ export const watchGlobalEnergyPeriodChanges = (
     callback();
   };
 
-  if (!connection.__efcpPropertyWatchers) {
-    connection.__efcpPropertyWatchers = {};
-  }
+  const watchers = getPropertyWatchers(connection) ?? {};
+  connection.__efcpPropertyWatchers = watchers;
 
   for (const key of keysToWatch) {
-    const existing = connection[key] as ListenerCollection | undefined;
-    if (existing) {
+    const existing = connection[key];
+    if (isObject(existing)) {
       unsubs.push(attachToCollection(existing));
       attachedCollections.add(existing);
     }
 
-    const watcher = connection.__efcpPropertyWatchers[key] ?? {
+    const watcher = watchers[key] ?? {
       listeners: new Set<() => void>(),
     };
     watcher.listeners.add(handleChange);
@@ -253,10 +320,9 @@ export const watchGlobalEnergyPeriodChanges = (
           get() {
             return currentValue;
           },
-          set(value) {
+          set(value: unknown) {
             currentValue = value;
-            const listeners = connection.__efcpPropertyWatchers?.[key]?.listeners;
-            listeners?.forEach((listener) => listener());
+            getPropertyWatchers(connection)?.[key]?.listeners.forEach((listener) => listener());
           },
         });
         watcher.cleanup = () => {
@@ -272,37 +338,47 @@ export const watchGlobalEnergyPeriodChanges = (
       }
     }
 
-    connection.__efcpPropertyWatchers[key] = watcher;
+    watchers[key] = watcher;
   }
 
   return () => {
     unsubs.forEach((unsub) => unsub());
+    const currentWatchers = getPropertyWatchers(connection);
     for (const key of keysToWatch) {
-      const watcher = connection.__efcpPropertyWatchers?.[key];
+      const watcher = currentWatchers?.[key];
       watcher?.listeners.delete(handleChange);
       if (watcher && watcher.listeners.size === 0) {
         watcher.cleanup?.();
-        delete connection.__efcpPropertyWatchers?.[key];
+        delete currentWatchers?.[key];
       }
     }
   };
 };
 
 const getSumGrowth = (values: StatisticsValue[]): number => {
-  if (!values.length) return 0;
+  if (!values.length) {
+    return 0;
+  }
   let changeGrowth = 0;
   let hasChange = false;
   for (const value of values) {
-    if (value.change === null || value.change === undefined) continue;
+    if (value.change === null || value.change === undefined) {
+      continue;
+    }
     changeGrowth += value.change;
     hasChange = true;
   }
-  if (hasChange) return Math.max(changeGrowth, 0);
-  const first = values.find((item) => item.sum !== null && item.sum !== undefined)?.sum;
-  const last = [...values]
-    .reverse()
-    .find((item) => item.sum !== null && item.sum !== undefined)?.sum;
-  if (first === undefined || first === null || last === undefined || last === null) return 0;
+  if (hasChange) {
+    return Math.max(changeGrowth, 0);
+  }
+  const sums = values.flatMap((item) =>
+    item.sum === null || item.sum === undefined ? [] : [item.sum]
+  );
+  const first = sums[0];
+  const last = sums[sums.length - 1];
+  if (first === undefined || first === null || last === undefined || last === null) {
+    return 0;
+  }
   return Math.max(last - first, 0);
 };
 
@@ -311,9 +387,11 @@ export const fetchEnergyPeriodGrowth = async (
   statisticIds: string[],
   window: EnergyPeriodWindow
 ): Promise<Record<string, number>> => {
-  if (!statisticIds.length) return {};
+  if (!statisticIds.length) {
+    return {};
+  }
 
-  const raw = (await hass.callWS({
+  const raw = await hass.callWS<PeriodStatisticsResponse>({
     type: "recorder/statistics_during_period",
     start_time: window.start.toISOString(),
     end_time: window.end.toISOString(),
@@ -321,7 +399,7 @@ export const fetchEnergyPeriodGrowth = async (
     period: getSuggestedPeriod(window.start, window.end),
     types: ["change", "sum"],
     units: { energy: "Wh" },
-  })) as PeriodStatisticsResponse;
+  });
 
   const result: Record<string, number> = {};
   for (const statisticId of statisticIds) {
@@ -334,7 +412,9 @@ export const getEntityEnergyFromGrowthMap = (
   growthMap: Record<string, number>,
   entity?: string
 ): number => {
-  if (!entity) return 0;
+  if (!entity) {
+    return 0;
+  }
   return getEntityNames(entity).reduce((sum, entityId) => sum + (growthMap[entityId] ?? 0), 0);
 };
 
@@ -350,21 +430,28 @@ export const subscribeEnergyCollectionData = (
   callback: (data: EnergyCollectionFossilData) => void,
   collectionKey?: string
 ): (() => void) | null => {
-  const collection = getEnergyCollection(hass, collectionKey) as Record<string, unknown> | null;
-  if (!collection || typeof collection.subscribe !== "function") {
+  const collection = getEnergyCollection(hass, collectionKey);
+  const subscribe = collection?.subscribe;
+  if (typeof subscribe !== "function") {
     return null;
   }
 
-  const unsub = (
-    collection.subscribe as (cb: (data: Record<string, unknown>) => void) => () => void
-  )((data) => {
+  const unsub: unknown = subscribe.call(collection, (data: unknown) => {
+    const co2SignalEntity = isObject(data) ? data.co2SignalEntity : undefined;
+    const fossilEnergyConsumption = isObject(data) ? data.fossilEnergyConsumption : undefined;
     callback({
-      co2SignalEntity: data?.co2SignalEntity as string | undefined,
-      fossilEnergyConsumption: data?.fossilEnergyConsumption as FossilEnergyConsumption | undefined,
+      co2SignalEntity: typeof co2SignalEntity === "string" ? co2SignalEntity : undefined,
+      fossilEnergyConsumption: isFossilEnergyConsumption(fossilEnergyConsumption)
+        ? fossilEnergyConsumption
+        : undefined,
     });
   });
 
-  return typeof unsub === "function" ? unsub : null;
+  return typeof unsub === "function"
+    ? () => {
+        Reflect.apply(unsub, undefined, []);
+      }
+    : null;
 };
 
 export const computeNonFossilFromCollection = (

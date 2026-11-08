@@ -36,6 +36,10 @@
     "display_zero_tolerance": "Tolerans för nollvärde",
     "double_tap_action": "Dubbeltrycksåtgärd",
     "entity_generator": "Generator",
+    "flow_rate_model": "Flödesmodell",
+    "flow_rate_model_duration": "Varaktighet (standard)",
+    "flow_rate_model_relative": "Relativ",
+    "flow_rate_model_speed": "Hastighet",
     "fossil_fuel_percentage": "Fossilt bränsle",
     "grey_color": "Grå färg",
     "grey_out": "Utgråad",
@@ -84,7 +88,6 @@
     "transparency": "Transparens",
     "unit_of_measurement": "Enhet",
     "unit_white_space": "Mellanrum före enhet",
-    "use_metadata": "Använd metadata",
-    "use_new_flow_rate_model": "Ny flödesmodell"
+    "use_metadata": "Använd metadata"
   }
 }

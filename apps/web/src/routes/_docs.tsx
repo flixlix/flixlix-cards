@@ -27,6 +27,7 @@ const SECTION_LABELS: Record<string, string> = {
   "power-flow-card-plus": "Power Flow Card Plus",
   "energy-flow-card-plus": "Energy Flow Card Plus",
   "energy-breakdown-card": "Energy Breakdown Card",
+  "energy-period-selector-plus": "Energy Period Selector Plus",
   contributing: "How to contribute",
   installation: "Installation",
   configuration: "Configuration",
@@ -34,7 +35,9 @@ const SECTION_LABELS: Record<string, string> = {
 };
 
 function humanize(part: string): string {
-  if (SECTION_LABELS[part]) return SECTION_LABELS[part];
+  if (SECTION_LABELS[part]) {
+    return SECTION_LABELS[part];
+  }
   return part
     .split("-")
     .map((p) => p.charAt(0).toUpperCase() + p.slice(1))

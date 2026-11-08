@@ -1,48 +1,53 @@
 import {
+  type BatteryObject,
   type CardMainContext,
-  type ConfigEntities,
+  type ComboEntity,
   type FlowCardPlusConfig,
 } from "@flixlix-cards/shared/types";
-import { displayValue } from "@flixlix-cards/shared/utils/display-value";
+import { nonEmpty } from "@flixlix-cards/shared/utils/utils";
 import { html, nothing } from "lit";
+import { type DisplayState, directionShown } from "./display-state";
+
+const batteryEntityId = (battery: BatteryObject, direction: keyof ComboEntity) =>
+  typeof battery.entity === "object" ? battery.entity[direction] : battery.entity;
+
+const chargeShown = ({ state }: BatteryObject, displayState: DisplayState): boolean =>
+  directionShown(displayState, {
+    nonZero: (state.toBattery ?? 0) > 0,
+    oneWay: state.toBattery !== 0,
+  });
+
+const dischargeShown = ({ state }: BatteryObject, displayState: DisplayState): boolean =>
+  directionShown(displayState, {
+    nonZero: (state.fromBattery ?? 0) > 0,
+    oneWay: state.toBattery === 0 || state.fromBattery !== 0,
+  });
 
 export const batteryElement = (
   main: CardMainContext,
   config: FlowCardPlusConfig,
-  {
-    battery,
-    entities,
-  }: {
-    battery: any;
-    entities: ConfigEntities;
-  }
+  battery: BatteryObject
 ) => {
-  const disableEntityClick = config.clickable_entities === false;
+  const { entities } = config;
+  const displayState = entities.battery?.display_state;
+  const disableEntityClick = !config.clickable_entities;
+  const circleTarget = () =>
+    nonEmpty(entities.battery?.state_of_charge) ?? batteryEntityId(battery, "production");
   return html`<div class="circle-container battery">
     <div
       class="circle ${disableEntityClick ? "pointer-events-none" : ""}"
+      tabindex=${disableEntityClick ? nothing : 0}
+      role=${disableEntityClick ? nothing : "button"}
       @click=${(e: MouseEvent) => {
-        const target = entities.battery?.state_of_charge
-          ? entities.battery?.state_of_charge
-          : typeof entities.battery?.entity === "string"
-            ? entities.battery?.entity
-            : entities.battery?.entity.production;
+        const target = circleTarget();
         main.onEntityClick(e, battery, target);
       }}
       @dblclick=${(e: MouseEvent) => {
-        const target = entities.battery?.state_of_charge
-          ? entities.battery?.state_of_charge
-          : typeof entities.battery?.entity === "string"
-            ? entities.battery?.entity
-            : entities.battery?.entity.production;
+        const target = circleTarget();
         main.onEntityDoubleClick(e, battery, target);
       }}
       @pointerdown=${(e: PointerEvent) => {
-        const target = entities.battery?.state_of_charge
-          ? entities.battery?.state_of_charge
-          : typeof entities.battery?.entity === "string"
-            ? entities.battery?.entity
-            : entities.battery?.entity.production;
+        const target = circleTarget();
         main.onEntityPointerDown(e, battery, target);
       }}
       @pointerup=${(e: PointerEvent) => {
@@ -51,183 +56,143 @@ export const batteryElement = (
       @pointercancel=${(e: PointerEvent) => {
         main.onEntityPointerUp(e);
       }}
-      @keyDown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
+      @keydown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
         if (e.key === "Enter") {
-          const target = entities.battery?.state_of_charge
-            ? entities.battery?.state_of_charge
-            : typeof entities.battery?.entity === "string"
-              ? entities.battery.entity
-              : entities.battery?.entity.production;
+          const target = circleTarget();
           main.openDetails(e, battery, target, "tap");
         }
       }}
     >
       <ha-ripple .disabled=${disableEntityClick}></ha-ripple>
-      ${battery.state_of_charge.state !== null && entities.battery?.show_state_of_charge !== false
-        ? html` <span
-            @click=${(e: MouseEvent) => {
-              main.onEntityClick(e, battery, entities.battery?.state_of_charge);
-            }}
-            @dblclick=${(e: MouseEvent) => {
-              main.onEntityDoubleClick(e, battery, entities.battery?.state_of_charge);
-            }}
-            @pointerdown=${(e: PointerEvent) => {
-              main.onEntityPointerDown(e, battery, entities.battery?.state_of_charge);
-            }}
-            @pointerup=${(e: PointerEvent) => {
-              main.onEntityPointerUp(e);
-            }}
-            @pointercancel=${(e: PointerEvent) => {
-              main.onEntityPointerUp(e);
-            }}
-            @keyDown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
-              if (e.key === "Enter") {
-                main.openDetails(e, battery, entities.battery?.state_of_charge, "tap");
-              }
-            }}
-            id="battery-state-of-charge-text"
-          >
-            ${displayValue(main.hass, config, battery.state_of_charge.state, {
-              unit: battery.state_of_charge.unit ?? "%",
-              unitWhiteSpace: battery.state_of_charge.unit_white_space,
-              decimals: battery.state_of_charge.decimals,
-              accept_negative: true,
-            })}
-          </span>`
-        : nothing}
-      ${battery.icon !== " "
-        ? html` <ha-icon
-            id="battery-icon"
-            .icon=${battery.icon}
-            @click=${(e: MouseEvent) => {
-              main.onEntityClick(e, battery, entities.battery?.state_of_charge);
-            }}
-            @dblclick=${(e: MouseEvent) => {
-              main.onEntityDoubleClick(e, battery, entities.battery?.state_of_charge);
-            }}
-            @pointerdown=${(e: PointerEvent) => {
-              main.onEntityPointerDown(e, battery, entities.battery?.state_of_charge);
-            }}
-            @pointerup=${(e: PointerEvent) => {
-              main.onEntityPointerUp(e);
-            }}
-            @pointercancel=${(e: PointerEvent) => {
-              main.onEntityPointerUp(e);
-            }}
-            @keyDown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
-              if (e.key === "Enter") {
-                main.openDetails(e, battery, entities.battery?.state_of_charge, "tap");
-              }
-            }}
-          ></ha-icon>`
-        : nothing}
-      ${entities.battery?.display_state === "two_way" ||
-      entities.battery?.display_state === undefined ||
-      (entities.battery?.display_state === "one_way_no_zero" && battery.state.toBattery > 0) ||
-      (entities.battery?.display_state === "one_way" && battery.state.toBattery !== 0)
-        ? html`<span
-            class="battery-in"
-            @click=${(e: MouseEvent) => {
-              const target =
-                typeof entities.battery!.entity === "string"
-                  ? entities.battery!.entity!
-                  : entities.battery!.entity!.production!;
+      ${
+        battery.state_of_charge.state !== null && entities.battery?.show_state_of_charge !== false
+          ? html` <span
+              @click=${(e: MouseEvent) => {
+                main.onEntityClick(e, battery, entities.battery?.state_of_charge);
+              }}
+              @dblclick=${(e: MouseEvent) => {
+                main.onEntityDoubleClick(e, battery, entities.battery?.state_of_charge);
+              }}
+              @pointerdown=${(e: PointerEvent) => {
+                main.onEntityPointerDown(e, battery, entities.battery?.state_of_charge);
+              }}
+              @pointerup=${(e: PointerEvent) => {
+                main.onEntityPointerUp(e);
+              }}
+              @pointercancel=${(e: PointerEvent) => {
+                main.onEntityPointerUp(e);
+              }}
+              @keydown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
+                if (e.key === "Enter") {
+                  main.openDetails(e, battery, entities.battery?.state_of_charge, "tap");
+                }
+              }}
+              id="battery-state-of-charge-text"
+            >
+              ${battery.display.stateOfCharge}
+            </span>`
+          : nothing
+      }
+      ${
+        battery.icon !== " "
+          ? html` <ha-icon
+              id="battery-icon"
+              .icon=${battery.icon}
+              @click=${(e: MouseEvent) => {
+                main.onEntityClick(e, battery, entities.battery?.state_of_charge);
+              }}
+              @dblclick=${(e: MouseEvent) => {
+                main.onEntityDoubleClick(e, battery, entities.battery?.state_of_charge);
+              }}
+              @pointerdown=${(e: PointerEvent) => {
+                main.onEntityPointerDown(e, battery, entities.battery?.state_of_charge);
+              }}
+              @pointerup=${(e: PointerEvent) => {
+                main.onEntityPointerUp(e);
+              }}
+              @pointercancel=${(e: PointerEvent) => {
+                main.onEntityPointerUp(e);
+              }}
+              @keydown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
+                if (e.key === "Enter") {
+                  main.openDetails(e, battery, entities.battery?.state_of_charge, "tap");
+                }
+              }}
+            ></ha-icon>`
+          : nothing
+      }
+      ${
+        chargeShown(battery, displayState)
+          ? html`<span
+              class="battery-in"
+              @click=${(e: MouseEvent) => {
+                const target = batteryEntityId(battery, "production");
 
-              main.onEntityClick(e, entities.battery, target);
-            }}
-            @dblclick=${(e: MouseEvent) => {
-              const target =
-                typeof entities.battery!.entity === "string"
-                  ? entities.battery!.entity!
-                  : entities.battery!.entity!.production!;
-              main.onEntityDoubleClick(e, entities.battery, target);
-            }}
-            @pointerdown=${(e: PointerEvent) => {
-              const target =
-                typeof entities.battery!.entity === "string"
-                  ? entities.battery!.entity!
-                  : entities.battery!.entity!.production!;
-              main.onEntityPointerDown(e, entities.battery, target);
-            }}
-            @pointerup=${(e: PointerEvent) => {
-              main.onEntityPointerUp(e);
-            }}
-            @pointercancel=${(e: PointerEvent) => {
-              main.onEntityPointerUp(e);
-            }}
-            @keyDown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
-              if (e.key === "Enter") {
-                const target =
-                  typeof entities.battery!.entity === "string"
-                    ? entities.battery!.entity!
-                    : entities.battery!.entity!.production!;
+                main.onEntityClick(e, entities.battery, target);
+              }}
+              @dblclick=${(e: MouseEvent) => {
+                const target = batteryEntityId(battery, "production");
+                main.onEntityDoubleClick(e, entities.battery, target);
+              }}
+              @pointerdown=${(e: PointerEvent) => {
+                const target = batteryEntityId(battery, "production");
+                main.onEntityPointerDown(e, entities.battery, target);
+              }}
+              @pointerup=${(e: PointerEvent) => {
+                main.onEntityPointerUp(e);
+              }}
+              @pointercancel=${(e: PointerEvent) => {
+                main.onEntityPointerUp(e);
+              }}
+              @keydown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
+                if (e.key === "Enter") {
+                  const target = batteryEntityId(battery, "production");
 
-                main.openDetails(e, entities.battery, target, "tap");
-              }
-            }}
-          >
-            <ha-icon class="small" .icon=${"mdi:arrow-down"}></ha-icon>
-            ${displayValue(main.hass, config, battery.state.toBattery, {
-              unit: battery.unit,
-              unitWhiteSpace: battery.unit_white_space,
-              decimals: battery.decimals,
-            })}</span
-          >`
-        : nothing}
-      ${entities.battery?.display_state === "two_way" ||
-      entities.battery?.display_state === undefined ||
-      (entities.battery?.display_state === "one_way_no_zero" && battery.state.fromBattery > 0) ||
-      (entities.battery?.display_state === "one_way" &&
-        (battery.state.toBattery === 0 || battery.state.fromBattery !== 0))
-        ? html`<span
-            class="battery-out"
-            @click=${(e: MouseEvent) => {
-              const target =
-                typeof entities.battery!.entity === "string"
-                  ? entities.battery!.entity!
-                  : entities.battery!.entity!.consumption!;
+                  main.openDetails(e, entities.battery, target, "tap");
+                }
+              }}
+            >
+              <ha-icon class="small" .icon=${"mdi:arrow-down"}></ha-icon>
+              ${battery.display.toBattery}</span
+            >`
+          : nothing
+      }
+      ${
+        dischargeShown(battery, displayState)
+          ? html`<span
+              class="battery-out"
+              @click=${(e: MouseEvent) => {
+                const target = batteryEntityId(battery, "consumption");
 
-              main.onEntityClick(e, entities.battery, target);
-            }}
-            @dblclick=${(e: MouseEvent) => {
-              const target =
-                typeof entities.battery!.entity === "string"
-                  ? entities.battery!.entity!
-                  : entities.battery!.entity!.consumption!;
-              main.onEntityDoubleClick(e, entities.battery, target);
-            }}
-            @pointerdown=${(e: PointerEvent) => {
-              const target =
-                typeof entities.battery!.entity === "string"
-                  ? entities.battery!.entity!
-                  : entities.battery!.entity!.consumption!;
-              main.onEntityPointerDown(e, entities.battery, target);
-            }}
-            @pointerup=${(e: PointerEvent) => {
-              main.onEntityPointerUp(e);
-            }}
-            @pointercancel=${(e: PointerEvent) => {
-              main.onEntityPointerUp(e);
-            }}
-            @keyDown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
-              if (e.key === "Enter") {
-                const target =
-                  typeof entities.battery!.entity === "string"
-                    ? entities.battery!.entity!
-                    : entities.battery!.entity!.consumption!;
+                main.onEntityClick(e, entities.battery, target);
+              }}
+              @dblclick=${(e: MouseEvent) => {
+                const target = batteryEntityId(battery, "consumption");
+                main.onEntityDoubleClick(e, entities.battery, target);
+              }}
+              @pointerdown=${(e: PointerEvent) => {
+                const target = batteryEntityId(battery, "consumption");
+                main.onEntityPointerDown(e, entities.battery, target);
+              }}
+              @pointerup=${(e: PointerEvent) => {
+                main.onEntityPointerUp(e);
+              }}
+              @pointercancel=${(e: PointerEvent) => {
+                main.onEntityPointerUp(e);
+              }}
+              @keydown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
+                if (e.key === "Enter") {
+                  const target = batteryEntityId(battery, "consumption");
 
-                main.openDetails(e, entities.battery, target, "tap");
-              }
-            }}
-          >
-            <ha-icon class="small" .icon=${"mdi:arrow-up"}></ha-icon>
-            ${displayValue(main.hass, config, battery.state.fromBattery, {
-              unit: battery.unit,
-              unitWhiteSpace: battery.unit_white_space,
-              decimals: battery.decimals,
-            })}</span
-          >`
-        : nothing}
+                  main.openDetails(e, entities.battery, target, "tap");
+                }
+              }}
+            >
+              <ha-icon class="small" .icon=${"mdi:arrow-up"}></ha-icon>
+              ${battery.display.fromBattery}</span
+            >`
+          : nothing
+      }
     </div>
     <span class="label">${battery.name}</span>
   </div>`;

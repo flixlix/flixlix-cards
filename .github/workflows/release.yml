@@ -194,6 +194,8 @@ jobs:
           DIST_REPO_TOKEN: ${{ secrets.DIST_REPO_TOKEN }}
           GH_TOKEN: ${{ secrets.DIST_REPO_TOKEN }}
           PUBLISHED_PACKAGES: ${{ steps.released-packages.outputs.packages }}
+          # Release bundles show only the version in the console, not the commit/build time.
+          RELEASE_BUILD: "true"
         run: |
           set -euo pipefail
 

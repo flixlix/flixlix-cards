@@ -31,11 +31,44 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Format, lint and type-aware checks
+        run: pnpm check
+
       - name: Typecheck
         run: pnpm typecheck
 
-      - name: Lint
-        run: pnpm lint
+      - name: Build cards (fails on syntax older browsers cannot parse)
+        run: pnpm build:cards
+
+      - name: Install Chromium for browser tests
+        run: pnpm --filter power-flow-card-plus exec playwright install --with-deps chromium
 
       - name: Test
         run: pnpm test
+
+  visual:
+    # Screenshot comparison in the image the baselines were made in (`pnpm test:visual`).
+    # Keep the tag in step with the `playwright` version in pnpm-workspace.yaml.
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.1-noble
+      options: --ipc=host
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Visual tests
+        run: pnpm --recursive --filter "./packages/flixlix-cards/**" run test:visual
+
+      - name: Upload screenshot diffs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-diffs
+          path: packages/flixlix-cards/*/.vitest/attachments/

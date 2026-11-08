@@ -13,7 +13,7 @@ export function useMediaQuery(
   query: string,
   { defaultValue = false, initializeWithValue = true }: UseMediaQueryOptions = {}
 ): boolean {
-  const getMatches = (query: string): boolean => {
+  const getMatches = (): boolean => {
     if (IS_SERVER) {
       return defaultValue;
     }
@@ -22,14 +22,14 @@ export function useMediaQuery(
 
   const [matches, setMatches] = useState<boolean>(() => {
     if (initializeWithValue) {
-      return getMatches(query);
+      return getMatches();
     }
     return defaultValue;
   });
 
   // Handles the change event of the media query.
   function handleChange() {
-    setMatches(getMatches(query));
+    setMatches(getMatches());
   }
 
   useIsomorphicLayoutEffect(() => {

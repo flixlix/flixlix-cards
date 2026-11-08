@@ -1,5 +1,5 @@
 export default function getElementWidth(element: HTMLElement | null): number {
-  const elementStyles = getComputedStyle(element || document.body);
+  const elementStyles = getComputedStyle(element ?? document.body);
   const { width } = elementStyles;
 
   // Parse the width value and extract the numeric portion

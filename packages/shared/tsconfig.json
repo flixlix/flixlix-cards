@@ -9,11 +9,10 @@
     "experimentalDecorators": true,
     "useDefineForClassFields": false,
     "emitDecoratorMetadata": true,
-    "baseUrl": "./",
     "paths": {
       "@flixlix-cards/shared/*": ["./src/*"]
     },
-    "types": ["node", "vitest/globals"]
+    "types": ["node"]
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist"]

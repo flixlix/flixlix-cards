@@ -12,22 +12,29 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as DocsRouteImport } from './routes/_docs'
 import { Route as DocsIndexRouteImport } from './routes/_docs/index'
 import { Route as DocsContributingRouteImport } from './routes/_docs/contributing'
-import { Route as DocsSortableListCardIndexRouteImport } from './routes/_docs/sortable-list-card/index'
-import { Route as DocsPowerFlowCardPlusIndexRouteImport } from './routes/_docs/power-flow-card-plus/index'
-import { Route as DocsEnergyFlowCardPlusIndexRouteImport } from './routes/_docs/energy-flow-card-plus/index'
 import { Route as DocsEnergyBreakdownCardIndexRouteImport } from './routes/_docs/energy-breakdown-card/index'
-import { Route as DocsSortableListCardInstallationRouteImport } from './routes/_docs/sortable-list-card/installation'
-import { Route as DocsSortableListCardExamplesRouteImport } from './routes/_docs/sortable-list-card/examples'
-import { Route as DocsSortableListCardConfigurationRouteImport } from './routes/_docs/sortable-list-card/configuration'
-import { Route as DocsPowerFlowCardPlusInstallationRouteImport } from './routes/_docs/power-flow-card-plus/installation'
-import { Route as DocsPowerFlowCardPlusExamplesRouteImport } from './routes/_docs/power-flow-card-plus/examples'
-import { Route as DocsPowerFlowCardPlusConfigurationRouteImport } from './routes/_docs/power-flow-card-plus/configuration'
-import { Route as DocsEnergyFlowCardPlusInstallationRouteImport } from './routes/_docs/energy-flow-card-plus/installation'
-import { Route as DocsEnergyFlowCardPlusExamplesRouteImport } from './routes/_docs/energy-flow-card-plus/examples'
-import { Route as DocsEnergyFlowCardPlusConfigurationRouteImport } from './routes/_docs/energy-flow-card-plus/configuration'
-import { Route as DocsEnergyBreakdownCardInstallationRouteImport } from './routes/_docs/energy-breakdown-card/installation'
-import { Route as DocsEnergyBreakdownCardExamplesRouteImport } from './routes/_docs/energy-breakdown-card/examples'
 import { Route as DocsEnergyBreakdownCardConfigurationRouteImport } from './routes/_docs/energy-breakdown-card/configuration'
+import { Route as DocsEnergyBreakdownCardExamplesRouteImport } from './routes/_docs/energy-breakdown-card/examples'
+import { Route as DocsEnergyBreakdownCardInstallationRouteImport } from './routes/_docs/energy-breakdown-card/installation'
+import { Route as DocsEnergyFlowCardPlusIndexRouteImport } from './routes/_docs/energy-flow-card-plus/index'
+import { Route as DocsEnergyFlowCardPlusConfigurationRouteImport } from './routes/_docs/energy-flow-card-plus/configuration'
+import { Route as DocsEnergyFlowCardPlusExamplesRouteImport } from './routes/_docs/energy-flow-card-plus/examples'
+import { Route as DocsEnergyFlowCardPlusInstallationRouteImport } from './routes/_docs/energy-flow-card-plus/installation'
+import { Route as DocsEnergyFlowCardPlusPlaygroundRouteImport } from './routes/_docs/energy-flow-card-plus/playground'
+import { Route as DocsEnergyPeriodSelectorPlusIndexRouteImport } from './routes/_docs/energy-period-selector-plus/index'
+import { Route as DocsEnergyPeriodSelectorPlusConfigurationRouteImport } from './routes/_docs/energy-period-selector-plus/configuration'
+import { Route as DocsEnergyPeriodSelectorPlusExamplesRouteImport } from './routes/_docs/energy-period-selector-plus/examples'
+import { Route as DocsEnergyPeriodSelectorPlusInstallationRouteImport } from './routes/_docs/energy-period-selector-plus/installation'
+import { Route as DocsEnergyPeriodSelectorPlusPlaygroundRouteImport } from './routes/_docs/energy-period-selector-plus/playground'
+import { Route as DocsPowerFlowCardPlusIndexRouteImport } from './routes/_docs/power-flow-card-plus/index'
+import { Route as DocsPowerFlowCardPlusConfigurationRouteImport } from './routes/_docs/power-flow-card-plus/configuration'
+import { Route as DocsPowerFlowCardPlusExamplesRouteImport } from './routes/_docs/power-flow-card-plus/examples'
+import { Route as DocsPowerFlowCardPlusInstallationRouteImport } from './routes/_docs/power-flow-card-plus/installation'
+import { Route as DocsPowerFlowCardPlusPlaygroundRouteImport } from './routes/_docs/power-flow-card-plus/playground'
+import { Route as DocsSortableListCardIndexRouteImport } from './routes/_docs/sortable-list-card/index'
+import { Route as DocsSortableListCardConfigurationRouteImport } from './routes/_docs/sortable-list-card/configuration'
+import { Route as DocsSortableListCardExamplesRouteImport } from './routes/_docs/sortable-list-card/examples'
+import { Route as DocsSortableListCardInstallationRouteImport } from './routes/_docs/sortable-list-card/installation'
 
 const DocsRoute = DocsRouteImport.update({
   id: '/_docs',
@@ -43,88 +50,16 @@ const DocsContributingRoute = DocsContributingRouteImport.update({
   path: '/contributing',
   getParentRoute: () => DocsRoute,
 } as any)
-const DocsSortableListCardIndexRoute =
-  DocsSortableListCardIndexRouteImport.update({
-    id: '/sortable-list-card/',
-    path: '/sortable-list-card/',
-    getParentRoute: () => DocsRoute,
-  } as any)
-const DocsPowerFlowCardPlusIndexRoute =
-  DocsPowerFlowCardPlusIndexRouteImport.update({
-    id: '/power-flow-card-plus/',
-    path: '/power-flow-card-plus/',
-    getParentRoute: () => DocsRoute,
-  } as any)
-const DocsEnergyFlowCardPlusIndexRoute =
-  DocsEnergyFlowCardPlusIndexRouteImport.update({
-    id: '/energy-flow-card-plus/',
-    path: '/energy-flow-card-plus/',
-    getParentRoute: () => DocsRoute,
-  } as any)
 const DocsEnergyBreakdownCardIndexRoute =
   DocsEnergyBreakdownCardIndexRouteImport.update({
     id: '/energy-breakdown-card/',
     path: '/energy-breakdown-card/',
     getParentRoute: () => DocsRoute,
   } as any)
-const DocsSortableListCardInstallationRoute =
-  DocsSortableListCardInstallationRouteImport.update({
-    id: '/sortable-list-card/installation',
-    path: '/sortable-list-card/installation',
-    getParentRoute: () => DocsRoute,
-  } as any)
-const DocsSortableListCardExamplesRoute =
-  DocsSortableListCardExamplesRouteImport.update({
-    id: '/sortable-list-card/examples',
-    path: '/sortable-list-card/examples',
-    getParentRoute: () => DocsRoute,
-  } as any)
-const DocsSortableListCardConfigurationRoute =
-  DocsSortableListCardConfigurationRouteImport.update({
-    id: '/sortable-list-card/configuration',
-    path: '/sortable-list-card/configuration',
-    getParentRoute: () => DocsRoute,
-  } as any)
-const DocsPowerFlowCardPlusInstallationRoute =
-  DocsPowerFlowCardPlusInstallationRouteImport.update({
-    id: '/power-flow-card-plus/installation',
-    path: '/power-flow-card-plus/installation',
-    getParentRoute: () => DocsRoute,
-  } as any)
-const DocsPowerFlowCardPlusExamplesRoute =
-  DocsPowerFlowCardPlusExamplesRouteImport.update({
-    id: '/power-flow-card-plus/examples',
-    path: '/power-flow-card-plus/examples',
-    getParentRoute: () => DocsRoute,
-  } as any)
-const DocsPowerFlowCardPlusConfigurationRoute =
-  DocsPowerFlowCardPlusConfigurationRouteImport.update({
-    id: '/power-flow-card-plus/configuration',
-    path: '/power-flow-card-plus/configuration',
-    getParentRoute: () => DocsRoute,
-  } as any)
-const DocsEnergyFlowCardPlusInstallationRoute =
-  DocsEnergyFlowCardPlusInstallationRouteImport.update({
-    id: '/energy-flow-card-plus/installation',
-    path: '/energy-flow-card-plus/installation',
-    getParentRoute: () => DocsRoute,
-  } as any)
-const DocsEnergyFlowCardPlusExamplesRoute =
-  DocsEnergyFlowCardPlusExamplesRouteImport.update({
-    id: '/energy-flow-card-plus/examples',
-    path: '/energy-flow-card-plus/examples',
-    getParentRoute: () => DocsRoute,
-  } as any)
-const DocsEnergyFlowCardPlusConfigurationRoute =
-  DocsEnergyFlowCardPlusConfigurationRouteImport.update({
-    id: '/energy-flow-card-plus/configuration',
-    path: '/energy-flow-card-plus/configuration',
-    getParentRoute: () => DocsRoute,
-  } as any)
-const DocsEnergyBreakdownCardInstallationRoute =
-  DocsEnergyBreakdownCardInstallationRouteImport.update({
-    id: '/energy-breakdown-card/installation',
-    path: '/energy-breakdown-card/installation',
+const DocsEnergyBreakdownCardConfigurationRoute =
+  DocsEnergyBreakdownCardConfigurationRouteImport.update({
+    id: '/energy-breakdown-card/configuration',
+    path: '/energy-breakdown-card/configuration',
     getParentRoute: () => DocsRoute,
   } as any)
 const DocsEnergyBreakdownCardExamplesRoute =
@@ -133,10 +68,124 @@ const DocsEnergyBreakdownCardExamplesRoute =
     path: '/energy-breakdown-card/examples',
     getParentRoute: () => DocsRoute,
   } as any)
-const DocsEnergyBreakdownCardConfigurationRoute =
-  DocsEnergyBreakdownCardConfigurationRouteImport.update({
-    id: '/energy-breakdown-card/configuration',
-    path: '/energy-breakdown-card/configuration',
+const DocsEnergyBreakdownCardInstallationRoute =
+  DocsEnergyBreakdownCardInstallationRouteImport.update({
+    id: '/energy-breakdown-card/installation',
+    path: '/energy-breakdown-card/installation',
+    getParentRoute: () => DocsRoute,
+  } as any)
+const DocsEnergyFlowCardPlusIndexRoute =
+  DocsEnergyFlowCardPlusIndexRouteImport.update({
+    id: '/energy-flow-card-plus/',
+    path: '/energy-flow-card-plus/',
+    getParentRoute: () => DocsRoute,
+  } as any)
+const DocsEnergyFlowCardPlusConfigurationRoute =
+  DocsEnergyFlowCardPlusConfigurationRouteImport.update({
+    id: '/energy-flow-card-plus/configuration',
+    path: '/energy-flow-card-plus/configuration',
+    getParentRoute: () => DocsRoute,
+  } as any)
+const DocsEnergyFlowCardPlusExamplesRoute =
+  DocsEnergyFlowCardPlusExamplesRouteImport.update({
+    id: '/energy-flow-card-plus/examples',
+    path: '/energy-flow-card-plus/examples',
+    getParentRoute: () => DocsRoute,
+  } as any)
+const DocsEnergyFlowCardPlusInstallationRoute =
+  DocsEnergyFlowCardPlusInstallationRouteImport.update({
+    id: '/energy-flow-card-plus/installation',
+    path: '/energy-flow-card-plus/installation',
+    getParentRoute: () => DocsRoute,
+  } as any)
+const DocsEnergyFlowCardPlusPlaygroundRoute =
+  DocsEnergyFlowCardPlusPlaygroundRouteImport.update({
+    id: '/energy-flow-card-plus/playground',
+    path: '/energy-flow-card-plus/playground',
+    getParentRoute: () => DocsRoute,
+  } as any)
+const DocsEnergyPeriodSelectorPlusIndexRoute =
+  DocsEnergyPeriodSelectorPlusIndexRouteImport.update({
+    id: '/energy-period-selector-plus/',
+    path: '/energy-period-selector-plus/',
+    getParentRoute: () => DocsRoute,
+  } as any)
+const DocsEnergyPeriodSelectorPlusConfigurationRoute =
+  DocsEnergyPeriodSelectorPlusConfigurationRouteImport.update({
+    id: '/energy-period-selector-plus/configuration',
+    path: '/energy-period-selector-plus/configuration',
+    getParentRoute: () => DocsRoute,
+  } as any)
+const DocsEnergyPeriodSelectorPlusExamplesRoute =
+  DocsEnergyPeriodSelectorPlusExamplesRouteImport.update({
+    id: '/energy-period-selector-plus/examples',
+    path: '/energy-period-selector-plus/examples',
+    getParentRoute: () => DocsRoute,
+  } as any)
+const DocsEnergyPeriodSelectorPlusInstallationRoute =
+  DocsEnergyPeriodSelectorPlusInstallationRouteImport.update({
+    id: '/energy-period-selector-plus/installation',
+    path: '/energy-period-selector-plus/installation',
+    getParentRoute: () => DocsRoute,
+  } as any)
+const DocsEnergyPeriodSelectorPlusPlaygroundRoute =
+  DocsEnergyPeriodSelectorPlusPlaygroundRouteImport.update({
+    id: '/energy-period-selector-plus/playground',
+    path: '/energy-period-selector-plus/playground',
+    getParentRoute: () => DocsRoute,
+  } as any)
+const DocsPowerFlowCardPlusIndexRoute =
+  DocsPowerFlowCardPlusIndexRouteImport.update({
+    id: '/power-flow-card-plus/',
+    path: '/power-flow-card-plus/',
+    getParentRoute: () => DocsRoute,
+  } as any)
+const DocsPowerFlowCardPlusConfigurationRoute =
+  DocsPowerFlowCardPlusConfigurationRouteImport.update({
+    id: '/power-flow-card-plus/configuration',
+    path: '/power-flow-card-plus/configuration',
+    getParentRoute: () => DocsRoute,
+  } as any)
+const DocsPowerFlowCardPlusExamplesRoute =
+  DocsPowerFlowCardPlusExamplesRouteImport.update({
+    id: '/power-flow-card-plus/examples',
+    path: '/power-flow-card-plus/examples',
+    getParentRoute: () => DocsRoute,
+  } as any)
+const DocsPowerFlowCardPlusInstallationRoute =
+  DocsPowerFlowCardPlusInstallationRouteImport.update({
+    id: '/power-flow-card-plus/installation',
+    path: '/power-flow-card-plus/installation',
+    getParentRoute: () => DocsRoute,
+  } as any)
+const DocsPowerFlowCardPlusPlaygroundRoute =
+  DocsPowerFlowCardPlusPlaygroundRouteImport.update({
+    id: '/power-flow-card-plus/playground',
+    path: '/power-flow-card-plus/playground',
+    getParentRoute: () => DocsRoute,
+  } as any)
+const DocsSortableListCardIndexRoute =
+  DocsSortableListCardIndexRouteImport.update({
+    id: '/sortable-list-card/',
+    path: '/sortable-list-card/',
+    getParentRoute: () => DocsRoute,
+  } as any)
+const DocsSortableListCardConfigurationRoute =
+  DocsSortableListCardConfigurationRouteImport.update({
+    id: '/sortable-list-card/configuration',
+    path: '/sortable-list-card/configuration',
+    getParentRoute: () => DocsRoute,
+  } as any)
+const DocsSortableListCardExamplesRoute =
+  DocsSortableListCardExamplesRouteImport.update({
+    id: '/sortable-list-card/examples',
+    path: '/sortable-list-card/examples',
+    getParentRoute: () => DocsRoute,
+  } as any)
+const DocsSortableListCardInstallationRoute =
+  DocsSortableListCardInstallationRouteImport.update({
+    id: '/sortable-list-card/installation',
+    path: '/sortable-list-card/installation',
     getParentRoute: () => DocsRoute,
   } as any)
 
@@ -149,14 +198,21 @@ export interface FileRoutesByFullPath {
   '/energy-flow-card-plus/configuration': typeof DocsEnergyFlowCardPlusConfigurationRoute
   '/energy-flow-card-plus/examples': typeof DocsEnergyFlowCardPlusExamplesRoute
   '/energy-flow-card-plus/installation': typeof DocsEnergyFlowCardPlusInstallationRoute
+  '/energy-flow-card-plus/playground': typeof DocsEnergyFlowCardPlusPlaygroundRoute
+  '/energy-period-selector-plus/configuration': typeof DocsEnergyPeriodSelectorPlusConfigurationRoute
+  '/energy-period-selector-plus/examples': typeof DocsEnergyPeriodSelectorPlusExamplesRoute
+  '/energy-period-selector-plus/installation': typeof DocsEnergyPeriodSelectorPlusInstallationRoute
+  '/energy-period-selector-plus/playground': typeof DocsEnergyPeriodSelectorPlusPlaygroundRoute
   '/power-flow-card-plus/configuration': typeof DocsPowerFlowCardPlusConfigurationRoute
   '/power-flow-card-plus/examples': typeof DocsPowerFlowCardPlusExamplesRoute
   '/power-flow-card-plus/installation': typeof DocsPowerFlowCardPlusInstallationRoute
+  '/power-flow-card-plus/playground': typeof DocsPowerFlowCardPlusPlaygroundRoute
   '/sortable-list-card/configuration': typeof DocsSortableListCardConfigurationRoute
   '/sortable-list-card/examples': typeof DocsSortableListCardExamplesRoute
   '/sortable-list-card/installation': typeof DocsSortableListCardInstallationRoute
   '/energy-breakdown-card/': typeof DocsEnergyBreakdownCardIndexRoute
   '/energy-flow-card-plus/': typeof DocsEnergyFlowCardPlusIndexRoute
+  '/energy-period-selector-plus/': typeof DocsEnergyPeriodSelectorPlusIndexRoute
   '/power-flow-card-plus/': typeof DocsPowerFlowCardPlusIndexRoute
   '/sortable-list-card/': typeof DocsSortableListCardIndexRoute
 }
@@ -169,14 +225,21 @@ export interface FileRoutesByTo {
   '/energy-flow-card-plus/configuration': typeof DocsEnergyFlowCardPlusConfigurationRoute
   '/energy-flow-card-plus/examples': typeof DocsEnergyFlowCardPlusExamplesRoute
   '/energy-flow-card-plus/installation': typeof DocsEnergyFlowCardPlusInstallationRoute
+  '/energy-flow-card-plus/playground': typeof DocsEnergyFlowCardPlusPlaygroundRoute
+  '/energy-period-selector-plus/configuration': typeof DocsEnergyPeriodSelectorPlusConfigurationRoute
+  '/energy-period-selector-plus/examples': typeof DocsEnergyPeriodSelectorPlusExamplesRoute
+  '/energy-period-selector-plus/installation': typeof DocsEnergyPeriodSelectorPlusInstallationRoute
+  '/energy-period-selector-plus/playground': typeof DocsEnergyPeriodSelectorPlusPlaygroundRoute
   '/power-flow-card-plus/configuration': typeof DocsPowerFlowCardPlusConfigurationRoute
   '/power-flow-card-plus/examples': typeof DocsPowerFlowCardPlusExamplesRoute
   '/power-flow-card-plus/installation': typeof DocsPowerFlowCardPlusInstallationRoute
+  '/power-flow-card-plus/playground': typeof DocsPowerFlowCardPlusPlaygroundRoute
   '/sortable-list-card/configuration': typeof DocsSortableListCardConfigurationRoute
   '/sortable-list-card/examples': typeof DocsSortableListCardExamplesRoute
   '/sortable-list-card/installation': typeof DocsSortableListCardInstallationRoute
   '/energy-breakdown-card': typeof DocsEnergyBreakdownCardIndexRoute
   '/energy-flow-card-plus': typeof DocsEnergyFlowCardPlusIndexRoute
+  '/energy-period-selector-plus': typeof DocsEnergyPeriodSelectorPlusIndexRoute
   '/power-flow-card-plus': typeof DocsPowerFlowCardPlusIndexRoute
   '/sortable-list-card': typeof DocsSortableListCardIndexRoute
 }
@@ -191,14 +254,21 @@ export interface FileRoutesById {
   '/_docs/energy-flow-card-plus/configuration': typeof DocsEnergyFlowCardPlusConfigurationRoute
   '/_docs/energy-flow-card-plus/examples': typeof DocsEnergyFlowCardPlusExamplesRoute
   '/_docs/energy-flow-card-plus/installation': typeof DocsEnergyFlowCardPlusInstallationRoute
+  '/_docs/energy-flow-card-plus/playground': typeof DocsEnergyFlowCardPlusPlaygroundRoute
+  '/_docs/energy-period-selector-plus/configuration': typeof DocsEnergyPeriodSelectorPlusConfigurationRoute
+  '/_docs/energy-period-selector-plus/examples': typeof DocsEnergyPeriodSelectorPlusExamplesRoute
+  '/_docs/energy-period-selector-plus/installation': typeof DocsEnergyPeriodSelectorPlusInstallationRoute
+  '/_docs/energy-period-selector-plus/playground': typeof DocsEnergyPeriodSelectorPlusPlaygroundRoute
   '/_docs/power-flow-card-plus/configuration': typeof DocsPowerFlowCardPlusConfigurationRoute
   '/_docs/power-flow-card-plus/examples': typeof DocsPowerFlowCardPlusExamplesRoute
   '/_docs/power-flow-card-plus/installation': typeof DocsPowerFlowCardPlusInstallationRoute
+  '/_docs/power-flow-card-plus/playground': typeof DocsPowerFlowCardPlusPlaygroundRoute
   '/_docs/sortable-list-card/configuration': typeof DocsSortableListCardConfigurationRoute
   '/_docs/sortable-list-card/examples': typeof DocsSortableListCardExamplesRoute
   '/_docs/sortable-list-card/installation': typeof DocsSortableListCardInstallationRoute
   '/_docs/energy-breakdown-card/': typeof DocsEnergyBreakdownCardIndexRoute
   '/_docs/energy-flow-card-plus/': typeof DocsEnergyFlowCardPlusIndexRoute
+  '/_docs/energy-period-selector-plus/': typeof DocsEnergyPeriodSelectorPlusIndexRoute
   '/_docs/power-flow-card-plus/': typeof DocsPowerFlowCardPlusIndexRoute
   '/_docs/sortable-list-card/': typeof DocsSortableListCardIndexRoute
 }
@@ -213,14 +283,21 @@ export interface FileRouteTypes {
     | '/energy-flow-card-plus/configuration'
     | '/energy-flow-card-plus/examples'
     | '/energy-flow-card-plus/installation'
+    | '/energy-flow-card-plus/playground'
+    | '/energy-period-selector-plus/configuration'
+    | '/energy-period-selector-plus/examples'
+    | '/energy-period-selector-plus/installation'
+    | '/energy-period-selector-plus/playground'
     | '/power-flow-card-plus/configuration'
     | '/power-flow-card-plus/examples'
     | '/power-flow-card-plus/installation'
+    | '/power-flow-card-plus/playground'
     | '/sortable-list-card/configuration'
     | '/sortable-list-card/examples'
     | '/sortable-list-card/installation'
     | '/energy-breakdown-card/'
     | '/energy-flow-card-plus/'
+    | '/energy-period-selector-plus/'
     | '/power-flow-card-plus/'
     | '/sortable-list-card/'
   fileRoutesByTo: FileRoutesByTo
@@ -233,14 +310,21 @@ export interface FileRouteTypes {
     | '/energy-flow-card-plus/configuration'
     | '/energy-flow-card-plus/examples'
     | '/energy-flow-card-plus/installation'
+    | '/energy-flow-card-plus/playground'
+    | '/energy-period-selector-plus/configuration'
+    | '/energy-period-selector-plus/examples'
+    | '/energy-period-selector-plus/installation'
+    | '/energy-period-selector-plus/playground'
     | '/power-flow-card-plus/configuration'
     | '/power-flow-card-plus/examples'
     | '/power-flow-card-plus/installation'
+    | '/power-flow-card-plus/playground'
     | '/sortable-list-card/configuration'
     | '/sortable-list-card/examples'
     | '/sortable-list-card/installation'
     | '/energy-breakdown-card'
     | '/energy-flow-card-plus'
+    | '/energy-period-selector-plus'
     | '/power-flow-card-plus'
     | '/sortable-list-card'
   id:
@@ -254,14 +338,21 @@ export interface FileRouteTypes {
     | '/_docs/energy-flow-card-plus/configuration'
     | '/_docs/energy-flow-card-plus/examples'
     | '/_docs/energy-flow-card-plus/installation'
+    | '/_docs/energy-flow-card-plus/playground'
+    | '/_docs/energy-period-selector-plus/configuration'
+    | '/_docs/energy-period-selector-plus/examples'
+    | '/_docs/energy-period-selector-plus/installation'
+    | '/_docs/energy-period-selector-plus/playground'
     | '/_docs/power-flow-card-plus/configuration'
     | '/_docs/power-flow-card-plus/examples'
     | '/_docs/power-flow-card-plus/installation'
+    | '/_docs/power-flow-card-plus/playground'
     | '/_docs/sortable-list-card/configuration'
     | '/_docs/sortable-list-card/examples'
     | '/_docs/sortable-list-card/installation'
     | '/_docs/energy-breakdown-card/'
     | '/_docs/energy-flow-card-plus/'
+    | '/_docs/energy-period-selector-plus/'
     | '/_docs/power-flow-card-plus/'
     | '/_docs/sortable-list-card/'
   fileRoutesById: FileRoutesById
@@ -293,27 +384,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocsContributingRouteImport
       parentRoute: typeof DocsRoute
     }
-    '/_docs/sortable-list-card/': {
-      id: '/_docs/sortable-list-card/'
-      path: '/sortable-list-card'
-      fullPath: '/sortable-list-card/'
-      preLoaderRoute: typeof DocsSortableListCardIndexRouteImport
-      parentRoute: typeof DocsRoute
-    }
-    '/_docs/power-flow-card-plus/': {
-      id: '/_docs/power-flow-card-plus/'
-      path: '/power-flow-card-plus'
-      fullPath: '/power-flow-card-plus/'
-      preLoaderRoute: typeof DocsPowerFlowCardPlusIndexRouteImport
-      parentRoute: typeof DocsRoute
-    }
-    '/_docs/energy-flow-card-plus/': {
-      id: '/_docs/energy-flow-card-plus/'
-      path: '/energy-flow-card-plus'
-      fullPath: '/energy-flow-card-plus/'
-      preLoaderRoute: typeof DocsEnergyFlowCardPlusIndexRouteImport
-      parentRoute: typeof DocsRoute
-    }
     '/_docs/energy-breakdown-card/': {
       id: '/_docs/energy-breakdown-card/'
       path: '/energy-breakdown-card'
@@ -321,74 +391,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocsEnergyBreakdownCardIndexRouteImport
       parentRoute: typeof DocsRoute
     }
-    '/_docs/sortable-list-card/installation': {
-      id: '/_docs/sortable-list-card/installation'
-      path: '/sortable-list-card/installation'
-      fullPath: '/sortable-list-card/installation'
-      preLoaderRoute: typeof DocsSortableListCardInstallationRouteImport
-      parentRoute: typeof DocsRoute
-    }
-    '/_docs/sortable-list-card/examples': {
-      id: '/_docs/sortable-list-card/examples'
-      path: '/sortable-list-card/examples'
-      fullPath: '/sortable-list-card/examples'
-      preLoaderRoute: typeof DocsSortableListCardExamplesRouteImport
-      parentRoute: typeof DocsRoute
-    }
-    '/_docs/sortable-list-card/configuration': {
-      id: '/_docs/sortable-list-card/configuration'
-      path: '/sortable-list-card/configuration'
-      fullPath: '/sortable-list-card/configuration'
-      preLoaderRoute: typeof DocsSortableListCardConfigurationRouteImport
-      parentRoute: typeof DocsRoute
-    }
-    '/_docs/power-flow-card-plus/installation': {
-      id: '/_docs/power-flow-card-plus/installation'
-      path: '/power-flow-card-plus/installation'
-      fullPath: '/power-flow-card-plus/installation'
-      preLoaderRoute: typeof DocsPowerFlowCardPlusInstallationRouteImport
-      parentRoute: typeof DocsRoute
-    }
-    '/_docs/power-flow-card-plus/examples': {
-      id: '/_docs/power-flow-card-plus/examples'
-      path: '/power-flow-card-plus/examples'
-      fullPath: '/power-flow-card-plus/examples'
-      preLoaderRoute: typeof DocsPowerFlowCardPlusExamplesRouteImport
-      parentRoute: typeof DocsRoute
-    }
-    '/_docs/power-flow-card-plus/configuration': {
-      id: '/_docs/power-flow-card-plus/configuration'
-      path: '/power-flow-card-plus/configuration'
-      fullPath: '/power-flow-card-plus/configuration'
-      preLoaderRoute: typeof DocsPowerFlowCardPlusConfigurationRouteImport
-      parentRoute: typeof DocsRoute
-    }
-    '/_docs/energy-flow-card-plus/installation': {
-      id: '/_docs/energy-flow-card-plus/installation'
-      path: '/energy-flow-card-plus/installation'
-      fullPath: '/energy-flow-card-plus/installation'
-      preLoaderRoute: typeof DocsEnergyFlowCardPlusInstallationRouteImport
-      parentRoute: typeof DocsRoute
-    }
-    '/_docs/energy-flow-card-plus/examples': {
-      id: '/_docs/energy-flow-card-plus/examples'
-      path: '/energy-flow-card-plus/examples'
-      fullPath: '/energy-flow-card-plus/examples'
-      preLoaderRoute: typeof DocsEnergyFlowCardPlusExamplesRouteImport
-      parentRoute: typeof DocsRoute
-    }
-    '/_docs/energy-flow-card-plus/configuration': {
-      id: '/_docs/energy-flow-card-plus/configuration'
-      path: '/energy-flow-card-plus/configuration'
-      fullPath: '/energy-flow-card-plus/configuration'
-      preLoaderRoute: typeof DocsEnergyFlowCardPlusConfigurationRouteImport
-      parentRoute: typeof DocsRoute
-    }
-    '/_docs/energy-breakdown-card/installation': {
-      id: '/_docs/energy-breakdown-card/installation'
-      path: '/energy-breakdown-card/installation'
-      fullPath: '/energy-breakdown-card/installation'
-      preLoaderRoute: typeof DocsEnergyBreakdownCardInstallationRouteImport
+    '/_docs/energy-breakdown-card/configuration': {
+      id: '/_docs/energy-breakdown-card/configuration'
+      path: '/energy-breakdown-card/configuration'
+      fullPath: '/energy-breakdown-card/configuration'
+      preLoaderRoute: typeof DocsEnergyBreakdownCardConfigurationRouteImport
       parentRoute: typeof DocsRoute
     }
     '/_docs/energy-breakdown-card/examples': {
@@ -398,11 +405,144 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocsEnergyBreakdownCardExamplesRouteImport
       parentRoute: typeof DocsRoute
     }
-    '/_docs/energy-breakdown-card/configuration': {
-      id: '/_docs/energy-breakdown-card/configuration'
-      path: '/energy-breakdown-card/configuration'
-      fullPath: '/energy-breakdown-card/configuration'
-      preLoaderRoute: typeof DocsEnergyBreakdownCardConfigurationRouteImport
+    '/_docs/energy-breakdown-card/installation': {
+      id: '/_docs/energy-breakdown-card/installation'
+      path: '/energy-breakdown-card/installation'
+      fullPath: '/energy-breakdown-card/installation'
+      preLoaderRoute: typeof DocsEnergyBreakdownCardInstallationRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/_docs/energy-flow-card-plus/': {
+      id: '/_docs/energy-flow-card-plus/'
+      path: '/energy-flow-card-plus'
+      fullPath: '/energy-flow-card-plus/'
+      preLoaderRoute: typeof DocsEnergyFlowCardPlusIndexRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/_docs/energy-flow-card-plus/configuration': {
+      id: '/_docs/energy-flow-card-plus/configuration'
+      path: '/energy-flow-card-plus/configuration'
+      fullPath: '/energy-flow-card-plus/configuration'
+      preLoaderRoute: typeof DocsEnergyFlowCardPlusConfigurationRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/_docs/energy-flow-card-plus/examples': {
+      id: '/_docs/energy-flow-card-plus/examples'
+      path: '/energy-flow-card-plus/examples'
+      fullPath: '/energy-flow-card-plus/examples'
+      preLoaderRoute: typeof DocsEnergyFlowCardPlusExamplesRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/_docs/energy-flow-card-plus/installation': {
+      id: '/_docs/energy-flow-card-plus/installation'
+      path: '/energy-flow-card-plus/installation'
+      fullPath: '/energy-flow-card-plus/installation'
+      preLoaderRoute: typeof DocsEnergyFlowCardPlusInstallationRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/_docs/energy-flow-card-plus/playground': {
+      id: '/_docs/energy-flow-card-plus/playground'
+      path: '/energy-flow-card-plus/playground'
+      fullPath: '/energy-flow-card-plus/playground'
+      preLoaderRoute: typeof DocsEnergyFlowCardPlusPlaygroundRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/_docs/energy-period-selector-plus/': {
+      id: '/_docs/energy-period-selector-plus/'
+      path: '/energy-period-selector-plus'
+      fullPath: '/energy-period-selector-plus/'
+      preLoaderRoute: typeof DocsEnergyPeriodSelectorPlusIndexRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/_docs/energy-period-selector-plus/configuration': {
+      id: '/_docs/energy-period-selector-plus/configuration'
+      path: '/energy-period-selector-plus/configuration'
+      fullPath: '/energy-period-selector-plus/configuration'
+      preLoaderRoute: typeof DocsEnergyPeriodSelectorPlusConfigurationRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/_docs/energy-period-selector-plus/examples': {
+      id: '/_docs/energy-period-selector-plus/examples'
+      path: '/energy-period-selector-plus/examples'
+      fullPath: '/energy-period-selector-plus/examples'
+      preLoaderRoute: typeof DocsEnergyPeriodSelectorPlusExamplesRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/_docs/energy-period-selector-plus/installation': {
+      id: '/_docs/energy-period-selector-plus/installation'
+      path: '/energy-period-selector-plus/installation'
+      fullPath: '/energy-period-selector-plus/installation'
+      preLoaderRoute: typeof DocsEnergyPeriodSelectorPlusInstallationRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/_docs/energy-period-selector-plus/playground': {
+      id: '/_docs/energy-period-selector-plus/playground'
+      path: '/energy-period-selector-plus/playground'
+      fullPath: '/energy-period-selector-plus/playground'
+      preLoaderRoute: typeof DocsEnergyPeriodSelectorPlusPlaygroundRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/_docs/power-flow-card-plus/': {
+      id: '/_docs/power-flow-card-plus/'
+      path: '/power-flow-card-plus'
+      fullPath: '/power-flow-card-plus/'
+      preLoaderRoute: typeof DocsPowerFlowCardPlusIndexRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/_docs/power-flow-card-plus/configuration': {
+      id: '/_docs/power-flow-card-plus/configuration'
+      path: '/power-flow-card-plus/configuration'
+      fullPath: '/power-flow-card-plus/configuration'
+      preLoaderRoute: typeof DocsPowerFlowCardPlusConfigurationRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/_docs/power-flow-card-plus/examples': {
+      id: '/_docs/power-flow-card-plus/examples'
+      path: '/power-flow-card-plus/examples'
+      fullPath: '/power-flow-card-plus/examples'
+      preLoaderRoute: typeof DocsPowerFlowCardPlusExamplesRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/_docs/power-flow-card-plus/installation': {
+      id: '/_docs/power-flow-card-plus/installation'
+      path: '/power-flow-card-plus/installation'
+      fullPath: '/power-flow-card-plus/installation'
+      preLoaderRoute: typeof DocsPowerFlowCardPlusInstallationRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/_docs/power-flow-card-plus/playground': {
+      id: '/_docs/power-flow-card-plus/playground'
+      path: '/power-flow-card-plus/playground'
+      fullPath: '/power-flow-card-plus/playground'
+      preLoaderRoute: typeof DocsPowerFlowCardPlusPlaygroundRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/_docs/sortable-list-card/': {
+      id: '/_docs/sortable-list-card/'
+      path: '/sortable-list-card'
+      fullPath: '/sortable-list-card/'
+      preLoaderRoute: typeof DocsSortableListCardIndexRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/_docs/sortable-list-card/configuration': {
+      id: '/_docs/sortable-list-card/configuration'
+      path: '/sortable-list-card/configuration'
+      fullPath: '/sortable-list-card/configuration'
+      preLoaderRoute: typeof DocsSortableListCardConfigurationRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/_docs/sortable-list-card/examples': {
+      id: '/_docs/sortable-list-card/examples'
+      path: '/sortable-list-card/examples'
+      fullPath: '/sortable-list-card/examples'
+      preLoaderRoute: typeof DocsSortableListCardExamplesRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/_docs/sortable-list-card/installation': {
+      id: '/_docs/sortable-list-card/installation'
+      path: '/sortable-list-card/installation'
+      fullPath: '/sortable-list-card/installation'
+      preLoaderRoute: typeof DocsSortableListCardInstallationRouteImport
       parentRoute: typeof DocsRoute
     }
   }
@@ -417,14 +557,21 @@ interface DocsRouteChildren {
   DocsEnergyFlowCardPlusConfigurationRoute: typeof DocsEnergyFlowCardPlusConfigurationRoute
   DocsEnergyFlowCardPlusExamplesRoute: typeof DocsEnergyFlowCardPlusExamplesRoute
   DocsEnergyFlowCardPlusInstallationRoute: typeof DocsEnergyFlowCardPlusInstallationRoute
+  DocsEnergyFlowCardPlusPlaygroundRoute: typeof DocsEnergyFlowCardPlusPlaygroundRoute
+  DocsEnergyPeriodSelectorPlusConfigurationRoute: typeof DocsEnergyPeriodSelectorPlusConfigurationRoute
+  DocsEnergyPeriodSelectorPlusExamplesRoute: typeof DocsEnergyPeriodSelectorPlusExamplesRoute
+  DocsEnergyPeriodSelectorPlusInstallationRoute: typeof DocsEnergyPeriodSelectorPlusInstallationRoute
+  DocsEnergyPeriodSelectorPlusPlaygroundRoute: typeof DocsEnergyPeriodSelectorPlusPlaygroundRoute
   DocsPowerFlowCardPlusConfigurationRoute: typeof DocsPowerFlowCardPlusConfigurationRoute
   DocsPowerFlowCardPlusExamplesRoute: typeof DocsPowerFlowCardPlusExamplesRoute
   DocsPowerFlowCardPlusInstallationRoute: typeof DocsPowerFlowCardPlusInstallationRoute
+  DocsPowerFlowCardPlusPlaygroundRoute: typeof DocsPowerFlowCardPlusPlaygroundRoute
   DocsSortableListCardConfigurationRoute: typeof DocsSortableListCardConfigurationRoute
   DocsSortableListCardExamplesRoute: typeof DocsSortableListCardExamplesRoute
   DocsSortableListCardInstallationRoute: typeof DocsSortableListCardInstallationRoute
   DocsEnergyBreakdownCardIndexRoute: typeof DocsEnergyBreakdownCardIndexRoute
   DocsEnergyFlowCardPlusIndexRoute: typeof DocsEnergyFlowCardPlusIndexRoute
+  DocsEnergyPeriodSelectorPlusIndexRoute: typeof DocsEnergyPeriodSelectorPlusIndexRoute
   DocsPowerFlowCardPlusIndexRoute: typeof DocsPowerFlowCardPlusIndexRoute
   DocsSortableListCardIndexRoute: typeof DocsSortableListCardIndexRoute
 }
@@ -442,17 +589,29 @@ const DocsRouteChildren: DocsRouteChildren = {
   DocsEnergyFlowCardPlusExamplesRoute: DocsEnergyFlowCardPlusExamplesRoute,
   DocsEnergyFlowCardPlusInstallationRoute:
     DocsEnergyFlowCardPlusInstallationRoute,
+  DocsEnergyFlowCardPlusPlaygroundRoute: DocsEnergyFlowCardPlusPlaygroundRoute,
+  DocsEnergyPeriodSelectorPlusConfigurationRoute:
+    DocsEnergyPeriodSelectorPlusConfigurationRoute,
+  DocsEnergyPeriodSelectorPlusExamplesRoute:
+    DocsEnergyPeriodSelectorPlusExamplesRoute,
+  DocsEnergyPeriodSelectorPlusInstallationRoute:
+    DocsEnergyPeriodSelectorPlusInstallationRoute,
+  DocsEnergyPeriodSelectorPlusPlaygroundRoute:
+    DocsEnergyPeriodSelectorPlusPlaygroundRoute,
   DocsPowerFlowCardPlusConfigurationRoute:
     DocsPowerFlowCardPlusConfigurationRoute,
   DocsPowerFlowCardPlusExamplesRoute: DocsPowerFlowCardPlusExamplesRoute,
   DocsPowerFlowCardPlusInstallationRoute:
     DocsPowerFlowCardPlusInstallationRoute,
+  DocsPowerFlowCardPlusPlaygroundRoute: DocsPowerFlowCardPlusPlaygroundRoute,
   DocsSortableListCardConfigurationRoute:
     DocsSortableListCardConfigurationRoute,
   DocsSortableListCardExamplesRoute: DocsSortableListCardExamplesRoute,
   DocsSortableListCardInstallationRoute: DocsSortableListCardInstallationRoute,
   DocsEnergyBreakdownCardIndexRoute: DocsEnergyBreakdownCardIndexRoute,
   DocsEnergyFlowCardPlusIndexRoute: DocsEnergyFlowCardPlusIndexRoute,
+  DocsEnergyPeriodSelectorPlusIndexRoute:
+    DocsEnergyPeriodSelectorPlusIndexRoute,
   DocsPowerFlowCardPlusIndexRoute: DocsPowerFlowCardPlusIndexRoute,
   DocsSortableListCardIndexRoute: DocsSortableListCardIndexRoute,
 }

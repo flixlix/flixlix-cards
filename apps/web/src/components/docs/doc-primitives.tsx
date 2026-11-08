@@ -1,7 +1,7 @@
 import { Check, Copy, Info, Lightbulb, TriangleAlert } from "lucide-react";
 import * as React from "react";
 
-import { cn } from "@flixlix-cards/cn";
+import { cn } from "cn";
 import { Badge } from "@flixlix-cards/ui/components/badge";
 import { Button } from "@flixlix-cards/ui/components/button";
 

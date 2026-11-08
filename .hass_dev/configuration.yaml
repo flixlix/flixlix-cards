@@ -1,12 +1,20 @@
+# Dev and e2e Home Assistant. Start with `pnpm hass:up` (see e2e/README.md).
 default_config:
 
 homeassistant:
+  name: Flixlix Cards Dev
+  # UTC on both sides keeps "today" in the energy cards and the imported statistics on the same day.
+  time_zone: UTC
+  unit_system: metric
+  currency: EUR
+  country: DE
   packages: !include_dir_named packages/
-
-tts:
-  - platform: google_translate
 
 lovelace: !include lovelace.yaml
 
-frontend:
-  themes: !include_dir_merge_named themes
+recorder:
+  # Imported statistics are the only source for these sensors: if the recorder also compiled
+  # them, its short-term sums restart at 0 and corrupt the imported totals.
+  exclude:
+    entity_globs:
+      - sensor.*_energy

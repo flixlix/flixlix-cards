@@ -1,59 +1,33 @@
-import { type FlowCardPlusConfig } from "@flixlix-cards/shared/types";
-import { checkShouldShowDots } from "@flixlix-cards/shared/utils/check-should-show-dots";
-import {
-  checkHasBottomIndividual,
-  checkHasRightIndividual,
-} from "@flixlix-cards/shared/utils/compute-individual-position";
-import { showLine } from "@flixlix-cards/shared/utils/show-line";
-import { styleLine } from "@flixlix-cards/shared/utils/style-line";
-import { html, nothing, svg } from "lit";
-import { classMap } from "lit/directives/class-map.js";
+import { html, nothing } from "lit";
+import { flowDot } from "../flow-dot";
 import { type Flows } from "./index";
 
-const solarToGridDot = (
-  config: FlowCardPlusConfig,
-  solar: Flows["solar"],
-  newDur: Flows["newDur"]
-) => {
-  if (!checkShouldShowDots(config) || !solar.state.toGrid || !solar.has) return nothing;
+const solarToGridDot = ({ animate, solar, flows, paths }: Flows) => {
+  if (!animate || !solar.state.toGrid || !solar.has) {
+    return nothing;
+  }
 
-  return svg`<circle r="1" class="return" vector-effect="non-scaling-stroke">
-      <animateMotion dur="${newDur.solarToGrid}s" repeatCount="indefinite" calcMode="paced">
-        <mpath xlink:href="#return" />
-      </animateMotion>
-    </circle>`;
+  return flowDot({
+    path: "return",
+    className: "return",
+    durationSeconds: flows.solarToGrid.durationSeconds,
+    radius: paths.scale,
+  });
 };
 
-export const flowSolarToGrid = (
-  config: FlowCardPlusConfig,
-  { battery, grid, individual, solar, newDur }: Flows
-) => {
-  const shouldShow =
-    grid.has && grid.hasReturnToGrid && solar.has && showLine(config, solar.state.toGrid || 0);
-  if (!shouldShow) return nothing;
+export const flowSolarToGrid = (context: Flows) => {
+  const { flows, paths } = context;
+  if (!flows.solarToGrid.visible || !paths.solarToGrid) {
+    return nothing;
+  }
 
-  return html`<div
-    class="lines ${classMap({
-      high: battery.has || checkHasBottomIndividual(individual),
-      "individual1-individual2": !battery.has && individual.every((i) => i?.has),
-      "multi-individual": checkHasRightIndividual(individual),
-    })}"
-  >
-    <svg
-      viewBox="0 0 100 100"
-      xmlns="http://www.w3.org/2000/svg"
-      preserveAspectRatio="xMidYMid slice"
-      id="solar-grid-flow"
-    >
+  return html`<svg class="flow" id="solar-grid-flow" viewBox=${context.viewBox}>
       <path
         id="return"
-        class="return ${styleLine(solar.state.toGrid || 0, config)}"
-        d="M${battery.has ? 45 : 47},0 v15 c0,${battery.has
-          ? "30 -10,30 -30,30"
-          : "35 -10,35 -30,35"} h-20"
+        class="return ${flows.solarToGrid.lineClass}"
+        d=${paths.solarToGrid.d}
         vector-effect="non-scaling-stroke"
       ></path>
-      ${solarToGridDot(config, solar, newDur)}
     </svg>
-  </div>`;
+    ${solarToGridDot(context)}`;
 };

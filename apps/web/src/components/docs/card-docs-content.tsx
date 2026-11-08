@@ -33,6 +33,8 @@ import {
 } from "@flixlix-cards/ui/components/card";
 import { Checkbox } from "@flixlix-cards/ui/components/checkbox";
 
+import { CardDemo } from "@/components/card-demo";
+
 import { CategorySection } from "./category-section";
 import {
   Callout,
@@ -65,7 +67,7 @@ type Variant = {
   hacsRedirect: string;
   releaseUrl: string;
   basePath: "/power-flow-card-plus" | "/energy-flow-card-plus";
-  previewVideo: string;
+  demo: "power" | "period";
 };
 
 const VARIANTS: Record<CardKey, Variant> = {
@@ -95,7 +97,7 @@ const VARIANTS: Record<CardKey, Variant> = {
       "https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=power-flow-card-plus&category=Dashboard",
     releaseUrl: "https://github.com/flixlix/power-flow-card-plus/releases/latest",
     basePath: "/power-flow-card-plus",
-    previewVideo: "/videos/power-demo.mp4",
+    demo: "power",
   },
   energy: {
     key: "energy",
@@ -118,7 +120,7 @@ const VARIANTS: Record<CardKey, Variant> = {
       "https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=energy-flow-card-plus&category=Dashboard",
     releaseUrl: "https://github.com/flixlix/energy-flow-card-plus/releases/latest",
     basePath: "/energy-flow-card-plus",
-    previewVideo: "/videos/energy-demo.mp4",
+    demo: "period",
   },
 };
 
@@ -148,19 +150,17 @@ export function OverviewPage({ cardKey }: { cardKey: CardKey }) {
         badges={[{ label: "HACS Default" }, { label: "YAML & UI editor" }, { label: v.unitKilo }]}
       />
 
-      <video
-        key={v.previewVideo}
-        controls={false}
-        loop
-        muted
-        playsInline
-        autoPlay
-        aria-label={`${v.title} demo`}
-        className="mx-auto w-full max-w-lg rounded-md"
-      >
-        <source src={v.previewVideo} type="video/mp4" />
-        Your browser does not support the video tag.
-      </video>
+      <CardDemo demo={v.demo} className="mx-auto w-fit max-w-full rounded-xl border" />
+      <p className="text-muted-foreground mt-2 text-center text-sm">
+        The real card, live.{" "}
+        <Link
+          to={`${v.basePath}/playground`}
+          className="text-primary underline-offset-4 hover:underline"
+        >
+          Try it in the playground
+        </Link>
+        .
+      </p>
 
       <Prose className="mt-4">
         <p>
@@ -472,26 +472,33 @@ const ADVANCED_CARD_OPTIONS = (v: Variant): OptionRow[] => [
     default: "6",
     description: "Time (s) for the slowest dot to travel an entire line.",
   },
-  {
-    name: "min_expected_power",
-    type: "number",
-    default: "0.01",
-    description: (
-      <>
-        Minimum value used by the <a href="#flow-formula">new flow formula</a>.
-      </>
-    ),
-  },
-  {
-    name: "max_expected_power",
-    type: "number",
-    default: "2000",
-    description: (
-      <>
-        Maximum value used by the <a href="#flow-formula">new flow formula</a>.
-      </>
-    ),
-  },
+  // The energy card always uses the relative formula, so these never apply there
+  ...(v.key === "energy"
+    ? []
+    : [
+        {
+          name: "min_expected_power",
+          type: "number",
+          default: "0.01",
+          description: (
+            <>
+              Minimum value used by the <code>duration</code> and <code>speed</code>{" "}
+              <a href="#flow-formula">flow rate models</a>.
+            </>
+          ),
+        },
+        {
+          name: "max_expected_power",
+          type: "number",
+          default: "2000",
+          description: (
+            <>
+              Maximum value used by the <code>duration</code> and <code>speed</code>{" "}
+              <a href="#flow-formula">flow rate models</a>.
+            </>
+          ),
+        },
+      ]),
   {
     name: "display_zero_lines",
     type: "object",
@@ -506,12 +513,32 @@ const ADVANCED_CARD_OPTIONS = (v: Variant): OptionRow[] => [
   },
   { name: "style_ha_card", type: "css", description: "CSS applied to the card container." },
   { name: "style_card_content", type: "css", description: "CSS applied to the content area." },
-  {
-    name: "use_new_flow_rate_model",
-    type: "boolean",
-    default: "false",
-    description: "Switch to the new (more intuitive) flow formula.",
-  },
+  ...(v.key === "energy"
+    ? []
+    : [
+        {
+          name: "flow_rate_model",
+          type: "string",
+          default: "duration",
+          description: (
+            <>
+              How dot speed follows power: <code>duration</code>, <code>speed</code> or{" "}
+              <code>relative</code>. See <a href="#flow-formula">flow formulas</a>.
+            </>
+          ),
+        },
+        {
+          name: "use_new_flow_rate_model",
+          type: "boolean",
+          description: (
+            <>
+              Older alias of <code>flow_rate_model</code>: <code>false</code> is{" "}
+              <code>relative</code>, <code>true</code> is <code>duration</code>. Ignored when{" "}
+              <code>flow_rate_model</code> is set.
+            </>
+          ),
+        },
+      ]),
   {
     name: "sort_individual_devices",
     type: "boolean",
@@ -724,6 +751,39 @@ const BATTERY_OPTIONS: OptionRow[] = [
   },
 ];
 
+/** unit_of_measurement, unit_white_space and decimals, shared by grid, solar and battery. */
+const UNIT_OPTIONS = (v: Variant): OptionRow[] => [
+  {
+    name: "unit_of_measurement",
+    type: "string",
+    default: `${v.unit} / ${v.unitKilo} (dynamic)`,
+    description: (
+      <>
+        Unit shown after the value. When set, the value is shown in that unit, so{" "}
+        <code>{v.unitKilo}</code> shows <code>1500 {v.unit}</code> as <code>1.5 {v.unitKilo}</code>.
+        Any other unit, such as <code>L/min</code>, shows the value as read from the entity.
+      </>
+    ),
+  },
+  {
+    name: "unit_white_space",
+    type: "boolean",
+    default: "true",
+    description: "Whitespace before the unit.",
+  },
+  {
+    name: "decimals",
+    type: "number",
+    description: (
+      <>
+        Decimals shown in the value. Without <code>unit_of_measurement</code> it overrides the
+        card-wide decimals for the current scale, e.g. 1234 with <code>decimals: 2</code> shows 1.23{" "}
+        {v.unitKilo}.
+      </>
+    ),
+  },
+];
+
 const HOME_OPTIONS: OptionRow[] = [
   {
     name: "entity",
@@ -784,6 +844,13 @@ const INDIVIDUAL_OPTIONS: OptionRow[] = [
     default: "false",
     description: "Reverse the dot direction.",
   },
+  {
+    name: "accept_negative",
+    type: "boolean",
+    default: "false",
+    description:
+      "Treat a negative reading as the device feeding the home: keep the sign, flip the dots.",
+  },
   { name: "secondary_info", type: "object", description: "Secondary info object." },
   {
     name: "display_zero",
@@ -836,7 +903,7 @@ const FOSSIL_OPTIONS: OptionRow[] = [
   {
     name: "display_zero",
     type: "boolean",
-    default: "true",
+    default: "false",
     description: "Show even when the state is 0 / unavailable.",
   },
   {
@@ -860,8 +927,9 @@ const FOSSIL_OPTIONS: OptionRow[] = [
   {
     name: "calculate_flow_rate",
     type: "boolean | number",
-    default: "false",
-    description: "Use the flow formula or a fixed dot interval (seconds).",
+    default: "true",
+    description:
+      "Unset or true uses the calculated flow rate, false a fixed pace, a number a fixed dot interval (seconds).",
   },
 ];
 
@@ -940,8 +1008,9 @@ const POWER_OUTAGE_OPTIONS: OptionRow[] = [
   {
     name: "calculate_flow_rate",
     type: "boolean | number",
-    default: "false",
-    description: "Use the formula or a fixed dot interval (seconds).",
+    default: "true",
+    description:
+      "Unset or true uses the calculated flow rate, false a fixed pace, a number a fixed dot interval (seconds).",
   },
 ];
 
@@ -1230,7 +1299,7 @@ entities:
       entity: binary_sensor.grid_status`,
           }}
         >
-          <OptionList rows={GRID_OPTIONS} />
+          <OptionList rows={[...GRID_OPTIONS, ...UNIT_OPTIONS(v)]} />
         </CategorySection>
 
         <CategorySection
@@ -1250,7 +1319,7 @@ entities:
     display_zero: true`,
           }}
         >
-          <OptionList rows={SOLAR_OPTIONS} />
+          <OptionList rows={[...SOLAR_OPTIONS, ...UNIT_OPTIONS(v)]} />
         </CategorySection>
 
         <CategorySection
@@ -1271,7 +1340,7 @@ entities:
     color_circle: color_dynamically`,
           }}
         >
-          <OptionList rows={BATTERY_OPTIONS} />
+          <OptionList rows={[...BATTERY_OPTIONS, ...UNIT_OPTIONS(v)]} />
         </CategorySection>
 
         <CategorySection
@@ -1516,19 +1585,29 @@ entities:
           title="Flow formulas"
           icon={Calculator}
           accent="violet"
-          description="The card animates dots along the lines. There are two formulas controlling how fast they travel."
+          description={
+            cardKey === "energy"
+              ? "The card animates dots along the lines. It always uses the relative formula: period totals in Wh don't fit an absolute power scale, so flow_rate_model, use_new_flow_rate_model, min_expected_power and max_expected_power have no effect."
+              : "The card animates dots along the lines. flow_rate_model picks one of three formulas for how fast they travel. With the defaults, a 1000 W line takes 3.38 s per dot with duration and 1.33 s with speed; relative depends on the line's share of all lines."
+          }
         >
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className={cardKey === "energy" ? "grid gap-4" : "grid gap-4 md:grid-cols-3"}>
             <div className="bg-card rounded-lg border p-4">
               <div className="mb-2 flex items-center gap-2">
                 <span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide">
-                  Default
+                  {cardKey === "energy" ? "Always used" : "Optional"}
                 </span>
-                <h3 className="text-foreground text-sm font-semibold">Legacy (relative)</h3>
+                <h3 className="text-foreground text-sm font-semibold">Relative</h3>
               </div>
               <p className="text-muted-foreground mb-3 text-xs leading-relaxed">
                 Each line's flow rate is calculated relative to all the others. When one line
                 dominates, dots accelerate to keep a roughly constant dot count.
+                {cardKey === "energy" ? null : (
+                  <>
+                    {" "}
+                    Set <code>flow_rate_model: relative</code> to use it.
+                  </>
+                )}
               </p>
               <CodeBlock
                 language="js"
@@ -1539,24 +1618,50 @@ entities:
 // totalLines = sum of all line values`}
               />
             </div>
-            <div className="bg-card rounded-lg border p-4">
-              <div className="mb-2 flex items-center gap-2">
-                <span className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide">
-                  Recommended
-                </span>
-                <h3 className="text-foreground text-sm font-semibold">New (absolute)</h3>
-              </div>
-              <p className="text-muted-foreground mb-3 text-xs leading-relaxed">
-                Speed maps directly to the value. A constant value always animates at the same speed
-                regardless of other lines. Set <code>use_new_flow_rate_model: true</code> and tune
-                the <code>min/max_expected_power</code> + <code>min/max_flow_rate</code> pairs.
-              </p>
-              <CodeBlock
-                language="js"
-                code={`if (value > maxIn) return maxOut;
-return ((value - minIn) * (maxOut - minOut)) / (maxIn - minIn) + minOut;`}
-              />
-            </div>
+            {cardKey === "energy" ? null : (
+              <>
+                <div className="bg-card rounded-lg border p-4">
+                  <div className="mb-2 flex items-center gap-2">
+                    <span className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide">
+                      Default
+                    </span>
+                    <h3 className="text-foreground text-sm font-semibold">Duration</h3>
+                  </div>
+                  <p className="text-muted-foreground mb-3 text-xs leading-relaxed">
+                    Time per dot shrinks linearly with the value, regardless of other lines. Tune
+                    the <code>min/max_expected_power</code> + <code>min/max_flow_rate</code> pairs.
+                    Below <code>min_expected_power</code> dots move slower than{" "}
+                    <code>max_flow_rate</code>.
+                  </p>
+                  <CodeBlock
+                    language="js"
+                    code={`if (value > maxIn) return minOut;
+return ((value - minIn) * (minOut - maxOut)) / (maxIn - minIn) + maxOut;
+// minIn/maxIn = min/max_expected_power
+// minOut/maxOut = min/max_flow_rate`}
+                  />
+                </div>
+                <div className="bg-card rounded-lg border p-4">
+                  <div className="mb-2 flex items-center gap-2">
+                    <span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide">
+                      Optional
+                    </span>
+                    <h3 className="text-foreground text-sm font-semibold">Speed</h3>
+                  </div>
+                  <p className="text-muted-foreground mb-3 text-xs leading-relaxed">
+                    Dot speed grows linearly with the value, so twice the power looks about twice as
+                    fast; mid-range values move faster than with duration. Set{" "}
+                    <code>flow_rate_model: speed</code> to use it.
+                  </p>
+                  <CodeBlock
+                    language="js"
+                    code={`progress = clamp((value - minIn) / (maxIn - minIn), 0, 1);
+speed = 1 / maxOut + progress * (1 / minOut - 1 / maxOut);
+return 1 / speed;`}
+                  />
+                </div>
+              </>
+            )}
           </div>
         </CategorySection>
 

@@ -7,6 +7,7 @@ import {
 } from "@flixlix-cards/shared/states/utils/energy-period";
 import { getEnergyEntityState } from "@flixlix-cards/shared/utils/get-energy-entity-state";
 import { registerCustomCard } from "@flixlix-cards/shared/utils/register-custom-card";
+import { cardShouldUpdate } from "@flixlix-cards/shared/utils/relevant-change";
 import {
   type ActionConfig,
   type HomeAssistant,
@@ -23,7 +24,13 @@ import {
   type EnergyBreakdownEntityConfig,
   type ResolvedSegment,
 } from "./types";
-import { describeDonutSegment, formatValue, resolveSegments } from "./utils";
+import {
+  describeDonutSegment,
+  energyInUnit,
+  formatValue,
+  getEntityUnit,
+  resolveSegments,
+} from "./utils";
 
 registerCustomCard({
   type: "energy-breakdown-card",
@@ -79,7 +86,9 @@ export class EnergyBreakdownCard extends LitElement implements LovelaceCard {
   }
 
   public setConfig(config: EnergyBreakdownCardConfig): void {
-    if (!config) throw new Error("Invalid configuration");
+    if (!config) {
+      throw new Error("Invalid configuration");
+    }
     if (!Array.isArray(config.entities)) {
       throw new Error("`entities` must be a list");
     }
@@ -126,11 +135,19 @@ export class EnergyBreakdownCard extends LitElement implements LovelaceCard {
     super.disconnectedCallback();
   }
 
+  protected shouldUpdate(changed: PropertyValues<this>): boolean {
+    if (!this._config) {
+      return true;
+    }
+    this._ensureEnergyPeriodListener();
+    const entityIds = this._config.entities.map(({ entity }) => entity);
+    return cardShouldUpdate(changed, this.hass, entityIds);
+  }
+
   protected willUpdate(changed: PropertyValues): void {
     super.willUpdate?.(changed);
-    if (!this._config || !this.hass) return;
-    if (changed.has("hass") || changed.has("_config")) {
-      this._ensureEnergyPeriodListener();
+    if (!this._config || !this.hass) {
+      return;
     }
     if (changed.has("_config")) {
       void this._refreshEnergyData();
@@ -153,8 +170,12 @@ export class EnergyBreakdownCard extends LitElement implements LovelaceCard {
   }
 
   private _ensureEnergyPeriodListener(): void {
-    if (!this._isEnergyMode()) return;
-    if (this._unsubEnergyPeriodListener || !this.hass) return;
+    if (!this._isEnergyMode()) {
+      return;
+    }
+    if (this._unsubEnergyPeriodListener || !this.hass) {
+      return;
+    }
     const unsub = watchGlobalEnergyPeriodChanges(
       this.hass,
       () => this._scheduleRefreshEnergyData(),
@@ -167,7 +188,9 @@ export class EnergyBreakdownCard extends LitElement implements LovelaceCard {
   }
 
   private _scheduleRefreshEnergyData(): void {
-    if (this._energyRefreshPending) return;
+    if (this._energyRefreshPending) {
+      return;
+    }
     this._energyRefreshPending = true;
     queueMicrotask(() => {
       this._energyRefreshPending = false;
@@ -190,7 +213,9 @@ export class EnergyBreakdownCard extends LitElement implements LovelaceCard {
         /* swallow — about to retry */
       }
     }
-    if (generation !== this._energyRefreshGeneration) return;
+    if (generation !== this._energyRefreshGeneration) {
+      return;
+    }
     this._energyRefreshInFlight = this._doRefreshEnergyData();
     try {
       await this._energyRefreshInFlight;
@@ -200,7 +225,9 @@ export class EnergyBreakdownCard extends LitElement implements LovelaceCard {
   }
 
   private async _doRefreshEnergyData(): Promise<void> {
-    if (!this.hass || !this._config) return;
+    if (!this.hass || !this._config) {
+      return;
+    }
     const window = getGlobalEnergyPeriodWindow(this.hass, this._energyCollectionKey);
     this._energyWindow = window;
     const statisticIds = (this._config.entities ?? [])
@@ -223,17 +250,23 @@ export class EnergyBreakdownCard extends LitElement implements LovelaceCard {
   }
 
   private _addOutsideListener(): void {
-    if (this._outsideClickListener) return;
+    if (this._outsideClickListener) {
+      return;
+    }
     this._outsideClickListener = (event: PointerEvent) => {
       const path = event.composedPath();
-      if (path.includes(this)) return;
+      if (path.includes(this)) {
+        return;
+      }
       this._closeTooltip();
     };
     window.addEventListener("pointerdown", this._outsideClickListener, { passive: true });
   }
 
   private _removeOutsideListener(): void {
-    if (!this._outsideClickListener) return;
+    if (!this._outsideClickListener) {
+      return;
+    }
     window.removeEventListener("pointerdown", this._outsideClickListener);
     this._outsideClickListener = undefined;
   }
@@ -258,18 +291,26 @@ export class EnergyBreakdownCard extends LitElement implements LovelaceCard {
   }
 
   private _onSegmentPointerEnter(index: number, event: PointerEvent): void {
-    if (this._isCoarsePointer || event.pointerType === "touch") return;
+    if (this._isCoarsePointer || event.pointerType === "touch") {
+      return;
+    }
     this._openTooltipFor(index, event);
   }
 
   private _onSegmentPointerMove(index: number, event: PointerEvent): void {
-    if (this._activeIndex !== index) return;
-    if (event.pointerType === "touch") return;
+    if (this._activeIndex !== index) {
+      return;
+    }
+    if (event.pointerType === "touch") {
+      return;
+    }
     this._openTooltipFor(index, event);
   }
 
   private _onSegmentPointerLeave(event: PointerEvent): void {
-    if (this._isCoarsePointer || event.pointerType === "touch") return;
+    if (this._isCoarsePointer || event.pointerType === "touch") {
+      return;
+    }
     this._closeTooltip();
   }
 
@@ -290,10 +331,12 @@ export class EnergyBreakdownCard extends LitElement implements LovelaceCard {
   }
 
   private _invokeAction(segment: ResolvedSegment, action: "tap" | "hold" | "double_tap"): void {
-    if (!segment.entity || !this.hass) return;
+    if (!segment.entity || !this.hass) {
+      return;
+    }
     const cfg = segment.config;
     const tap_action: ActionConfig | undefined = cfg?.tap_action ?? { action: "more-info" };
-    handleAction(
+    void handleAction(
       this,
       this.hass,
       {
@@ -307,7 +350,9 @@ export class EnergyBreakdownCard extends LitElement implements LovelaceCard {
   }
 
   protected render(): TemplateResult | typeof nothing {
-    if (!this._config || !this.hass) return nothing;
+    if (!this._config || !this.hass) {
+      return nothing;
+    }
     if (this._isEnergyMode() && !this._energyDataLoaded) {
       return html`<ha-card .header=${this._config.title}>
         <div class="card-content empty">
@@ -318,7 +363,11 @@ export class EnergyBreakdownCard extends LitElement implements LovelaceCard {
     const useEnergy = this._isEnergyMode();
     const resolveValue = useEnergy
       ? (entity: string) =>
-          getEnergyEntityState(this.hass, this._energyGrowthMap, true, entity) ?? 0
+          energyInUnit(
+            getEnergyEntityState(this.hass, this._energyGrowthMap, true, entity),
+            this._config?.entities.find((e) => e.entity === entity)?.unit_of_measurement ??
+              getEntityUnit(this.hass, entity)
+          )
       : undefined;
     const { segments, total } = resolveSegments(this.hass, this._config, resolveValue);
     const chartType = this._config.chart_type ?? "donut";
@@ -344,11 +393,13 @@ export class EnergyBreakdownCard extends LitElement implements LovelaceCard {
             })}
           >
             <div class="chart-host" @pointerdown=${this._onChartHostPointerDown}>
-              ${hasData
-                ? chartType === "donut"
-                  ? this._renderDonut(segments, total)
-                  : this._renderBar(segments, total)
-                : this._renderEmpty()}
+              ${
+                hasData
+                  ? chartType === "donut"
+                    ? this._renderDonut(segments, total)
+                    : this._renderBar(segments, total)
+                  : this._renderEmpty()
+              }
               ${this._renderTooltip(segments)}
             </div>
             ${showLegend && hasData ? this._renderLegend(segments) : nothing}
@@ -358,12 +409,12 @@ export class EnergyBreakdownCard extends LitElement implements LovelaceCard {
     `;
   }
 
-  private _onChartHostPointerDown(event: PointerEvent): void {
-    const target = event.target as HTMLElement | null;
-    if (!target?.closest("[data-segment-index]")) {
+  private _onChartHostPointerDown = (event: PointerEvent): void => {
+    const target = event.target;
+    if (!(target instanceof Element && target.closest("[data-segment-index]"))) {
       this._closeTooltip();
     }
-  }
+  };
 
   private _renderEmpty(): TemplateResult {
     return html`<div class="empty">
@@ -388,7 +439,9 @@ export class EnergyBreakdownCard extends LitElement implements LovelaceCard {
     const showGaps = segments.length > 1;
     segments.forEach((segment, index) => {
       const sweep = (segment.value / total) * 360;
-      if (sweep <= 0) return;
+      if (sweep <= 0) {
+        return;
+      }
       const gap = showGaps ? Math.min(SEGMENT_GAP_DEG, sweep / 2) : 0;
       const start = cursor + gap / 2;
       const end = cursor + sweep - gap / 2;
@@ -402,7 +455,9 @@ export class EnergyBreakdownCard extends LitElement implements LovelaceCard {
         endAngle: end,
         cornerRadius,
       });
-      if (!d) return;
+      if (!d) {
+        return;
+      }
       const isActive = this._activeIndex === index;
       paths.push(svg`
         <path
@@ -450,11 +505,13 @@ export class EnergyBreakdownCard extends LitElement implements LovelaceCard {
           />
           ${paths}
         </svg>
-        ${centerLabel
-          ? html`<div class="center-label">
-              <div class="center-value">${centerLabel}</div>
-            </div>`
-          : nothing}
+        ${
+          centerLabel
+            ? html`<div class="center-label">
+                <div class="center-value">${centerLabel}</div>
+              </div>`
+            : nothing
+        }
       </div>
     `;
   }
@@ -470,14 +527,16 @@ export class EnergyBreakdownCard extends LitElement implements LovelaceCard {
 
     return html`
       <div class="bar-wrapper">
-        ${showTotal
-          ? html`<div class="bar-header">
-              <div class="bar-header-value">
-                ${headerLabel}
-                <small>Total</small>
-              </div>
-            </div>`
-          : nothing}
+        ${
+          showTotal
+            ? html`<div class="bar-header">
+                <div class="bar-header-value">
+                  ${headerLabel}
+                  <small>Total</small>
+                </div>
+              </div>`
+            : nothing
+        }
         <div
           class="bar-track"
           style=${styleMap({
@@ -489,7 +548,9 @@ export class EnergyBreakdownCard extends LitElement implements LovelaceCard {
         >
           ${segments.map((segment, index) => {
             const width = total > 0 ? (segment.value / total) * 100 : 0;
-            if (width <= 0) return nothing;
+            if (width <= 0) {
+              return nothing;
+            }
             const isActive = this._activeIndex === index;
             return html`<button
               class=${classMap({ "bar-segment": true, "segment-active": isActive })}
@@ -513,10 +574,12 @@ export class EnergyBreakdownCard extends LitElement implements LovelaceCard {
   }
 
   private _onSegmentKeydown(index: number, event: KeyboardEvent, segment: ResolvedSegment): void {
-    if (event.key !== "Enter" && event.key !== " ") return;
+    if (event.key !== "Enter" && event.key !== " ") {
+      return;
+    }
     event.preventDefault();
-    const target = event.currentTarget as HTMLElement | null;
-    if (target) {
+    const target = event.currentTarget;
+    if (target instanceof Element) {
       const rect = target.getBoundingClientRect();
       this._openTooltipFor(index, {
         clientX: rect.left + rect.width / 2,
@@ -551,18 +614,24 @@ export class EnergyBreakdownCard extends LitElement implements LovelaceCard {
               @keydown=${(e: KeyboardEvent) => this._onSegmentKeydown(index, e, segment)}
             >
               <span class="legend-swatch" style=${styleMap({ background: segment.color })}></span>
-              ${showIcons && segment.icon
-                ? html`<ha-icon class="legend-icon" .icon=${segment.icon}></ha-icon>`
-                : nothing}
+              ${
+                showIcons && segment.icon
+                  ? html`<ha-icon class="legend-icon" .icon=${segment.icon}></ha-icon>`
+                  : nothing
+              }
               <span class="legend-name">${segment.name}</span>
-              ${showValue || showPercent
-                ? html`<span class="legend-value">
-                    ${showValue ? html`<span class="legend-amount">${valueText}</span>` : nothing}
-                    ${showPercent
-                      ? html`<span class="legend-percent">${percentText}</span>`
-                      : nothing}
-                  </span>`
-                : nothing}
+              ${
+                showValue || showPercent
+                  ? html`<span class="legend-value">
+                      ${showValue ? html`<span class="legend-amount">${valueText}</span>` : nothing}
+                      ${
+                        showPercent
+                          ? html`<span class="legend-percent">${percentText}</span>`
+                          : nothing
+                      }
+                    </span>`
+                  : nothing
+              }
             </li>
           `;
         })}
@@ -571,10 +640,16 @@ export class EnergyBreakdownCard extends LitElement implements LovelaceCard {
   }
 
   private _renderTooltip(segments: ResolvedSegment[]): TemplateResult | typeof nothing {
-    if (this._config?.show_tooltip === false) return nothing;
-    if (this._activeIndex === null || !this._tooltipPos) return nothing;
+    if (this._config?.show_tooltip === false) {
+      return nothing;
+    }
+    if (this._activeIndex === null || !this._tooltipPos) {
+      return nothing;
+    }
     const segment = segments[this._activeIndex];
-    if (!segment) return nothing;
+    if (!segment) {
+      return nothing;
+    }
     const host = this._chartHost;
     const hostWidth = host?.clientWidth ?? 0;
     const hostHeight = host?.clientHeight ?? 0;

@@ -36,6 +36,10 @@
     "display_zero_tolerance": "Nulltoleranz",
     "double_tap_action": "Aktion beim Doppeltippen",
     "entity_generator": "Generator",
+    "flow_rate_model": "Fluss-Modell",
+    "flow_rate_model_duration": "Dauer (Standard)",
+    "flow_rate_model_relative": "Relativ",
+    "flow_rate_model_speed": "Geschwindigkeit",
     "fossil_fuel_percentage": "Fossile Brennstoffe",
     "grey_color": "Graue Farbe",
     "grey_out": "Ausgrauen",
@@ -84,7 +88,6 @@
     "transparency": "Transparenz",
     "unit_of_measurement": "Einheit",
     "unit_white_space": "Weißraum für Einheit",
-    "use_metadata": "Metadaten verwenden",
-    "use_new_flow_rate_model": "Neues Fluss-Modell verwenden"
+    "use_metadata": "Metadaten verwenden"
   }
 }

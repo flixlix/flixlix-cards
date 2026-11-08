@@ -5,6 +5,7 @@ import {
   getBaseMainConfigSchema,
   getEntityCombinedSelectionSchema,
   getEntitySeparatedSelectionSchema,
+  unitSchema,
 } from "./_schema-base";
 
 const mainSchema = {
@@ -33,6 +34,7 @@ const mainSchema = {
       label: "Use Metadata",
       selector: { boolean: {} },
     },
+    ...unitSchema,
   ],
 };
 

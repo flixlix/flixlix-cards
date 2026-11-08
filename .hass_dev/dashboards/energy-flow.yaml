@@ -1,0 +1,59 @@
+# Energy Flow Card Plus playground. The energy meters only have imported history (see
+# e2e/src/energy-history.ts): switch the period in the date selection to see other totals.
+title: Energy Flow
+views:
+  - title: Energy Flow
+    path: energy-flow
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Period
+            icon: mdi:calendar
+          - type: energy-date-selection
+          - type: custom:energy-period-selector-plus
+            card_background: true
+            compare_button_type: icon
+            period_buttons: [day, week, month, year, custom]
+          - type: custom:energy-flow-card-plus
+            title: Energy flow
+            clickable_entities: true
+            entities:
+              grid:
+                entity:
+                  consumption: sensor.grid_import_energy
+                  production: sensor.grid_export_energy
+              solar:
+                entity: sensor.solar_energy
+              battery:
+                entity:
+                  consumption: sensor.battery_discharge_energy
+                  production: sensor.battery_charge_energy
+              individual:
+                - entity: sensor.ev_charger_energy
+                  name: EV
+                  icon: mdi:car-electric
+                - entity: sensor.heat_pump_energy
+                  name: Heat pump
+                  icon: mdi:heat-pump
+      - type: grid
+        cards:
+          - type: heading
+            heading: Compare
+            icon: mdi:compare
+          - type: custom:energy-breakdown-card
+            title: Devices
+            chart_type: donut
+            energy_date_selection: true
+            entities:
+              - entity: sensor.ev_charger_energy
+                name: EV
+              - entity: sensor.heat_pump_energy
+                name: Heat pump
+              - entity: sensor.washing_machine_energy
+                name: Washer
+          - type: energy-distribution
+            title: Home Assistant energy distribution
+            link_dashboard: false
