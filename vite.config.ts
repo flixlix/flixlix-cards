@@ -106,6 +106,12 @@ export default defineConfig({
         rules: { "flixlix/no-unsupported-runtime-apis": "error" },
       },
       {
+        // Cards watch their width through the shared WidthController, which owns the observer.
+        files: ["packages/flixlix-cards/*/src/**"],
+        excludeFiles: ["**/*.test.ts"],
+        rules: { "flixlix/no-card-resize-observer": "error" },
+      },
+      {
         files: ["apps/web/**", "packages/ui/**"],
         plugins: ["react", "jsx-a11y"],
         rules: { "unicorn/filename-case": "off", "react/react-in-jsx-scope": "off" },

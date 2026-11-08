@@ -1,6 +1,7 @@
 import { definePlugin } from "vite-plus/lint/plugins";
 import cognitiveComplexity from "./rules/cognitive-complexity.js";
 import noCamelcaseEventBinding from "./rules/no-camelcase-event-binding.js";
+import noCardResizeObserver from "./rules/no-card-resize-observer.js";
 import noCardTypeSniffing from "./rules/no-card-type-sniffing.js";
 import noIdentityArithmetic from "./rules/no-identity-arithmetic.js";
 import noIndexFallback from "./rules/no-index-fallback.js";
@@ -18,6 +19,7 @@ export default definePlugin({
   rules: {
     "cognitive-complexity": cognitiveComplexity,
     "no-camelcase-event-binding": noCamelcaseEventBinding,
+    "no-card-resize-observer": noCardResizeObserver,
     "no-card-type-sniffing": noCardTypeSniffing,
     "no-identity-arithmetic": noIdentityArithmetic,
     "no-index-fallback": noIndexFallback,

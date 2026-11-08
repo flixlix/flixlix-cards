@@ -1,5 +1,12 @@
 # home-flow-card
 
+## 0.1.2
+
+### Patch Changes
+
+- Labels have their full size as soon as the dashboard opens. Home Assistant takes cards out and puts them back while a dashboard loads, and the card stopped watching its width on the way: its labels stayed small until a sensor changed.
+- Units only slide when their number changes, not when the dashboard opens.
+
 ## 0.1.1
 
 ### Patch Changes

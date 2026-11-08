@@ -28,6 +28,7 @@ import { registerCustomCard } from "@flixlix-cards/shared/utils/register-custom-
 import { cardShouldUpdate } from "@flixlix-cards/shared/utils/relevant-change";
 import { SecondaryTemplates } from "@flixlix-cards/shared/utils/secondary-templates";
 import { coerceNumber } from "@flixlix-cards/shared/utils/utils";
+import { WidthController } from "@flixlix-cards/shared/utils/width-controller";
 import { type HomeAssistant, type LovelaceCardEditor } from "custom-card-helpers";
 import { html, LitElement, nothing, type PropertyValues, type TemplateResult } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
@@ -47,7 +48,7 @@ const isPageHidden = () => typeof document !== "undefined" && document.visibilit
 export class EnergyFlowCardPlus extends LitElement {
   @property({ attribute: false }) public hass!: HomeAssistant;
   @state() private _config!: EnergyFlowCardPlusConfig;
-  @state() private _width = 0;
+  private readonly _width = new WidthController(this, "#energy-flow-card-plus");
   @state() private _pageHidden = isPageHidden();
   @state() private _energyWindow: EnergyPeriodWindow | null = null;
   @state() private _energyGrowthMap: Record<string, number> = {};
@@ -61,8 +62,6 @@ export class EnergyFlowCardPlus extends LitElement {
   private _energyCollectionKey?: string;
   private _cardState?: CardState;
   private _appliedCardState?: CardState;
-  private _resizeObserver?: ResizeObserver;
-  private _observedContent?: HTMLElement;
   private readonly _actions = new EntityActions(this, () => ({
     hass: this.hass,
     clickableEntities: this._config.clickable_entities,
@@ -112,9 +111,6 @@ export class EnergyFlowCardPlus extends LitElement {
   }
 
   public disconnectedCallback() {
-    this._resizeObserver?.disconnect();
-    this._resizeObserver = undefined;
-    this._observedContent = undefined;
     if (typeof document !== "undefined") {
       document.removeEventListener("visibilitychange", this._handleVisibilityChange);
     }
@@ -165,7 +161,7 @@ export class EnergyFlowCardPlus extends LitElement {
         this._fossilEnergyData.fossilEnergyConsumption
       ),
       templates: this._templates.templates(this._config),
-      width: this._width,
+      width: this._width.width,
       pageHidden: this._pageHidden,
     });
   }
@@ -201,7 +197,6 @@ export class EnergyFlowCardPlus extends LitElement {
     if (!this._config || !this.hass) {
       return;
     }
-    this._observeWidth();
     const cardState = this._cardState;
     if (cardState?.status === "ready" && cardState !== this._appliedCardState) {
       applyCardState(this, cardState);
@@ -336,22 +331,6 @@ export class EnergyFlowCardPlus extends LitElement {
     if (unsub) {
       this._unsubFossilData = unsub;
     }
-  }
-
-  private _observeWidth() {
-    const content = this.shadowRoot?.querySelector<HTMLElement>("#energy-flow-card-plus");
-    if (!content || content === this._observedContent) {
-      return;
-    }
-    this._observedContent = content;
-    this._resizeObserver?.disconnect();
-    this._resizeObserver ??= new ResizeObserver(([entry]) => {
-      if (entry) {
-        this._width = Math.round(entry.target.getBoundingClientRect().width);
-      }
-    });
-    this._resizeObserver.observe(content);
-    this._width = Math.round(content.getBoundingClientRect().width);
   }
 
   static styles = styles;
