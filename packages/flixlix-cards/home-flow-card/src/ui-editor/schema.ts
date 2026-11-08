@@ -105,14 +105,7 @@ export const NODE_SCHEMAS = {
     ),
   ],
   generator: [entity, name],
-  car: [
-    entity,
-    { name: "state_of_charge", selector: { entity: {} } },
-    name,
-    // conditions as in a card's visibility tab, written in YAML
-    { name: "visibility", selector: { object: {} } },
-    { name: "idle", selector: { object: {} } },
-  ],
+  car: [entity, { name: "state_of_charge", selector: { entity: {} } }, name],
   home: [
     entity,
     name,
@@ -127,6 +120,15 @@ export const NODE_SCHEMAS = {
     ),
   ],
 } as const;
+
+/**
+ * The car's conditions as YAML, should Home Assistant's own conditions editor not be there: it
+ * is defined while a dashboard is being edited, but it is not a public API.
+ */
+export const CAR_CONDITIONS_AS_YAML = [
+  { name: "visibility", selector: { object: {} } },
+  { name: "idle", selector: { object: {} } },
+] as const;
 
 export const generalSchema = [{ name: "title", selector: { text: {} } }] as const;
 

@@ -215,7 +215,7 @@ describe("editor", () => {
     editor.remove();
   });
 
-  test("the car's page sets its power, state of charge and name, at the top level", async () => {
+  test("without Home Assistant's conditions editor, the car's conditions are YAML fields", async () => {
     const { editor, open, fields, change, changes } = await mountEditor();
     await open("car");
 
@@ -226,6 +226,39 @@ describe("editor", () => {
         type: "custom:home-flow-card",
         car: { entity: "sensor.car_power", state_of_charge: "sensor.car_soc" },
       },
+    ]);
+    editor.remove();
+  });
+
+  test("with Home Assistant's conditions editor, the car's conditions need no YAML", async () => {
+    // stands in for Home Assistant's own, defined while a dashboard is being edited
+    customElements.define(
+      "ha-card-conditions-editor",
+      class extends HTMLElement {
+        conditions: unknown[] = [];
+      }
+    );
+    const home = { condition: "state", entity: "device_tracker.car", state: "home" };
+    const { editor, open, fields, changes } = await mountEditor({
+      car: { entity: "sensor.car_power", idle: [home] },
+    });
+    await open("car");
+    const [visibility, idle] = [
+      ...(editor.shadowRoot?.querySelectorAll("ha-card-conditions-editor") ?? []),
+    ];
+
+    expect(fields()).toEqual(["entity", "state_of_charge", "name"]);
+    expect(Reflect.get(idle ?? {}, "conditions")).toEqual([home]);
+
+    visibility?.dispatchEvent(new CustomEvent("value-changed", { detail: { value: [home] } }));
+    idle?.dispatchEvent(new CustomEvent("value-changed", { detail: { value: [] } }));
+
+    expect(changes).toEqual([
+      {
+        type: "custom:home-flow-card",
+        car: { entity: "sensor.car_power", idle: [home], visibility: [home] },
+      },
+      { type: "custom:home-flow-card", car: { entity: "sensor.car_power" } },
     ]);
     editor.remove();
   });

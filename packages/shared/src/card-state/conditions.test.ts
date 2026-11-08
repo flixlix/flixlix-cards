@@ -13,7 +13,14 @@ const entity = (state: string) => ({
 
 const hass = (states: Record<string, string>, userId = "luca"): HomeAssistant => {
   const partialHass: Partial<HomeAssistant> = {
-    states: Object.fromEntries(Object.entries(states).map(([id, state]) => [id, entity(state)])),
+    states: {
+      ...Object.fromEntries(Object.entries(states).map(([id, state]) => [id, entity(state)])),
+      "person.luca": {
+        ...entity(states["person.luca"] ?? "home"),
+        entity_id: "person.luca",
+        attributes: { user_id: "luca" },
+      },
+    },
     user: {
       id: userId,
       name: userId,
@@ -26,7 +33,11 @@ const hass = (states: Record<string, string>, userId = "luca"): HomeAssistant =>
   return partialHass as HomeAssistant;
 };
 
-const wide = { matchesMedia: (query: string) => query === "(min-width: 768px)" };
+/** A wide screen, on Monday 8 November 2026 at 21:30. */
+const wide = {
+  matchesMedia: (query: string) => query === "(min-width: 768px)",
+  now: () => new Date(2026, 10, 9, 21, 30),
+};
 const met = (conditions: Condition[], states: Record<string, string>) =>
   conditionsMet(conditions, hass(states), wide);
 
@@ -89,5 +100,20 @@ describe("conditions", () => {
         },
       ])
     ).toEqual(["device_tracker.car", "sensor.wallbox", "input_number.min"]);
+  });
+
+  test("time holds within its range, past midnight too, and on its weekdays", () => {
+    expect(met([{ condition: "time", after: "18:00", before: "23:00" }], {})).toBe(true);
+    expect(met([{ condition: "time", after: "22:00", before: "06:00" }], {})).toBe(false);
+    expect(met([{ condition: "time", after: "21:00", before: "06:00" }], {})).toBe(true);
+    expect(met([{ condition: "time", before: "21:30:00" }], {})).toBe(false);
+    expect(met([{ condition: "time", weekdays: ["sat", "sun"] }], {})).toBe(false);
+    expect(met([{ condition: "time", weekdays: ["mon"] }], {})).toBe(true);
+  });
+
+  test("location follows the person of the user looking at the card", () => {
+    const atHome: Condition = { condition: "location", locations: ["home"] };
+    expect(met([atHome], { "person.luca": "home" })).toBe(true);
+    expect(met([atHome], { "person.luca": "work" })).toBe(false);
   });
 });

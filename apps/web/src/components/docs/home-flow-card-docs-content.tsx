@@ -425,11 +425,12 @@ const CARD_OPTIONS: OptionRow[] = [
     type: "list",
     description: (
       <>
-        Conditions, as in a card&apos;s visibility tab (<code>state</code>,{" "}
-        <code>numeric_state</code>, <code>screen</code>, <code>user</code>, <code>and</code>,{" "}
-        <code>or</code>, <code>not</code>): the car shows only while all of them hold, for example
-        while its tracker reads <code>home</code>. While hidden it keeps its room, so the house does
-        not move as the car comes and goes. Without conditions the car always shows.
+        Conditions, as in a card&apos;s visibility tab, and set up with the same editor on the Car
+        page: the car shows only while all of them hold, for example while its tracker reads{" "}
+        <code>home</code>. While hidden it keeps its room, so the house does not move as the car
+        comes and goes. Without conditions the car always shows. Entity state, numeric state,
+        screen, user, time, location, and, or and not are checked; template, sun, zone and device
+        conditions need Home Assistant itself and are ignored.
       </>
     ),
   },

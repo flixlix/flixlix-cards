@@ -25,7 +25,10 @@ const carPower = (hass: HomeAssistant, car: HouseCar): number | null =>
 const carCharge = (hass: HomeAssistant, car: HouseCar): number | null =>
   car.state_of_charge ? getEntityState(hass, car.state_of_charge) : null;
 
-const screen: ConditionContext = { matchesMedia: (query) => matchMedia(query).matches };
+const screen: ConditionContext = {
+  matchesMedia: (query) => matchMedia(query).matches,
+  now: () => new Date(),
+};
 
 /**
  * Hidden unless its `visibility` conditions hold; then idle while its `idle` conditions hold, or
