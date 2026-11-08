@@ -27,6 +27,9 @@ meeting at the inverter. One look tells you where your power comes from and wher
   optional generator appears, wired to the inverter and never to the grid, and its label takes the
   grid's place. A nearly empty battery turns its charge bar yellow, then red, at thresholds you
   choose.
+- **Your car, too.** An optional electric car parks in front of the house, wired to the home's
+  outlet, with its charging power and state of charge on its label. Unplugged it waits faded,
+  without its cable; away, it is not drawn at all, on conditions you choose.
 
 Only what you configure is drawn: solar alone, a battery and the grid, or the whole house.
 Individual devices are not drawn yet; use [Power Flow Card Plus](https://github.com/flixlix/power-flow-card-plus)
@@ -76,6 +79,9 @@ the top level. Options that only change Power Flow Card Plus' circles and lines 
 | `disable_dots`                     | boolean | `false`                   | Keep the wires still: no pulses, only the colour of the power they carry                                                                            |
 | `battery.state_of_charge_severity` | object  | `{ red: 15, yellow: 30 }` | Battery charge bar colours, in %: red below `red`, yellow below `yellow`, green above both                                                          |
 | `generator`                        | object  | —                         | `entity` (and optional `name`) of a generator the inverter switches to during a grid outage; needs `grid.power_outage`                              |
+| `car`                              | object  | —                         | An electric car in front of the house: `entity` (its power, positive while charging), optional `state_of_charge` and `name`                         |
+| `car.visibility`                   | list    | —                         | Show the car only while all of these hold, in the format of a card's visibility tab; it keeps its room while hidden                                 |
+| `car.idle`                         | list    | 0 W                       | Draw the car faded and unplugged while all of these hold; without them, while it draws no power                                                     |
 | `base_decimals`                    | number  | `0`                       | Decimals of values in W                                                                                                                             |
 | `kilo_decimals`                    | number  | `1`                       | Decimals of values in kW                                                                                                                            |
 | `kilo_threshold`                   | number  | `1000`                    | From how many watts a value is shown in kW                                                                                                          |
@@ -115,6 +121,25 @@ battery:
   state_of_charge_severity:
     red: 10
     yellow: 25
+```
+
+```yaml
+type: custom:home-flow-card
+grid:
+  entity: sensor.grid_power
+solar:
+  entity: sensor.solar_power
+car:
+  entity: sensor.wallbox_power
+  state_of_charge: sensor.car_battery_level
+  visibility:
+    - condition: state
+      entity: device_tracker.car
+      state: home
+  idle:
+    - condition: state
+      entity: binary_sensor.car_plugged_in
+      state: "off"
 ```
 
 ## Source and issues

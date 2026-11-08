@@ -4,7 +4,14 @@ import { type ScaledReading, scaledReading } from "./format";
 import { HOME_SOURCE_COLORS } from "./styles";
 import { type ReadyCardState } from "./types";
 
-export type HouseNode = "solar" | "battery" | "grid" | "generator" | "home";
+export type HouseNode = "solar" | "battery" | "grid" | "generator" | "home" | "car";
+
+/** An electric car charging from the home, in W: positive while it charges, negative while it feeds the home. */
+export type CarReading = {
+  power: number | null;
+  unit_of_measurement?: string;
+  decimals?: number;
+};
 
 /**
  * The wire between a node and the inverter the house card draws: every node is wired to the
@@ -99,6 +106,18 @@ const homeWire = (state: ReadyCardState): Wire => ({
   color: HOME_SOURCE_COLORS[state.homeRing.largestSource],
 });
 
+/**
+ * The car hangs off the home's outlet, not the inverter: power "into the inverter" runs from the
+ * car back to the outlet. Its colour is the home's, since the home feeds it.
+ */
+const carWire = (state: ReadyCardState, car: CarReading | undefined): Wire | undefined =>
+  car && {
+    node: "car",
+    power: Math.abs(car.power ?? 0),
+    intoInverter: (car.power ?? 0) < 0,
+    color: HOME_SOURCE_COLORS[state.homeRing.largestSource],
+  };
+
 const isWire = (wire: Wire | undefined): wire is Wire => wire !== undefined;
 
 const intensity = (config: FlowCardPlusConfig, power: number): number => {
@@ -107,15 +126,26 @@ const intensity = (config: FlowCardPlusConfig, power: number): number => {
   return Number.isFinite(share) ? Math.min(Math.max(share, 0), 1) : 0;
 };
 
-/** The wires of the nodes the card shows, in drawing order: solar, battery, grid, generator, home. */
-export const houseWires = (config: FlowCardPlusConfig, state: ReadyCardState): HouseWire[] => {
+/**
+ * The wires of the nodes the card shows, in drawing order: solar, battery, grid, generator, home
+ * and the car, when there is one.
+ */
+export const houseWires = (
+  config: FlowCardPlusConfig,
+  state: ReadyCardState,
+  car?: CarReading
+): HouseWire[] => {
   const { entities } = config;
-  const entityOf: Record<HouseNode, BaseConfigEntity | undefined> = {
+  const entityOf: Record<
+    HouseNode,
+    Pick<BaseConfigEntity, "unit_of_measurement" | "decimals"> | undefined
+  > = {
     solar: entities.solar,
     battery: entities.battery,
     grid: entities.grid,
     generator: undefined,
     home: entities.home,
+    car,
   };
   const wires = [
     solarWire(state),
@@ -123,6 +153,7 @@ export const houseWires = (config: FlowCardPlusConfig, state: ReadyCardState): H
     gridWire(state),
     generatorWire(config, state),
     homeWire(state),
+    carWire(state, car),
   ].filter(isWire);
   const supplied = wires
     .filter((wire) => wire.intoInverter)

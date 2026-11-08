@@ -23,7 +23,7 @@ import { advancedSchema, FIELD_DEFAULTS, generalSchema, NODE_SCHEMAS } from "./s
 
 defineEditorElements();
 
-type Node = keyof HomeFlowNodes | "generator";
+type Node = keyof HomeFlowNodes | "generator" | "car";
 type Page = Node | "advanced";
 
 const NODE_PAGES: { page: Node; icon: string }[] = [
@@ -32,6 +32,7 @@ const NODE_PAGES: { page: Node; icon: string }[] = [
   { page: "battery", icon: "mdi:battery-high" },
   { page: "generator", icon: "mdi:engine" },
   { page: "home", icon: "mdi:home" },
+  { page: "car", icon: "mdi:car-electric" },
 ];
 
 /** The entity ids a node reads: one, or one per direction. */

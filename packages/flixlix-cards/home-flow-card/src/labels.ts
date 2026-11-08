@@ -29,6 +29,11 @@ export type Label = {
   entity: string | undefined;
 };
 
+/** The configured car's name, entity and state of charge, which the card state does not carry. */
+export type CarConfig =
+  | { name?: string; entity: string; charge: number | null; idle: boolean }
+  | undefined;
+
 /** The configured generator's name and entity, which the card state does not carry. */
 export type GeneratorConfig = { name?: string; entity: string } | undefined;
 
@@ -75,6 +80,38 @@ const gridLabel = (
   };
 };
 
+/** An idle car's label: its state of charge as its value, or a dash without one. */
+const idleCarLabel = (car: NonNullable<CarConfig>, language: string): Label => ({
+  node: "car",
+  reading: car.charge === null ? null : { value: car.charge, unit: "%", decimals: 0 },
+  name: car.name ?? translate("card.label.car", language),
+  actions: { tap_action: undefined },
+  entity: car.entity,
+});
+
+/** The car's power, with its state of charge and whether it charges, like the battery's. */
+const carLabel = (
+  wire: HouseWire | undefined,
+  car: CarConfig,
+  language: string
+): Label | undefined => {
+  if (car?.idle) {
+    return idleCarLabel(car, language);
+  }
+  return (
+    wire &&
+    car && {
+      ...idleCarLabel(car, language),
+      reading: wire.reading,
+      status: batteryStatus(
+        wire,
+        { state: car.charge, unit: "%", unit_white_space: true, decimals: 0 },
+        language
+      ),
+    }
+  );
+};
+
 /**
  * One label per drawn wire, in reading order: solar, home, battery, then the grid or the
  * generator. They share their place: the grid's label shows whenever the generator isn't drawn.
@@ -84,7 +121,8 @@ export const houseLabels = (
   wires: HouseWire[],
   generator: GeneratorConfig,
   gridAlert: string | undefined,
-  language: string
+  language: string,
+  car?: CarConfig
 ): Label[] => {
   const { nodes } = state;
   const wireOf = (node: HouseNode) => wires.find((wire) => wire.node === node);
@@ -93,6 +131,7 @@ export const houseLabels = (
   const battery = wireOf("battery");
   const grid = wireOf("grid");
   const generatorWire = wireOf("generator");
+  const carWire = wireOf("car");
   const labels: (Label | undefined)[] = [
     solar && {
       node: "solar",
@@ -125,6 +164,7 @@ export const houseLabels = (
       actions: { tap_action: undefined },
       entity: generator?.entity,
     },
+    carLabel(carWire, car, language),
   ];
   return labels.filter((label): label is Label => label !== undefined);
 };

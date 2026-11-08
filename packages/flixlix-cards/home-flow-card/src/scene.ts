@@ -1,6 +1,7 @@
 import { type HouseNode } from "@flixlix-cards/shared/card-state";
 import { type ChargeLevel } from "@flixlix-cards/shared/utils/severity";
 import { mdiFlash, mdiGeneratorStationary, mdiHome } from "@mdi/js";
+import { CAR_LABEL_AT } from "./car-shape";
 
 /** A point in house space: x along the ridge, y towards the viewer's left, z up. */
 export type Point = readonly [x: number, y: number, z: number];
@@ -277,6 +278,8 @@ export const GRID_FADE_FROM: Point = [GRID_LABEL_X + 1.5, 5.05, 0];
 export const GRID_CABLE_START: Point = [LENGTH + 0.07, INVERTER_Y, 0.02];
 const ON_FRONT = FRONT + 0.07;
 const ON_GABLE = LENGTH + 0.07;
+/** Where the car's wire drops down the front wall, out of sight behind the car. */
+const CAR_WIRE_X = 2.4;
 /** The generator's wire runs parallel to the grid cable, just behind it. */
 const GENERATOR_WIRE_Y = INVERTER.y0 + 0.1;
 
@@ -312,6 +315,12 @@ export const WIRE_ROUTES: Record<HouseNode, Point[]> = {
     [ON_GABLE, GENERATOR_WIRE_Y, 0.02],
     [ON_GABLE, GENERATOR_WIRE_Y, INVERTER_Z],
   ],
+  // the car hangs off the home's outlet: up the front wall from behind the car, then along it
+  car: [
+    [CAR_WIRE_X, ON_FRONT, 0.02],
+    [CAR_WIRE_X, ON_FRONT, INVERTER_Z],
+    [OUTLET.x0, ON_FRONT, INVERTER_Z],
+  ],
 };
 
 /**
@@ -325,6 +334,7 @@ export const DRAW_ORDER: readonly ({ wire: HouseNode } | { part: SceneGroup["nod
   { part: "battery" },
   { wire: "battery" }, // from the battery's visible side into the inverter's back
   { part: "inverter" },
+  { wire: "car" }, // into the outlet's side, from behind the car
   { part: "outlet" },
   { wire: "home" }, // onto the inverter's and the outlet's visible sides
   { wire: "solar" }, // onto the inverter's top, from under the panels
@@ -346,6 +356,8 @@ export const LABEL_ANCHORS: Record<LabelledNode, { at: Point; leader: number }> 
   grid: { at: [GRID_LABEL_X, INVERTER_Y, 0], leader: -32 },
   // above the generator, right of the battery and below its label
   generator: { at: [GENERATOR_X, GENERATOR_Y, GENERATOR.height], leader: -22 },
+  // down from the car's tail, left of the home's label
+  car: { at: CAR_LABEL_AT, leader: 26 },
 };
 
 /** The house's leftmost and rightmost points: its front eave and its gable's back corner. */

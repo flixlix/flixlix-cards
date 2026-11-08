@@ -31,6 +31,14 @@ export const styles = css`
     --house-ground: #eceef1;
     --house-shadow: rgba(60, 65, 80, 0.22);
     --house-leader: #9a9ea6;
+    --house-car-body: #fdfdfd;
+    --house-car-body-shade: #d6d7da;
+    --house-car-shine: #ffffff;
+    --house-car-glass: #a9abaf;
+    --house-car-glass-shade: #86888c;
+    --house-car-rail: #9c9ea2;
+    --house-car-tyre: #8a8c90;
+    --house-car-ground: var(--house-ground);
     display: block;
   }
 
@@ -64,6 +72,14 @@ export const styles = css`
       );
       --house-ground: var(--house-surface);
       --house-leader: var(--secondary-text-color, #727272);
+      /* the car: light paint, a softly tinted glass canopy and plain wheels, quiet next to the house */
+      --house-car-body: color-mix(in srgb, #fff 88%, var(--house-surface));
+      --house-car-body-shade: color-mix(in srgb, #000 12%, var(--house-surface));
+      --house-car-shine: #fff;
+      --house-car-glass: color-mix(in srgb, #000 28%, var(--house-surface));
+      --house-car-glass-shade: color-mix(in srgb, #000 46%, var(--house-surface));
+      --house-car-rail: color-mix(in srgb, #000 30%, var(--house-surface));
+      --house-car-tyre: color-mix(in srgb, #000 45%, var(--house-surface));
     }
 
     /* A dark card needs a stronger tint for the walls to stand off it. */
@@ -75,6 +91,12 @@ export const styles = css`
       );
       --house-panel-seam: color-mix(in srgb, #fff 22%, var(--house-panel));
       --house-shadow: rgba(0, 0, 0, 0.5);
+      --house-car-body: color-mix(in srgb, #fff 40%, var(--house-surface));
+      --house-car-body-shade: color-mix(in srgb, #000 10%, var(--house-surface));
+      --house-car-shine: color-mix(in srgb, #fff 70%, var(--house-surface));
+      --house-car-glass: color-mix(in srgb, #fff 4%, var(--house-surface));
+      --house-car-glass-shade: color-mix(in srgb, #000 18%, var(--house-surface));
+      --house-car-tyre: color-mix(in srgb, #000 14%, var(--house-surface));
     }
   }
 

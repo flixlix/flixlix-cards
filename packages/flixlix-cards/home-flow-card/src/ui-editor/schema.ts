@@ -105,6 +105,14 @@ export const NODE_SCHEMAS = {
     ),
   ],
   generator: [entity, name],
+  car: [
+    entity,
+    { name: "state_of_charge", selector: { entity: {} } },
+    name,
+    // conditions as in a card's visibility tab, written in YAML
+    { name: "visibility", selector: { object: {} } },
+    { name: "idle", selector: { object: {} } },
+  ],
   home: [
     entity,
     name,

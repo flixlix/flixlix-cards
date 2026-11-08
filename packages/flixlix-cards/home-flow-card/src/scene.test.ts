@@ -88,8 +88,9 @@ describe("house scene", () => {
     ).toBe("M0 0L0 1Q0 2 1 2L20 2");
   });
 
-  test("every wire ends at the inverter", () => {
-    const ends = Object.values(WIRE_ROUTES).flatMap((route): Point[] => route.slice(-1));
+  test("every wire but the car's ends at the inverter", () => {
+    const { car: _car, ...toInverter } = WIRE_ROUTES;
+    const ends = Object.values(toInverter).flatMap((route): Point[] => route.slice(-1));
 
     expect(ends).toHaveLength(5);
     for (const [, y, z] of ends) {
@@ -98,5 +99,14 @@ describe("house scene", () => {
       expect(z).toBeGreaterThanOrEqual(INVERTER.z0);
       expect(z).toBeLessThanOrEqual(INVERTER.z1);
     }
+  });
+
+  test("the car's wire ends at the home's outlet, opposite the home's wire", () => {
+    const carEnd = WIRE_ROUTES.car.at(-1);
+    const homeStart = WIRE_ROUTES.home[0];
+
+    expect(carEnd?.[1]).toBe(homeStart?.[1]);
+    expect(carEnd?.[2]).toBe(homeStart?.[2]);
+    expect(carEnd?.[0]).toBeLessThan(homeStart?.[0] ?? 0);
   });
 });

@@ -81,6 +81,7 @@ describe("editor", () => {
       "battery",
       "generator",
       "home",
+      "car",
       "advanced",
     ]);
     editor.remove();
@@ -106,6 +107,7 @@ describe("editor", () => {
       "sensor.import / sensor.export · 250 W · 0 W",
       "sensor.pv · 1,200 W",
       "sensor.battery · -800 W · 55 %",
+      "Not configured",
       "Not configured",
       "Not configured",
       null,
@@ -208,6 +210,21 @@ describe("editor", () => {
         type: "custom:home-flow-card",
         grid: { entity: "sensor.grid" },
         solar: { entity: "sensor.pv" },
+      },
+    ]);
+    editor.remove();
+  });
+
+  test("the car's page sets its power, state of charge and name, at the top level", async () => {
+    const { editor, open, fields, change, changes } = await mountEditor();
+    await open("car");
+
+    expect(fields()).toEqual(["entity", "state_of_charge", "name", "visibility", "idle"]);
+    change({ entity: "sensor.car_power", state_of_charge: "sensor.car_soc" });
+    expect(changes).toEqual([
+      {
+        type: "custom:home-flow-card",
+        car: { entity: "sensor.car_power", state_of_charge: "sensor.car_soc" },
       },
     ]);
     editor.remove();

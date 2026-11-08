@@ -1,3 +1,4 @@
+import { type Condition } from "@flixlix-cards/shared/card-state";
 import { type ConfigEntities, type PowerFlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { type ChargeSeverity } from "@flixlix-cards/shared/utils/severity";
 
@@ -19,6 +20,19 @@ export type HouseBattery = NonNullable<ConfigEntities["battery"]> & {
  */
 export type HouseGenerator = { entity: string; name?: string };
 
+/** An electric car charging from the home's outlet, parked in front of the house. */
+export type HouseCar = {
+  /** Its charging power: positive while it charges, negative while it feeds the home. */
+  entity: string;
+  name?: string;
+  /** Its battery's state of charge, in %. */
+  state_of_charge?: string;
+  /** Shown only while all of these hold, as in a card's visibility tab; always shown without. */
+  visibility?: Condition[];
+  /** Parked and unplugged while all of these hold; without them, while it draws no power. */
+  idle?: Condition[];
+};
+
 /** The card's nodes, configured as in Power Flow Card Plus' `entities`. */
 export type HomeFlowNodes = {
   grid?: ConfigEntities["grid"];
@@ -38,6 +52,8 @@ type CardOptions = WithoutEntities<PowerFlowCardPlusConfig> & {
    * grid's `power_outage` to know when there is one.
    */
   generator?: HouseGenerator;
+  /** Draws a car in front of the house, wired to the home's outlet. */
+  car?: HouseCar;
 };
 
 /** The card's config: Power Flow Card Plus' options, with the nodes at the top level. */
