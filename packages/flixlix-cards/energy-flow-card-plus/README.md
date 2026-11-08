@@ -507,9 +507,12 @@ In contrast to the old flow formula, this formula calculates the flow rate indep
 
 To get this new Flow Formula to work, simply set `use_new_flow_rate_model` in the main configuration to true. You may want to play around with the `max_expected_power`, `min_expected_power`, `max_flow_rate` and `min_flow_rate` to get the speeds that you wish
 
+The dot speed (one over the duration) grows linearly with the value, so twice the power looks about twice as fast. Values outside the expected range use the slowest or fastest speed.
+
 ```js
-if (value > maxIn) return maxOut; // In case power exceeds maximum expected power, use the fastest speed and ignore the rest.
-return ((value - minIn) * (maxOut - minOut)) / (maxIn - minIn) + minOut;
+progress = clamp((value - minIn) / (maxIn - minIn), 0, 1);
+speed = 1 / minOut + progress * (1 / maxOut - 1 / minOut);
+return 1 / speed; // seconds for one dot to travel the line
 
 // value = value of the current line to calculate (eg: grid to home)
 //
