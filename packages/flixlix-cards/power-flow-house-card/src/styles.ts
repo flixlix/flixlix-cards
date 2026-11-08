@@ -61,7 +61,7 @@ export const styles = css`
         var(--house-surface)
       );
       --house-ground: var(--house-surface);
-      --house-leader: color-mix(in srgb, var(--secondary-text-color, #727272) 75%, transparent);
+      --house-leader: var(--secondary-text-color, #727272);
     }
 
     /* A dark card needs a stronger tint for the walls to stand off it. */
@@ -107,6 +107,11 @@ export const styles = css`
     stroke: var(--wire-color);
     stroke-width: 1.2;
     opacity: 0.35;
+  }
+
+  /* Opaque line and dot faded as one, so they do not darken where they overlap. */
+  .leader {
+    opacity: 0.75;
   }
 
   .pulse {

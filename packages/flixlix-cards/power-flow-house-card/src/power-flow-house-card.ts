@@ -47,7 +47,7 @@ import {
   SHADOW,
   type Shape,
   WIRE_ROUTES,
-  WIRES_IN_FRONT,
+  DRAW_ORDER,
 } from "./scene";
 import { styles } from "./styles";
 import { type PowerFlowHouseCardConfig } from "./types";
@@ -370,14 +370,13 @@ export class PowerFlowHouseCard extends LitElement {
       <ellipse cx=${groundX} cy=${groundY + 30} rx="260" ry="150" fill="url(#house-ground)"></ellipse>
       <polygon points=${points(SHADOW)} fill="var(--house-shadow)" filter="url(#house-blur)" opacity="0.55"></polygon>
       ${[houseShell()].map(group)}
-      ${this._wires(
-        wires.filter((wire) => !WIRES_IN_FRONT.has(wire.node)),
-        cardState.animate
-      )}
-      ${parts.map(group)}
-      ${this._wires(
-        wires.filter((wire) => WIRES_IN_FRONT.has(wire.node)),
-        cardState.animate
+      ${DRAW_ORDER.map((layer) =>
+        "wire" in layer
+          ? this._wires(
+              wires.filter((wire) => wire.node === layer.wire),
+              cardState.animate
+            )
+          : parts.filter((part) => part.node === layer.part).map(group)
       )}
     `;
   }
@@ -491,8 +490,10 @@ export class PowerFlowHouseCard extends LitElement {
     const reach = anchor.side === "left" ? 10 - LABEL_WIDTH : LABEL_WIDTH - 10;
     extent.include([x, end + Math.sign(anchor.leader) * height], 4);
     extent.include([x + reach, end], 4);
-    return svg`<path d="M${x} ${y}V${end}" stroke="var(--house-leader)" stroke-width="0.8"></path>
-      <circle cx=${x} cy=${y} r="1.6" fill="var(--house-leader)"></circle>`;
+    return svg`<g class="leader">
+      <path d="M${x} ${y}V${end}" stroke="var(--house-leader)" stroke-width="0.8"></path>
+      <circle cx=${x} cy=${y} r="1.6" fill="var(--house-leader)"></circle>
+    </g>`;
   }
 
   /** A label at the end of its leader, above or below its anchor, running right or left. */

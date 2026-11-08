@@ -205,22 +205,22 @@ const ON_GABLE = LENGTH + 0.07;
 /**
  * Each wire's route from its node to the inverter, along walls and ground. They meet the inverter
  * from four sides: solar from above, the battery from the back, home round the front corner and
- * the grid from below. Wires `WIRES_IN_FRONT` lists end on a fixture's surface and are drawn over
- * the fixtures; the others pass behind a fixture, so they run into it and are drawn under them.
+ * the grid from below. A wire ends on the surface of a fixture it lies in front of and runs into
+ * one it passes behind; `DRAW_ORDER` stacks them to match.
  */
 export const WIRE_ROUTES: Record<HouseNode, Point[]> = {
   // from the panels along the roof, parallel to its ridge, then down the gable: one bend
   solar: [
-    onRoof(PANELS.x1, INVERTER_Y),
+    onRoof(PANELS.x1 - 0.4, INVERTER_Y),
     onRoof(ON_GABLE, INVERTER_Y),
     [ON_GABLE, INVERTER_Y, INVERTER.z1],
   ],
   battery: [
-    [ON_GABLE, 1.8, INVERTER_Z],
+    [ON_GABLE, 2.6, INVERTER_Z],
     [ON_GABLE, INVERTER_Y, INVERTER_Z],
   ],
   home: [
-    [OUTLET.x1, ON_FRONT, INVERTER_Z],
+    [OUTLET_X, ON_FRONT, INVERTER_Z],
     [LENGTH - 0.03, ON_FRONT, INVERTER_Z],
     [ON_GABLE, FRONT - 0.03, INVERTER_Z],
     [ON_GABLE, INVERTER.y1, INVERTER_Z],
@@ -228,8 +228,20 @@ export const WIRE_ROUTES: Record<HouseNode, Point[]> = {
   grid: [[GRID_CABLE_END, INVERTER_Y, 0.02], GRID_CABLE_START, [ON_GABLE, INVERTER_Y, INVERTER_Z]],
 };
 
-/** Wires on the visible side of the fixtures they meet: solar from above, home from the front. */
-export const WIRES_IN_FRONT: ReadonlySet<HouseNode> = new Set(["solar", "home"]);
+/**
+ * Wires and fixtures from back to front, over the walls and roof. Each wire sits over the fixtures
+ * it lies in front of and under those it runs into, as in 3D.
+ */
+export const DRAW_ORDER: readonly ({ wire: HouseNode } | { part: SceneGroup["node"] })[] = [
+  { wire: "grid" }, // up into the inverter from below
+  { part: "battery" },
+  { wire: "battery" }, // from the battery's visible side into the inverter's back
+  { part: "inverter" },
+  { wire: "home" }, // onto the inverter's visible side, from inside the outlet
+  { wire: "solar" }, // onto the inverter's top, from under the panels
+  { part: "outlet" },
+  { part: "solar" },
+];
 
 /**
  * Where each node's label hangs: the leader line starts at `at` and runs `leader` screen units up
