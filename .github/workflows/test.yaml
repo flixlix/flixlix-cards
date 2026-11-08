@@ -37,6 +37,9 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
+      - name: Build cards (fails on syntax older browsers cannot parse)
+        run: pnpm build:cards
+
       - name: Install Chromium for browser tests
         run: pnpm --filter power-flow-card-plus exec playwright install --with-deps chromium
 

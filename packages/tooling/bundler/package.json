@@ -8,7 +8,8 @@
     ".": "./index.js"
   },
   "scripts": {
-    "clean": "rimraf dist node_modules"
+    "clean": "rimraf dist node_modules",
+    "test": "vp test run"
   },
   "dependencies": {
     "@babel/core": "catalog:packages",
@@ -18,9 +19,14 @@
     "@rollup/plugin-json": "catalog:packages",
     "@rollup/plugin-node-resolve": "catalog:packages",
     "@rollup/plugin-terser": "catalog:packages",
+    "acorn": "catalog:packages",
     "@rollup/plugin-typescript": "catalog:packages",
     "rollup-plugin-minify-html-literals": "catalog:packages",
     "rollup-plugin-serve": "catalog:packages"
+  },
+  "devDependencies": {
+    "rollup": "catalog:packages",
+    "vite-plus": "catalog:packages"
   },
   "peerDependencies": {
     "rollup": "catalog:packages",
