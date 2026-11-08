@@ -746,8 +746,9 @@ const UNIT_OPTIONS = (v: Variant): OptionRow[] => [
     default: `${v.unit} / ${v.unitKilo} (dynamic)`,
     description: (
       <>
-        Unit shown after the value. When set, the value is shown as read from the entity, without
-        converting to {v.unitKilo}; useful for non-electrical flows such as <code>L/min</code>.
+        Unit shown after the value. When set, the value is shown in that unit, so{" "}
+        <code>{v.unitKilo}</code> shows <code>1500 {v.unit}</code> as <code>1.5 {v.unitKilo}</code>.
+        Any other unit, such as <code>L/min</code>, shows the value as read from the entity.
       </>
     ),
   },

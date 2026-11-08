@@ -62,6 +62,18 @@ describe("powerReadings", () => {
     expect(readings(solar, { "sensor.solar": ["1.5", "MW"] }).solar.total).toBe(1_500_000);
   });
 
+  test("mW readings are converted to W", () => {
+    const solar = { solar: { entity: "sensor.solar" } };
+
+    expect(readings(solar, { "sensor.solar": ["1500", "mW"] }).solar.total).toBe(1.5);
+  });
+
+  test.each(["m³", "L", "L/min", "°C", "W/m²"])("a reading in %s is not scaled", (unit) => {
+    const individual = { individual: [{ entity: "sensor.device" }] };
+
+    expect(readings(individual, { "sensor.device": ["348.9", unit] }).individuals).toEqual([348.9]);
+  });
+
   test.each(["unavailable", "unknown", "abc"])("a %s state reads as null", (state) => {
     const entities = {
       grid: { entity: "sensor.grid", power_outage: { entity: "" } },

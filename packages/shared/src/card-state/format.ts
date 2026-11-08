@@ -2,6 +2,7 @@ import { type FlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { defaultValues } from "@flixlix-cards/shared/utils/get-default-config";
 import { isNumberValue, nonEmpty, round } from "@flixlix-cards/shared/utils/utils";
 import { formatNumber } from "@flixlix-cards/shared/utils/format-number";
+import { powerUnitFactor } from "@flixlix-cards/shared/states/utils/unit-prefix";
 import { type HomeAssistant } from "custom-card-helpers";
 import { type UnitFamily } from "./types";
 
@@ -12,6 +13,8 @@ type FormatOptions = {
   unitWhiteSpace?: boolean;
   decimals?: number;
   accept_negative?: boolean;
+  /** The value is a reading in W or Wh, so an explicit W/Wh-prefixed `unit` rescales it. */
+  reading?: boolean;
 };
 
 /** Formats a value localized, rounded and scaled to k/M units of the reading's unit family. */
@@ -27,17 +30,33 @@ type Scale = {
   fallbackDecimals: number;
 };
 
-/** The k/M scale a reading is shown in; an explicit unit always keeps the base scale. */
+/** An explicit unit's scale: a reading in kW is divided by 1000, any other value is kept. */
+const explicitScale = (config: FlowCardPlusConfig, unit: string, reading: boolean): Scale => {
+  const divisor = (reading ? powerUnitFactor(unit) : undefined) ?? 1;
+  const decimalsByDivisor: Record<number, number | undefined> = {
+    1: config.base_decimals,
+    1000: config.kilo_decimals,
+    1000000: config.mega_decimals,
+  };
+  return {
+    divisor,
+    unit,
+    decimals: decimalsByDivisor[divisor],
+    fallbackDecimals: divisor === 1 ? 0 : 2,
+  };
+};
+
+/** The k/M scale a reading is shown in, or the explicit unit's scale when one is set. */
 const scaleFor = (
   config: FlowCardPlusConfig,
   baseUnit: string,
   value: number,
-  unit: string | undefined
+  { unit, reading }: FormatOptions
 ): Scale => {
-  const base = { divisor: 1, unit: baseUnit, decimals: config.base_decimals, fallbackDecimals: 0 };
   if (unit !== undefined) {
-    return base;
+    return explicitScale(config, unit, reading === true);
   }
+  const base = { divisor: 1, unit: baseUnit, decimals: config.base_decimals, fallbackDecimals: 0 };
   if (value >= (config.mega_threshold ?? defaultValues.megaThreshold)) {
     return {
       divisor: 1000000,
@@ -62,8 +81,9 @@ const displayValue = (
   config: FlowCardPlusConfig,
   family: UnitFamily,
   value: number | string | null,
-  { unit, unitWhiteSpace, decimals, accept_negative }: FormatOptions
+  options: FormatOptions
 ): string => {
+  const { unit, unitWhiteSpace, decimals, accept_negative } = options;
   const whiteSpace = unitWhiteSpace === false ? "" : `\u2009`;
   const baseUnit = family === "energy" ? "Wh" : "W";
 
@@ -76,7 +96,7 @@ const displayValue = (
   }
 
   const valueInNumber = Number(value);
-  const scale = scaleFor(config, baseUnit, valueInNumber, unit);
+  const scale = scaleFor(config, baseUnit, valueInNumber, options);
   const rounded = round(
     valueInNumber / scale.divisor,
     decimals ?? scale.decimals ?? scale.fallbackDecimals

@@ -363,6 +363,29 @@ export const flowScenarios: FlowScenario[] = [
     },
   },
   {
+    name: "an explicit kW unit shows kW readings in kW",
+    entities: {
+      grid: { entity: "sensor.grid", unit_of_measurement: "kW", decimals: 1 },
+      individual: [{ entity: "sensor.heater", name: "Heater", unit_of_measurement: "kW" }],
+    },
+    states: {
+      "sensor.grid": sensor("1.5", { unit: "kW" }),
+      "sensor.heater": sensor("1.2", { unit: "kW" }),
+    },
+    expect: {
+      text: { ".grid .consumption": "1.5 kW", "span.individual-left-top": "1.2 kW" },
+    },
+  },
+  {
+    name: "a water meter in m³ is not scaled",
+    entities: {
+      grid: { entity: "sensor.grid" },
+      individual: [{ entity: "sensor.water", name: "Water", unit_of_measurement: "m³" }],
+    },
+    states: { "sensor.grid": "100", "sensor.water": sensor("348.9", { unit: "m³" }) },
+    expect: { text: { "span.individual-left-top": "349 m³" } },
+  },
+  {
     name: "grid, solar and battery with their own unit, white space and decimals",
     entities: {
       grid: {

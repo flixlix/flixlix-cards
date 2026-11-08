@@ -705,6 +705,42 @@ describe("display units", () => {
 
     expect(nodes.grid.secondary.text).toBe("2,500L");
   });
+
+  test("a reading with an explicit prefixed unit is shown in that unit", () => {
+    const state = ready(
+      compute({
+        config: config({
+          entities: {
+            grid: { ...gridEntity, unit_of_measurement: "kW" },
+            individual: [{ entity: "sensor.heater", unit_of_measurement: "kW" }],
+          },
+        }),
+        hass: hassWith({ "binary_sensor.outage": "off" }),
+        readings: readings({ grid: { fromGrid: 1500 }, individuals: [1500] }),
+      })
+    );
+
+    expect(state.nodes.grid.display.fromGrid).toBe(`1.5${thinSpace}kW`);
+    expect(state.nodes.individuals[0]?.displayState).toBe(`1.5${thinSpace}kW`);
+  });
+
+  test("an explicit unit on a secondary info keeps the entity's own value", () => {
+    const { nodes } = ready(
+      compute({
+        config: config({
+          entities: {
+            grid: {
+              ...gridEntity,
+              secondary_info: { entity: "sensor.today", unit_of_measurement: "kWh", decimals: 1 },
+            },
+          },
+        }),
+        hass: hassWith({ "sensor.today": "12.5", "binary_sensor.outage": "off" }),
+      })
+    );
+
+    expect(nodes.grid.secondary.text).toBe(`12.5${thinSpace}kWh`);
+  });
 });
 
 describe("zero lines", () => {
