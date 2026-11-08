@@ -1,6 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   BookOpen,
+  CalendarRange,
   ChartPie,
   ChevronRight,
   GitPullRequest,
@@ -64,6 +65,7 @@ const SECTIONS: DocSection[] = [
       { label: "Installation", to: "/energy-flow-card-plus/installation" },
       { label: "Configuration", to: "/energy-flow-card-plus/configuration" },
       { label: "Examples", to: "/energy-flow-card-plus/examples" },
+      { label: "Playground", to: "/energy-flow-card-plus/playground" },
     ],
   },
   {
@@ -75,6 +77,17 @@ const SECTIONS: DocSection[] = [
       { label: "Installation", to: "/energy-breakdown-card/installation" },
       { label: "Configuration", to: "/energy-breakdown-card/configuration" },
       { label: "Examples", to: "/energy-breakdown-card/examples" },
+    ],
+  },
+  {
+    label: "Energy Period Selector Plus",
+    to: "/energy-period-selector-plus",
+    icon: CalendarRange,
+    items: [
+      { label: "Overview", to: "/energy-period-selector-plus" },
+      { label: "Installation", to: "/energy-period-selector-plus/installation" },
+      { label: "Configuration", to: "/energy-period-selector-plus/configuration" },
+      { label: "Examples", to: "/energy-period-selector-plus/examples" },
     ],
   },
   {

@@ -13,7 +13,8 @@
   ],
   "main": "./dist/energy-flow-card-plus.js",
   "exports": {
-    ".": "./dist/energy-flow-card-plus.js"
+    ".": "./dist/energy-flow-card-plus.js",
+    "./source": "./src/energy-flow-card-plus.ts"
   },
   "repository": {
     "type": "git",

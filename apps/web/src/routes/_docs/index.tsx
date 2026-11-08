@@ -1,6 +1,7 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import {
   ArrowRight,
+  CalendarRange,
   ChartPie,
   Compass,
   Github,
@@ -12,7 +13,7 @@ import {
 } from "lucide-react";
 import * as React from "react";
 
-import { HeroFlow } from "@/components/hero-flow";
+import { CardDemo } from "@/components/card-demo";
 import { cn } from "cn";
 import { Button } from "@flixlix-cards/ui/components/button";
 
@@ -40,16 +41,9 @@ const CARDS: CardEntry[] = [
       border: "hover:border-amber-500/40",
     },
     media: (
-      <video
-        key="/videos/power-demo.mp4"
-        src="/videos/power-demo.mp4"
-        autoPlay
-        loop
-        muted
-        playsInline
-        aria-label="Power Flow Card Plus demo"
-        className="mx-auto block h-44 w-full object-contain"
-      />
+      <Thumbnail zoom={0.4}>
+        <CardDemo demo="power" width={420} />
+      </Thumbnail>
     ),
     description: (
       <>
@@ -73,16 +67,9 @@ const CARDS: CardEntry[] = [
       border: "hover:border-sky-500/40",
     },
     media: (
-      <video
-        key="/videos/energy-demo.mp4"
-        src="/videos/energy-demo.mp4"
-        autoPlay
-        loop
-        muted
-        playsInline
-        aria-label="Energy Flow Card Plus demo"
-        className="mx-auto block h-44 w-full object-contain"
-      />
+      <Thumbnail zoom={0.4}>
+        <CardDemo demo="energy" width={420} />
+      </Thumbnail>
     ),
     description: (
       <>
@@ -113,11 +100,9 @@ const CARDS: CardEntry[] = [
       border: "hover:border-emerald-500/40",
     },
     media: (
-      <img
-        src="/images/energy-breakdown-demo.png"
-        alt="Energy Breakdown Card"
-        className="h-full w-full max-w-60 object-contain"
-      />
+      <Thumbnail zoom={0.24}>
+        <CardDemo demo="breakdown" width={420} />
+      </Thumbnail>
     ),
     description: (
       <>
@@ -137,6 +122,40 @@ const CARDS: CardEntry[] = [
         ),
       },
       { id: "hacs", content: "Custom HACS repository (not yet in the default index)" },
+    ],
+  },
+  {
+    to: "/energy-period-selector-plus",
+    title: "Energy Period Selector Plus",
+    icon: CalendarRange,
+    accent: {
+      chip: "bg-rose-500/10 text-rose-600 ring-rose-500/25 dark:text-rose-400",
+      border: "hover:border-rose-500/40",
+    },
+    media: (
+      <Thumbnail zoom={0.28}>
+        <CardDemo demo="period" width={420} />
+      </Thumbnail>
+    ),
+    description: (
+      <>
+        Picks the <strong>period</strong> every energy card on the dashboard shows: day, week,
+        month, year or a custom range, like Home Assistant's energy date picker.
+      </>
+    ),
+    bullets: [
+      { id: "buttons", content: "Period buttons in the order you list them" },
+      { id: "picker", content: "Custom ranges in Home Assistant's own calendar" },
+      { id: "compare", content: "Previous, next, today and compare buttons" },
+      {
+        id: "cards",
+        content: (
+          <>
+            Drives Energy Flow Card Plus and Energy Breakdown Card with{" "}
+            <code>energy_date_selection</code>
+          </>
+        ),
+      },
     ],
   },
   {
@@ -162,6 +181,15 @@ const CARDS: CardEntry[] = [
     ],
   },
 ];
+
+/** A live card, shrunk to fit a card tile; the tile links to its docs, so the card itself is inert. */
+function Thumbnail({ zoom, children }: { zoom: number; children: React.ReactNode }) {
+  return (
+    <div style={{ zoom }} className="pointer-events-none" inert>
+      {children}
+    </div>
+  );
+}
 
 function IndexPage() {
   return (
@@ -204,13 +232,17 @@ function IndexPage() {
             </div>
           </div>
 
-          <HeroFlow className="mx-auto w-full max-w-105 lg:max-w-none" />
+          <CardDemo
+            demo="power"
+            width={400}
+            className="mx-auto w-fit max-w-full rounded-2xl border shadow-sm"
+          />
         </div>
       </section>
 
       <h2 className="mb-1 text-2xl font-semibold tracking-tight">The cards</h2>
       <p className="text-muted-foreground mb-6 text-sm">
-        Four cards, one goal: making your dashboard worth looking at.
+        Five cards, one goal: making your dashboard worth looking at.
       </p>
 
       <div className="grid gap-4 md:grid-cols-2">

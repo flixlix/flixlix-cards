@@ -33,6 +33,8 @@ import {
 } from "@flixlix-cards/ui/components/card";
 import { Checkbox } from "@flixlix-cards/ui/components/checkbox";
 
+import { CardDemo } from "@/components/card-demo";
+
 import { CategorySection } from "./category-section";
 import {
   Callout,
@@ -65,7 +67,7 @@ type Variant = {
   hacsRedirect: string;
   releaseUrl: string;
   basePath: "/power-flow-card-plus" | "/energy-flow-card-plus";
-  previewVideo: string;
+  demo: "power" | "period";
 };
 
 const VARIANTS: Record<CardKey, Variant> = {
@@ -95,7 +97,7 @@ const VARIANTS: Record<CardKey, Variant> = {
       "https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=power-flow-card-plus&category=Dashboard",
     releaseUrl: "https://github.com/flixlix/power-flow-card-plus/releases/latest",
     basePath: "/power-flow-card-plus",
-    previewVideo: "/videos/power-demo.mp4",
+    demo: "power",
   },
   energy: {
     key: "energy",
@@ -118,7 +120,7 @@ const VARIANTS: Record<CardKey, Variant> = {
       "https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=energy-flow-card-plus&category=Dashboard",
     releaseUrl: "https://github.com/flixlix/energy-flow-card-plus/releases/latest",
     basePath: "/energy-flow-card-plus",
-    previewVideo: "/videos/energy-demo.mp4",
+    demo: "period",
   },
 };
 
@@ -148,19 +150,17 @@ export function OverviewPage({ cardKey }: { cardKey: CardKey }) {
         badges={[{ label: "HACS Default" }, { label: "YAML & UI editor" }, { label: v.unitKilo }]}
       />
 
-      <video
-        key={v.previewVideo}
-        controls={false}
-        loop
-        muted
-        playsInline
-        autoPlay
-        aria-label={`${v.title} demo`}
-        className="mx-auto w-full max-w-lg rounded-md"
-      >
-        <source src={v.previewVideo} type="video/mp4" />
-        Your browser does not support the video tag.
-      </video>
+      <CardDemo demo={v.demo} className="mx-auto w-fit max-w-full rounded-xl border" />
+      <p className="text-muted-foreground mt-2 text-center text-sm">
+        The real card, live.{" "}
+        <Link
+          to={`${v.basePath}/playground`}
+          className="text-primary underline-offset-4 hover:underline"
+        >
+          Try it in the playground
+        </Link>
+        .
+      </p>
 
       <Prose className="mt-4">
         <p>
