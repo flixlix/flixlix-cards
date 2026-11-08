@@ -18,7 +18,7 @@ same sensors as [Power Flow Card Plus](https://github.com/flixlix/power-flow-car
 - Numbers roll to their new value when a reading changes (`animate_numbers`)
 - The battery's icon follows its state of charge, as in Power Flow Card Plus; its charge bar turns yellow and red at thresholds you set
 - Under the battery's value: its state of charge and whether it is charging or discharging
-- Power outages on the grid
+- Power outages on the grid, and an optional generator wired to the inverter (never to the grid cable)
 - Greys taken from your theme, in light and dark
 - Visual editor
 
@@ -42,6 +42,7 @@ resource (`/local/home-flow-card.js`, type `module`).
 | `clickable_entities`               | boolean | `false`                   | Tapping a value opens its entity, or runs the node's tap/hold actions                                                                               |
 | `disable_dots`                     | boolean | `false`                   | Keep the wires still: no pulses, only the colour of the power they carry                                                                            |
 | `battery.state_of_charge_severity` | object  | `{ red: 15, yellow: 30 }` | Battery charge bar colours, in %: red below `red`, yellow below `yellow`, green above both                                                          |
+| `generator`                        | object  | —                         | `entity` (and optional `name`) of a generator the inverter switches to during a grid outage; needs `grid.power_outage`                              |
 | `base_decimals`                    | number  | `0`                       | Decimals of values in W                                                                                                                             |
 | `kilo_decimals`                    | number  | `1`                       | Decimals of values in kW                                                                                                                            |
 | `kilo_threshold`                   | number  | `1000`                    | From how many watts a value is shown in kW                                                                                                          |
@@ -75,6 +76,8 @@ grid:
     production: sensor.grid_export_power
   power_outage:
     entity: binary_sensor.grid_outage
+generator:
+  entity: sensor.generator_power
 solar:
   entity: sensor.solar_power
 battery:

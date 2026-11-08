@@ -86,6 +86,11 @@ export const styles = css`
     position: relative;
   }
 
+  /* ha-card's header already spaces the title from the content */
+  .stage.titled {
+    margin-top: -16px;
+  }
+
   svg {
     display: block;
     width: 100%;
@@ -181,7 +186,8 @@ export const styles = css`
     line-height: 1;
   }
 
-  .name {
+  .name,
+  .status {
     display: flex;
     align-items: center;
     gap: 0.35em;
@@ -190,28 +196,18 @@ export const styles = css`
     color: var(--secondary-text-color);
   }
 
+  /* even space above and below, so the status sits between value and name */
+  .status {
+    gap: 0.3em;
+    margin: calc(var(--house-unit, 1px) * 2) 0 calc(var(--house-unit, 1px) * 1.5);
+  }
+
   .state-of-charge {
     color: var(--primary-text-color);
   }
 
-  /* A new direction word slides in; see _batteryState. */
-  .direction {
-    display: inline-block;
-    animation: direction-in 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
-  }
-
-  @keyframes direction-in {
-    from {
-      opacity: 0;
-      transform: translateY(0.5em);
-      filter: blur(2px);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .direction {
-      animation: none;
-    }
+  .status > span:not(.state-of-charge):not(.direction) {
+    opacity: 0.6;
   }
 
   .charging {

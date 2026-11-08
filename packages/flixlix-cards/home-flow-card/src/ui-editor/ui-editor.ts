@@ -23,13 +23,14 @@ import { advancedSchema, FIELD_DEFAULTS, generalSchema, NODE_SCHEMAS } from "./s
 
 defineEditorElements();
 
-type Node = keyof HomeFlowNodes;
+type Node = keyof HomeFlowNodes | "generator";
 type Page = Node | "advanced";
 
 const NODE_PAGES: { page: Node; icon: string }[] = [
   { page: "grid", icon: "mdi:transmission-tower" },
   { page: "solar", icon: "mdi:solar-power" },
   { page: "battery", icon: "mdi:battery-high" },
+  { page: "generator", icon: "mdi:engine" },
   { page: "home", icon: "mdi:home" },
 ];
 
@@ -116,7 +117,7 @@ export class HomeFlowCardEditor extends LitElement implements LovelaceCardEditor
                 path=${page}
                 header=${localize(`editor.${page}`)}
                 secondary=${this._summary(page)}
-                icon=${nonEmpty(nodeConfig?.icon) ?? icon}
+                icon=${(nodeConfig && "icon" in nodeConfig ? nonEmpty(nodeConfig.icon) : undefined) ?? icon}
                 @open-sub-element-editor=${() => (this._page = page)}
               ></link-subpage>
             `;

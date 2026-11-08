@@ -4,7 +4,7 @@ import { type ScaledReading, scaledReading } from "./format";
 import { HOME_SOURCE_COLORS } from "./styles";
 import { type ReadyCardState } from "./types";
 
-export type HouseNode = "solar" | "battery" | "grid" | "home";
+export type HouseNode = "solar" | "battery" | "grid" | "generator" | "home";
 
 /**
  * The wire between a node and the inverter the house card draws: every node is wired to the
@@ -33,6 +33,7 @@ const GRID_IN = "var(--energy-grid-consumption-color)";
 const GRID_OUT = "var(--energy-grid-return-color)";
 const BATTERY_OUT = "var(--energy-battery-out-color)";
 const BATTERY_IN = "var(--energy-battery-in-color)";
+const GENERATOR = "var(--energy-generator-color, #b07d4f)";
 
 /** `outOf` − `into` as a direction and a magnitude. */
 const net = (outOf: number | null, into: number | null) => {
@@ -58,12 +59,28 @@ const batteryWire = ({ nodes }: ReadyCardState): Wire | undefined => {
   return { node: "battery", power, intoInverter, color: intoInverter ? BATTERY_OUT : BATTERY_IN };
 };
 
+/** During an outage the grid cable is dead: what the grid's totals hold then is the generator's. */
 const gridWire = ({ nodes }: ReadyCardState): Wire | undefined => {
   if (!nodes.grid.has) {
     return undefined;
   }
+  if (nodes.grid.powerOutage.isOutage) {
+    return { node: "grid", power: 0, intoInverter: true, color: GRID_IN };
+  }
   const { power, intoInverter } = net(nodes.grid.state.fromGrid, nodes.grid.state.toGrid);
   return { node: "grid", power, intoInverter, color: intoInverter ? GRID_IN : GRID_OUT };
+};
+
+/**
+ * A generator wired to the inverter, never to the grid: it carries the generator's power during
+ * an outage and sits idle otherwise.
+ */
+const generatorWire = (config: FlowCardPlusConfig, { nodes }: ReadyCardState): Wire | undefined => {
+  if (!nodes.grid.has || !config.entities.grid?.power_outage?.entity_generator) {
+    return undefined;
+  }
+  const power = nodes.grid.powerOutage.isOutage ? (nodes.grid.state.fromGrid ?? 0) : 0;
+  return { node: "generator", power, intoInverter: true, color: GENERATOR };
 };
 
 const homeWire = (state: ReadyCardState): Wire => ({
@@ -81,18 +98,23 @@ const intensity = (config: FlowCardPlusConfig, power: number): number => {
   return Number.isFinite(share) ? Math.min(Math.max(share, 0), 1) : 0;
 };
 
-/** The wires of the nodes the card shows, in drawing order: solar, battery, grid, home. */
+/** The wires of the nodes the card shows, in drawing order: solar, battery, grid, generator, home. */
 export const houseWires = (config: FlowCardPlusConfig, state: ReadyCardState): HouseWire[] => {
   const { entities } = config;
   const entityOf: Record<HouseNode, BaseConfigEntity | undefined> = {
     solar: entities.solar,
     battery: entities.battery,
     grid: entities.grid,
+    generator: undefined,
     home: entities.home,
   };
-  const wires = [solarWire(state), batteryWire(state), gridWire(state), homeWire(state)].filter(
-    isWire
-  );
+  const wires = [
+    solarWire(state),
+    batteryWire(state),
+    gridWire(state),
+    generatorWire(config, state),
+    homeWire(state),
+  ].filter(isWire);
   const supplied = wires
     .filter((wire) => wire.intoInverter)
     .reduce((sum, wire) => sum + wire.power, 0);

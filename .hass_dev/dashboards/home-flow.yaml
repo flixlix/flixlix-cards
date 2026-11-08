@@ -33,6 +33,7 @@ views:
               - input_number.grid_import_power
               - input_number.grid_export_power
               - input_boolean.power_outage
+              - input_number.generator_power
       - type: grid
         cards:
           - type: heading
@@ -46,6 +47,8 @@ views:
               power_outage:
                 entity: input_boolean.power_outage
                 state_alert: "on"
+            generator:
+              entity: sensor.generator_power
             solar:
               entity: sensor.solar_power
             battery:

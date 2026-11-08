@@ -50,6 +50,7 @@
     "display_zero_tolerance": "Vis ingen tolerance",
     "double_tap_action": "Dobbelttryk-handling",
     "entity_generator": "Generator",
+    "generator": "Generator",
     "flow_rate_model": "Flowhastighedsmodel",
     "flow_rate_model_duration": "Varighed (standard)",
     "flow_rate_model_relative": "Relativ",

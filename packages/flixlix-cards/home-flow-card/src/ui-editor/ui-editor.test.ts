@@ -79,6 +79,7 @@ describe("editor", () => {
       "grid",
       "solar",
       "battery",
+      "generator",
       "home",
       "advanced",
     ]);
@@ -105,6 +106,7 @@ describe("editor", () => {
       "sensor.import / sensor.export · 250 W · 0 W",
       "sensor.pv · 1,200 W",
       "sensor.battery · -800 W · 55 %",
+      "Not configured",
       "Not configured",
       null,
     ]);

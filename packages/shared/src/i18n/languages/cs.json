@@ -50,6 +50,7 @@
     "display_zero_tolerance": "Zobrazit nulovou toleranci",
     "double_tap_action": "Akce při dvojitém klepnutí",
     "entity_generator": "Generátor",
+    "generator": "Generátor",
     "flow_rate_model": "Model průtoku",
     "flow_rate_model_duration": "Doba (výchozí)",
     "flow_rate_model_relative": "Relativní",

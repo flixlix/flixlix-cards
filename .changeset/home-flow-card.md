@@ -7,3 +7,5 @@ New card: Home Flow Card draws your live power on an isometric house. Solar pane
 Its `grid` (with power outage), `solar`, `battery` (with state of charge) and `home` take Power Flow Card Plus' options, at the top level of the card instead of under `entities`. Individual devices are not drawn yet.
 
 The battery's icon follows its state of charge, as in Power Flow Card Plus, and its charge bar turns yellow and red below thresholds you set with the battery's `state_of_charge_severity` (default: red below 15 %, yellow below 30 %). Under the battery's value, its state of charge and whether it is charging or discharging are spelled out.
+
+During a grid outage, an optional `generator` gets its own wire into the inverter and carries the generator's power, while the grid cable stays dead: a generator is never drawn feeding the grid.

@@ -50,6 +50,7 @@
     "display_zero_tolerance": "शून्य सहिष्णुता दिखाएँ",
     "double_tap_action": "डबल टैप क्रिया",
     "entity_generator": "जनरेटर",
+    "generator": "जनरेटर",
     "flow_rate_model": "प्रवाह दर मॉडल",
     "flow_rate_model_duration": "Duration (default)",
     "flow_rate_model_relative": "Relative",

@@ -38,8 +38,8 @@ import {
 } from "custom-card-helpers";
 import { html, LitElement, nothing, type PropertyValues, svg, type TemplateResult } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import { keyed } from "lit/directives/keyed.js";
 import NumberFlow, { canAnimate } from "number-flow";
+import { TextMorph } from "torph";
 import packageJson from "../package.json" with { type: "json" };
 import {
   faceTransform,
@@ -51,6 +51,7 @@ import {
   roundedPath,
   fixtures,
   GRID_CABLE_START,
+  HOUSE_SPAN,
   houseShell,
   type ScreenPoint,
   SHADOW,
@@ -109,12 +110,17 @@ class Extent {
     ];
   }
 
-  viewBox(padding: number): Box {
+  /**
+   * The box around everything, widened on the short side so `centerX` sits in its middle: the
+   * labels and the grid cable reach further right than the house does left.
+   */
+  viewBox(padding: number, centerX: number): Box {
     const [left, top, right, bottom] = this._box;
+    const half = Math.max(centerX - left, right - centerX) + padding;
     return {
-      x: left - padding,
+      x: centerX - half,
       y: top - padding,
-      width: right - left + padding * 2,
+      width: half * 2,
       height: bottom - top + padding * 2,
     };
   }
@@ -205,7 +211,9 @@ type Label = {
   node: HouseNode;
   reading: ScaledReading | null;
   name: string;
-  /** A second line under the name, e.g. the power outage alert. */
+  /** A line between the value and the name, e.g. the battery's state of charge and status. */
+  status?: TemplateResult;
+  /** A line under the name, e.g. the power outage alert. */
   extra?: TemplateResult;
   nameClass?: string;
   actions: ActionConfigSet;
@@ -223,6 +231,7 @@ export class HomeFlowCard extends LitElement {
   private _appliedCardState?: CardState;
   private _resizeObserver?: ResizeObserver;
   private _observedScene?: Element;
+  private readonly _morphs = new Map<HTMLElement, TextMorph>();
   private readonly _actions = new EntityActions(this, () => ({
     hass: this.hass,
     clickableEntities: this._config.clickable_entities,
@@ -236,6 +245,8 @@ export class HomeFlowCard extends LitElement {
   };
 
   setConfig(cardConfig: HomeFlowCardConfig): void {
+    // `animate_numbers` may have changed: morphs are created with it.
+    this._destroyMorphs();
     const config = toFlowConfig(cardConfig);
     assertRenderableFlowCardConfig(config);
     this._config = {
@@ -262,6 +273,7 @@ export class HomeFlowCard extends LitElement {
     this._resizeObserver?.disconnect();
     this._resizeObserver = undefined;
     this._observedScene = undefined;
+    this._destroyMorphs();
     if (typeof document !== "undefined") {
       document.removeEventListener("visibilitychange", this._handleVisibilityChange);
     }
@@ -317,13 +329,15 @@ export class HomeFlowCard extends LitElement {
     const scene = this._scene(cardState, wires, extent);
     const labels = this._labels(cardState, wires);
     const leaders = labels.map((label) => this._leader(label, extent));
-    const box = extent.viewBox(10);
+    const [houseLeft] = project(HOUSE_SPAN[0]);
+    const [houseRight] = project(HOUSE_SPAN[1]);
+    const box = extent.viewBox(10, (houseLeft + houseRight) / 2);
     const unit = this._width > 0 ? this._width / box.width : 1;
     const at = ([x, y]: ScreenPoint) =>
       `left: ${((x - box.x) / box.width) * 100}%; top: ${((y - box.y) / box.height) * 100}%`;
     return html`
       <ha-card .header=${this._config.title}>
-        <div class="stage" style=${`--house-unit: ${unit}px`}>
+        <div class="stage ${this._config.title ? "titled" : ""}" style=${`--house-unit: ${unit}px`}>
           <svg
             viewBox="${box.x} ${box.y} ${box.width} ${box.height}"
             role="img"
@@ -355,6 +369,7 @@ export class HomeFlowCard extends LitElement {
       applyCardState(this, cardState);
       this._appliedCardState = cardState;
     }
+    this._morphWords();
     this.shadowRoot?.querySelectorAll("number-flow").forEach((flow) => {
       if (flow instanceof NumberFlow) {
         flow.update(Number(flow.dataset.value));
@@ -376,6 +391,7 @@ export class HomeFlowCard extends LitElement {
     const soc = nodes.battery.state_of_charge.state;
     const parts = fixtures({
       solar: nodes.solar.has,
+      generator: wires.some((wire) => wire.node === "generator"),
       battery: nodes.battery.has
         ? {
             icon: BATTERY_ICONS[nodes.battery.icon] ?? mdiBattery,
@@ -454,6 +470,7 @@ export class HomeFlowCard extends LitElement {
     const home = wireOf("home");
     const battery = wireOf("battery");
     const grid = wireOf("grid");
+    const generator = wireOf("generator");
     return [
       solar && {
         node: "solar" as const,
@@ -471,6 +488,16 @@ export class HomeFlowCard extends LitElement {
       },
       battery && this._batteryLabel(nodes, battery),
       grid && this._gridLabel(nodes, grid),
+      generator && {
+        node: "generator" as const,
+        reading: generator.reading,
+        name:
+          this._config.generator?.name ??
+          translate("editor.entity_generator", this.hass.locale?.language ?? "en"),
+        // no actions of its own: opens more-info only with clickable_entities, like the others
+        actions: { tap_action: undefined },
+        entity: this._config.generator?.entity,
+      },
     ].filter((label): label is Label => label !== undefined);
   }
 
@@ -479,7 +506,7 @@ export class HomeFlowCard extends LitElement {
       node: "battery",
       reading: wire.reading,
       name: nodes.battery.name,
-      extra: this._batteryState(wire, nodes.battery.state_of_charge),
+      status: this._batteryState(wire, nodes.battery.state_of_charge),
       actions: nodes.battery,
       entity: nodes.battery.mainEntity,
     };
@@ -508,8 +535,8 @@ export class HomeFlowCard extends LitElement {
   }
 
   /**
-   * The battery's state of charge and whether it charges or discharges. The word is keyed on the
-   * direction, so a change brings in a new element and with it the stylesheet's entry animation.
+   * The battery's state of charge and whether it charges or discharges. The word's span is left
+   * empty for `_morphWords` to fill, so its shared letters slide while the rest morphs.
    */
   private _batteryState(wire: HouseWire, soc: BatteryObject["state_of_charge"]) {
     const direction = wire.power > 0 ? (wire.intoInverter ? "discharging" : "charging") : undefined;
@@ -523,21 +550,60 @@ export class HomeFlowCard extends LitElement {
       return undefined;
     }
     const word = direction
-      ? keyed(
-          direction,
-          html`<span class="direction ${direction}"
-            >${translate(`card.battery.${direction}`, this.hass.locale?.language ?? "en")}</span
-          >`
-        )
-      : nothing;
-    return html`${charge ?? nothing}${charge && direction ? html`<span>·</span>` : nothing}${word}`;
+      ? translate(`card.battery.${direction}`, this.hass.locale?.language ?? "en")
+      : "";
+    return html`${charge ?? nothing}${charge && direction ? html`<span>·</span>` : nothing}<span
+        class="direction ${direction ?? ""}"
+        data-word=${word}
+      ></span>`;
+  }
+
+  /** Morphs each label word to its new text with Torph, created once per word element. */
+  private _morphWords() {
+    for (const [element, morph] of this._morphs) {
+      if (!element.isConnected) {
+        morph.destroy();
+        this._morphs.delete(element);
+      }
+    }
+    this.shadowRoot?.querySelectorAll<HTMLElement>(".direction").forEach((element) => {
+      const morph =
+        this._morphs.get(element) ??
+        new TextMorph({
+          element,
+          duration: 450,
+          disabled: this._config.animate_numbers === false,
+        });
+      this._morphs.set(element, morph);
+      morph.update(element.dataset.word ?? "");
+    });
+    this._adoptMorphStyles();
+  }
+
+  /**
+   * Torph styles its letters (and hides the copy it keeps for screen readers) with a stylesheet
+   * it adds to the page's head, which does not reach into this card's shadow root: copy it in.
+   */
+  private _adoptMorphStyles() {
+    const root = this.shadowRoot;
+    const source = document.head.querySelector("style[data-torph]");
+    if (!root || !source || root.querySelector("style[data-torph]")) {
+      return;
+    }
+    root.append(source.cloneNode(true));
+  }
+
+  private _destroyMorphs() {
+    this._morphs.forEach((morph) => morph.destroy());
+    this._morphs.clear();
   }
 
   private _leader(label: Label, extent: Extent) {
     const anchor = LABEL_ANCHORS[label.node];
     const [x, y] = project(anchor.at);
     const end = y + anchor.leader;
-    const height = LABEL_HEIGHT + (label.extra ? EXTRA_LINE_HEIGHT : 0);
+    const lines = [label.status, label.extra].filter(Boolean).length;
+    const height = LABEL_HEIGHT + lines * EXTRA_LINE_HEIGHT;
     extent.include([x, end + Math.sign(anchor.leader) * height], 4);
     extent.include([x - 10 + LABEL_WIDTH, end], 4);
     return svg`<g class="leader">
@@ -577,6 +643,7 @@ export class HomeFlowCard extends LitElement {
       }}
     >
       <div class="value">${this._value(label.reading)}</div>
+      ${label.status ? html`<div class="status">${label.status}</div>` : nothing}
       <div class="name ${label.nameClass ?? ""}">${label.name}</div>
       ${label.extra ? html`<div class="name extra">${label.extra}</div>` : nothing}
     </div>`;

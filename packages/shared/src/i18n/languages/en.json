@@ -50,6 +50,7 @@
     "display_zero_tolerance": "Display Zero Tolerance",
     "double_tap_action": "Double Tap Action",
     "entity_generator": "Generator",
+    "generator": "Generator",
     "flow_rate_model": "Flow Rate Model",
     "flow_rate_model_duration": "Duration (default)",
     "flow_rate_model_relative": "Relative",

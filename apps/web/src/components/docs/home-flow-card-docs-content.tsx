@@ -121,7 +121,7 @@ export function OverviewPage() {
           <HighlightItem>Only what you configure is drawn</HighlightItem>
           <HighlightItem>Numbers that roll to their new value</HighlightItem>
           <HighlightItem>Battery icon and charge colours from its state of charge</HighlightItem>
-          <HighlightItem>Power outages on the grid</HighlightItem>
+          <HighlightItem>Power outages, with an optional generator on the inverter</HighlightItem>
           <HighlightItem>Greys taken from your theme, light and dark</HighlightItem>
         </ul>
       </Section>
@@ -316,6 +316,17 @@ const CARD_OPTIONS: OptionRow[] = [
     ),
   },
   {
+    name: "generator",
+    type: "object",
+    description: (
+      <>
+        <code>entity</code> (and optional <code>name</code>) of a generator the inverter switches to
+        during a grid outage. It gets its own wire into the inverter and is never drawn on the grid
+        cable. Needs <code>grid.power_outage</code> to know when the grid is down.
+      </>
+    ),
+  },
+  {
     name: "disable_dots",
     type: "boolean",
     default: "false",
@@ -436,7 +447,7 @@ export function ExamplesPage() {
 
       <Section id="split" title="Separate import and export sensors">
         <Prose>
-          <p>One sensor per direction and the power-outage alert.</p>
+          <p>One sensor per direction, the power-outage alert and a generator for outages.</p>
         </Prose>
         <CodeBlock
           language="yaml"
@@ -447,6 +458,8 @@ grid:
     production: sensor.grid_export_power
   power_outage:
     entity: binary_sensor.grid_outage
+generator:
+  entity: sensor.generator_power
 solar:
   entity: sensor.solar_power
 battery:

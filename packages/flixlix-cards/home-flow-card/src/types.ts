@@ -13,6 +13,12 @@ export type HouseBattery = NonNullable<ConfigEntities["battery"]> & {
   state_of_charge_severity?: ChargeSeverity;
 };
 
+/**
+ * A generator the inverter switches to during a grid outage. It is never drawn on the grid
+ * cable: that would back-feed the grid.
+ */
+export type HouseGenerator = { entity: string; name?: string };
+
 /** The card's nodes, configured as in Power Flow Card Plus' `entities`. */
 export type HomeFlowNodes = {
   grid?: ConfigEntities["grid"];
@@ -27,6 +33,11 @@ type WithoutEntities<T> = { [K in keyof T as K extends "entities" ? never : K]: 
 type CardOptions = WithoutEntities<PowerFlowCardPlusConfig> & {
   /** Roll the numbers to their new value when a reading changes. Defaults to true. */
   animate_numbers?: boolean;
+  /**
+   * Draws a generator wired to the inverter, carrying its power during a grid outage; needs the
+   * grid's `power_outage` to know when there is one.
+   */
+  generator?: HouseGenerator;
 };
 
 /** The card's config: Power Flow Card Plus' options, with the nodes at the top level. */
@@ -37,10 +48,24 @@ export type FlowConfig = CardOptions & { entities: HomeFlowNodes };
 
 const NODES = ["grid", "solar", "battery", "home"] as const;
 
-/** Moves the card's top-level nodes under `entities`, leaving out the ones not configured. */
+/**
+ * Moves the card's top-level nodes under `entities`, leaving out the ones not configured. The
+ * shared pipeline reads a generator as the grid's `power_outage.entity_generator`.
+ */
 export const toFlowConfig = (config: HomeFlowCardConfig): FlowConfig => {
   const { grid, solar, battery, home, ...options } = config;
-  const nodes: HomeFlowNodes = { grid, solar, battery, home };
+  const nodes: HomeFlowNodes = {
+    grid:
+      grid?.power_outage && options.generator
+        ? {
+            ...grid,
+            power_outage: { ...grid.power_outage, entity_generator: options.generator.entity },
+          }
+        : grid,
+    solar,
+    battery,
+    home,
+  };
   const entities = Object.fromEntries(
     NODES.flatMap((node) => (nodes[node] === undefined ? [] : [[node, nodes[node]]]))
   );

@@ -50,6 +50,7 @@
     "display_zero_tolerance": "Nulltoleranz",
     "double_tap_action": "Aktion beim Doppeltippen",
     "entity_generator": "Generator",
+    "generator": "Generator",
     "flow_rate_model": "Fluss-Modell",
     "flow_rate_model_duration": "Dauer (Standard)",
     "flow_rate_model_relative": "Relativ",

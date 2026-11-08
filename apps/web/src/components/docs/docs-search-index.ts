@@ -849,6 +849,10 @@ function houseEntries(): SearchEntry[] {
     ]),
     option("clickable_entities", "Tap a value to open its entity.", "card-options"),
     option("disable_dots", "Keep the wires still.", "card-options", ["pulses"]),
+    option("generator", "A generator on the inverter during a grid outage.", "card-options", [
+      "outage",
+      "backup",
+    ]),
     option("state_of_charge_severity", "Battery charge bar colours.", "card-options", [
       "battery",
       "red",

@@ -50,6 +50,7 @@
     "display_zero_tolerance": "Wyświetl tolerancję zera",
     "double_tap_action": "Akcja podwójnego dotknięcia",
     "entity_generator": "Generator",
+    "generator": "Generator",
     "flow_rate_model": "Model wskaźnika przepływu",
     "flow_rate_model_duration": "Czas trwania (domyślnie)",
     "flow_rate_model_relative": "Względny",

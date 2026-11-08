@@ -50,6 +50,7 @@
     "display_zero_tolerance": "Допустимая погрешность нуля",
     "double_tap_action": "действие двойного касания",
     "entity_generator": "Генератор",
+    "generator": "Генератор",
     "flow_rate_model": "Модель скорости потока",
     "flow_rate_model_duration": "Длительность (по умолчанию)",
     "flow_rate_model_relative": "Относительная",

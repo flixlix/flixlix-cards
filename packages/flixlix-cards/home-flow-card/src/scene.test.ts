@@ -91,7 +91,7 @@ describe("house scene", () => {
   test("every wire ends at the inverter", () => {
     const ends = Object.values(WIRE_ROUTES).flatMap((route): Point[] => route.slice(-1));
 
-    expect(ends).toHaveLength(4);
+    expect(ends).toHaveLength(5);
     for (const [, y, z] of ends) {
       expect(y).toBeGreaterThanOrEqual(INVERTER.y0);
       expect(y).toBeLessThanOrEqual(INVERTER.y1);

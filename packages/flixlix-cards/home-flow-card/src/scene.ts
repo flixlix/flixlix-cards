@@ -1,6 +1,6 @@
 import { type HouseNode } from "@flixlix-cards/shared/card-state";
 import { type ChargeLevel } from "@flixlix-cards/shared/utils/severity";
-import { mdiFlash, mdiHome } from "@mdi/js";
+import { mdiFlash, mdiGeneratorStationary, mdiHome } from "@mdi/js";
 
 /** A point in house space: x along the ridge, y towards the viewer's left, z up. */
 export type Point = readonly [x: number, y: number, z: number];
@@ -227,8 +227,27 @@ const inverter = (): Shape[] => [
   },
 ];
 
-/** What the house shows: panels with solar, the battery when there is one. */
-export type ScenePresence = { solar: boolean; battery?: BatteryLook };
+/** A generator on the ground in front of the gable, beside the grid cable but not on it. */
+const GENERATOR = { x0: 12.6, x1: 14.4, y0: 6.3, y1: 7.5, height: 1.3 } as const;
+const GENERATOR_X = (GENERATOR.x0 + GENERATOR.x1) / 2;
+const GENERATOR_Y = (GENERATOR.y0 + GENERATOR.y1) / 2;
+
+const generator = (): Shape[] => [
+  ...box(
+    [GENERATOR.x0, GENERATOR.y0, 0],
+    [GENERATOR.x1 - GENERATOR.x0, GENERATOR.y1 - GENERATOR.y0, GENERATOR.height]
+  ),
+  {
+    kind: "icon",
+    face: "front",
+    at: [GENERATOR_X, GENERATOR.y1 + 0.01, GENERATOR.height / 2],
+    size: 0.8,
+    path: mdiGeneratorStationary,
+  },
+];
+
+/** What the house shows: panels with solar, the battery and the generator when there are. */
+export type ScenePresence = { solar: boolean; battery?: BatteryLook; generator?: boolean };
 
 /** Walls and roof: drawn before the wires, which run on them. */
 export const houseShell = (): SceneGroup => ({ node: "home", shapes: house() });
@@ -237,9 +256,14 @@ export const houseShell = (): SceneGroup => ({ node: "home", shapes: house() });
  * What the wires connect, drawn over the wires: each wire runs into its fixture, so the fixture
  * hides the wire's end the way it would in 3D.
  */
-export const fixtures = ({ solar, battery: look }: ScenePresence): SceneGroup[] => [
+export const fixtures = ({
+  solar,
+  battery: look,
+  generator: hasGenerator,
+}: ScenePresence): SceneGroup[] => [
   ...(solar ? [{ node: "solar" as const, shapes: panels() }] : []),
   ...(look ? [{ node: "battery" as const, shapes: battery(look) }] : []),
+  ...(hasGenerator ? [{ node: "generator" as const, shapes: generator() }] : []),
   { node: "outlet", shapes: outlet() },
   { node: "inverter", shapes: inverter() },
 ];
@@ -275,6 +299,14 @@ export const WIRE_ROUTES: Record<HouseNode, Point[]> = {
     [ON_GABLE, INVERTER.y1, INVERTER_Z],
   ],
   grid: [[GRID_CABLE_END, INVERTER_Y, 0.02], GRID_CABLE_START, [ON_GABLE, INVERTER_Y, INVERTER_Z]],
+  // from inside the generator along the ground to the gable, then up into the inverter beside
+  // the grid cable: two separate wires, never joined outside the inverter
+  generator: [
+    [GENERATOR_X, GENERATOR_Y, 0.02],
+    [ON_GABLE, GENERATOR_Y, 0.02],
+    [ON_GABLE, INVERTER_Y + 0.35, 0.02],
+    [ON_GABLE, INVERTER_Y + 0.35, INVERTER_Z],
+  ],
 };
 
 /**
@@ -283,6 +315,8 @@ export const WIRE_ROUTES: Record<HouseNode, Point[]> = {
  */
 export const DRAW_ORDER: readonly ({ wire: HouseNode } | { part: SceneGroup["node"] })[] = [
   { wire: "grid" }, // up into the inverter from below
+  { wire: "generator" }, // beside the grid cable, from inside the generator
+  { part: "generator" },
   { part: "battery" },
   { wire: "battery" }, // from the battery's visible side into the inverter's back
   { part: "inverter" },
@@ -303,7 +337,15 @@ export const LABEL_ANCHORS: Record<HouseNode, { at: Point; leader: number }> = {
   battery: { at: onBattery(1.8, 3.3), leader: -50 },
   // above the cable, out past the battery: the cable falls away under the label
   grid: { at: [GRID_LABEL_X, INVERTER_Y, 0], leader: -20 },
+  // below the generator: clear of the home label to its left and the grid cable above
+  generator: { at: [GENERATOR_X, GENERATOR.y1, 0], leader: 46 },
 };
+
+/** The house's leftmost and rightmost points: its front eave and its gable's back corner. */
+export const HOUSE_SPAN: readonly [Point, Point] = [
+  [0, EAVE_Y, 0],
+  [OVERHANG_X, BACK_EAVE_Y, 0],
+];
 
 /** The house's footprint and the shadow it casts towards the back right. */
 export const SHADOW: Point[] = [

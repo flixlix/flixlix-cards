@@ -59,7 +59,6 @@ export const NODE_SCHEMAS = {
             { name: "entity", selector: { entity: {} } },
             { name: "state_alert", selector: { text: {} } },
             { name: "label_alert", selector: { text: {} } },
-            { name: "entity_generator", selector: { entity: {} } },
           ],
         },
       ],
@@ -105,6 +104,7 @@ export const NODE_SCHEMAS = {
       [customColorsSchema, actions]
     ),
   ],
+  generator: [entity, name],
   home: [
     entity,
     name,

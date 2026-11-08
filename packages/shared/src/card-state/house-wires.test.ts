@@ -5,16 +5,28 @@ import { computeCardState } from "./compute-card-state";
 import { houseWires } from "./house-wires";
 import { type ReadyReadings } from "./types";
 
-const partialHass: Partial<HomeAssistant> = {
-  localize: (key: string) => key,
-  locale: {
-    language: "en",
-    number_format: NumberFormat.language,
-    time_format: TimeFormat.language,
-  },
-  states: {},
+/** A `hass` whose outage sensor reads `on` while there is an outage. */
+const hassWith = (outage: boolean): HomeAssistant => {
+  const partialHass: Partial<HomeAssistant> = {
+    localize: (key: string) => key,
+    locale: {
+      language: "en",
+      number_format: NumberFormat.language,
+      time_format: TimeFormat.language,
+    },
+    states: {
+      "binary_sensor.outage": {
+        entity_id: "binary_sensor.outage",
+        state: outage ? "on" : "off",
+        attributes: {},
+        last_changed: "",
+        last_updated: "",
+        context: { id: "", user_id: null, parent_id: null },
+      },
+    },
+  };
+  return partialHass as HomeAssistant;
 };
-const hass = partialHass as HomeAssistant;
 
 const config = (entities: FlowCardPlusConfig["entities"]): FlowCardPlusConfig => ({
   type: "custom:home-flow-card",
@@ -43,6 +55,8 @@ type Power = {
   toBattery?: number;
   fromGrid?: number;
   toGrid?: number;
+  generator?: number;
+  outage?: boolean;
 };
 
 const readings = (power: Power): ReadyReadings => ({
@@ -52,14 +66,14 @@ const readings = (power: Power): ReadyReadings => ({
   solar: { total: power.solar ?? 0, secondary: 0 },
   battery: { kind: "split", outOf: power.fromBattery ?? 0, into: power.toBattery ?? 0 },
   home: null,
-  generator: null,
+  generator: power.generator ?? null,
   individuals: [],
 });
 
 const wiresFor = (cardConfig: FlowCardPlusConfig, power: Power) => {
   const state = computeCardState({
     config: cardConfig,
-    hass,
+    hass: hassWith(power.outage ?? false),
     readings: readings(power),
     templates: {
       gridSecondary: undefined,
@@ -147,6 +161,36 @@ describe("house wires", () => {
     expect(battery?.intensity).toBe(1);
     expect(home?.intensity).toBe(1);
     expect(wiresFor(allNodes, {})[0]?.intensity).toBe(0);
+  });
+
+  describe("with a generator", () => {
+    const withGenerator = config({
+      grid: {
+        entity: "sensor.grid",
+        power_outage: { entity: "binary_sensor.outage", entity_generator: "sensor.generator" },
+      },
+      battery: { entity: "sensor.battery" },
+    });
+    const wire = (power: Power, node: string) =>
+      wiresFor(withGenerator, power).find((candidate) => candidate.node === node);
+
+    test("in an outage the generator feeds the inverter and the grid cable is dead", () => {
+      const outage = { outage: true, generator: 1200, fromGrid: 300 };
+
+      expect(wire(outage, "generator")).toMatchObject({ power: 1200, intoInverter: true });
+      expect(wire(outage, "grid")).toMatchObject({ power: 0 });
+    });
+
+    test("with the grid up the generator is idle", () => {
+      const normal = { generator: 1200, fromGrid: 300 };
+
+      expect(wire(normal, "generator")).toMatchObject({ power: 0 });
+      expect(wire(normal, "grid")).toMatchObject({ power: 300, intoInverter: true });
+    });
+
+    test("without a generator there is no generator wire", () => {
+      expect(wiresFor(allNodes, {}).map(({ node }) => node)).not.toContain("generator");
+    });
   });
 
   test("more power pulses faster", () => {

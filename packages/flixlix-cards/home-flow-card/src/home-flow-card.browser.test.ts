@@ -56,17 +56,20 @@ const reading = (root: ShadowRoot, node: string) => {
 const startOf = (d: string) => d.match(/^M([\d.-]+ [\d.-]+)/)?.[1];
 const endOf = (d: string) => d.match(/L([\d.-]+ [\d.-]+)$/)?.[1];
 
-/** The battery label's second line: its state of charge and direction, numbers as they read. */
+/** A morphing word as it reads: Torph keeps it for screen readers while its letters animate. */
+const wordOf = (element: Element) =>
+  (element.querySelector("[torph-sr]") ?? element).textContent?.trim() || undefined;
+
+/** The battery label's status line: its state of charge and direction, numbers as they read. */
 const batteryLine = (root: ShadowRoot) => {
-  const line = labelOf(root, "battery").querySelector(".extra");
+  const line = labelOf(root, "battery").querySelector(".status");
   const charge = line?.querySelector(".number");
   const percent =
     charge instanceof NumberFlow
       ? `${charge.value}${charge.numberSuffix ?? ""}`
       : charge?.textContent?.trim();
-  return [percent, line?.querySelector(".direction")?.textContent?.trim()]
-    .filter(Boolean)
-    .join(" · ");
+  const direction = line?.querySelector(".direction");
+  return [percent, direction ? wordOf(direction) : undefined].filter(Boolean).join(" · ");
 };
 
 /** The path of the battery's icon for a state of charge. */
@@ -158,15 +161,22 @@ describe("home flow card", () => {
     expect(await barOf("40", { battery: custom })).toBe("var(--house-soc-yellow)");
   });
 
-  test("switching from discharging to charging brings in a new direction word", async () => {
+  test("the direction word shows once: its screen-reader copy takes no space", async () => {
+    const { root } = await mountHouse();
+    const copy = labelOf(root, "battery").querySelector(".direction [torph-sr]");
+
+    expect(copy?.getBoundingClientRect().width ?? 0).toBeLessThanOrEqual(1);
+  });
+
+  test("the direction word morphs in place when the battery switches", async () => {
     const { root, card, setHass } = await mountHouse();
     const before = labelOf(root, "battery").querySelector(".direction");
 
     await setHass(withStates(card.hass ?? fakeHass(), { "sensor.battery": "-900" }));
 
     const after = labelOf(root, "battery").querySelector(".direction");
-    expect(after?.textContent?.trim()).toBe("charging");
-    expect(after).not.toBe(before);
+    expect(after).toBe(before);
+    expect(after ? wordOf(after) : undefined).toBe("charging");
   });
 
   test("an idle battery shows only its state of charge", async () => {
@@ -208,6 +218,48 @@ describe("home flow card", () => {
 
     expect(reading(root, "grid")).toBe("—");
     expect(labelOf(root, "grid").textContent).toContain("Power Outage");
+  });
+
+  test("in an outage a generator feeds the inverter, never the grid cable", async () => {
+    const { root } = await mountHouse(
+      {
+        grid: { entity: "sensor.grid", power_outage: { entity: "binary_sensor.outage" } },
+        generator: { entity: "sensor.generator" },
+      },
+      {
+        ...evening,
+        "binary_sensor.outage": sensor("on", { unit: undefined }),
+        "sensor.generator": "1200",
+      }
+    );
+
+    expect(root.querySelector(".node.generator")).not.toBeNull();
+    expect(reading(root, "generator")).toBe("1.2 kW");
+    expect(root.querySelector(".power.generator .pulse")).not.toBeNull();
+    expect(root.querySelector(".power.grid")).toBeNull();
+  });
+
+  test("with the grid up a generator stands idle", async () => {
+    const { root } = await mountHouse(
+      {
+        grid: { entity: "sensor.grid", power_outage: { entity: "binary_sensor.outage" } },
+        generator: { entity: "sensor.generator" },
+      },
+      {
+        ...evening,
+        "binary_sensor.outage": sensor("off", { unit: undefined }),
+        "sensor.generator": "0",
+      }
+    );
+
+    expect(reading(root, "generator")).toBe("0 W");
+    expect(root.querySelector(".power.generator")).toBeNull();
+  });
+
+  test("a generator needs the grid's outage sensor to know when to run", async () => {
+    const { root } = await mountHouse({ generator: { entity: "sensor.generator" } });
+
+    expect(root.querySelector(".node.generator")).toBeNull();
   });
 
   test("tapping a label opens its entity's more-info dialog", async () => {

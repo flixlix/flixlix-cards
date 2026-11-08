@@ -50,6 +50,7 @@
     "display_zero_tolerance": "Допуск для нульових значень",
     "double_tap_action": "Дія при подвійному натисканні",
     "entity_generator": "Генератор сутностей",
+    "generator": "Генератор сутностей",
     "flow_rate_model": "Алгоритм швидкості потоку",
     "flow_rate_model_duration": "Тривалість (за замовчуванням)",
     "flow_rate_model_relative": "Відносна",
