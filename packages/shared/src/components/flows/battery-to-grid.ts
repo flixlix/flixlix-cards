@@ -13,7 +13,7 @@ const batteryFromGridDot = (animate: boolean, grid: Flows["grid"], flows: Flows[
         repeatCount="indefinite"
         keyPoints="1;0"
         keyTimes="0;1"
-        calcMode="paced"
+        calcMode="linear"
       >
         <mpath xlink:href="#battery-grid" />
       </animateMotion>

@@ -94,7 +94,7 @@ const flowDot = (slot: IndividualSlot, key: IndividualKey, animate: boolean) => 
     <animateMotion
       dur="${slot.flow.durationSeconds}s"
       repeatCount="indefinite"
-      calcMode="paced"
+      calcMode="linear"
       keyPoints="${slot.node.invertAnimation ? "0;1" : "1;0"}"
       keyTimes="0;1"
     >
