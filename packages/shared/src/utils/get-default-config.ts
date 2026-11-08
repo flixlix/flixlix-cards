@@ -90,7 +90,6 @@ export function getDefaultConfig(hass: HomeAssistant, cardType: "power" | "energ
     },
     clickable_entities: true,
     display_zero_lines: true,
-    use_new_flow_rate_model: true,
     base_decimals: defaultValues.baseDecimals,
     kilo_decimals: defaultValues.kiloDecimals,
     min_flow_rate: defaultValues.minFlowRate,

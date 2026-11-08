@@ -24,9 +24,9 @@ export const flowSolarToBattery = (context: Flows) => {
     <path
       id="battery-solar"
       class="battery-solar ${flows.solarToBattery.lineClass}"
-      d=${paths.solarToBattery}
+      d=${paths.solarToBattery.d}
       vector-effect="non-scaling-stroke"
     ></path>
-    ${keyed(paths.solarToBattery, solarToBatteryDot(context))}
+    ${keyed(paths.solarToBattery.d, solarToBatteryDot(context))}
   </svg>`;
 };

@@ -24,9 +24,9 @@ export const flowGridToHome = (context: Flows) => {
     <path
       class="grid ${flows.gridToHome.lineClass}"
       id="grid"
-      d=${paths.gridToHome}
+      d=${paths.gridToHome.d}
       vector-effect="non-scaling-stroke"
     ></path>
-    ${keyed(paths.gridToHome, gridToHomeDot(context))}
+    ${keyed(paths.gridToHome.d, gridToHomeDot(context))}
   </svg>`;
 };

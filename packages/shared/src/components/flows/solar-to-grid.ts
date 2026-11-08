@@ -24,9 +24,9 @@ export const flowSolarToGrid = (context: Flows) => {
     <path
       id="return"
       class="return ${flows.solarToGrid.lineClass}"
-      d=${paths.solarToGrid}
+      d=${paths.solarToGrid.d}
       vector-effect="non-scaling-stroke"
     ></path>
-    ${keyed(paths.solarToGrid, solarToGridDot(context))}
+    ${keyed(paths.solarToGrid.d, solarToGridDot(context))}
   </svg>`;
 };

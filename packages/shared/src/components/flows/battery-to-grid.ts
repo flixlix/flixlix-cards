@@ -2,8 +2,12 @@ import { html, nothing, svg } from "lit";
 import { keyed } from "lit/directives/keyed.js";
 import { type Flows } from "./index";
 
+/**
+ * Runs from the grid to the battery, against the line's drawing direction: it follows the line
+ * drawn backwards instead of `keyPoints`, which older Chromium ignores with `calcMode="paced"`.
+ */
 const batteryFromGridDot = ({ animate, grid, flows, paths }: Flows) => {
-  if (!animate || !grid.state.toBattery) {
+  if (!animate || !grid.state.toBattery || !paths.batteryToGrid) {
     return nothing;
   }
 
@@ -11,12 +15,9 @@ const batteryFromGridDot = ({ animate, grid, flows, paths }: Flows) => {
       <animateMotion
         dur="${flows.batteryGrid.durationSeconds}s"
         repeatCount="indefinite"
-        keyPoints="1;0"
-        keyTimes="0;1"
         calcMode="paced"
-      >
-        <mpath xlink:href="#battery-grid" />
-      </animateMotion>
+        path="${paths.batteryToGrid.reversed}"
+      ></animateMotion>
     </circle>`;
 };
 
@@ -43,9 +44,12 @@ export const flowBatteryToGrid = (context: Flows) => {
     <path
       id="battery-grid"
       class="${flows.batteryGrid.lineClass}"
-      d=${paths.batteryToGrid}
+      d=${paths.batteryToGrid.d}
       vector-effect="non-scaling-stroke"
     ></path>
-    ${keyed(paths.batteryToGrid, svg`${batteryFromGridDot(context)} ${batteryToGridDot(context)}`)}
+    ${keyed(
+      paths.batteryToGrid.d,
+      svg`${batteryFromGridDot(context)} ${batteryToGridDot(context)}`
+    )}
   </svg>`;
 };

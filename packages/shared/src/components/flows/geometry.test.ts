@@ -69,7 +69,7 @@ const nodeSets = fc.record({
   right: fc.boolean(),
 });
 
-const startX = (d: string | undefined) => sample(d ?? "")[0]?.x ?? Number.NaN;
+const startX = (line: { d: string } | undefined) => sample(line?.d ?? "")[0]?.x ?? Number.NaN;
 
 describe("flow paths", () => {
   test("every line starts and ends on the border of its rings, at every width", () => {
@@ -78,8 +78,9 @@ describe("flow paths", () => {
         const layout = nominalLayout(width, nodes);
         const paths = flowPaths(layout, { hasBottomRow: nodes.battery || nodes.right });
         for (const [flow, [from, to]] of Object.entries(ends(layout))) {
-          const d = paths[flow as keyof typeof paths];
-          if (typeof d !== "string" || !from || !to) {
+          const line = paths[flow as keyof typeof paths];
+          const d = typeof line === "object" ? line.d : undefined;
+          if (!d || !from || !to) {
             continue;
           }
           const points = sample(d);
@@ -104,8 +105,9 @@ describe("flow paths", () => {
           .flat()
           .filter((candidate) => candidate !== undefined);
         for (const flow of Object.keys(ends(layout))) {
-          const d = paths[flow as keyof typeof paths];
-          if (typeof d !== "string") {
+          const line = paths[flow as keyof typeof paths];
+          const d = typeof line === "object" ? line.d : undefined;
+          if (!d) {
             continue;
           }
           for (const point of sample(d)) {
@@ -127,6 +129,23 @@ describe("flow paths", () => {
     expect(startX(paths.solarToBattery)).toBeCloseTo(hub, 2);
     expect(startX(paths.solarToHome) - hub).toBeCloseTo(hub - startX(paths.solarToGrid), 2);
     expect(startX(paths.batteryToHome) - hub).toBeCloseTo(hub - startX(paths.batteryToGrid), 2);
+  });
+
+  test("a reversed line is the same line, run from its other end", () => {
+    const layout = nominalLayout(360, { grid: true, solar: true, battery: true, right: true });
+    for (const line of Object.values(flowPaths(layout, { hasBottomRow: true }))) {
+      if (typeof line !== "object") {
+        continue;
+      }
+      const forwards = sample(line.d);
+      const backwards = sample(line.reversed);
+      expect(backwards).toHaveLength(forwards.length);
+      for (const [index, point] of forwards.entries()) {
+        const mirrored = backwards[backwards.length - 1 - index];
+        expect(mirrored?.x).toBeCloseTo(point.x, 1);
+        expect(mirrored?.y).toBeCloseTo(point.y, 1);
+      }
+    }
   });
 
   test("keeps the proportions of a wide card", () => {

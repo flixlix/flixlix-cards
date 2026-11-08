@@ -186,3 +186,53 @@ views:
                 - entity: sensor.fridge_power
                   name: Fridge
                   icon: mdi:fridge
+      - type: grid
+        cards:
+          - type: heading
+            heading: Flow rate models
+            icon: mdi:speedometer
+          - type: custom:power-flow-card-plus
+            title: "flow_rate_model: duration (default)"
+            flow_rate_model: duration
+            entities:
+              grid:
+                entity: sensor.grid_power
+              solar:
+                entity: sensor.solar_power
+              battery:
+                entity: sensor.battery_power
+                state_of_charge: sensor.battery_soc
+              individual:
+                - entity: sensor.ev_charger_power
+                  name: EV
+                  icon: mdi:car-electric
+          - type: custom:power-flow-card-plus
+            title: "flow_rate_model: speed"
+            flow_rate_model: speed
+            entities:
+              grid:
+                entity: sensor.grid_power
+              solar:
+                entity: sensor.solar_power
+              battery:
+                entity: sensor.battery_power
+                state_of_charge: sensor.battery_soc
+              individual:
+                - entity: sensor.ev_charger_power
+                  name: EV
+                  icon: mdi:car-electric
+          - type: custom:power-flow-card-plus
+            title: "flow_rate_model: relative"
+            flow_rate_model: relative
+            entities:
+              grid:
+                entity: sensor.grid_power
+              solar:
+                entity: sensor.solar_power
+              battery:
+                entity: sensor.battery_power
+                state_of_charge: sensor.battery_soc
+              individual:
+                - entity: sensor.ev_charger_power
+                  name: EV
+                  icon: mdi:car-electric

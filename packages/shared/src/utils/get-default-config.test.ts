@@ -31,7 +31,6 @@ describe("get-default-config", () => {
     expect(config.entities.solar?.entity).toBe("sensor.solar_power");
     expect(config.entities.battery.entity).toBe("sensor.home_battery_power");
     expect(config.entities.battery.state_of_charge).toBe("sensor.battery_level");
-    expect(config.use_new_flow_rate_model).toBe(true);
     expect(config.sort_individual_devices).toBe(true);
   });
 });

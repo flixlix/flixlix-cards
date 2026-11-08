@@ -6,6 +6,8 @@ import {
 } from "@flixlix-cards/shared/types";
 import { html, nothing, svg, type SVGTemplateResult, type TemplateResult } from "lit";
 import { keyed } from "lit/directives/keyed.js";
+import { type FlowLine } from "./flows/geometry";
+import { reversePath } from "./reverse-path";
 import { spacer } from "./spacer";
 import { type IndividualKey, individualSecondarySpan } from "./spans/individual-secondary-span";
 
@@ -77,15 +79,25 @@ const individualCircle = (
   </div>`;
 };
 
-/** Each slot's line has its own path id, which `xlink:href` must name statically. */
-const dotPaths: Record<IndividualKey, SVGTemplateResult> = {
-  "left-top": svg`<mpath xlink:href="#individual-top" />`,
-  "left-bottom": svg`<mpath xlink:href="#individual-bottom" />`,
-  "right-top": svg`<mpath xlink:href="#individual-top-right-home" />`,
-  "right-bottom": svg`<mpath xlink:href="#individual-bottom-right-home" />`,
+type LeftKey = "left-top" | "left-bottom";
+type RightKey = "right-top" | "right-bottom";
+
+/** The left slots' lines, drawn from the device to the home inside their 80×30 boxes. */
+const leftLines: Record<LeftKey, string> = {
+  "left-top": "M40 -10 v50",
+  "left-bottom": "M40 40 v-40",
 };
 
-const flowDot = (slot: IndividualSlot, key: IndividualKey, animate: boolean, radius = 1.75) => {
+/**
+ * The dot runs along the line drawn in its direction of travel instead of using `keyPoints`:
+ * older Chromium ignores `keyPoints` with `calcMode="paced"`, and `linear` speeds up on straight parts.
+ * `line` is drawn from the device to the home.
+ */
+const flowDot = (
+  slot: IndividualSlot,
+  key: IndividualKey,
+  { animate, line, radius }: { animate: boolean; line: FlowLine; radius: number }
+) => {
   if (!animate || !isFlowing(slot.node)) {
     return nothing;
   }
@@ -95,16 +107,14 @@ const flowDot = (slot: IndividualSlot, key: IndividualKey, animate: boolean, rad
       dur="${slot.flow.durationSeconds}s"
       repeatCount="indefinite"
       calcMode="paced"
-      keyPoints="${slot.node.invertAnimation ? "0;1" : "1;0"}"
-      keyTimes="0;1"
-    >
-      ${dotPaths[key]}
-    </animateMotion>
+      path="${slot.node.invertAnimation ? line.d : line.reversed}"
+    ></animateMotion>
   </circle>`;
 };
 
 type Parts = {
   slot: IndividualSlot;
+  line: string;
   label: TemplateResult;
   circle: TemplateResult;
   dot: SVGTemplateResult | typeof nothing;
@@ -112,24 +122,24 @@ type Parts = {
 
 /** Where label, circle and line sit for each slot around the home. */
 const layouts: Record<IndividualKey, (parts: Parts) => TemplateResult> = {
-  "left-top": ({ slot, label, circle, dot }) =>
+  "left-top": ({ slot, line, label, circle, dot }) =>
     html`<div class="circle-container individual-top">
       ${label} ${circle}
       ${
         slot.flow.visible
           ? html`<svg width="80" height="30">
-              <path d="M40 -10 v50" id="individual-top" class="${slot.flow.lineClass}" />
+              <path d="${line}" id="individual-top" class="${slot.flow.lineClass}" />
               ${dot}
             </svg>`
           : nothing
       }
     </div>`,
-  "left-bottom": ({ slot, label, circle, dot }) =>
+  "left-bottom": ({ slot, line, label, circle, dot }) =>
     html`<div class="circle-container individual-bottom bottom">
       ${
         slot.flow.visible
           ? html`<svg width="80" height="30">
-              <path d="M40 40 v-40" id="individual-bottom" class="${slot.flow.lineClass}" />
+              <path d="${line}" id="individual-bottom" class="${slot.flow.lineClass}" />
               ${dot}
             </svg>`
           : html` <svg width="80" height="30"></svg> `
@@ -149,17 +159,17 @@ const layouts: Record<IndividualKey, (parts: Parts) => TemplateResult> = {
 /** The line from a right-column individual into the home; drawn in the card's flow overlay. */
 export const rightIndividualFlow = (
   slot: IndividualSlot | undefined,
-  key: "right-top" | "right-bottom",
-  d: string | undefined,
+  key: RightKey,
+  line: FlowLine | undefined,
   { animate, scale, viewBox }: { animate: boolean; scale: number; viewBox: string }
 ) => {
-  if (!slot?.flow.visible || !d) {
+  if (!slot?.flow.visible || !line) {
     return nothing;
   }
   const id = key === "right-top" ? "individual-top-right-home" : "individual-bottom-right-home";
   return html`<svg class="flow individual-${key}" id="${id}-flow" viewBox=${viewBox}>
-    <path id=${id} class="${slot.flow.lineClass}" d=${d} vector-effect="non-scaling-stroke" />
-    ${keyed(d, flowDot(slot, key, animate, scale))}
+    <path id=${id} class="${slot.flow.lineClass}" d=${line.d} vector-effect="non-scaling-stroke" />
+    ${keyed(line.d, flowDot(slot, key, { animate, line, radius: scale }))}
   </svg>`;
 };
 
@@ -173,10 +183,19 @@ export const individualElement = (
   if (!slot) {
     return spacer;
   }
+  // The right slots' lines are drawn in the card's flow overlay (`rightIndividualFlow`).
+  const line = key === "left-top" || key === "left-bottom" ? leftLines[key] : "";
   return layouts[key]({
     slot,
+    line,
     label: html`<span class="label">${slot.node.name}</span>`,
     circle: individualCircle(main, config, slot.node, key),
-    dot: flowDot(slot, key, animate),
+    dot: line
+      ? flowDot(slot, key, {
+          animate,
+          line: { d: line, reversed: reversePath(line) },
+          radius: 1.75,
+        })
+      : nothing,
   });
 };

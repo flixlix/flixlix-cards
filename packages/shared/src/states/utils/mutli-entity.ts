@@ -5,5 +5,5 @@ export const getEntityNames = (entities: string): string[] => {
 export const getFirstEntityName = (entities: string): string => {
   const names = getEntityNames(entities);
 
-  return names.at(0) ?? "";
+  return names[0] ?? "";
 };

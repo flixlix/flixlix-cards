@@ -36,6 +36,10 @@
     "display_zero_tolerance": "Vis ingen tolerance",
     "double_tap_action": "Dobbelttryk-handling",
     "entity_generator": "Generator",
+    "flow_rate_model": "Flowhastighedsmodel",
+    "flow_rate_model_duration": "Varighed (standard)",
+    "flow_rate_model_relative": "Relativ",
+    "flow_rate_model_speed": "Hastighed",
     "fossil_fuel_percentage": "Fossilt Brændstof",
     "grey_color": "Grå farve",
     "grey_out": "Grået ud",
@@ -84,7 +88,6 @@
     "transparency": "Transparens",
     "unit_of_measurement": "Enhed",
     "unit_white_space": "Enhed tomt mellemrum",
-    "use_metadata": "Brug Metadata",
-    "use_new_flow_rate_model": "Ny flowhastighedsmodel"
+    "use_metadata": "Brug Metadata"
   }
 }

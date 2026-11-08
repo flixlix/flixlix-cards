@@ -185,8 +185,16 @@ function configOptions(
     ...(card === "energy"
       ? []
       : [
-          make("min_expected_power", "Minimum value for the new flow formula.", "flow-formula"),
-          make("max_expected_power", "Maximum value for the new flow formula.", "flow-formula"),
+          make(
+            "min_expected_power",
+            "Minimum value for the duration and speed flow rate models.",
+            "flow-formula"
+          ),
+          make(
+            "max_expected_power",
+            "Maximum value for the duration and speed flow rate models.",
+            "flow-formula"
+          ),
         ]),
     make("display_zero_lines", "Behavior of inactive lines.", "display-zero-lines"),
     make("full_size", "Experimental, fill the screen in panel mode."),
@@ -196,8 +204,14 @@ function configOptions(
       ? []
       : [
           make(
+            "flow_rate_model",
+            "duration (default), speed or relative: how dot speed follows power.",
+            "flow-formula",
+            ["duration", "speed", "relative"]
+          ),
+          make(
             "use_new_flow_rate_model",
-            "New (absolute) flow formula, on by default; false for the relative one.",
+            "Older alias of flow_rate_model; false is relative.",
             "flow-formula"
           ),
         ]),

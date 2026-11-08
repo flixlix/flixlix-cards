@@ -36,6 +36,10 @@
     "display_zero_tolerance": "Zobrazit nulovou toleranci",
     "double_tap_action": "Akce při dvojitém klepnutí",
     "entity_generator": "Generátor",
+    "flow_rate_model": "Model průtoku",
+    "flow_rate_model_duration": "Doba (výchozí)",
+    "flow_rate_model_relative": "Relativní",
+    "flow_rate_model_speed": "Rychlost",
     "fossil_fuel_percentage": "Fosilní palivo",
     "grey_color": "Šedá barva",
     "grey_out": "Šedý výstup",
@@ -84,7 +88,6 @@
     "transparency": "Průhlednost",
     "unit_of_measurement": "Jednotka",
     "unit_white_space": "Mezera u jednotky",
-    "use_metadata": "Použít Metadata",
-    "use_new_flow_rate_model": "Nový model průtoku"
+    "use_metadata": "Použít Metadata"
   }
 }

@@ -36,6 +36,10 @@
     "display_zero_tolerance": "Wyświetl tolerancję zera",
     "double_tap_action": "Akcja podwójnego dotknięcia",
     "entity_generator": "Generator",
+    "flow_rate_model": "Model wskaźnika przepływu",
+    "flow_rate_model_duration": "Czas trwania (domyślnie)",
+    "flow_rate_model_relative": "Względny",
+    "flow_rate_model_speed": "Prędkość",
     "fossil_fuel_percentage": "Paliwo kopalne",
     "grey_color": "Kolor szary",
     "grey_out": "Szary",
@@ -84,7 +88,6 @@
     "transparency": "Przezroczystość",
     "unit_of_measurement": "Jednostka",
     "unit_white_space": "Spacja jednostki",
-    "use_metadata": "Użyj metadanych",
-    "use_new_flow_rate_model": "Nowy model wskaźnika przepływu"
+    "use_metadata": "Użyj metadanych"
   }
 }

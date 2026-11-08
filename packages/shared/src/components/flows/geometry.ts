@@ -195,18 +195,23 @@ export const flowScale = ({ hub, home, solar, battery, rightTop }: FlowLayout): 
   return Math.max(0, Math.min(Math.max(across, down) / 100, ...verticals));
 };
 
+/** A flow line's SVG path data, and the same line drawn from its other end for dots running back. */
+export type FlowLine = { d: string; reversed: string };
+
 export type FlowPaths = {
   /** Pixels per line unit; flow dots have a radius of one unit. */
   scale: number;
-  solarToHome?: string;
-  solarToGrid?: string;
-  solarToBattery?: string;
-  gridToHome?: string;
-  batteryToHome?: string;
-  batteryToGrid?: string;
-  rightTopToHome?: string;
-  rightBottomToHome?: string;
+  solarToHome?: FlowLine;
+  solarToGrid?: FlowLine;
+  solarToBattery?: FlowLine;
+  gridToHome?: FlowLine;
+  batteryToHome?: FlowLine;
+  batteryToGrid?: FlowLine;
+  rightTopToHome?: FlowLine;
+  rightBottomToHome?: FlowLine;
 };
+
+const flowLine = (path: Path): FlowLine => ({ d: toD(path), reversed: toD(reverse(path)) });
 
 /**
  * An elbow line from `from` into `to`, cut at both rings: down (or up) at `x`, a curve `curve`
@@ -220,12 +225,12 @@ const elbowLine = (
 ) => {
   const room = Math.abs(to.cx - x) - to.r - MIN_STRAIGHT;
   const size = Math.max(0, Math.min(scale, room / CURVE_WIDTH));
-  return toD(between(elbow(from, to, x, y, curve * size, size), from, to));
+  return flowLine(between(elbow(from, to, x, y, curve * size, size), from, to));
 };
 
 /** A straight line from `from` into `to`, cut at both rings. */
 const straightLine = (from: Ring, to: Ring, at: Partial<Point>) =>
-  toD(between(straight(from, to, at), from, to));
+  flowLine(between(straight(from, to, at), from, to));
 
 type Lines = Omit<FlowPaths, "scale">;
 

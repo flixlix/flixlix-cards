@@ -72,6 +72,7 @@ export default defineConfig({
       "flixlix/no-mwc-elements": "error",
       "flixlix/no-sliced-svg": "error",
       "flixlix/no-native-date-input": "error",
+      "flixlix/no-paced-key-points": "error",
       "vite-plus/prefer-vite-plus-imports": "error",
     },
     overrides: [
@@ -96,6 +97,12 @@ export default defineConfig({
           "vitest/valid-expect": ["error", { maxArgs: 2 }],
           "vitest/expect-expect": ["error", { assertFunctionNames: ["expect", "expectFlowCard"] }],
         },
+      },
+      {
+        // Shipped in the card bundles, which target older browsers than apps/web.
+        files: ["packages/shared/src/**", "packages/flixlix-cards/*/src/**"],
+        excludeFiles: ["**/*.test.ts", "packages/shared/src/testing/**"],
+        rules: { "flixlix/no-unsupported-runtime-apis": "error" },
       },
       {
         files: ["apps/web/**", "packages/ui/**"],

@@ -36,6 +36,10 @@
     "display_zero_tolerance": "Допуск для нульових значень",
     "double_tap_action": "Дія при подвійному натисканні",
     "entity_generator": "Генератор сутностей",
+    "flow_rate_model": "Алгоритм швидкості потоку",
+    "flow_rate_model_duration": "Тривалість (за замовчуванням)",
+    "flow_rate_model_relative": "Відносна",
+    "flow_rate_model_speed": "Швидкість",
     "fossil_fuel_percentage": "Частка викопного палива",
     "grey_color": "Колір затемнення",
     "grey_out": "Затемнити неактивні",
@@ -84,7 +88,6 @@
     "transparency": "Прозорість",
     "unit_of_measurement": "Одиниця виміру",
     "unit_white_space": "Пробіл між числом і одиницею",
-    "use_metadata": "Використовувати метадані",
-    "use_new_flow_rate_model": "Новий алгоритм швидкості потоку"
+    "use_metadata": "Використовувати метадані"
   }
 }

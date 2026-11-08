@@ -36,6 +36,10 @@
     "display_zero_tolerance": "Tolérance de l'affichage zéro",
     "double_tap_action": "Action de double tap",
     "entity_generator": "Générateur",
+    "flow_rate_model": "Modèle de débit",
+    "flow_rate_model_duration": "Durée (par défaut)",
+    "flow_rate_model_relative": "Relatif",
+    "flow_rate_model_speed": "Vitesse",
     "fossil_fuel_percentage": "Carburant fossile",
     "grey_color": "Couleur grise",
     "grey_out": "Griser",
@@ -84,7 +88,6 @@
     "transparency": "Transparence",
     "unit_of_measurement": "Unité",
     "unit_white_space": "Espace blanc de l'unité",
-    "use_metadata": "Utiliser les métadonnées",
-    "use_new_flow_rate_model": "Nouveau modèle de débit"
+    "use_metadata": "Utiliser les métadonnées"
   }
 }

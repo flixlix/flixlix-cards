@@ -88,7 +88,7 @@ export class EnergyFlowCardPlus extends LitElement {
       mega_threshold: coerceNumber(config.mega_threshold, defaultValues.megaThreshold),
       max_expected_power: coerceNumber(config.max_expected_power, defaultValues.maxExpectedPower),
       min_expected_power: coerceNumber(config.min_expected_power, defaultValues.minExpectedPower),
-      use_new_flow_rate_model: false,
+      flow_rate_model: "relative",
       display_zero_lines: displayZeroLinesWithDefaults(config.display_zero_lines),
     };
     const previousCollectionKey = this._energyCollectionKey;
