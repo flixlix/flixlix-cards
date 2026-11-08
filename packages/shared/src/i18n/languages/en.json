@@ -36,6 +36,10 @@
     "display_zero_tolerance": "Display Zero Tolerance",
     "double_tap_action": "Double Tap Action",
     "entity_generator": "Generator",
+    "flow_rate_model": "Flow Rate Model",
+    "flow_rate_model_duration": "Duration (default)",
+    "flow_rate_model_relative": "Relative",
+    "flow_rate_model_speed": "Speed",
     "fossil_fuel_percentage": "Fossil Fuel",
     "grey_color": "Grey Color",
     "grey_out": "Grey Out",
@@ -84,7 +88,6 @@
     "transparency": "Transparency",
     "unit_of_measurement": "Unit",
     "unit_white_space": "Unit White Space",
-    "use_metadata": "Use Metadata",
-    "use_new_flow_rate_model": "New Flow Rate Model"
+    "use_metadata": "Use Metadata"
   }
 }

@@ -1,3 +1,4 @@
+import { flowRateModel } from "@flixlix-cards/shared/card-state";
 import localize from "@flixlix-cards/shared/i18n";
 import { fireEvent } from "@flixlix-cards/shared/ha/common/dom/fire-event";
 import { type ConfigPage, type PowerFlowCardPlusConfig } from "@flixlix-cards/shared/types";
@@ -195,12 +196,12 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
         <subpage-header @go-back=${this._goBack} page=${currentPage}> </subpage-header>
         <ha-form
           .hass=${this.hass}
-          .data=${data}
+          .data=${{ ...data, flow_rate_model: flowRateModel(this._config) }}
           .schema=${advancedOptionsSchema(
             this._config.display_zero_lines?.mode ?? defaultValues.displayZeroLines.mode
           )}
           .computeLabel=${this._computeLabelCallback}
-          @value-changed=${this._valueChanged}
+          @value-changed=${this._advancedChanged}
         ></ha-form>
       `;
     }
@@ -258,6 +259,15 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
       return;
     }
     fireEvent(this, "config-changed", { config: ev.detail.value });
+  };
+
+  /** The form always carries `flow_rate_model`, which supersedes the older alias. */
+  private _advancedChanged = (ev: ValueChangedEvent<PowerFlowCardPlusConfig>): void => {
+    if (!this._config || !this.hass) {
+      return;
+    }
+    const { use_new_flow_rate_model: _alias, ...config } = ev.detail.value;
+    fireEvent(this, "config-changed", { config });
   };
 
   private _entityChanged(page: EntityPage, ev: ValueChangedEvent<Record<string, unknown>>): void {

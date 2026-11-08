@@ -131,13 +131,14 @@ Else, if you prefer the graphical editor, use the menu to add the resource:
 | max_flow_rate               | `number`  |                    6                     | Represents how much time it takes for the slowest dot to travel from one end to the other in seconds.                                                                                                                    |
 | kilo_threshold              | `number`  |                    0                     | The number of watts to display before converting to and displaying kilowatts. Setting of 0 will always display in kilowatts.                                                                                             |
 | clickable_entities          | `boolean` |                  false                   | If true, clicking on the entity will open the entity's more info dialog.                                                                                                                                                 |
-| min_expected_power          | `number`  |                   0.01                   | Represents the minimum amount of power (in Watts) expected to flow through the system at a given moment. Only used in the [New Flow Formula](#new-flow-formula).                                                         |
-| max_expected_power          | `number`  |                   2000                   | Represents the maximum amount of power (in Watts) expected to flow through the system at a given moment. Only used in the [New Flow Formula](#new-flow-formula).                                                         |
+| min_expected_power          | `number`  |                   0.01                   | Represents the minimum amount of power (in Watts) expected to flow through the system at a given moment. Only used by the `duration` and `speed` [flow rate models](#flow-formula).                                      |
+| max_expected_power          | `number`  |                   2000                   | Represents the maximum amount of power (in Watts) expected to flow through the system at a given moment. Only used by the `duration` and `speed` [flow rate models](#flow-formula).                                      |
 | display_zero_lines          | `object`  |             `{mode: "show"}`             | Check [Display Zero Lines](#display-zero-lines)                                                                                                                                                                          |
 | full_size                   | `boolean` |                  false                   | Warning: This option is experimental. To use this option, you must set your view to panel mode. If set to true, the card will take up the full height of the screen. And the Card should go to the center of the screen. |
 | style_ha_card               | `css`     |                                          | [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) Styling to apply to the container of the card (border and background of the card).                                                                               |
 | style_card_content          | `css`     |                                          | [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) Styling to apply to the content of the card (all circles and lines of the card).                                                                                 |
-| use_new_flow_rate_model     | `boolean` |                   true                   | The card uses the [New Flow Formula](#new-flow-formula) by default. If `false`, the card uses the old [Flow Formula](#flow-formula).                                                                                     |
+| flow_rate_model             | `string`  |                `duration`                | How dot speed follows power: `duration`, `speed` or `relative`. See [Flow Formula](#flow-formula).                                                                                                                       |
+| use_new_flow_rate_model     | `boolean` |                                          | Older alias of `flow_rate_model`: `false` is `relative`, `true` is `duration`. Ignored when `flow_rate_model` is set.                                                                                                    |
 | sort_individual_devices     | `boolean` |           true (since v0.3.1)            | If `true`, sort devices in order of power consumption -> entity id -> alphabetically.                                                                                                                                    |
 | allow_layout_break          | `boolean` |                  false                   | Always allow up to 4 individual devices to show, even when there is not enough space, causing visual layout break.                                                                                                       |
 
@@ -274,7 +275,7 @@ The Individual fields must be an array of objects. Each object must follow the f
 | display_zero_state  | `boolean`             | `true`          | If set to `true`, the state will be shown even if it is `0`. If set to `false`, the state will be hidden if it is `0`.                                                                                                                                                                                                                                                                                                                                         |
 | state_type          | `string`              | `power`         | The type of state to use for the entity. Can be `power` or `percentage`. When set to `power` the state will be the amount of power from the grid that is low-carbon. When set to `percentage` the state will be the percentage of power from the grid that is low-carbon.                                                                                                                                                                                      |
 | unit_white_space    | `boolean`             | `true`          | If set to `false` will not add any whitespace between unit and state. Otherwise, white space will be added.                                                                                                                                                                                                                                                                                                                                                    |
-| calculate_flow_rate | `boolean` or `number` | `true`          | When unset or `true`, the flow rate is calculated with the flow rate formula (the new or the old one, depending on `use_new_flow_rate_model`). If `false`, dots flow at a fixed pace. If set to a number, the flow rate will be set to that number. For example, defining the value `10` will ensure one dot will flow every 10 seconds.                                                                                                                       |
+| calculate_flow_rate | `boolean` or `number` | `true`          | When unset or `true`, the flow rate is calculated with the flow rate formula (see `flow_rate_model`). If `false`, dots flow at a fixed pace. If set to a number, the flow rate will be set to that number. For example, defining the value `10` will ensure one dot will flow every 10 seconds.                                                                                                                                                                |
 
 #### Color Object
 
@@ -316,15 +317,15 @@ This Feature allows you to configure an additional small text for each Individua
 
 This feature allows you to configure how the card handles a Grid Power Outage scenario.
 
-| Name                | Type                  | Description                                                                                                                                                                                                                                                                                                                              |
-| ------------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| entity              | `string` required     | Entity ID providing a state that changes when there is a Power Outage. (eg: `binary_sensor.grid_connection_status`). Doesn't need to be a binary_sensor.                                                                                                                                                                                 |
-| entity_generator    | `string`              | Entity ID providing the power of a Generator. (eg: `sensor.generator_power`). This is optional, meaning if you don't use this, the card will assume the grid is the only source of power.                                                                                                                                                |
-| state_alert         | `string`              | The state the provided entity is at when there is a power outage. Default is `on`, meaning if the entity's state is `on` the card will assume there is a power outage.                                                                                                                                                                   |
-| icon_alert          | `string`              | An icon path to be override the grid icon when there is a power outage. Default is `mdi:transmission-tower-off`.                                                                                                                                                                                                                         |
-| label_alert         | `string`              | A text that will be displayed below the icon when there is a power outage.                                                                                                                                                                                                                                                               |
-| calculate_flow_rate | `boolean` or `number` | `true`                                                                                                                                                                                                                                                                                                                                   |
-|                     |                       | When unset or `true`, the flow rate is calculated with the flow rate formula (the new or the old one, depending on `use_new_flow_rate_model`). If `false`, dots flow at a fixed pace. If set to a number, the flow rate will be set to that number. For example, defining the value `10` will ensure one dot will flow every 10 seconds. |
+| Name                | Type                  | Description                                                                                                                                                                                                                                                                                     |
+| ------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| entity              | `string` required     | Entity ID providing a state that changes when there is a Power Outage. (eg: `binary_sensor.grid_connection_status`). Doesn't need to be a binary_sensor.                                                                                                                                        |
+| entity_generator    | `string`              | Entity ID providing the power of a Generator. (eg: `sensor.generator_power`). This is optional, meaning if you don't use this, the card will assume the grid is the only source of power.                                                                                                       |
+| state_alert         | `string`              | The state the provided entity is at when there is a power outage. Default is `on`, meaning if the entity's state is `on` the card will assume there is a power outage.                                                                                                                          |
+| icon_alert          | `string`              | An icon path to be override the grid icon when there is a power outage. Default is `mdi:transmission-tower-off`.                                                                                                                                                                                |
+| label_alert         | `string`              | A text that will be displayed below the icon when there is a power outage.                                                                                                                                                                                                                      |
+| calculate_flow_rate | `boolean` or `number` | `true`                                                                                                                                                                                                                                                                                          |
+|                     |                       | When unset or `true`, the flow rate is calculated with the flow rate formula (see `flow_rate_model`). If `false`, dots flow at a fixed pace. If set to a number, the flow rate will be set to that number. For example, defining the value `10` will ensure one dot will flow every 10 seconds. |
 
 #### Display Zero Lines
 
@@ -482,7 +483,55 @@ This should give you something like this:
 
 ### Flow Formula
 
-This formula is based on the official formula used by the Energy Distribution card. It is only used when `use_new_flow_rate_model` is set to `false`; by default the card uses the [New Flow Formula](#new-flow-formula).
+`flow_rate_model` picks how a line's value becomes the time one dot takes to travel it:
+
+| `flow_rate_model`    | What moves linearly with power             | Depends on other lines |
+| -------------------- | ------------------------------------------ | ---------------------- |
+| `duration` (default) | time per dot                               | no                     |
+| `speed`              | dot speed (1 / time per dot)               | no                     |
+| `relative`           | time per dot, by the line's share of total | yes                    |
+
+Seconds per dot with the default `min_flow_rate: 0.75`, `max_flow_rate: 6`, `min_expected_power: 0.01` and `max_expected_power: 2000` (for `relative`, the line's share of all lines):
+
+| Line value             | `duration` | `speed` | `relative` |
+| ---------------------- | ---------: | ------: | ---------: |
+| 0 W (0 %)              |       6.00 |    6.00 |       6.00 |
+| 250 W (12.5 %)         |       5.34 |    3.20 |       5.34 |
+| 500 W (25 %)           |       4.69 |    2.18 |       4.69 |
+| 1000 W (50 %)          |       3.38 |    1.33 |       3.38 |
+| 1500 W (75 %)          |       2.06 |    0.96 |       2.06 |
+| 2000 W or more (100 %) |       0.75 |    0.75 |       0.75 |
+
+You may want to play around with `max_expected_power`, `min_expected_power`, `max_flow_rate` and `min_flow_rate` to get the speeds that you wish. `use_new_flow_rate_model` is the older way to choose: `false` means `relative`, `true` or unset means `duration`; `flow_rate_model` wins when both are set.
+
+#### Duration model (default)
+
+The time per dot shrinks linearly with the value, independently from other lines: a state of `10W` always flows with the same velocity, no matter what other lines are doing. This is how the card behaved before 0.4.0-beta.0.
+
+```js
+if (value > maxIn) return minOut; // above max_expected_power, use the fastest speed
+return ((value - minIn) * (minOut - maxOut)) / (maxIn - minIn) + maxOut;
+
+// value = value of the current line to calculate (eg: grid to home)
+// minIn = min_expected_power, maxIn = max_expected_power
+// maxOut = max_flow_rate (seconds per dot at min_expected_power)
+// minOut = min_flow_rate (seconds per dot at max_expected_power)
+// Below min_expected_power, dots move slower than max_flow_rate.
+```
+
+#### Speed model
+
+Like `duration` it is independent from other lines, but the dot speed (one over the duration) grows linearly with the value, so twice the power looks about twice as fast. Mid-range values move noticeably faster than with `duration`. Values outside the expected range use the slowest or fastest speed.
+
+```js
+progress = clamp((value - minIn) / (maxIn - minIn), 0, 1);
+speed = 1 / maxOut + progress * (1 / minOut - 1 / maxOut);
+return 1 / speed; // seconds for one dot to travel the line
+```
+
+#### Relative model
+
+Based on the official formula used by the Energy Distribution card. Each line's flow rate is relative to all the other lines.
 
 ```js
 max - (value / totalLines) * (max - min);
@@ -493,37 +542,7 @@ max - (value / totalLines) * (max - min);
 //   solarToGrid + batteryConsumption + batteryFromGrid + batteryToGrid
 ```
 
-### New Flow Formula
-
-In contrast to the old flow formula, this formula calculates the flow rate independently from other lines, making it more intuitive to interpret the perceived power. This means that a state of `10W` will always flow with the same velocity, no matter what other lines are doing. In other words this flow rate is calculated in absolute and not relative values.
-
-This is the default formula. To use the old [Flow Formula](#flow-formula) instead, set `use_new_flow_rate_model` in the main configuration to `false`. You may want to play around with the `max_expected_power`, `min_expected_power`, `max_flow_rate` and `min_flow_rate` to get the speeds that you wish.
-
-The dot speed (one over the duration) grows linearly with the value, so twice the power looks about twice as fast. Values outside the expected range use the slowest or fastest speed.
-
-```js
-progress = clamp((value - minIn) / (maxIn - minIn), 0, 1);
-speed = 1 / minOut + progress * (1 / maxOut - 1 / minOut);
-return 1 / speed; // seconds for one dot to travel the line
-
-// value = value of the current line to calculate (eg: grid to home)
-//
-// minIn = amount of watts at which the lowest speed will be selected.
-//   ↳ In your configuration this is `min_expected_power`
-//   ↳ eg: setting this at `100` means that at `100` watts, the dots will still flow at the lowest speed
-// maxIn = amount of watts at which the highest speed will be selected.
-//   ↳ In your configuration this is `max_expected_power`
-//   ↳ eg: setting this at `2000` means that everything more than `2000` will flow at the highest speed selected
-//
-// minOut = amount of watts at which the lowest speed will be selected.
-//   ↳ In your configuration this is `max_flow_rate`
-//   ↳ eg: setting this at `5` means that one dot will take `5` second to travel
-// maxOut = amount of watts at which the highest speed will be selected.
-//   ↳ In your configuration this is `min_flow_rate`
-//   ↳ eg: setting this at `1` means that one dot will take `1` second to travel
-```
-
-The following video aims to show the diffence between the two flow formulas:
+The following video aims to show the difference between the relative and an absolute flow formula:
 
 <https://user-images.githubusercontent.com/61006057/231479254-91d6c625-8f38-4abb-b9ba-8dd24d6395f3.mp4>
 

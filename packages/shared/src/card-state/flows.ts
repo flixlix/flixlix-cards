@@ -1,4 +1,9 @@
-import { type FlowCardPlusConfig, type IndividualObject } from "@flixlix-cards/shared/types";
+import {
+  FLOW_RATE_MODELS,
+  type FlowCardPlusConfig,
+  type FlowRateModel,
+  type IndividualObject,
+} from "@flixlix-cards/shared/types";
 import { type Balance } from "./nodes";
 import { type CardState, type Flow, type FlowName, type Flows } from "./types";
 
@@ -10,8 +15,36 @@ const SHORTEST_DURATION = 0.01;
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
+const isFlowRateModel = (value: unknown): value is FlowRateModel =>
+  FLOW_RATE_MODELS.some((model) => model === value);
+
 /**
- * Seconds per dot in the new model. Dot speed (1 / duration), not duration, moves linearly
+ * `flow_rate_model` when it is a known model, else the older `use_new_flow_rate_model` alias:
+ * `false` is the relative model, anything else the default duration model.
+ */
+export const flowRateModel = (config: Partial<FlowCardPlusConfig>): FlowRateModel => {
+  if (isFlowRateModel(config.flow_rate_model)) {
+    return config.flow_rate_model;
+  }
+  return config.use_new_flow_rate_model === false ? "relative" : "duration";
+};
+
+/**
+ * Seconds per dot in the duration model: time per dot shrinks linearly from `max_flow_rate` at
+ * `min_expected_power` to `min_flow_rate` at `max_expected_power` and stays there above it. Below
+ * `min_expected_power` it keeps growing past `max_flow_rate`.
+ */
+const linearDuration = (config: FlowCardPlusConfig, value: number): number => {
+  const { min_flow_rate: min, max_flow_rate: max } = config;
+  const { min_expected_power: minIn, max_expected_power: maxIn } = config;
+  if (value > maxIn) {
+    return min;
+  }
+  return ((value - minIn) * (min - max)) / (maxIn - minIn) + max;
+};
+
+/**
+ * Seconds per dot in the speed model. Dot speed (1 / duration), not duration, moves linearly
  * across the expected power range, so twice the power looks about twice as fast.
  */
 const linearSpeedDuration = (config: FlowCardPlusConfig, value: number): number => {
@@ -33,8 +66,12 @@ const flowRate = (config: FlowCardPlusConfig, value: number, total: number): num
     const denominator = total > 0 ? total : value > 0 ? value : 1;
     return max - (value / denominator) * (max - min);
   };
-  const result =
-    (config.use_new_flow_rate_model ?? true) ? linearSpeedDuration(config, value) : relative();
+  const durations: Record<FlowRateModel, () => number> = {
+    duration: () => linearDuration(config, value),
+    speed: () => linearSpeedDuration(config, value),
+    relative,
+  };
+  const result = durations[flowRateModel(config)]();
   return Number.isFinite(result) ? result : max;
 };
 

@@ -8,6 +8,10 @@ import {
   type SecondaryInfoType,
 } from "./type";
 
+/** How a flow's value maps to seconds per dot; see the flow formula docs. */
+export const FLOW_RATE_MODELS = ["duration", "speed", "relative"] as const;
+export type FlowRateModel = (typeof FLOW_RATE_MODELS)[number];
+
 export type DisplayZeroLinesMode = "show" | "grey_out" | "transparency" | "hide" | "custom";
 
 interface mainConfigOptions {
@@ -20,6 +24,8 @@ interface mainConfigOptions {
   clickable_entities: boolean;
   max_expected_power: number;
   min_expected_power: number;
+  flow_rate_model?: FlowRateModel;
+  /** Older alias of `flow_rate_model`: `false` is "relative", otherwise "duration". */
   use_new_flow_rate_model?: boolean;
   base_decimals: number;
   kilo_decimals: number;

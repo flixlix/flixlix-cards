@@ -508,7 +508,7 @@ max - (value / totalLines) * (max - min);
 //   solarToGrid + batteryConsumption + batteryFromGrid + batteryToGrid
 ```
 
-The energy card always uses this relative formula. It shows totals in Wh for the selected period, which don't fit a fixed power scale, so the absolute "new flow formula" from Power Flow Card Plus is not available here: `use_new_flow_rate_model`, `min_expected_power` and `max_expected_power` have no effect on this card.
+The energy card always uses this relative formula. It shows totals in Wh for the selected period, which don't fit a fixed power scale, so the absolute `duration` and `speed` flow rate models from Power Flow Card Plus are not available here: `flow_rate_model`, `use_new_flow_rate_model`, `min_expected_power` and `max_expected_power` have no effect on this card.
 
 ### To-Do List
 

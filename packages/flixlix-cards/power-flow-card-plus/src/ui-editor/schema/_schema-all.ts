@@ -1,7 +1,18 @@
 import localize from "@flixlix-cards/shared/i18n";
 import { displayZeroLinesSchema } from "@flixlix-cards/shared/ui-editor/schema/display-zero-lines";
+import { FLOW_RATE_MODELS } from "@flixlix-cards/shared/types";
 import memoizeOne from "memoize-one";
-import { any, assign, boolean, integer, number, object, optional, string } from "superstruct";
+import {
+  any,
+  assign,
+  boolean,
+  enums,
+  integer,
+  number,
+  object,
+  optional,
+  string,
+} from "superstruct";
 
 const baseLovelaceCardConfig = object({
   type: string(),
@@ -35,6 +46,7 @@ export const cardConfigStruct = assign(
     transparency_zero_lines: optional(number()),
     greyout_zero_lines: optional(boolean()),
     display_zero_lines: optional(any()),
+    flow_rate_model: optional(enums([...FLOW_RATE_MODELS])),
     use_new_flow_rate_model: optional(boolean()),
     full_size: optional(boolean()),
     style_ha_card: optional(any()),
@@ -146,10 +158,16 @@ export const advancedOptionsSchema = memoizeOne((displayZeroLinesMode: string) =
         selector: { boolean: {} },
       },
       {
-        name: "use_new_flow_rate_model",
-        label: "New Flow Model?",
-        selector: { boolean: {} },
-        default: true,
+        name: "flow_rate_model",
+        selector: {
+          select: {
+            mode: "dropdown",
+            options: FLOW_RATE_MODELS.map((model) => ({
+              value: model,
+              label: localize(`editor.flow_rate_model_${model}`),
+            })),
+          },
+        },
       },
       {
         name: "sort_individual_devices",
