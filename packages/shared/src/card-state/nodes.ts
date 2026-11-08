@@ -90,6 +90,7 @@ const nodeFormat = (entity: BaseConfigEntity | undefined) => ({
   unit: entity?.unit_of_measurement,
   unitWhiteSpace: entity?.unit_white_space,
   decimals: entity?.decimals,
+  reading: true,
 });
 
 type GridConfig = ConfigEntities["grid"];
@@ -319,7 +320,7 @@ const nonFossilText = ({ input, readings, balance, format }: NodeContext): strin
   const { gridImport, nonFossilFraction } = balance.totals;
   return fossil?.state_type === "percentage"
     ? format(tolerated(nonFossilFraction * 100), { unit: "%", unitWhiteSpace, decimals: 0 })
-    : format(tolerated(gridImport * nonFossilFraction), { unitWhiteSpace });
+    : format(tolerated(gridImport * nonFossilFraction), { unitWhiteSpace, reading: true });
 };
 
 export const nonFossilNode = (context: NodeContext): NonFossilObject => {

@@ -100,4 +100,21 @@ describe("energyReadings", () => {
 
     expect(result.solar.total).toBe(1500);
   });
+
+  test.each([
+    ["m³", 348.9],
+    ["L", 348.9],
+    ["MWh", 348_900_000],
+    ["mWh", 0.3489],
+  ])("without date selection, a reading in %s reads as %s", (unit, expected) => {
+    const result = ready(
+      energyReadings(
+        hassWith({ "sensor.water": ["348.9", unit] }),
+        config({ individual: [{ entity: "sensor.water" }] }, { energy_date_selection: false }),
+        {}
+      )
+    );
+
+    expect(result.individuals[0]).toBeCloseTo(expected);
+  });
 });

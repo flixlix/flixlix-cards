@@ -129,6 +129,7 @@ export const individualNodes = (
         unit: field.unit_of_measurement,
         unitWhiteSpace: field.unit_white_space,
         accept_negative: feeding,
+        reading: true,
       }),
       secondary: individualSecondary(input.hass, format, field, input.templates.individual[index]),
     };

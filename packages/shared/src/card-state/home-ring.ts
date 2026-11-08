@@ -35,7 +35,11 @@ const usageText = (
     (sum, individual) => sum + (individual.has ? (individual.state ?? 0) : 0),
     0
   );
-  const options = { unit: home?.unit_of_measurement, unitWhiteSpace: home?.unit_white_space };
+  const options = {
+    unit: home?.unit_of_measurement,
+    unitWhiteSpace: home?.unit_white_space,
+    reading: true,
+  };
   const consumption = totals.measuredHome ?? flows.home;
   return format(
     home?.subtract_individual ? consumption - individualConsumption : consumption,
