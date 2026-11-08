@@ -1,4 +1,5 @@
-import { type HomeAssistant, formatNumber } from "custom-card-helpers";
+import { formatNumber } from "@flixlix-cards/shared/utils/format-number";
+import { type HomeAssistant } from "custom-card-helpers";
 import {
   type EnergyBreakdownCardConfig,
   type EnergyBreakdownEntityConfig,
