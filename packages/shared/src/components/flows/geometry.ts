@@ -266,8 +266,8 @@ const gridLines = ({ hub, home, grid, solar, battery }: FlowLayout, scale: numbe
   if (!grid) {
     return {};
   }
-  // The grid line enters the home below the solar line when there is no battery line under it.
-  const below = battery ? 0 : solar ? 6 : 3;
+  // Without a battery, the solar line enters the home on its axis, so the grid line goes below it.
+  const below = solar && !battery ? 6 : 0;
   return { gridToHome: straightLine(grid, home, { y: hub.y + below * scale }) };
 };
 
