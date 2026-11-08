@@ -47,6 +47,8 @@ export const styles = css`
 
   ha-card {
     overflow: hidden;
+    /* Keeps the z-index of the circles inside the card, under overlays like a floating nav bar. */
+    isolation: isolate;
   }
 
   ha-card.full-size {
