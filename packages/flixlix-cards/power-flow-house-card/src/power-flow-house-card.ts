@@ -38,12 +38,16 @@ import {
   LABEL_ANCHORS,
   panelSeams,
   type Point,
+  type SceneGroup,
   project,
-  sceneGroups,
+  fixtures,
+  GRID_CABLE_START,
+  houseShell,
   type ScreenPoint,
   SHADOW,
   type Shape,
   WIRE_ROUTES,
+  WIRES_IN_FRONT,
 } from "./scene";
 import { styles } from "./styles";
 import { type PowerFlowHouseCardConfig } from "./types";
@@ -69,6 +73,8 @@ const isDarkMode = (hass: HomeAssistant): boolean => {
 
 const isPageHidden = () => typeof document !== "undefined" && document.visibilityState === "hidden";
 
+type Box = { x: number; y: number; width: number; height: number };
+
 /** Screen-space box the scene and its labels take, for the viewBox. */
 class Extent {
   private _box: [left: number, top: number, right: number, bottom: number] = [
@@ -88,7 +94,7 @@ class Extent {
     ];
   }
 
-  viewBox(padding: number): { x: number; y: number; width: number; height: number } {
+  viewBox(padding: number): Box {
     const [left, top, right, bottom] = this._box;
     return {
       x: left - padding,
@@ -111,6 +117,35 @@ const route = (wire: HouseWire) => {
     .map((point, index) => `${index === 0 ? "M" : "L"}${project(point).join(" ")}`)
     .join("");
 };
+
+/**
+ * The mask that fades the grid cable out: opaque up to where its label points at it, transparent
+ * where it leaves the card.
+ */
+const gridFade = (box: Box) => {
+  const [startX, startY] = project(GRID_CABLE_START);
+  const [stepX, stepY] = project([
+    GRID_CABLE_START[0] + 1,
+    GRID_CABLE_START[1],
+    GRID_CABLE_START[2],
+  ]);
+  const [fromX, fromY] = project(LABEL_ANCHORS.grid.at);
+  const [dx, dy] = [stepX - startX, stepY - startY];
+  const toEdge = Math.min((box.x + box.width - startX) / dx, (box.y + box.height - startY) / dy);
+  const [toX, toY] = [startX + dx * toEdge, startY + dy * toEdge];
+  return svg`<defs>
+    <linearGradient id="house-grid-fade" gradientUnits="userSpaceOnUse" x1=${fromX} y1=${fromY} x2=${toX} y2=${toY}>
+      <stop offset="0" stop-color="#fff"></stop>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"></stop>
+    </linearGradient>
+    <mask id="house-grid-cable" maskUnits="userSpaceOnUse" x=${box.x} y=${box.y} width=${box.width} height=${box.height}>
+      <rect x=${box.x} y=${box.y} width=${box.width} height=${box.height} fill="url(#house-grid-fade)"></rect>
+    </mask>
+  </defs>`;
+};
+
+/** The grid cable fades out towards the card's edge. */
+const fadeOf = (wire: HouseWire) => (wire.node === "grid" ? "url(#house-grid-cable)" : nothing);
 
 /** Pulses travel this many times slower than the flow rate's seconds per dot. */
 const PULSE_SLOWDOWN = 2.5;
@@ -260,13 +295,13 @@ export class PowerFlowHouseCard extends LitElement {
             role="img"
             aria-label=${labels.map((label) => label.name).join(", ")}
           >
-            ${scene} ${leaders}
+            ${gridFade(box)} ${scene} ${leaders}
           </svg>
           <div class="labels">
             ${labels.map((label) => {
               const anchor = LABEL_ANCHORS[label.node];
               const [x, y] = project(anchor.at);
-              return this._label(label, at([x, y + anchor.leader]), anchor.leader);
+              return this._label(label, at([x, y + anchor.leader]), anchor);
             })}
           </div>
         </div>
@@ -305,7 +340,7 @@ export class PowerFlowHouseCard extends LitElement {
       list.map((point, index) => `${index === 0 ? "M" : "L"}${screen(point).join(" ")}`).join("");
     const { nodes } = cardState;
     const soc = nodes.battery.state_of_charge.state;
-    const groups = sceneGroups({
+    const parts = fixtures({
       solar: nodes.solar.has,
       battery: nodes.battery.has,
       soc: typeof soc === "number" ? soc / 100 : null,
@@ -319,6 +354,8 @@ export class PowerFlowHouseCard extends LitElement {
           .map(([from, to]) => path([from, to]))
           .join("")} stroke="var(--house-panel-seam)" stroke-width="1"></path>`
       : nothing;
+    const group = (part: SceneGroup) =>
+      svg`<g class="node ${part.node}">${part.shapes.map(shape)}${part.node === "solar" ? seams : nothing}</g>`;
     const [groundX, groundY] = project([4, 6, 0]);
     return svg`
       <defs>
@@ -332,15 +369,19 @@ export class PowerFlowHouseCard extends LitElement {
       </defs>
       <ellipse cx=${groundX} cy=${groundY + 30} rx="260" ry="150" fill="url(#house-ground)"></ellipse>
       <polygon points=${points(SHADOW)} fill="var(--house-shadow)" filter="url(#house-blur)" opacity="0.55"></polygon>
-      ${groups.map(
-        (group) =>
-          svg`<g class="node ${group.node}">${group.shapes.map(shape)}${group.node === "solar" ? seams : nothing}</g>`
+      ${[houseShell()].map(group)}
+      ${this._wires(
+        wires.filter((wire) => !WIRES_IN_FRONT.has(wire.node)),
+        cardState.animate
       )}
-      ${this._wires(wires, cardState.animate)}
+      ${parts.map(group)}
+      ${this._wires(
+        wires.filter((wire) => WIRES_IN_FRONT.has(wire.node)),
+        cardState.animate
+      )}
     `;
   }
 
-  /** Wires under-to-over in layers, so they meet cleanly at the inverter. */
   /**
    * Every wire as a neutral track; one carrying power also gets its colour and moving pulses.
    * Wires are not part of the extent: the grid cable runs on past the card's edge.
@@ -349,13 +390,13 @@ export class PowerFlowHouseCard extends LitElement {
     const power = (wire: HouseWire) => {
       const d = route(wire);
       const duration = `animation-duration: ${wire.durationSeconds * PULSE_SLOWDOWN}s`;
-      return svg`<g class="power ${wire.node}" style=${`--wire-color: ${wire.color}`}>
+      return svg`<g class="power ${wire.node}" style=${`--wire-color: ${wire.color}`} mask=${fadeOf(wire)}>
         <path class="flow" d=${d}></path>
         ${animate ? svg`<path class="pulse" d=${d} style=${duration}></path>` : nothing}
       </g>`;
     };
     return svg`
-      ${wires.map((wire) => svg`<path class="track ${wire.node}" d=${route(wire)}></path>`)}
+      ${wires.map((wire) => svg`<path class="track ${wire.node}" d=${route(wire)} mask=${fadeOf(wire)}></path>`)}
       ${wires.filter((wire) => wire.power > 0).map(power)}
     `;
   }
@@ -447,20 +488,16 @@ export class PowerFlowHouseCard extends LitElement {
     const [x, y] = project(anchor.at);
     const end = y + anchor.leader;
     const height = LABEL_HEIGHT + (label.extra ? EXTRA_LINE_HEIGHT : 0);
-    if (anchor.leader === 0) {
-      extent.include([x - LABEL_WIDTH / 2, y - height / 2], 4);
-      extent.include([x + LABEL_WIDTH / 2, y + height / 2], 4);
-      return nothing;
-    }
+    const reach = anchor.side === "left" ? 10 - LABEL_WIDTH : LABEL_WIDTH - 10;
     extent.include([x, end + Math.sign(anchor.leader) * height], 4);
-    extent.include([x - 10 + LABEL_WIDTH, end], 4);
+    extent.include([x + reach, end], 4);
     return svg`<path d="M${x} ${y}V${end}" stroke="var(--house-leader)" stroke-width="0.8"></path>
       <circle cx=${x} cy=${y} r="1.6" fill="var(--house-leader)"></circle>`;
   }
 
-  /** A label above (`leader` < 0), below (> 0) or centred on its anchor (0). */
-  private _label(label: Label, position: string, leader: number) {
-    const placement = leader === 0 ? "on-line" : leader > 0 ? "down" : "up";
+  /** A label at the end of its leader, above or below its anchor, running right or left. */
+  private _label(label: Label, position: string, anchor: (typeof LABEL_ANCHORS)[HouseNode]) {
+    const placement = `${anchor.leader > 0 ? "down" : "up"} ${anchor.side ?? "right"}`;
     const clickable = this._config.clickable_entities;
     const { actions, entity } = label;
     return html`<div

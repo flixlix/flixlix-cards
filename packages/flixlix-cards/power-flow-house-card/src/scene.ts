@@ -26,8 +26,8 @@ export type Face = { kind: "face"; points: Point[]; fill: string };
 export type Icon = { kind: "icon"; face: "front" | "gable"; at: Point; size: number; path: string };
 export type Shape = Face | Icon;
 
-/** The house, one group per node so each can be clicked on its own. */
-export type SceneGroup = { node: HouseNode | "inverter"; shapes: Shape[] };
+/** A part of the house, one group per node so each can be clicked on its own. */
+export type SceneGroup = { node: HouseNode | "inverter" | "outlet"; shapes: Shape[] };
 
 const face = (fill: string, ...points: Point[]): Face => ({ kind: "face", points, fill });
 
@@ -94,9 +94,15 @@ const house = (): Shape[] => [
     [OVERHANG_X, 4, 8.6 - FASCIA],
     [OVERHANG_X, BACK_EAVE_Y, roofHeight(BACK_EAVE_Y) - FASCIA]
   ),
-  // the plate on the front wall where the home wire ends
-  ...box([7.6, FRONT, 2.35], [1, 0.12, 1]),
-  { kind: "icon", face: "front", at: [8.1, FRONT + 0.13, 2.85], size: 0.55, path: mdiHome },
+];
+
+const OUTLET = { x0: 7.6, x1: 8.6 } as const;
+const OUTLET_X = (OUTLET.x0 + OUTLET.x1) / 2;
+
+/** The plate on the front wall where the home wire ends. */
+const outlet = (): Shape[] => [
+  ...box([OUTLET.x0, FRONT, 2.35], [OUTLET.x1 - OUTLET.x0, 0.12, 1]),
+  { kind: "icon", face: "front", at: [OUTLET_X, FRONT + 0.13, 2.85], size: 0.55, path: mdiHome },
 ];
 
 /** The panel array: 6 columns along the ridge, 2 rows down the front roof. */
@@ -155,7 +161,7 @@ const socFill = (top: number, soc: number): Face =>
   );
 
 /** Where every wire meets, on the gable wall. */
-const INVERTER = { y0: 4.5, y1: 5.6, z0: 2.3, z1: 3.4 } as const;
+export const INVERTER = { y0: 4.5, y1: 5.6, z0: 2.3, z1: 3.4 } as const;
 const INVERTER_Y = (INVERTER.y0 + INVERTER.y1) / 2;
 const INVERTER_Z = (INVERTER.z0 + INVERTER.z1) / 2;
 
@@ -175,23 +181,32 @@ const inverter = (): Shape[] => [
 
 export type ScenePresence = { solar: boolean; battery: boolean; soc: number | null };
 
-export const sceneGroups = ({ solar, battery: hasBattery, soc }: ScenePresence): SceneGroup[] => [
-  { node: "home", shapes: house() },
+/** Walls and roof: drawn before the wires, which run on them. */
+export const houseShell = (): SceneGroup => ({ node: "home", shapes: house() });
+
+/**
+ * What the wires connect, drawn over the wires: each wire runs into its fixture, so the fixture
+ * hides the wire's end the way it would in 3D.
+ */
+export const fixtures = ({ solar, battery: hasBattery, soc }: ScenePresence): SceneGroup[] => [
   ...(solar ? [{ node: "solar" as const, shapes: panels() }] : []),
   ...(hasBattery ? [{ node: "battery" as const, shapes: battery(soc) }] : []),
+  { node: "outlet", shapes: outlet() },
   { node: "inverter", shapes: inverter() },
 ];
 
-/** The grid cable runs on past the card's edge; its label sits on it at GRID_LABEL_X. */
+/** The grid cable runs on past the card's edge, fading out after its label points at it. */
 const GRID_CABLE_END = 40;
 const GRID_LABEL_X = 16;
+export const GRID_CABLE_START: Point = [LENGTH + 0.07, INVERTER_Y, 0.02];
 const ON_FRONT = FRONT + 0.07;
 const ON_GABLE = LENGTH + 0.07;
 
 /**
  * Each wire's route from its node to the inverter, along walls and ground. They meet the inverter
  * from four sides: solar from above, the battery from the back, home round the front corner and
- * the grid from below.
+ * the grid from below. Wires `WIRES_IN_FRONT` lists end on a fixture's surface and are drawn over
+ * the fixtures; the others pass behind a fixture, so they run into it and are drawn under them.
  */
 export const WIRE_ROUTES: Record<HouseNode, Point[]> = {
   // from the panels along the roof, parallel to its ridge, then down the gable: one bend
@@ -201,32 +216,35 @@ export const WIRE_ROUTES: Record<HouseNode, Point[]> = {
     [ON_GABLE, INVERTER_Y, INVERTER.z1],
   ],
   battery: [
-    [ON_GABLE, 2.6, INVERTER_Z],
-    [ON_GABLE, INVERTER.y0, INVERTER_Z],
+    [ON_GABLE, 1.8, INVERTER_Z],
+    [ON_GABLE, INVERTER_Y, INVERTER_Z],
   ],
   home: [
-    [8.6, ON_FRONT, INVERTER_Z],
+    [OUTLET.x1, ON_FRONT, INVERTER_Z],
     [LENGTH - 0.03, ON_FRONT, INVERTER_Z],
     [ON_GABLE, FRONT - 0.03, INVERTER_Z],
     [ON_GABLE, INVERTER.y1, INVERTER_Z],
   ],
-  grid: [
-    [GRID_CABLE_END, INVERTER_Y, 0.02],
-    [ON_GABLE, INVERTER_Y, 0.02],
-    [ON_GABLE, INVERTER_Y, INVERTER.z0],
-  ],
+  grid: [[GRID_CABLE_END, INVERTER_Y, 0.02], GRID_CABLE_START, [ON_GABLE, INVERTER_Y, INVERTER_Z]],
 };
+
+/** Wires on the visible side of the fixtures they meet: solar from above, home from the front. */
+export const WIRES_IN_FRONT: ReadonlySet<HouseNode> = new Set(["solar", "home"]);
 
 /**
  * Where each node's label hangs: the leader line starts at `at` and runs `leader` screen units up
- * (negative) or down; with no leader the label sits centred on `at`. The anchors keep leaders
- * clear of the wires and the panels.
+ * (negative) or down, and the text runs right from it, or left with `side: "left"`. The anchors
+ * keep leaders and labels clear of the wires, the panels and each other.
  */
-export const LABEL_ANCHORS: Record<HouseNode, { at: Point; leader: number }> = {
+export const LABEL_ANCHORS: Record<
+  HouseNode,
+  { at: Point; leader: number; side?: "left" | "right" }
+> = {
   solar: { at: onRoof(4.2, PANELS.y0), leader: -40 },
   home: { at: [8.1, FRONT + 0.13, 2.35], leader: 44 },
   battery: { at: onBattery(1.8, 3.3), leader: -50 },
-  grid: { at: [GRID_LABEL_X, INVERTER_Y, 0], leader: 0 },
+  // below the cable and to its left: the cable falls away to the right
+  grid: { at: [GRID_LABEL_X, INVERTER_Y, 0], leader: 18, side: "left" },
 };
 
 /** The house's footprint and the shadow it casts towards the back right. */

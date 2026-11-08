@@ -147,13 +147,17 @@ export const styles = css`
     transform: translate(calc(var(--house-unit, 1px) * -10), 0);
   }
 
-  /* Sits on its line; a halo in the card's colour keeps the text readable over it. */
-  .label.on-line {
-    transform: translate(-50%, -50%);
-    text-shadow:
-      0 0 3px var(--ha-card-background, var(--card-background-color, #fff)),
-      0 0 6px var(--ha-card-background, var(--card-background-color, #fff)),
-      0 0 10px var(--ha-card-background, var(--card-background-color, #fff));
+  .label.left {
+    text-align: right;
+    transform: translate(calc(-100% + var(--house-unit, 1px) * 10), -100%);
+  }
+
+  .label.down.left {
+    transform: translate(calc(-100% + var(--house-unit, 1px) * 10), 0);
+  }
+
+  .label.left .name {
+    justify-content: flex-end;
   }
 
   .label.clickable {
