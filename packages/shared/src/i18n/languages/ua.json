@@ -1,5 +1,9 @@
 {
   "card": {
+    "battery": {
+      "charging": "заряджається",
+      "discharging": "розряджається"
+    },
     "label": {
       "car": "Автомобіль",
       "motorbike": "Мотоцикл"
@@ -9,7 +13,11 @@
     "accept_negative": "Дозволити від’ємні значення",
     "action": "Дія",
     "advanced": "Розширені параметри",
+    "animation": "Анімація",
     "animate_numbers": "Анімувати числа",
+    "interaction": "Взаємодія",
+    "not_configured": "Не налаштовано",
+    "number_format": "Формат чисел",
     "red": "Червоний нижче (%)",
     "state_of_charge_severity": "Кольори заряду батареї",
     "yellow": "Жовтий нижче (%)",

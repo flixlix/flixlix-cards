@@ -1,5 +1,9 @@
 {
   "card": {
+    "battery": {
+      "charging": "en charge",
+      "discharging": "en décharge"
+    },
     "label": {
       "car": "Voiture",
       "motorbike": "Moto"
@@ -9,7 +13,11 @@
     "accept_negative": "Accepter les valeurs négatives",
     "action": "Action",
     "advanced": "Options avancées",
+    "animation": "Animation",
     "animate_numbers": "Animer les nombres",
+    "interaction": "Interaction",
+    "not_configured": "Non configuré",
+    "number_format": "Format des nombres",
     "red": "Rouge en dessous de (%)",
     "state_of_charge_severity": "Couleurs de charge de la batterie",
     "yellow": "Jaune en dessous de (%)",

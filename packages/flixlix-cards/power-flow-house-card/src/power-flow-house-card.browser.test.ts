@@ -56,11 +56,18 @@ const reading = (root: ShadowRoot, node: string) => {
 const startOf = (d: string) => d.match(/^M([\d.-]+ [\d.-]+)/)?.[1];
 const endOf = (d: string) => d.match(/L([\d.-]+ [\d.-]+)$/)?.[1];
 
-const stateOfCharge = (root: ShadowRoot) =>
-  labelOf(root, "battery")
-    .querySelector(".state-of-charge")
-    ?.textContent?.replace(/\s+/g, " ")
-    .trim();
+/** The battery label's second line: its state of charge and direction, numbers as they read. */
+const batteryLine = (root: ShadowRoot) => {
+  const line = labelOf(root, "battery").querySelector(".extra");
+  const charge = line?.querySelector(".number");
+  const percent =
+    charge instanceof NumberFlow
+      ? `${charge.value}${charge.numberSuffix ?? ""}`
+      : charge?.textContent?.trim();
+  return [percent, line?.querySelector(".direction")?.textContent?.trim()]
+    .filter(Boolean)
+    .join(" · ");
+};
 
 /** The path of the battery's icon for a state of charge. */
 const iconOf = async (soc: string) => {
@@ -92,7 +99,7 @@ describe("power flow house card", () => {
     expect(reading(root, "home")).toBe("2.6 kW");
     expect(reading(root, "battery")).toBe("1.8 kW");
     expect(reading(root, "grid")).toBe("0 W");
-    expect(stateOfCharge(root)).toBe("▼ 22 %");
+    expect(batteryLine(root)).toBe("22 % · discharging");
   });
 
   test("draws only what is configured", async () => {
@@ -130,8 +137,8 @@ describe("power flow house card", () => {
 
     expect(startOf(charging)).toBe(endOf(discharging));
     expect(
-      stateOfCharge((await mountHouse({}, { ...evening, "sensor.battery": "-1800" })).root)
-    ).toBe("▲ 22 %");
+      batteryLine((await mountHouse({}, { ...evening, "sensor.battery": "-1800" })).root)
+    ).toBe("22 % · charging");
   });
 
   test("the battery icon follows its state of charge, as in Power Flow Card Plus", async () => {
@@ -143,9 +150,31 @@ describe("power flow house card", () => {
     expect(await barOf("10")).toBe("var(--house-soc-red)");
     expect(await barOf("20")).toBe("var(--house-soc-yellow)");
     expect(await barOf("80")).toBe("var(--house-soc-green)");
-    expect(await barOf("40", { state_of_charge_severity: { red: 20, yellow: 60 } })).toBe(
+    const custom = {
+      ...allNodes.battery,
+      entity: "sensor.battery",
+      state_of_charge_severity: { red: 20, yellow: 60 },
+    };
+    expect(await barOf("40", { entities: { ...allNodes, battery: custom } })).toBe(
       "var(--house-soc-yellow)"
     );
+  });
+
+  test("switching from discharging to charging brings in a new direction word", async () => {
+    const { root, card, setHass } = await mountHouse();
+    const before = labelOf(root, "battery").querySelector(".direction");
+
+    await setHass(withStates(card.hass ?? fakeHass(), { "sensor.battery": "-900" }));
+
+    const after = labelOf(root, "battery").querySelector(".direction");
+    expect(after?.textContent?.trim()).toBe("charging");
+    expect(after).not.toBe(before);
+  });
+
+  test("an idle battery shows only its state of charge", async () => {
+    const { root } = await mountHouse({}, { ...evening, "sensor.battery": "0" });
+
+    expect(batteryLine(root)).toBe("22 %");
   });
 
   test("disable_dots keeps the wires still", async () => {

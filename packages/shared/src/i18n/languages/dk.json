@@ -1,5 +1,9 @@
 {
   "card": {
+    "battery": {
+      "charging": "oplader",
+      "discharging": "aflader"
+    },
     "label": {
       "car": "Bil",
       "motorbike": "Motorcykel"
@@ -9,7 +13,11 @@
     "accept_negative": "Accepter negative værdier",
     "action": "Handling",
     "advanced": "Avancerede indstillinger",
+    "animation": "Animation",
     "animate_numbers": "Animér tal",
+    "interaction": "Interaktion",
+    "not_configured": "Ikke opsat",
+    "number_format": "Talformat",
     "red": "Rød under (%)",
     "state_of_charge_severity": "Farver for batteriets opladning",
     "yellow": "Gul under (%)",

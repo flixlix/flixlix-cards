@@ -10,7 +10,7 @@ import {
   watchedEntities,
 } from "@flixlix-cards/shared/card-state";
 import { translate } from "@flixlix-cards/shared/i18n";
-import { type ActionConfigSet } from "@flixlix-cards/shared/types";
+import { type ActionConfigSet, type BatteryObject } from "@flixlix-cards/shared/types";
 import { applyCardState } from "@flixlix-cards/shared/utils/apply-card-state";
 import { EntityActions } from "@flixlix-cards/shared/utils/entity-actions";
 import {
@@ -38,6 +38,7 @@ import {
 } from "custom-card-helpers";
 import { html, LitElement, nothing, type PropertyValues, svg, type TemplateResult } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
+import { keyed } from "lit/directives/keyed.js";
 import NumberFlow, { canAnimate } from "number-flow";
 import packageJson from "../package.json" with { type: "json" };
 import {
@@ -198,8 +199,6 @@ type Label = {
   node: HouseNode;
   reading: ScaledReading | null;
   name: string;
-  /** Shown after the name, e.g. the state of charge. */
-  inline?: TemplateResult;
   /** A second line under the name, e.g. the power outage alert. */
   extra?: TemplateResult;
   nameClass?: string;
@@ -377,7 +376,8 @@ export class PowerFlowHouseCard extends LitElement {
               typeof soc === "number"
                 ? chargeLevel(
                     soc,
-                    this._config.state_of_charge_severity ?? DEFAULT_STATE_OF_CHARGE_SEVERITY
+                    this._config.entities.battery?.state_of_charge_severity ??
+                      DEFAULT_STATE_OF_CHARGE_SEVERITY
                   )
                 : undefined,
           }
@@ -471,11 +471,7 @@ export class PowerFlowHouseCard extends LitElement {
       node: "battery",
       reading: wire.reading,
       name: nodes.battery.name,
-      inline: this._stateOfCharge(
-        wire,
-        nodes.battery.state_of_charge.state,
-        nodes.battery.display.stateOfCharge
-      ),
+      extra: this._batteryState(wire, nodes.battery.state_of_charge),
       actions: nodes.battery,
       entity: nodes.battery.mainEntity,
     };
@@ -503,18 +499,30 @@ export class PowerFlowHouseCard extends LitElement {
     };
   }
 
-  private _stateOfCharge(battery: HouseWire, soc: number | string | null, display: string) {
-    const charging = !battery.intoInverter && battery.power > 0;
-    const discharging = battery.intoInverter && battery.power > 0;
-    if (soc === null && !charging && !discharging) {
+  /**
+   * The battery's state of charge and whether it charges or discharges. The word is keyed on the
+   * direction, so a change brings in a new element and with it the stylesheet's entry animation.
+   */
+  private _batteryState(wire: HouseWire, soc: BatteryObject["state_of_charge"]) {
+    const direction = wire.power > 0 ? (wire.intoInverter ? "discharging" : "charging") : undefined;
+    const charge =
+      typeof soc.state === "number"
+        ? html`<span class="state-of-charge"
+            >${this._number(soc.state, soc.decimals, `${soc.unit_white_space ? " " : ""}${soc.unit}`)}</span
+          >`
+        : undefined;
+    if (!charge && !direction) {
       return undefined;
     }
-    return html`<span class="state-of-charge"
-      >${charging ? html`<span class="charging">▲</span>` : nothing}${
-        discharging ? html`<span class="discharging">▼</span>` : nothing
-      }
-      ${soc === null ? nothing : display}</span
-    >`;
+    const word = direction
+      ? keyed(
+          direction,
+          html`<span class="direction ${direction}"
+            >${translate(`card.battery.${direction}`, this.hass.locale?.language ?? "en")}</span
+          >`
+        )
+      : nothing;
+    return html`${charge ?? nothing}${charge && direction ? html`<span>·</span>` : nothing}${word}`;
   }
 
   private _leader(label: Label, extent: Extent) {
@@ -561,7 +569,7 @@ export class PowerFlowHouseCard extends LitElement {
       }}
     >
       <div class="value">${this._value(label.reading)}</div>
-      <div class="name ${label.nameClass ?? ""}">${label.name}${label.inline ?? nothing}</div>
+      <div class="name ${label.nameClass ?? ""}">${label.name}</div>
       ${label.extra ? html`<div class="name extra">${label.extra}</div>` : nothing}
     </div>`;
   }
@@ -570,18 +578,23 @@ export class PowerFlowHouseCard extends LitElement {
     if (reading === null) {
       return "—";
     }
-    const unit = html`<span class="unit">${reading.unit}</span>`;
+    return html`${this._number(reading.value, reading.decimals)}<span class="unit"
+        >${reading.unit}</span
+      >`;
+  }
+
+  /** A number that rolls to its new value with number-flow, or plain text when it should not. */
+  private _number(value: number, decimals: number, suffix = "") {
     if (this._config.animate_numbers === false || !canAnimate) {
-      return html`<span class="number">${formatNumber(reading.value, this.hass.locale)}</span
-        >${unit}`;
+      return html`<span class="number">${formatNumber(value, this.hass.locale)}${suffix}</span>`;
     }
     return html`<number-flow
-        class="number"
-        data-value=${reading.value}
-        .format=${{ maximumFractionDigits: reading.decimals }}
-        .locales=${this.hass.locale ? numberFormatToLocale(this.hass.locale) : undefined}
-      ></number-flow
-      >${unit}`;
+      class="number"
+      data-value=${value}
+      .format=${{ maximumFractionDigits: decimals }}
+      .numberSuffix=${suffix}
+      .locales=${this.hass.locale ? numberFormatToLocale(this.hass.locale) : undefined}
+    ></number-flow>`;
   }
 
   /** The scene's rendered width sets the label size, so labels scale with the drawing. */

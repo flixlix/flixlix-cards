@@ -1,5 +1,9 @@
 {
   "card": {
+    "battery": {
+      "charging": "laadt op",
+      "discharging": "ontlaadt"
+    },
     "label": {
       "car": "Auto",
       "motorbike": "Motorfiets"
@@ -9,7 +13,11 @@
     "accept_negative": "Negatieve waarden accepteren",
     "action": "Actie",
     "advanced": "Geavanceerde Opties",
+    "animation": "Animatie",
     "animate_numbers": "Getallen animeren",
+    "interaction": "Interactie",
+    "not_configured": "Niet ingesteld",
+    "number_format": "Getalnotatie",
     "red": "Rood onder (%)",
     "state_of_charge_severity": "Kleuren van de batterijlading",
     "yellow": "Geel onder (%)",

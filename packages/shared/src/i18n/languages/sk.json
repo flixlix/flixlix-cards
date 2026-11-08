@@ -1,5 +1,9 @@
 {
   "card": {
+    "battery": {
+      "charging": "nabíja sa",
+      "discharging": "vybíja sa"
+    },
     "label": {
       "car": "Auto",
       "motorbike": "Motorka"
@@ -9,7 +13,11 @@
     "accept_negative": "Povoliť záporné hodnoty",
     "action": "Akcia",
     "advanced": "Pokročilé nastavenia",
+    "animation": "Animácia",
     "animate_numbers": "Animovať čísla",
+    "interaction": "Interakcia",
+    "not_configured": "Nenastavené",
+    "number_format": "Formát čísel",
     "red": "Červená pod (%)",
     "state_of_charge_severity": "Farby nabitia batérie",
     "yellow": "Žltá pod (%)",

@@ -6,4 +6,4 @@ New card: Power Flow House Card draws your live power on an isometric house. Sol
 
 It takes Power Flow Card Plus' `entities` config (grid with power outage, solar, battery with state of charge, home), so you can try it by changing a Power Flow Card Plus' `type` to `custom:power-flow-house-card`. Individual devices are not drawn yet.
 
-The battery's icon follows its state of charge, as in Power Flow Card Plus, and its charge bar turns yellow and red below thresholds you set with `state_of_charge_severity` (default: red below 15 %, yellow below 30 %).
+The battery's icon follows its state of charge, as in Power Flow Card Plus, and its charge bar turns yellow and red below thresholds you set with the battery's `state_of_charge_severity` (default: red below 15 %, yellow below 30 %). Under the battery's value, its state of charge and whether it is charging or discharging are spelled out.

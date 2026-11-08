@@ -1,5 +1,9 @@
 {
   "card": {
+    "battery": {
+      "charging": "carregant",
+      "discharging": "descarregant"
+    },
     "label": {
       "car": "Cotxe",
       "motorbike": "Moto"
@@ -9,7 +13,11 @@
     "accept_negative": "Accepta Negatius",
     "action": "Acció",
     "advanced": "Opcions Avançades",
+    "animation": "Animació",
     "animate_numbers": "Anima els números",
+    "interaction": "Interacció",
+    "not_configured": "No configurat",
+    "number_format": "Format dels números",
     "red": "Vermell per sota de (%)",
     "state_of_charge_severity": "Colors de càrrega de la bateria",
     "yellow": "Groc per sota de (%)",

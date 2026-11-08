@@ -192,7 +192,26 @@ export const styles = css`
 
   .state-of-charge {
     color: var(--primary-text-color);
-    opacity: 0.75;
+  }
+
+  /* A new direction word slides in; see _batteryState. */
+  .direction {
+    display: inline-block;
+    animation: direction-in 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  @keyframes direction-in {
+    from {
+      opacity: 0;
+      transform: translateY(0.5em);
+      filter: blur(2px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .direction {
+      animation: none;
+    }
   }
 
   .charging {

@@ -1,5 +1,9 @@
 {
   "card": {
+    "battery": {
+      "charging": "laddar",
+      "discharging": "laddar ur"
+    },
     "label": {
       "car": "Bil",
       "motorbike": "Motorcykel"
@@ -9,7 +13,11 @@
     "accept_negative": "Acceptera negativa värden",
     "action": "Åtgärd",
     "advanced": "Avancerade inställningar",
+    "animation": "Animering",
     "animate_numbers": "Animera siffror",
+    "interaction": "Interaktion",
+    "not_configured": "Inte konfigurerad",
+    "number_format": "Talformat",
     "red": "Röd under (%)",
     "state_of_charge_severity": "Färger för batteriets laddning",
     "yellow": "Gul under (%)",

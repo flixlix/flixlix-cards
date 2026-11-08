@@ -305,14 +305,14 @@ const CARD_OPTIONS: OptionRow[] = [
     description: "Tapping a value opens its entity, or runs the node's tap/hold actions.",
   },
   {
-    name: "state_of_charge_severity",
+    name: "entities.battery.state_of_charge_severity",
     type: "object",
     default: "{ red: 15, yellow: 30 }",
     description: (
       <>
         The battery&apos;s charge bar colours, in %: red below <code>red</code>, yellow below{" "}
         <code>yellow</code>, green above both. Its icon follows the state of charge as in Power Flow
-        Card Plus.
+        Card Plus, and its label shows the state of charge and whether it is charging.
       </>
     ),
   },

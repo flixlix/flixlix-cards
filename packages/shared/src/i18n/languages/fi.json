@@ -1,5 +1,9 @@
 {
   "card": {
+    "battery": {
+      "charging": "latautuu",
+      "discharging": "purkautuu"
+    },
     "label": {
       "car": "Auto",
       "motorbike": "Moottoripyörä"
@@ -9,7 +13,11 @@
     "accept_negative": "Hyväksy negatiiviset arvot",
     "action": "Toiminto",
     "advanced": "Lisäasetukset",
+    "animation": "Animaatio",
     "animate_numbers": "Animoi numerot",
+    "interaction": "Vuorovaikutus",
+    "not_configured": "Ei määritetty",
+    "number_format": "Lukumuoto",
     "red": "Punainen alle (%)",
     "state_of_charge_severity": "Akun varaustason värit",
     "yellow": "Keltainen alle (%)",
