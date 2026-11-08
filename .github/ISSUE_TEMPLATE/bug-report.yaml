@@ -27,6 +27,7 @@ body:
       label: Which card is this for?
       options:
         - Power Flow Card Plus
+        - Home Flow Card
         - Energy Flow Card Plus
         - Energy Period Selector Plus
     validations:

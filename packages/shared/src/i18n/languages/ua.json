@@ -1,5 +1,9 @@
 {
   "card": {
+    "battery": {
+      "charging": "заряджається",
+      "discharging": "розряджається"
+    },
     "label": {
       "car": "Автомобіль",
       "motorbike": "Мотоцикл"
@@ -9,6 +13,16 @@
     "accept_negative": "Дозволити від’ємні значення",
     "action": "Дія",
     "advanced": "Розширені параметри",
+    "animation": "Анімація",
+    "animate_numbers": "Анімувати числа",
+    "default": "За замовчуванням",
+    "more": "Інші параметри",
+    "interaction": "Взаємодія",
+    "not_configured": "Не налаштовано",
+    "number_format": "Формат чисел",
+    "red": "Червоний нижче (%)",
+    "state_of_charge_severity": "Кольори заряду батареї",
+    "yellow": "Жовтий нижче (%)",
     "allow_layout_break": "Дозволити розрив макета",
     "base_decimals": "Десяткові знаки для бази",
     "battery": "Акумулятор",
@@ -36,6 +50,7 @@
     "display_zero_tolerance": "Допуск для нульових значень",
     "double_tap_action": "Дія при подвійному натисканні",
     "entity_generator": "Генератор сутностей",
+    "generator": "Генератор сутностей",
     "flow_rate_model": "Алгоритм швидкості потоку",
     "flow_rate_model_duration": "Тривалість (за замовчуванням)",
     "flow_rate_model_relative": "Відносна",

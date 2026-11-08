@@ -232,6 +232,26 @@ script:
           grid_export_power: 2000
           heat_pump_power: 700
           battery_soc: 80
+  # The battery switching direction at about the same power and the same state of charge: only
+  # its direction (and so its word and colour) changes, for checking the label's word morph.
+  scenario_battery_charging_steady:
+    alias: "Scenario: battery charging, 1.2 kW at 50 %"
+    icon: mdi:battery-plus
+    sequence:
+      - action: script.set_power_readings
+        data:
+          solar_power: 2000
+          battery_charge_power: 1200
+          battery_soc: 50
+  scenario_battery_discharging_steady:
+    alias: "Scenario: battery discharging, 1.1 kW at 50 %"
+    icon: mdi:battery-minus
+    sequence:
+      - action: script.set_power_readings
+        data:
+          solar_power: 0
+          battery_discharge_power: 1100
+          battery_soc: 50
   scenario_grid_outage_generator:
     alias: "Scenario: grid outage with generator"
     icon: mdi:generator-portable

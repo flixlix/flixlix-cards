@@ -11,6 +11,8 @@ resources:
     type: module
   - url: /local/energy-period-selector-plus/energy-period-selector-plus.js
     type: module
+  - url: /local/home-flow-card/home-flow-card.js
+    type: module
 # One YAML dashboard per card: the card under test in a few configurations next to the knobs
 # (sliders, availability toggles) and scenario scripts that drive it.
 dashboards:
@@ -20,6 +22,12 @@ dashboards:
     icon: mdi:flash
     show_in_sidebar: true
     filename: dashboards/power-flow.yaml
+  home-flow:
+    mode: yaml
+    title: Home Flow
+    icon: mdi:home-lightning-bolt
+    show_in_sidebar: true
+    filename: dashboards/home-flow.yaml
   energy-flow:
     mode: yaml
     title: Energy Flow

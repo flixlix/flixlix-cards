@@ -1,5 +1,9 @@
 {
   "card": {
+    "battery": {
+      "charging": "заряжается",
+      "discharging": "разряжается"
+    },
     "label": {
       "car": "Автомобиль",
       "motorbike": "Мотоцикл"
@@ -9,6 +13,16 @@
     "accept_negative": "Принять отрицательные значения",
     "action": "Действие",
     "advanced": "Расширенные настройки",
+    "animation": "Анимация",
+    "animate_numbers": "Анимировать числа",
+    "default": "По умолчанию",
+    "more": "Другие параметры",
+    "interaction": "Взаимодействие",
+    "not_configured": "Не настроено",
+    "number_format": "Формат чисел",
+    "red": "Красный ниже (%)",
+    "state_of_charge_severity": "Цвета заряда батареи",
+    "yellow": "Жёлтый ниже (%)",
     "allow_layout_break": "Разрешить разрыв макета",
     "base_decimals": "Десятичные базовые",
     "battery": "Батарея",
@@ -36,6 +50,7 @@
     "display_zero_tolerance": "Допустимая погрешность нуля",
     "double_tap_action": "действие двойного касания",
     "entity_generator": "Генератор",
+    "generator": "Генератор",
     "flow_rate_model": "Модель скорости потока",
     "flow_rate_model_duration": "Длительность (по умолчанию)",
     "flow_rate_model_relative": "Относительная",

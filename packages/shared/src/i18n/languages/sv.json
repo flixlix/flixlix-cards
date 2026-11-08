@@ -1,5 +1,9 @@
 {
   "card": {
+    "battery": {
+      "charging": "laddar",
+      "discharging": "laddar ur"
+    },
     "label": {
       "car": "Bil",
       "motorbike": "Motorcykel"
@@ -9,6 +13,16 @@
     "accept_negative": "Acceptera negativa värden",
     "action": "Åtgärd",
     "advanced": "Avancerade inställningar",
+    "animation": "Animering",
+    "animate_numbers": "Animera siffror",
+    "default": "Standard",
+    "more": "Fler alternativ",
+    "interaction": "Interaktion",
+    "not_configured": "Inte konfigurerad",
+    "number_format": "Talformat",
+    "red": "Röd under (%)",
+    "state_of_charge_severity": "Färger för batteriets laddning",
+    "yellow": "Gul under (%)",
     "allow_layout_break": "Tillåt layoutbrytning",
     "base_decimals": "Decimaler för bas",
     "battery": "Batteri",
@@ -36,6 +50,7 @@
     "display_zero_tolerance": "Tolerans för nollvärde",
     "double_tap_action": "Dubbeltrycksåtgärd",
     "entity_generator": "Generator",
+    "generator": "Generator",
     "flow_rate_model": "Flödesmodell",
     "flow_rate_model_duration": "Varaktighet (standard)",
     "flow_rate_model_relative": "Relativ",

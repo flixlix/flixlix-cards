@@ -32,10 +32,11 @@ const freeze = (card: Locator) =>
       "*, *::before, *::after { animation: none !important; transition: none !important; }"
     );
     root.adoptedStyleSheets = [...root.adoptedStyleSheets, still];
-    for (const svg of root.querySelectorAll("svg")) {
-      svg.pauseAnimations();
-      svg.setCurrentTime(0);
-    }
+    // flow dots run as Web Animations: park each at the start of its loop, as the unit tests do
+    root.getAnimations().forEach((animation) => {
+      animation.pause();
+      animation.currentTime = 0;
+    });
   });
 
 /** The card's dashboard config and the states of every entity it names, as HA has them. */

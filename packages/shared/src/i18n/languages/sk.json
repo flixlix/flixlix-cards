@@ -1,5 +1,9 @@
 {
   "card": {
+    "battery": {
+      "charging": "nabíja sa",
+      "discharging": "vybíja sa"
+    },
     "label": {
       "car": "Auto",
       "motorbike": "Motorka"
@@ -9,6 +13,16 @@
     "accept_negative": "Povoliť záporné hodnoty",
     "action": "Akcia",
     "advanced": "Pokročilé nastavenia",
+    "animation": "Animácia",
+    "animate_numbers": "Animovať čísla",
+    "default": "Predvolené",
+    "more": "Ďalšie možnosti",
+    "interaction": "Interakcia",
+    "not_configured": "Nenastavené",
+    "number_format": "Formát čísel",
+    "red": "Červená pod (%)",
+    "state_of_charge_severity": "Farby nabitia batérie",
+    "yellow": "Žltá pod (%)",
     "allow_layout_break": "Povoliť zalomenie rozloženia",
     "base_decimals": "Desatinné miesta pre základ",
     "battery": "Batéria",
@@ -36,6 +50,7 @@
     "display_zero_tolerance": "Zobraziť nulovú toleranciu",
     "double_tap_action": "Akcia pri dvojitom klepnutí",
     "entity_generator": "Generátor",
+    "generator": "Generátor",
     "flow_rate_model": "Model prietoku",
     "flow_rate_model_duration": "Trvanie (predvolené)",
     "flow_rate_model_relative": "Relatívny",

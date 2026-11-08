@@ -1,5 +1,9 @@
 {
   "card": {
+    "battery": {
+      "charging": "चार्ज हो रही है",
+      "discharging": "डिस्चार्ज हो रही है"
+    },
     "label": {
       "car": "कार",
       "motorbike": "मोटरसाइकिल"
@@ -9,6 +13,16 @@
     "accept_negative": "नकारात्मक स्वीकार करें",
     "action": "क्रिया",
     "advanced": "उन्नत विकल्प",
+    "animation": "एनिमेशन",
+    "animate_numbers": "संख्याएँ एनिमेट करें",
+    "default": "डिफ़ॉल्ट",
+    "more": "और विकल्प",
+    "interaction": "इंटरैक्शन",
+    "not_configured": "कॉन्फ़िगर नहीं किया गया",
+    "number_format": "संख्या प्रारूप",
+    "red": "लाल (%) से कम",
+    "state_of_charge_severity": "बैटरी चार्ज के रंग",
+    "yellow": "पीला (%) से कम",
     "allow_layout_break": "लेआउट तोड़ने की अनुमति दें",
     "base_decimals": "बेस दशमलव",
     "battery": "बैटरी",
@@ -36,6 +50,7 @@
     "display_zero_tolerance": "शून्य सहिष्णुता दिखाएँ",
     "double_tap_action": "डबल टैप क्रिया",
     "entity_generator": "जनरेटर",
+    "generator": "जनरेटर",
     "flow_rate_model": "प्रवाह दर मॉडल",
     "flow_rate_model_duration": "Duration (default)",
     "flow_rate_model_relative": "Relative",

@@ -43,10 +43,12 @@ catalogs:
     acorn: ^8.16.0
     conventional-changelog-conventionalcommits: ^4.6.3
     custom-card-helpers: ^2.0.0
+    esm-env: ^1.2.2
     fast-check: ^4.10.2
     home-assistant-js-websocket: ^9.8.1
     lit: ^3.3.3
     memoize-one: ^6.0.0
+    number-flow: ^0.6.2
     # Pinned exactly: the visual tests run in mcr.microsoft.com/playwright:v<this version>-noble.
     playwright: 1.64.1
     rollup: ^4.68.0

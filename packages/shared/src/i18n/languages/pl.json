@@ -1,5 +1,9 @@
 {
   "card": {
+    "battery": {
+      "charging": "ładuje się",
+      "discharging": "rozładowuje się"
+    },
     "label": {
       "car": "Samochód",
       "motorbike": "Motocykl"
@@ -9,6 +13,16 @@
     "accept_negative": "Akceptuj wartości ujemne",
     "action": "Akcja",
     "advanced": "Zaawansowane opcje",
+    "animation": "Animacja",
+    "animate_numbers": "Animuj liczby",
+    "default": "Domyślnie",
+    "more": "Więcej opcji",
+    "interaction": "Interakcja",
+    "not_configured": "Nie skonfigurowano",
+    "number_format": "Format liczb",
+    "red": "Czerwony poniżej (%)",
+    "state_of_charge_severity": "Kolory naładowania baterii",
+    "yellow": "Żółty poniżej (%)",
     "allow_layout_break": "Zezwól na łamanie układu",
     "base_decimals": "Miejsca po przecinku dla podstawy",
     "battery": "Bateria",
@@ -36,6 +50,7 @@
     "display_zero_tolerance": "Wyświetl tolerancję zera",
     "double_tap_action": "Akcja podwójnego dotknięcia",
     "entity_generator": "Generator",
+    "generator": "Generator",
     "flow_rate_model": "Model wskaźnika przepływu",
     "flow_rate_model_duration": "Czas trwania (domyślnie)",
     "flow_rate_model_relative": "Względny",

@@ -27,7 +27,7 @@ const GRID_OUT = "var(--energy-grid-return-color)";
 const BATTERY_IN = "var(--energy-battery-in-color)";
 const BATTERY_OUT = "var(--energy-battery-out-color)";
 
-const HOME_SOURCE_COLORS: Record<HomeRing["largestSource"], string> = {
+export const HOME_SOURCE_COLORS: Record<HomeRing["largestSource"], string> = {
   battery: BATTERY_OUT,
   solar: "var(--energy-solar-color)",
   grid: GRID_IN,

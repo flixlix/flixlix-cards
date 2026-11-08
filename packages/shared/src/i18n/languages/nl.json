@@ -1,5 +1,9 @@
 {
   "card": {
+    "battery": {
+      "charging": "laadt op",
+      "discharging": "ontlaadt"
+    },
     "label": {
       "car": "Auto",
       "motorbike": "Motorfiets"
@@ -9,6 +13,16 @@
     "accept_negative": "Negatieve waarden accepteren",
     "action": "Actie",
     "advanced": "Geavanceerde Opties",
+    "animation": "Animatie",
+    "animate_numbers": "Getallen animeren",
+    "default": "Standaard",
+    "more": "Meer opties",
+    "interaction": "Interactie",
+    "not_configured": "Niet ingesteld",
+    "number_format": "Getalnotatie",
+    "red": "Rood onder (%)",
+    "state_of_charge_severity": "Kleuren van de batterijlading",
+    "yellow": "Geel onder (%)",
     "allow_layout_break": "Lay-out doorbreken toestaan",
     "base_decimals": "Decimalen voor basis",
     "battery": "Batterij",
@@ -36,6 +50,7 @@
     "display_zero_tolerance": "Nultolerantie Weergeven",
     "double_tap_action": "Dubbel tik actie",
     "entity_generator": "Generator",
+    "generator": "Generator",
     "flow_rate_model": "Stroomsnelheid Model",
     "flow_rate_model_duration": "Duur (standaard)",
     "flow_rate_model_relative": "Relatief",

@@ -6,6 +6,7 @@ import {
   ChevronRight,
   GitPullRequest,
   HeartHandshake,
+  House,
   ListOrdered,
   Sparkles,
   Zap,
@@ -54,6 +55,17 @@ const SECTIONS: DocSection[] = [
       { label: "Configuration", to: "/power-flow-card-plus/configuration" },
       { label: "Examples", to: "/power-flow-card-plus/examples" },
       { label: "Playground", to: "/power-flow-card-plus/playground" },
+    ],
+  },
+  {
+    label: "Home Flow Card",
+    to: "/home-flow-card",
+    icon: House,
+    items: [
+      { label: "Overview", to: "/home-flow-card" },
+      { label: "Installation", to: "/home-flow-card/installation" },
+      { label: "Configuration", to: "/home-flow-card/configuration" },
+      { label: "Examples", to: "/home-flow-card/examples" },
     ],
   },
   {

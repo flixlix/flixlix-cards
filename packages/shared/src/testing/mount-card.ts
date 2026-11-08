@@ -26,6 +26,11 @@ const freezeMotion = (root: ShadowRoot) => {
   });
 };
 
+/** Lets CSS motion run again, for a test about the motion itself. */
+export const thawMotion = (root: ShadowRoot) => {
+  root.adoptedStyleSheets = root.adoptedStyleSheets.filter((sheet) => sheet !== frozenMotion);
+};
+
 const nextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 
 /**

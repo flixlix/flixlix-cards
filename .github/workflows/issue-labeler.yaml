@@ -27,6 +27,7 @@ jobs:
             // Map the dropdown text to your actual GitHub labels
             const labelMap = {
               "Power Flow Card Plus": "card:power-flow-card-plus",
+              "Home Flow Card": "card:home-flow-card",
               "Energy Flow Card Plus": "card:energy-flow-card-plus",
               "Energy Period Selector Plus": "card:energy-period-selector-plus"
             };

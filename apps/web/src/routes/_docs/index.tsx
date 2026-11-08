@@ -6,6 +6,7 @@ import {
   Compass,
   Github,
   HeartHandshake,
+  House,
   ListOrdered,
   Search,
   Sparkles,
@@ -56,6 +57,32 @@ const CARDS: CardEntry[] = [
       { id: "devices", content: "Up to 4 individual devices" },
       { id: "bidirectional", content: "Bidirectional grid & battery flows" },
       { id: "outage", content: "Power outage handling and templates" },
+    ],
+  },
+  {
+    to: "/home-flow-card",
+    title: "Home Flow Card",
+    icon: House,
+    accent: {
+      chip: "bg-orange-500/10 text-orange-600 ring-orange-500/25 dark:text-orange-400",
+      border: "hover:border-orange-500/40",
+    },
+    media: (
+      <Thumbnail zoom={0.4}>
+        <CardDemo demo="house" width={420} />
+      </Thumbnail>
+    ),
+    description: (
+      <>
+        The same <strong>live</strong> power as Power Flow Card Plus, drawn on an isometric house:
+        solar on the roof, a battery on the wall, every wire through the inverter.
+      </>
+    ),
+    bullets: [
+      { id: "config", content: "Power Flow Card Plus' node options, at the top level" },
+      { id: "numbers", content: "Numbers that roll to their new value" },
+      { id: "battery", content: "Battery icon and charge colours from its state of charge" },
+      { id: "theme", content: "Greys from your theme, light and dark" },
     ],
   },
   {

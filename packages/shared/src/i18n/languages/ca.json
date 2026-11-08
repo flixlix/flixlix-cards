@@ -1,5 +1,9 @@
 {
   "card": {
+    "battery": {
+      "charging": "carregant",
+      "discharging": "descarregant"
+    },
     "label": {
       "car": "Cotxe",
       "motorbike": "Moto"
@@ -9,6 +13,16 @@
     "accept_negative": "Accepta Negatius",
     "action": "Acció",
     "advanced": "Opcions Avançades",
+    "animation": "Animació",
+    "animate_numbers": "Anima els números",
+    "default": "Per defecte",
+    "more": "Més opcions",
+    "interaction": "Interacció",
+    "not_configured": "No configurat",
+    "number_format": "Format dels números",
+    "red": "Vermell per sota de (%)",
+    "state_of_charge_severity": "Colors de càrrega de la bateria",
+    "yellow": "Groc per sota de (%)",
     "allow_layout_break": "Permet trencar el disseny",
     "base_decimals": "Decimals de base",
     "battery": "Bateria",
@@ -36,6 +50,7 @@
     "display_zero_tolerance": "Mostra Zero Tolerància",
     "double_tap_action": "Acció en doble toc",
     "entity_generator": "Generador",
+    "generator": "Generador",
     "flow_rate_model": "Model de Rel. de Fluxe",
     "flow_rate_model_duration": "Durada (per defecte)",
     "flow_rate_model_relative": "Relatiu",

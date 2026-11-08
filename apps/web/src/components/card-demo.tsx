@@ -1,8 +1,16 @@
 import { CardPreview } from "@/components/card-preview";
-import { breakdownDemo, type Demo, energyDemo, periodDemo, powerDemo } from "@/components/demos";
+import {
+  breakdownDemo,
+  type Demo,
+  energyDemo,
+  houseDemo,
+  periodDemo,
+  powerDemo,
+} from "@/components/demos";
 
-const demos: Record<"power" | "energy" | "period" | "breakdown", Demo> = {
+const demos: Record<"power" | "house" | "energy" | "period" | "breakdown", Demo> = {
   power: powerDemo,
+  house: houseDemo,
   energy: energyDemo,
   period: periodDemo,
   breakdown: breakdownDemo,

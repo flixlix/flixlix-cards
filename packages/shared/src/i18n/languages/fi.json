@@ -1,5 +1,9 @@
 {
   "card": {
+    "battery": {
+      "charging": "latautuu",
+      "discharging": "purkautuu"
+    },
     "label": {
       "car": "Auto",
       "motorbike": "Moottoripyörä"
@@ -9,6 +13,16 @@
     "accept_negative": "Hyväksy negatiiviset arvot",
     "action": "Toiminto",
     "advanced": "Lisäasetukset",
+    "animation": "Animaatio",
+    "animate_numbers": "Animoi numerot",
+    "default": "Oletus",
+    "more": "Lisää asetuksia",
+    "interaction": "Vuorovaikutus",
+    "not_configured": "Ei määritetty",
+    "number_format": "Lukumuoto",
+    "red": "Punainen alle (%)",
+    "state_of_charge_severity": "Akun varaustason värit",
+    "yellow": "Keltainen alle (%)",
     "allow_layout_break": "Salli asettelun rivitys",
     "base_decimals": "Whien desimaalit",
     "battery": "Akku",
@@ -36,6 +50,7 @@
     "display_zero_tolerance": "Näytä nolla-toleranssi",
     "double_tap_action": "Kaksoisnapautustoiminto",
     "entity_generator": "Generaattori",
+    "generator": "Generaattori",
     "flow_rate_model": "Virtausnopeusmalli",
     "flow_rate_model_duration": "Kesto (oletus)",
     "flow_rate_model_relative": "Suhteellinen",

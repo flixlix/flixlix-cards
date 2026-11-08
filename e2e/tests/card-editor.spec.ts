@@ -5,6 +5,7 @@ import { HassSocket, isObject, type JsonObject, loginWithPassword } from "../src
 /** A minimal valid config per card; the test edits its title through the card's own editor. */
 const cardConfigs: Record<CardType, JsonObject> = {
   "power-flow-card-plus": { entities: { grid: { entity: "sensor.grid_power" } } },
+  "home-flow-card": { grid: { entity: "sensor.grid_power" } },
   "energy-flow-card-plus": { entities: { grid: { entity: "sensor.grid_import_energy" } } },
   "energy-breakdown-card": { entities: [{ entity: "sensor.ev_charger_power" }] },
   "sortable-list-card": { items: [{ key: "alpha" }, { key: "beta" }] },

@@ -1,5 +1,9 @@
 {
   "card": {
+    "battery": {
+      "charging": "oplader",
+      "discharging": "aflader"
+    },
     "label": {
       "car": "Bil",
       "motorbike": "Motorcykel"
@@ -9,6 +13,16 @@
     "accept_negative": "Accepter negative værdier",
     "action": "Handling",
     "advanced": "Avancerede indstillinger",
+    "animation": "Animation",
+    "animate_numbers": "Animér tal",
+    "default": "Standard",
+    "more": "Flere indstillinger",
+    "interaction": "Interaktion",
+    "not_configured": "Ikke opsat",
+    "number_format": "Talformat",
+    "red": "Rød under (%)",
+    "state_of_charge_severity": "Farver for batteriets opladning",
+    "yellow": "Gul under (%)",
     "allow_layout_break": "Tillad layout-brud",
     "base_decimals": "Decimaler for basis",
     "battery": "Batteri",
@@ -36,6 +50,7 @@
     "display_zero_tolerance": "Vis ingen tolerance",
     "double_tap_action": "Dobbelttryk-handling",
     "entity_generator": "Generator",
+    "generator": "Generator",
     "flow_rate_model": "Flowhastighedsmodel",
     "flow_rate_model_duration": "Varighed (standard)",
     "flow_rate_model_relative": "Relativ",

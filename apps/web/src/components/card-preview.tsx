@@ -15,6 +15,7 @@ const loadPreview = () =>
     import("@flixlix-cards/shared/preview/fake-hass"),
     import("@flixlix-cards/shared/preview/date-range-picker"),
     import("power-flow-card-plus/source"),
+    import("home-flow-card/source"),
     import("energy-flow-card-plus/source"),
     import("energy-breakdown-card/source"),
     import("energy-period-selector-plus/source"),
