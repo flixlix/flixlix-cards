@@ -98,7 +98,6 @@ const nonFossilFraction = (input: NormalizeInput, readings: ReadyReadings, gridI
 };
 
 type NodeReadings = Readonly<{
-  grid: Directions;
   toleratedGrid: Directions;
   battery: Directions;
   solar: number;
@@ -112,7 +111,6 @@ const nodeReadings = (input: NormalizeInput, readings: ReadyReadings): NodeReadi
   const battery = directions(readings.battery, batteryPrimary, !!entities.battery?.invert_state);
   const solar = solarProduction(input, readings);
   return {
-    grid,
     toleratedGrid: tolerated(grid, entities.grid?.display_zero_tolerance),
     battery: tolerated(battery, entities.battery?.display_zero_tolerance),
     solar,
@@ -149,13 +147,13 @@ const nonFossilShown = (
   input: NormalizeInput,
   gridShown: boolean,
   outage: boolean,
-  untoleratedNonFossilImport: number
+  nonFossilImport: number
 ): boolean => {
   const fossil = input.config.entities.fossil_fuel_percentage;
   if (fossil?.entity === undefined || !gridShown || outage) {
     return false;
   }
-  return fossil.display_zero === true || untoleratedNonFossilImport > 0;
+  return fossil.display_zero === true || nonFossilImport > 0;
 };
 
 const gridDuringOutage = (input: NormalizeInput, readings: ReadyReadings): Directions => ({
@@ -186,7 +184,7 @@ export const normalize = (input: NormalizeInput, readings: ReadyReadings): Norma
   const visible = presenceOf(input, nodes, individuals);
   const presence = {
     ...visible,
-    nonFossil: nonFossilShown(input, visible.grid, outage, nodes.grid.outOf * fraction),
+    nonFossil: nonFossilShown(input, visible.grid, outage, nodes.toleratedGrid.outOf * fraction),
   };
   const grid = outage ? gridDuringOutage(input, readings) : nodes.toleratedGrid;
   return {
