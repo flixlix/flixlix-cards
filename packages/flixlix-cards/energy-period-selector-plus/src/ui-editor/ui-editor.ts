@@ -23,6 +23,7 @@ const schema = (config: EnergyPeriodSelectorPlusConfig) => [
     schema: [
       { name: "card_background", selector: { boolean: {} } },
       { name: "prev_next_buttons", selector: { boolean: {} } },
+      { name: "date_picker", selector: { boolean: {} } },
     ],
   },
   {
@@ -62,6 +63,7 @@ const LABELS: Record<string, string> = {
   title: "Title",
   card_background: "Card background",
   prev_next_buttons: "Previous/next buttons",
+  date_picker: "Open the calendar from the date",
   today_button_type: "Today button",
   compare_button_type: "Compare button",
   compare_button_label: "Compare button label",
