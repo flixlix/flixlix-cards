@@ -1,10 +1,15 @@
 import { type HomeAssistant } from "custom-card-helpers";
 import { type HassEntity } from "home-assistant-js-websocket";
 import { type EntityName } from "../types/type";
+import { nonEmpty } from "./utils";
 
 const atLeastVersion = (hass: HomeAssistant, major: number, minor: number): boolean => {
   const [haMajor, haMinor] = (hass?.config?.version ?? "").split(".", 2);
   return Number(haMajor) > major || (Number(haMajor) === major && Number(haMinor) >= minor);
+};
+
+type HassWithEntityNames = HomeAssistant & {
+  formatEntityName: (stateObj: HassEntity, name: EntityName | undefined) => string;
 };
 
 /**
@@ -12,27 +17,12 @@ const atLeastVersion = (hass: HomeAssistant, major: number, minor: number): bool
  * structured name, or undefined) from HA 2026.4. Earlier versions expose the same
  * helper with an incompatible signature - bare type strings in 2025.10, and only
  * structured items between 2025.11 and 2026.3 - so feature detection is not
- * enough and the version has to be checked.
+ * enough and the version has to be checked. A hass can also report a recent
+ * version without carrying the helper (a test harness, or a hass that has not
+ * finished initialising), so the version gate alone is not enough either.
  */
-const hasEntityNameHelper = (hass: HomeAssistant | undefined): boolean =>
-  typeof (hass as { formatEntityName?: unknown } | undefined)?.formatEntityName === "function";
-
-// A hass can report a recent version without carrying the helper (a test harness,
-// or a hass that has not finished initialising), and calling it then throws - so
-// the version gate alone is not enough.
-const supportsEntityNames = (hass: HomeAssistant): boolean =>
-  hasEntityNameHelper(hass) && atLeastVersion(hass, 2026, 4);
-
-/**
- * The `entity_name` selector, which lets users compose a name out of registry
- * parts in the visual editor, was added in HA 2025.11.
- */
-export const supportsEntityNameSelector = (hass: HomeAssistant): boolean =>
-  atLeastVersion(hass, 2025, 11);
-
-type HassWithEntityNames = HomeAssistant & {
-  formatEntityName: (stateObj: HassEntity, name: EntityName | undefined) => string;
-};
+const supportsEntityNames = (hass: HomeAssistant): hass is HassWithEntityNames =>
+  typeof Reflect.get(hass, "formatEntityName") === "function" && atLeastVersion(hass, 2026, 4);
 
 /**
  * Resolves a `name` option against the entity's registry context (entity,
@@ -44,29 +34,23 @@ export const computeEntityName = (
   stateObj: HassEntity | undefined,
   name: EntityName | undefined
 ): string | undefined => {
-  const configuredName = typeof name === "string" ? name : undefined;
-
-  if (!stateObj) return configuredName;
-  if (supportsEntityNames(hass)) {
-    return (hass as HassWithEntityNames).formatEntityName(stateObj, name) || undefined;
+  const configuredName = typeof name === "string" ? nonEmpty(name) : undefined;
+  if (!stateObj) {
+    return configuredName;
   }
-  return configuredName || stateObj.attributes?.friendly_name;
+  if (supportsEntityNames(hass)) {
+    return nonEmpty(hass.formatEntityName(stateObj, name));
+  }
+  return configuredName ?? nonEmpty(stateObj.attributes?.friendly_name);
 };
 
 /**
  * `formatEntityName` resolves against the entity/device/area/floor registries,
  * and HA swaps the real formatter in asynchronously once translations load.
- * Neither shows up as an entity state change, so without this a rename (or that
- * swap) leaves rendered names stale until an unrelated state change forces a render.
+ * Neither shows up as an entity state change.
  */
 const NAME_SOURCES = ["formatEntityName", "entities", "devices", "areas", "floors"] as const;
 
-export const entityNamesChanged = (
-  oldHass: HomeAssistant | undefined,
-  newHass: HomeAssistant | undefined
-): boolean => {
-  if (!oldHass || !newHass) return false;
-  const before = oldHass as unknown as Record<string, unknown>;
-  const after = newHass as unknown as Record<string, unknown>;
-  return NAME_SOURCES.some((key) => before[key] !== after[key]);
-};
+/** Whether a new `hass` can resolve entity names differently than the previous one. */
+export const entityNamesChanged = (previous: HomeAssistant, hass: HomeAssistant): boolean =>
+  NAME_SOURCES.some((key) => Reflect.get(previous, key) !== Reflect.get(hass, key));

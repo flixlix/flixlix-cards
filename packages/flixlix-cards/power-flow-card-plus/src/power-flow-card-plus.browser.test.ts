@@ -443,3 +443,66 @@ describe("updates", () => {
     expect(text(".solar .solar")).toBe("400 W");
   });
 });
+
+/** HA's name formatter, composing `area` and `entity` parts; a plain string is kept. */
+const nameFormatter = (area: string) => (_stateObj: unknown, name: unknown) => {
+  if (typeof name === "string") {
+    return name;
+  }
+  const parts: { type: string }[] = Array.isArray(name) ? name : [{ type: "entity" }];
+  return parts.map((part) => (part.type === "area" ? area : "Grid power")).join(" ");
+};
+
+/** A Home Assistant of `version` with a name formatter and an entity registry. */
+const namingHass = (version: string): HomeAssistant => {
+  const hass = fakeHass({
+    states: { "sensor.grid": sensor("100", { name: "Utility room Shelly EM Grid power" }) },
+  });
+  return Object.assign(hass, {
+    config: { ...hass.config, version },
+    entities: {},
+    formatEntityName: nameFormatter("Utility room"),
+  });
+};
+
+const mountNamed = (grid: object, hass: HomeAssistant) =>
+  mountCard(
+    PowerFlowCardPlus,
+    {
+      type: "custom:power-flow-card-plus",
+      entities: { grid: { entity: "sensor.grid", ...grid } },
+    },
+    hass
+  );
+
+describe("entity names", () => {
+  test("from HA 2026.4, use_metadata takes the composed name", async () => {
+    const { text } = await mountNamed({ use_metadata: true }, namingHass("2026.4.0"));
+    expect(text(".grid .label")).toBe("Grid power");
+  });
+
+  test("from HA 2026.4, a structured name is composed from its parts", async () => {
+    const name = [{ type: "area" }, { type: "entity" }];
+    const { text } = await mountNamed({ name }, namingHass("2026.4.0"));
+    expect(text(".grid .label")).toBe("Utility room Grid power");
+  });
+
+  test("before HA 2026.4, names come from friendly_name and a plain name is kept", async () => {
+    const hass = namingHass("2026.3.0");
+    const structured = await mountNamed({ name: [{ type: "area" }] }, hass);
+    expect(structured.text(".grid .label")).toBe("Utility room Shelly EM Grid power");
+    const plain = await mountNamed({ name: "Netz" }, hass);
+    expect(plain.text(".grid .label")).toBe("Netz");
+  });
+
+  test("a renamed area updates the label without a state change", async () => {
+    const name = [{ type: "area" }, { type: "entity" }];
+    const hass = namingHass("2026.4.0");
+    const { setHass, text } = await mountNamed({ name }, hass);
+    // Only the registries and the formatter are new, as when HA renames an area.
+    await setHass(
+      Object.assign({ ...hass }, { entities: {}, formatEntityName: nameFormatter("Basement") })
+    );
+    expect(text(".grid .label")).toBe("Basement Grid power");
+  });
+});

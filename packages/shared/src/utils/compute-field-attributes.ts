@@ -32,12 +32,26 @@ export const computeFieldIcon = (
   return fallback;
 };
 
-const fieldStateObj = (hass: HomeAssistant, field: ConfigEntity | undefined) => {
-  if (typeof field?.entity === "string") return getEntityStateObj(hass, field.entity);
-  return (
-    getEntityStateObj(hass, field?.entity?.consumption) ??
-    getEntityStateObj(hass, field?.entity?.production)
-  );
+/** The field's entities; a combo entity lists consumption first. */
+const fieldEntities = (field: ConfigEntity): (string | undefined)[] =>
+  typeof field.entity === "string"
+    ? [field.entity]
+    : [field.entity?.consumption, field.entity?.production];
+
+/** The first name one of the field's entities resolves `name` to, as a combo entity tries each. */
+const fieldEntityName = (
+  hass: HomeAssistant,
+  field: ConfigEntity,
+  name: ConfigEntity["name"]
+): string | undefined => {
+  for (const entity of fieldEntities(field)) {
+    const stateObj = getEntityStateObj(hass, entity);
+    const resolved = stateObj && nonEmpty(computeEntityName(hass, stateObj, name));
+    if (resolved) {
+      return resolved;
+    }
+  }
+  return typeof name === "string" ? nonEmpty(name) : undefined;
 };
 
 export const computeFieldName = (
@@ -46,10 +60,10 @@ export const computeFieldName = (
   fallback: string
 ): string => {
   if (field?.name) {
-    return computeEntityName(hass, fieldStateObj(hass, field), field.name) || fallback;
+    return fieldEntityName(hass, field, field.name) ?? fallback;
   }
   if (field?.use_metadata) {
-    return computeEntityName(hass, fieldStateObj(hass, field), undefined) || fallback;
+    return fieldEntityName(hass, field, undefined) ?? fallback;
   }
   return fallback;
 };
