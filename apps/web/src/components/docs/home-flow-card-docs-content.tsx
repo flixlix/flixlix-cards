@@ -121,7 +121,7 @@ const BENEFITS: {
   {
     icon: ShieldAlert,
     title: "Ready for the bad days",
-    text: "When the grid fails, its cable goes dead and an optional generator appears, wired to the inverter and never to the grid. A nearly empty battery turns its bar yellow, then red.",
+    text: "When the grid fails, its cable goes dead and its label says so. An optional generator appears, wired to the inverter and never to the grid, and its label takes the grid's place. A nearly empty battery turns its bar yellow, then red.",
   },
 ];
 
@@ -426,9 +426,10 @@ const CARD_OPTIONS: OptionRow[] = [
       <>
         <code>entity</code> (and optional <code>name</code>) of a generator the inverter switches to
         during a grid outage. It gets its own wire into the inverter and is never drawn on the grid
-        cable. Needs <code>grid.power_outage</code> to know when the grid is down. The grid itself
-        has no label, so its <code>name</code> and <code>power_outage.label_alert</code> are not
-        shown.
+        cable. Needs <code>grid.power_outage</code> to know when the grid is down. While it runs,
+        its label takes the place of the grid&apos;s; otherwise the grid&apos;s label shows its
+        import or export, or a dash and <code>power_outage.label_alert</code> (default &quot;Power
+        Outage&quot;) when the grid is down.
       </>
     ),
   },

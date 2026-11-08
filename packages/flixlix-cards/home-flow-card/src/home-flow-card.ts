@@ -68,7 +68,13 @@ const HOUSE_MIDDLE = (project(HOUSE_SPAN[0])[0] + project(HOUSE_SPAN[1])[0]) / 2
 /** The scene, its leaders and labels, and the viewBox that holds them all. */
 const drawHouse = (config: FlowConfig, cardState: ReadyCardState, language: string) => {
   const wires = houseWires(config, cardState);
-  const labels = houseLabels(cardState, wires, config.generator, language);
+  const labels = houseLabels(
+    cardState,
+    wires,
+    config.generator,
+    config.entities.grid?.power_outage?.label_alert,
+    language
+  );
   const extent = new Extent();
   const reserveGenerator = Boolean(config.entities.grid?.power_outage?.entity_generator);
   const scene = sceneSvg({
@@ -79,8 +85,13 @@ const drawHouse = (config: FlowConfig, cardState: ReadyCardState, language: stri
     reserveGenerator,
   });
   const leaders = labels.map((label) => leaderSvg(label, extent));
+  // the grid's and the generator's labels take turns: keep room for both, so the card keeps its
+  // size as the grid goes down and comes back
+  if (config.entities.grid) {
+    includeLabel(extent, "grid", 0);
+  }
   if (reserveGenerator) {
-    includeLabel(extent, "generator", false);
+    includeLabel(extent, "generator", 0);
   }
   return { labels, scene, leaders, box: extent.viewBox(10, HOUSE_MIDDLE) };
 };

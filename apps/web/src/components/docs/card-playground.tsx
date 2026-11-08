@@ -97,28 +97,139 @@ const asDailyEnergy = (states: StateFixtures): StateFixtures =>
 
 type Preset = { name: string; state: PlaygroundState };
 
-/** A day on the house, then setups worth trying: solar alone, and the card standing still. */
-const homePresets = (): Preset[] => {
-  const [afternoon] = houseMoments;
-  const extra = afternoon
-    ? [
-        {
-          name: "Solar only",
-          config: { type: "custom:home-flow-card", solar: { entity: "sensor.solar_power" } },
-          states: { "sensor.solar_power": "2400" },
+const HOUSE = "custom:home-flow-card";
+const grid = { entity: "sensor.grid_power" };
+const solar = { entity: "sensor.solar_power" };
+const battery = { entity: "sensor.battery_power", state_of_charge: "sensor.battery_soc" };
+const soc = (state: string) => sensor(state, { unit: "%" });
+const outage = (state: string) => sensor(state, { unit: undefined });
+
+/** Setups worth trying beyond a day on the house: other times, other houses, other options. */
+const houseExtras: { name: string; config: CardConfig; states: StateFixtures }[] = [
+  {
+    name: "Noon, battery full, all to the grid",
+    config: { type: HOUSE, grid, solar, battery },
+    states: {
+      "sensor.grid_power": "-4800",
+      "sensor.solar_power": "6200",
+      "sensor.battery_power": "0",
+      "sensor.battery_soc": soc("100"),
+    },
+  },
+  {
+    name: "A cloudy day",
+    config: { type: HOUSE, grid, solar, battery },
+    states: {
+      "sensor.grid_power": "900",
+      "sensor.solar_power": "700",
+      "sensor.battery_power": "0",
+      "sensor.battery_soc": soc("31"),
+    },
+  },
+  {
+    name: "Charging the battery from the grid at night",
+    config: { type: HOUSE, grid, solar, battery },
+    states: {
+      "sensor.grid_power": "3200",
+      "sensor.solar_power": "0",
+      "sensor.battery_power": "-2500",
+      "sensor.battery_soc": soc("20"),
+    },
+  },
+  {
+    name: "Battery into the grid",
+    config: { type: HOUSE, grid, solar, battery },
+    states: {
+      "sensor.grid_power": "-2000",
+      "sensor.solar_power": "0",
+      "sensor.battery_power": "3000",
+      "sensor.battery_soc": soc("80"),
+    },
+  },
+  {
+    name: "A grid outage without a generator",
+    config: {
+      type: HOUSE,
+      grid: { ...grid, power_outage: { entity: "binary_sensor.grid_outage" } },
+      solar,
+      battery,
+    },
+    states: {
+      "sensor.grid_power": "0",
+      "sensor.solar_power": "900",
+      "sensor.battery_power": "1100",
+      "sensor.battery_soc": soc("57"),
+      "binary_sensor.grid_outage": outage("on"),
+    },
+  },
+  {
+    name: "Separate import and export sensors",
+    config: {
+      type: HOUSE,
+      grid: {
+        entity: {
+          consumption: "sensor.grid_import_power",
+          production: "sensor.grid_export_power",
         },
-        {
-          name: "Still: plain numbers, no pulses",
-          config: { ...afternoon.config, animate_numbers: false, disable_dots: true },
-          states: afternoon.states,
-        },
-      ]
-    : [];
-  return [...houseMoments, ...extra].map(({ name, config, states }) => ({
+      },
+      solar,
+    },
+    states: {
+      "sensor.grid_import_power": "0",
+      "sensor.grid_export_power": "1300",
+      "sensor.solar_power": "2100",
+    },
+  },
+  {
+    name: "Off the grid: solar and a battery",
+    config: { type: HOUSE, solar, battery },
+    states: {
+      "sensor.solar_power": "1800",
+      "sensor.battery_power": "-1000",
+      "sensor.battery_soc": soc("73"),
+    },
+  },
+  {
+    name: "Solar only",
+    config: { type: HOUSE, solar },
+    states: { "sensor.solar_power": "2400" },
+  },
+  {
+    name: "Battery only",
+    config: { type: HOUSE, battery },
+    states: { "sensor.battery_power": "650", "sensor.battery_soc": soc("44") },
+  },
+  {
+    name: "Grid only",
+    config: { type: HOUSE, grid },
+    states: { "sensor.grid_power": "860" },
+  },
+  {
+    name: "Your own charge colours: red below 25 %, yellow below 50 %",
+    config: {
+      type: HOUSE,
+      grid,
+      battery: { ...battery, state_of_charge_severity: { red: 25, yellow: 50 } },
+    },
+    states: {
+      "sensor.grid_power": "300",
+      "sensor.battery_power": "800",
+      "sensor.battery_soc": soc("44"),
+    },
+  },
+  {
+    name: "Still: plain numbers, no pulses",
+    config: { type: HOUSE, grid, solar, battery, animate_numbers: false, disable_dots: true },
+    states: houseMoments[0]?.states ?? {},
+  },
+];
+
+/** A day on the house, then the extras. */
+const homePresets = (): Preset[] =>
+  [...houseMoments, ...houseExtras].map(({ name, config, states }) => ({
     name,
     state: { yaml: stringify(config), states, width: 440 },
   }));
-};
 
 const presets = (kind: PlaygroundKind): Preset[] => {
   if (kind === "period") {

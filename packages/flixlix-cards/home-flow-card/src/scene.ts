@@ -268,9 +268,12 @@ export const fixtures = ({
   { node: "inverter", shapes: inverter() },
 ];
 
+/** Where the grid's label points at its cable: out past the generator, under its label's place. */
+const GRID_LABEL_X = 19.5;
+
 /** The grid cable runs on past the card's edge, fading out from GRID_FADE_FROM onwards. */
 const GRID_CABLE_END = 40;
-export const GRID_FADE_FROM: Point = [18, 5.05, 0];
+export const GRID_FADE_FROM: Point = [GRID_LABEL_X + 1.5, 5.05, 0];
 export const GRID_CABLE_START: Point = [LENGTH + 0.07, INVERTER_Y, 0.02];
 const ON_FRONT = FRONT + 0.07;
 const ON_GABLE = LENGTH + 0.07;
@@ -333,13 +336,14 @@ export const DRAW_ORDER: readonly ({ wire: HouseNode } | { part: SceneGroup["nod
  * (negative) or down, with the label's text running right from it. The anchors keep leaders and
  * labels clear of the wires, the panels and each other.
  */
-/** The grid has no label: its cable runs on to the card's edge and the space above is the generator's. */
-export type LabelledNode = Exclude<HouseNode, "grid">;
+export type LabelledNode = HouseNode;
 
 export const LABEL_ANCHORS: Record<LabelledNode, { at: Point; leader: number }> = {
   solar: { at: onRoof(4.2, PANELS.y0), leader: -40 },
   home: { at: [8.1, FRONT + 0.13, 2.35], leader: 44 },
   battery: { at: onBattery(1.8, 3.3), leader: -50 },
+  // on the cable before it fades, its label where the generator's goes: the two never show together
+  grid: { at: [GRID_LABEL_X, INVERTER_Y, 0], leader: -32 },
   // above the generator, right of the battery and below its label
   generator: { at: [GENERATOR_X, GENERATOR_Y, GENERATOR.height], leader: -22 },
 };

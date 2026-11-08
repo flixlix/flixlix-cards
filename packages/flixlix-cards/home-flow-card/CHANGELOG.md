@@ -1,5 +1,12 @@
 # home-flow-card
 
+## 0.1.1
+
+### Patch Changes
+
+- The grid has a label again, whenever the generator isn't drawn: its import or export, pointing at the grid cable out past the battery. During an outage it shows a dash and the outage alert (`grid.power_outage.label_alert`, default "Power Outage"); with a generator running, the generator's label takes its place.
+- The editor's grid page has its `name` and `label_alert` fields back.
+
 ## 0.1.0
 
 ### Minor Changes

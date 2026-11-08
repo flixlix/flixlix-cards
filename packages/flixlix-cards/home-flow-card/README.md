@@ -23,9 +23,10 @@ meeting at the inverter. One look tells you where your power comes from and wher
   "charging" becomes "discharging" by growing only the letters that change.
 - **Made for your dashboard.** Monotone greys from your theme, light and dark, with colour only where
   power flows. It scales to any card width, and the visual editor sets it up without YAML.
-- **Ready for the bad days.** When the grid fails, its cable goes dead and an optional generator
-  appears, wired to the inverter and never to the grid. A nearly empty battery turns its charge bar
-  yellow, then red, at thresholds you choose.
+- **Ready for the bad days.** When the grid fails, its cable goes dead and its label says so. An
+  optional generator appears, wired to the inverter and never to the grid, and its label takes the
+  grid's place. A nearly empty battery turns its charge bar yellow, then red, at thresholds you
+  choose.
 
 Only what you configure is drawn: solar alone, a battery and the grid, or the whole house.
 Individual devices are not drawn yet; use [Power Flow Card Plus](https://github.com/flixlix/power-flow-card-plus)
