@@ -74,15 +74,15 @@ const CARDS: CardEntry[] = [
     ),
     description: (
       <>
-        The same <strong>live</strong> power as Power Flow Card Plus, drawn on an isometric house:
-        solar on the roof, a battery on the wall, every wire through the inverter.
+        Your own little isometric home, with your <strong>live</strong> power flowing through it:
+        solar on the roof, a battery on the wall, the grid off to the street.
       </>
     ),
     bullets: [
-      { id: "config", content: "Power Flow Card Plus' node options, at the top level" },
-      { id: "numbers", content: "Numbers that roll to their new value" },
-      { id: "battery", content: "Battery icon and charge colours from its state of charge" },
-      { id: "theme", content: "Greys from your theme, light and dark" },
+      { id: "glance", content: "Where your power comes from, at a glance" },
+      { id: "motion", content: "Pulses, rolling numbers and morphing words" },
+      { id: "outage", content: "Grid outages, with an optional generator" },
+      { id: "config", content: "Power Flow Card Plus' sensors and options" },
     ],
   },
   {

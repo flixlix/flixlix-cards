@@ -1,8 +1,26 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, BookOpen, Github, House, Package, Settings, Wrench } from "lucide-react";
+import {
+  Activity,
+  ArrowRight,
+  BookOpen,
+  Download,
+  Eye,
+  Github,
+  House,
+  Package,
+  Palette,
+  Play,
+  Settings,
+  ShieldAlert,
+  Wrench,
+} from "lucide-react";
 import type * as React from "react";
+import { parse, stringify } from "yaml";
 
 import { CardDemo } from "@/components/card-demo";
+import { type CardConfig, CardPreview } from "@/components/card-preview";
+import { type HouseMoment, houseMoments } from "@/components/demos";
+import { sensor, type StateFixtures } from "@flixlix-cards/shared/preview/fake-hass";
 import { Button } from "@flixlix-cards/ui/components/button";
 import {
   Card,
@@ -11,7 +29,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@flixlix-cards/ui/components/card";
-import { Checkbox } from "@flixlix-cards/ui/components/checkbox";
 
 import { CategorySection } from "./category-section";
 import {
@@ -43,15 +60,6 @@ solar:
 battery:
   entity: sensor.battery_power
   state_of_charge: sensor.battery_soc`;
-
-function HighlightItem({ children }: { children: React.ReactNode }) {
-  return (
-    <li className="bg-muted/40 flex items-center gap-2 rounded-md border p-3">
-      <Checkbox className="pointer-events-none" checked />
-      {children}
-    </li>
-  );
-}
 
 function SectionCard({
   to,
@@ -85,47 +93,135 @@ function SectionCard({
 
 // ---------- Overview ----------
 
+/** A moment of the day as the playground's setup, so a link can open it there. */
+const playgroundSearch = ({ config, states }: HouseMoment) => ({
+  s: { yaml: stringify(config), states, width: 440 },
+});
+
+const BENEFITS: {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  text: string;
+}[] = [
+  {
+    icon: Eye,
+    title: "Reads at a glance",
+    text: "Solar sits on the roof, the battery on the wall, the grid runs off to the street. You know where your power comes from before you read a single number.",
+  },
+  {
+    icon: Activity,
+    title: "Motion that means something",
+    text: "A pulse runs along every wire in the direction its power flows, faster and longer the more it carries. Numbers roll to their new value, units slide along, and the battery's word changes only the letters that change.",
+  },
+  {
+    icon: Palette,
+    title: "Made for your dashboard",
+    text: "Monotone greys taken from your theme, light and dark, with colour only where power flows. It scales to any card width, and the visual editor sets it up without YAML.",
+  },
+  {
+    icon: ShieldAlert,
+    title: "Ready for the bad days",
+    text: "When the grid fails, its cable goes dead and its label says so. An optional generator appears, wired to the inverter and never to the grid, and its label takes the grid's place. A nearly empty battery turns its bar yellow, then red.",
+  },
+];
+
+function Benefit({ icon: Icon, title, text }: (typeof BENEFITS)[number]) {
+  return (
+    <div className="bg-card rounded-xl border p-5">
+      <div className="bg-primary/10 text-primary mb-3 flex size-9 items-center justify-center rounded-lg">
+        <Icon className="size-4.5" />
+      </div>
+      <h3 className="mb-1.5 font-semibold">{title}</h3>
+      <p className="text-muted-foreground text-sm leading-relaxed">{text}</p>
+    </div>
+  );
+}
+
+function Moment({ moment }: { moment: HouseMoment }) {
+  return (
+    <figure className="flex flex-col gap-3">
+      <CardPreview
+        configs={[moment.config]}
+        states={moment.states}
+        width={400}
+        className="mx-auto w-fit max-w-full rounded-xl border"
+      />
+      <figcaption className="flex items-start justify-between gap-3 px-1">
+        <div>
+          <div className="text-sm font-semibold">{moment.name}</div>
+          <p className="text-muted-foreground text-sm">{moment.caption}</p>
+        </div>
+        <Button asChild size="sm" variant="ghost" className="shrink-0">
+          <Link to={`${BASE_PATH}/playground`} search={playgroundSearch(moment)}>
+            Play <ArrowRight className="size-3.5" />
+          </Link>
+        </Button>
+      </figcaption>
+    </figure>
+  );
+}
+
 export function OverviewPage() {
   return (
     <>
       <PageHeader
         eyebrow={TITLE}
-        title="Overview"
-        description="Your power flows drawn on an isometric house: solar panels on the roof, a battery on the wall and every wire running through the inverter, with the values next to what they measure."
+        title="Your own little isometric home"
+        description="Home Flow Card draws your live power on a little house: solar on the roof, a battery on the wall and the grid running off to the street. One look tells you where your power comes from and where it goes."
         badges={[{ label: "HACS custom" }, { label: "YAML & UI editor" }, { label: "Power" }]}
       />
 
       <CardDemo demo="house" className="mx-auto w-fit max-w-full rounded-xl border" />
-      <p className="text-muted-foreground mt-2 mb-8 text-center text-sm">
-        The real card, live: a sunny afternoon, charging the battery and exporting the surplus.
+      <p className="text-muted-foreground mt-2 text-center text-sm">
+        Not a screenshot: the real card, running right here.
       </p>
+      <div className="mt-5 mb-12 flex flex-wrap justify-center gap-2">
+        <Button asChild>
+          <a href={HACS_REDIRECT} target="_blank" rel="noopener noreferrer">
+            <Download className="size-4" /> Get it in HACS
+          </a>
+        </Button>
+        <Button asChild variant="outline">
+          <Link to={`${BASE_PATH}/playground`}>
+            <Play className="size-4" /> Try it in the playground
+          </Link>
+        </Button>
+      </div>
 
-      <Prose className="mt-4">
-        <p>
-          <strong>{TITLE}</strong> reads the same sensors as{" "}
-          <Link to="/power-flow-card-plus">Power Flow Card Plus</Link>, and its <code>grid</code>,{" "}
-          <code>solar</code>, <code>battery</code> and <code>home</code> take the same options, at
-          the top level of the card. Instead of circles and lines, every node is wired to the
-          inverter on the house wall: a pulse runs along a wire in the direction its power flows,
-          faster and longer the more power it carries.
-        </p>
-        <p>
-          It shows solar, battery, grid and home for now. Individual devices are not drawn yet; use
-          Power Flow Card Plus for those.
-        </p>
-      </Prose>
+      <Section title="Why a house?">
+        <div className="grid gap-3 md:grid-cols-2">
+          {BENEFITS.map((benefit) => (
+            <Benefit key={benefit.title} {...benefit} />
+          ))}
+        </div>
+      </Section>
 
-      <Section title="Highlights">
-        <ul className="text-foreground/90 grid grid-cols-1 gap-2 text-sm md:grid-cols-2">
-          <HighlightItem>Solar on the roof, battery on the wall, grid to the street</HighlightItem>
-          <HighlightItem>Only what you configure is drawn</HighlightItem>
-          <HighlightItem>Numbers that roll to their new value</HighlightItem>
-          <HighlightItem>Battery icon and charge colours from its state of charge</HighlightItem>
-          <HighlightItem>
-            A dead grid cable in an outage, with an optional generator on the inverter
-          </HighlightItem>
-          <HighlightItem>Greys taken from your theme, light and dark</HighlightItem>
-        </ul>
+      <Section
+        id="a-day"
+        title="A day on your house"
+        description="The same card through the day. Each one is live; open it in the playground to make it yours."
+      >
+        <div className="grid gap-8 md:grid-cols-2">
+          {houseMoments.map((moment) => (
+            <Moment key={moment.name} moment={moment} />
+          ))}
+        </div>
+      </Section>
+
+      <Section title="Set up in a minute">
+        <Prose>
+          <p>
+            Point it at the sensors you already have: grid, solar, battery and, if you like, the
+            home. Leave one out and the house simply doesn&apos;t draw it.
+          </p>
+        </Prose>
+        <CodeBlock language="yaml" code={MINIMAL_CONFIG} />
+        <Callout variant="tip" title="Already using Power Flow Card Plus?">
+          Home Flow Card reads the same sensors and its nodes take the same options. Change the{" "}
+          <code>type</code>, move <code>grid</code>, <code>solar</code>, <code>battery</code> and{" "}
+          <code>home</code> out of <code>entities</code>, and your house is ready. Individual
+          devices are not drawn yet; keep Power Flow Card Plus for those.
+        </Callout>
       </Section>
 
       <Section title="What's in this section">
@@ -146,7 +242,13 @@ export function OverviewPage() {
             to={`${BASE_PATH}/examples`}
             icon={Wrench}
             title="Examples"
-            description="Copy-pastable configs."
+            description="Copy-pastable configs, each shown live."
+          />
+          <SectionCard
+            to={`${BASE_PATH}/playground`}
+            icon={Play}
+            title="Playground"
+            description="Edit the config and drag the sensors; share the link."
           />
         </div>
       </Section>
@@ -434,29 +536,27 @@ max_expected_power: 5000`,
 
 // ---------- Examples ----------
 
-export function ExamplesPage() {
-  return (
-    <>
-      <PageHeader
-        eyebrow={TITLE}
-        title="Examples"
-        description="Copy-pastable configs for the most common setups."
-      />
+const AFTERNOON = houseMoments[0]?.states ?? {};
 
-      <Section id="solar-battery" title="Solar and a battery">
-        <Prose>
-          <p>The full house: solar, a battery with its state of charge, and the grid.</p>
-        </Prose>
-        <CodeBlock language="yaml" code={MINIMAL_CONFIG} />
-      </Section>
-
-      <Section id="split" title="Separate import and export sensors">
-        <Prose>
-          <p>One sensor per direction, the power-outage alert and a generator for outages.</p>
-        </Prose>
-        <CodeBlock
-          language="yaml"
-          code={`type: ${CARD_TYPE}
+const EXAMPLES: {
+  id: string;
+  title: string;
+  text: string;
+  code: string;
+  states: StateFixtures;
+}[] = [
+  {
+    id: "solar-battery",
+    title: "Solar and a battery",
+    text: "The full house: solar, a battery with its state of charge, and the grid.",
+    code: MINIMAL_CONFIG,
+    states: AFTERNOON,
+  },
+  {
+    id: "split",
+    title: "Separate sensors, an outage and a generator",
+    text: "One sensor per direction, the grid's outage sensor, and a generator that appears when the grid goes down. Here the grid is down.",
+    code: `type: ${CARD_TYPE}
 grid:
   entity:
     consumption: sensor.grid_import_power
@@ -471,39 +571,108 @@ battery:
   entity:
     consumption: sensor.battery_discharge_power
     production: sensor.battery_charge_power
-  state_of_charge: sensor.battery_soc`}
-        />
-      </Section>
-
-      <Section id="grid-only" title="Grid only">
-        <Prose>
-          <p>Without solar or a battery, the house shows the grid feeding the home.</p>
-        </Prose>
-        <CodeBlock
-          language="yaml"
-          code={`type: ${CARD_TYPE}
+  state_of_charge: sensor.battery_soc`,
+    states: {
+      "sensor.grid_import_power": "1400",
+      "sensor.grid_export_power": "0",
+      "binary_sensor.grid_outage": sensor("on", { unit: undefined }),
+      "sensor.generator_power": "1400",
+      "sensor.solar_power": "600",
+      "sensor.battery_discharge_power": "0",
+      "sensor.battery_charge_power": "300",
+      "sensor.battery_soc": sensor("41", { unit: "%" }),
+    },
+  },
+  {
+    id: "thresholds",
+    title: "Your own battery thresholds",
+    text: "Turn the charge bar yellow and red where it matters for your battery.",
+    code: `type: ${CARD_TYPE}
 grid:
-  entity: sensor.grid_power`}
-        />
-      </Section>
-
-      <Section id="still" title="Still numbers and wires">
-        <Prose>
-          <p>Plain numbers and no pulses, for a calmer dashboard.</p>
-        </Prose>
-        <CodeBlock
-          language="yaml"
-          code={`type: ${CARD_TYPE}
+  entity: sensor.grid_power
+battery:
+  entity: sensor.battery_power
+  state_of_charge: sensor.battery_soc
+  state_of_charge_severity:
+    red: 25
+    yellow: 50`,
+    states: {
+      "sensor.grid_power": "300",
+      "sensor.battery_power": "800",
+      "sensor.battery_soc": sensor("44", { unit: "%" }),
+    },
+  },
+  {
+    id: "grid-only",
+    title: "Grid only",
+    text: "Without solar or a battery, the house shows the grid feeding the home.",
+    code: `type: ${CARD_TYPE}
+grid:
+  entity: sensor.grid_power`,
+    states: { "sensor.grid_power": "860" },
+  },
+  {
+    id: "still",
+    title: "Still numbers and wires",
+    text: "Plain numbers and no pulses, for a calmer dashboard.",
+    code: `type: ${CARD_TYPE}
 animate_numbers: false
 disable_dots: true
 grid:
   entity: sensor.grid_power
 solar:
-  entity: sensor.solar_power`}
-        />
-      </Section>
+  entity: sensor.solar_power`,
+    states: AFTERNOON,
+  },
+];
 
-      <NextPageNav prev={{ label: "Configuration", to: `${BASE_PATH}/configuration` }} />
+const isConfig = (value: unknown): value is CardConfig =>
+  typeof value === "object" && value !== null && "type" in value && typeof value.type === "string";
+
+function LiveExample({ code, states }: { code: string; states: StateFixtures }) {
+  const config: unknown = parse(code);
+  return (
+    <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+      <CodeBlock language="yaml" code={code} />
+      {isConfig(config) ? (
+        <CardPreview
+          configs={[config]}
+          states={states}
+          width={400}
+          className="mx-auto w-fit max-w-full rounded-xl border"
+        />
+      ) : null}
+    </div>
+  );
+}
+
+export function ExamplesPage() {
+  return (
+    <>
+      <PageHeader
+        eyebrow={TITLE}
+        title="Examples"
+        description="Copy-pastable configs for the most common setups, each next to the card it draws."
+      />
+
+      {EXAMPLES.map((example) => (
+        <Section key={example.id} id={example.id} title={example.title}>
+          <Prose>
+            <p>{example.text}</p>
+          </Prose>
+          <LiveExample code={example.code} states={example.states} />
+        </Section>
+      ))}
+
+      <Callout variant="tip" title="Try your own">
+        Paste your config into the <Link to={`${BASE_PATH}/playground`}>playground</Link> and drag
+        the sensors to see every state of your house.
+      </Callout>
+
+      <NextPageNav
+        prev={{ label: "Configuration", to: `${BASE_PATH}/configuration` }}
+        next={{ label: "Playground", to: `${BASE_PATH}/playground` }}
+      />
     </>
   );
 }

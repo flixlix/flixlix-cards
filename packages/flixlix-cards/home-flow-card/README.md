@@ -1,35 +1,67 @@
 # Home Flow Card
 
-![ko-fi support](https://img.shields.io/badge/support-me-ff5e5b?style=flat-square&logo=ko-fi)
+[![ko-fi support](https://img.shields.io/badge/support-me-ff5e5b?style=flat-square&logo=ko-fi)](https://ko-fi.com/flixlix)
+[![HACS custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=flat-square)](https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=home-flow-card&category=Dashboard)
+![GitHub release](https://img.shields.io/github/v/release/flixlix/home-flow-card?style=flat-square)
+![GitHub total downloads](https://img.shields.io/github/downloads/flixlix/home-flow-card/total?style=flat-square)
 
-<img width="456" alt="Home Flow Card on a sunny noon: solar on the roof charging the battery and exporting to the grid" src="https://raw.githubusercontent.com/flixlix/flixlix-cards/main/packages/flixlix-cards/home-flow-card/assets/demo.png">
+**Your own little isometric home in Home Assistant, with your live power flowing through it.**
 
-Your power flows drawn on an isometric house: solar panels on the roof, a battery on the wall and
-every wire running through the inverter, with each value next to what it measures. It reads the
-same sensors as [Power Flow Card Plus](https://github.com/flixlix/power-flow-card-plus), and its
-`grid`, `solar`, `battery` and `home` take the same options, at the top level of the card.
+<img width="498" alt="Home Flow Card through a day: a sunny afternoon charging the battery, an evening on the battery, and a grid outage with the generator taking over" src="https://raw.githubusercontent.com/flixlix/flixlix-cards/main/packages/flixlix-cards/home-flow-card/assets/home-flow-card.gif">
 
-📖 Full documentation: [cards.flixlix.com/home-flow-card](https://cards.flixlix.com/home-flow-card)
+Solar sits on the roof, the battery on the wall and the grid runs off to the street, every wire
+meeting at the inverter. One look tells you where your power comes from and where it goes.
 
-## Features
+> [!TIP]
+> 📖 **[Documentation](https://cards.flixlix.com/home-flow-card)** · 🎮 **[Try it live in the playground](https://cards.flixlix.com/home-flow-card/playground)**, no install needed
 
-- Solar on the roof, a battery on the wall, the grid cable to the street; only what you configure is drawn
-- A pulse runs along each wire in the direction its power flows, faster and longer the more power it carries
-- Numbers roll to their new value when a reading changes (`animate_numbers`)
-- The battery's icon follows its state of charge, as in Power Flow Card Plus; its charge bar turns yellow and red at thresholds you set
-- Under the battery's value: its state of charge and whether it is charging or discharging
-- During an outage the grid cable goes dead and its label shows the outage alert; an optional generator, wired to the inverter (never to the grid cable), takes over and its label takes the grid's place
-- Greys taken from your theme, in light and dark
-- Visual editor
+## Why a house?
 
-Individual devices are not drawn yet; use Power Flow Card Plus for those.
+- **Reads at a glance.** You know where your power comes from before you read a single number.
+- **Motion that means something.** A pulse runs along every wire in the direction its power flows,
+  faster and longer the more it carries. Numbers roll to their new value, units slide along, and
+  "charging" becomes "discharging" by growing only the letters that change.
+- **Made for your dashboard.** Monotone greys from your theme, light and dark, with colour only where
+  power flows. It scales to any card width, and the visual editor sets it up without YAML.
+- **Ready for the bad days.** When the grid fails, its cable goes dead and its label says so. An
+  optional generator appears, wired to the inverter and never to the grid, and its label takes the
+  grid's place. A nearly empty battery turns its charge bar yellow, then red, at thresholds you
+  choose.
+
+Only what you configure is drawn: solar alone, a battery and the grid, or the whole house.
+Individual devices are not drawn yet; use [Power Flow Card Plus](https://github.com/flixlix/power-flow-card-plus)
+for those.
 
 ## Installation
 
-Add `https://github.com/flixlix/home-flow-card` as a custom repository (category
-**Dashboard**) in HACS and download **Home Flow Card**. To install manually, copy
-`home-flow-card.js` from the latest release into `config/www/` and add it as a dashboard
-resource (`/local/home-flow-card.js`, type `module`).
+[![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=home-flow-card&category=Dashboard)
+
+Or in HACS, open **⋮ → Custom repositories**, add `https://github.com/flixlix/home-flow-card` with
+category **Dashboard**, and download **Home Flow Card**.
+
+To install manually, copy `home-flow-card.js` from the
+[latest release](https://github.com/flixlix/home-flow-card/releases/latest) into `config/www/` and
+add it as a dashboard resource (`/local/home-flow-card.js`, type `module`).
+
+## Set up in a minute
+
+Point it at the sensors you already have; leave one out and the house doesn't draw it.
+
+```yaml
+type: custom:home-flow-card
+grid:
+  entity: sensor.grid_power
+solar:
+  entity: sensor.solar_power
+battery:
+  entity: sensor.battery_power
+  state_of_charge: sensor.battery_soc
+```
+
+**Already using Power Flow Card Plus?** Home Flow Card reads the same sensors and its nodes take the
+same options. Change the `type` and move `grid`, `solar`, `battery` and `home` out of `entities` to
+the top level. Options that only change Power Flow Card Plus' circles and lines (for example
+`display_zero_lines`) have no effect here.
 
 ## Configuration
 
@@ -49,10 +81,6 @@ resource (`/local/home-flow-card.js`, type `module`).
 | `min_flow_rate`                    | number  | `0.75`                    | Seconds per pulse at the most power                                                                                                                 |
 | `max_flow_rate`                    | number  | `6`                       | Seconds per pulse at the least power                                                                                                                |
 | `max_expected_power`               | number  | `2000`                    | Power at which pulses run their fastest                                                                                                             |
-
-Coming from Power Flow Card Plus? Move `grid`, `solar`, `battery` and `home` out of `entities` to the
-top level. Options that only change its circles and lines (for example `display_zero_lines`) have no
-effect here.
 
 ## Examples
 
@@ -87,3 +115,9 @@ battery:
     red: 10
     yellow: 25
 ```
+
+## Source and issues
+
+This card is distributed via [flixlix/home-flow-card](https://github.com/flixlix/home-flow-card);
+the source lives in the monorepo [flixlix/flixlix-cards](https://github.com/flixlix/flixlix-cards),
+where issues and feature requests are tracked.

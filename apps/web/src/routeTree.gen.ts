@@ -30,6 +30,7 @@ import { Route as DocsHomeFlowCardIndexRouteImport } from './routes/_docs/home-f
 import { Route as DocsHomeFlowCardConfigurationRouteImport } from './routes/_docs/home-flow-card/configuration'
 import { Route as DocsHomeFlowCardExamplesRouteImport } from './routes/_docs/home-flow-card/examples'
 import { Route as DocsHomeFlowCardInstallationRouteImport } from './routes/_docs/home-flow-card/installation'
+import { Route as DocsHomeFlowCardPlaygroundRouteImport } from './routes/_docs/home-flow-card/playground'
 import { Route as DocsPowerFlowCardPlusIndexRouteImport } from './routes/_docs/power-flow-card-plus/index'
 import { Route as DocsPowerFlowCardPlusConfigurationRouteImport } from './routes/_docs/power-flow-card-plus/configuration'
 import { Route as DocsPowerFlowCardPlusExamplesRouteImport } from './routes/_docs/power-flow-card-plus/examples'
@@ -161,6 +162,12 @@ const DocsHomeFlowCardInstallationRoute =
     path: '/home-flow-card/installation',
     getParentRoute: () => DocsRoute,
   } as any)
+const DocsHomeFlowCardPlaygroundRoute =
+  DocsHomeFlowCardPlaygroundRouteImport.update({
+    id: '/home-flow-card/playground',
+    path: '/home-flow-card/playground',
+    getParentRoute: () => DocsRoute,
+  } as any)
 const DocsPowerFlowCardPlusIndexRoute =
   DocsPowerFlowCardPlusIndexRouteImport.update({
     id: '/power-flow-card-plus/',
@@ -233,6 +240,7 @@ export interface FileRoutesByFullPath {
   '/home-flow-card/configuration': typeof DocsHomeFlowCardConfigurationRoute
   '/home-flow-card/examples': typeof DocsHomeFlowCardExamplesRoute
   '/home-flow-card/installation': typeof DocsHomeFlowCardInstallationRoute
+  '/home-flow-card/playground': typeof DocsHomeFlowCardPlaygroundRoute
   '/power-flow-card-plus/configuration': typeof DocsPowerFlowCardPlusConfigurationRoute
   '/power-flow-card-plus/examples': typeof DocsPowerFlowCardPlusExamplesRoute
   '/power-flow-card-plus/installation': typeof DocsPowerFlowCardPlusInstallationRoute
@@ -264,6 +272,7 @@ export interface FileRoutesByTo {
   '/home-flow-card/configuration': typeof DocsHomeFlowCardConfigurationRoute
   '/home-flow-card/examples': typeof DocsHomeFlowCardExamplesRoute
   '/home-flow-card/installation': typeof DocsHomeFlowCardInstallationRoute
+  '/home-flow-card/playground': typeof DocsHomeFlowCardPlaygroundRoute
   '/power-flow-card-plus/configuration': typeof DocsPowerFlowCardPlusConfigurationRoute
   '/power-flow-card-plus/examples': typeof DocsPowerFlowCardPlusExamplesRoute
   '/power-flow-card-plus/installation': typeof DocsPowerFlowCardPlusInstallationRoute
@@ -297,6 +306,7 @@ export interface FileRoutesById {
   '/_docs/home-flow-card/configuration': typeof DocsHomeFlowCardConfigurationRoute
   '/_docs/home-flow-card/examples': typeof DocsHomeFlowCardExamplesRoute
   '/_docs/home-flow-card/installation': typeof DocsHomeFlowCardInstallationRoute
+  '/_docs/home-flow-card/playground': typeof DocsHomeFlowCardPlaygroundRoute
   '/_docs/power-flow-card-plus/configuration': typeof DocsPowerFlowCardPlusConfigurationRoute
   '/_docs/power-flow-card-plus/examples': typeof DocsPowerFlowCardPlusExamplesRoute
   '/_docs/power-flow-card-plus/installation': typeof DocsPowerFlowCardPlusInstallationRoute
@@ -330,6 +340,7 @@ export interface FileRouteTypes {
     | '/home-flow-card/configuration'
     | '/home-flow-card/examples'
     | '/home-flow-card/installation'
+    | '/home-flow-card/playground'
     | '/power-flow-card-plus/configuration'
     | '/power-flow-card-plus/examples'
     | '/power-flow-card-plus/installation'
@@ -361,6 +372,7 @@ export interface FileRouteTypes {
     | '/home-flow-card/configuration'
     | '/home-flow-card/examples'
     | '/home-flow-card/installation'
+    | '/home-flow-card/playground'
     | '/power-flow-card-plus/configuration'
     | '/power-flow-card-plus/examples'
     | '/power-flow-card-plus/installation'
@@ -393,6 +405,7 @@ export interface FileRouteTypes {
     | '/_docs/home-flow-card/configuration'
     | '/_docs/home-flow-card/examples'
     | '/_docs/home-flow-card/installation'
+    | '/_docs/home-flow-card/playground'
     | '/_docs/power-flow-card-plus/configuration'
     | '/_docs/power-flow-card-plus/examples'
     | '/_docs/power-flow-card-plus/installation'
@@ -561,6 +574,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocsHomeFlowCardInstallationRouteImport
       parentRoute: typeof DocsRoute
     }
+    '/_docs/home-flow-card/playground': {
+      id: '/_docs/home-flow-card/playground'
+      path: '/home-flow-card/playground'
+      fullPath: '/home-flow-card/playground'
+      preLoaderRoute: typeof DocsHomeFlowCardPlaygroundRouteImport
+      parentRoute: typeof DocsRoute
+    }
     '/_docs/power-flow-card-plus/': {
       id: '/_docs/power-flow-card-plus/'
       path: '/power-flow-card-plus'
@@ -644,6 +664,7 @@ interface DocsRouteChildren {
   DocsHomeFlowCardConfigurationRoute: typeof DocsHomeFlowCardConfigurationRoute
   DocsHomeFlowCardExamplesRoute: typeof DocsHomeFlowCardExamplesRoute
   DocsHomeFlowCardInstallationRoute: typeof DocsHomeFlowCardInstallationRoute
+  DocsHomeFlowCardPlaygroundRoute: typeof DocsHomeFlowCardPlaygroundRoute
   DocsPowerFlowCardPlusConfigurationRoute: typeof DocsPowerFlowCardPlusConfigurationRoute
   DocsPowerFlowCardPlusExamplesRoute: typeof DocsPowerFlowCardPlusExamplesRoute
   DocsPowerFlowCardPlusInstallationRoute: typeof DocsPowerFlowCardPlusInstallationRoute
@@ -684,6 +705,7 @@ const DocsRouteChildren: DocsRouteChildren = {
   DocsHomeFlowCardConfigurationRoute: DocsHomeFlowCardConfigurationRoute,
   DocsHomeFlowCardExamplesRoute: DocsHomeFlowCardExamplesRoute,
   DocsHomeFlowCardInstallationRoute: DocsHomeFlowCardInstallationRoute,
+  DocsHomeFlowCardPlaygroundRoute: DocsHomeFlowCardPlaygroundRoute,
   DocsPowerFlowCardPlusConfigurationRoute:
     DocsPowerFlowCardPlusConfigurationRoute,
   DocsPowerFlowCardPlusExamplesRoute: DocsPowerFlowCardPlusExamplesRoute,

@@ -66,6 +66,7 @@ const SECTIONS: DocSection[] = [
       { label: "Installation", to: "/home-flow-card/installation" },
       { label: "Configuration", to: "/home-flow-card/configuration" },
       { label: "Examples", to: "/home-flow-card/examples" },
+      { label: "Playground", to: "/home-flow-card/playground" },
     ],
   },
   {
