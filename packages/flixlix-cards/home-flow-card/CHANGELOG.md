@@ -1,0 +1,13 @@
+# home-flow-card
+
+## 0.1.0
+
+### Minor Changes
+
+- First release: Home Flow Card draws your live power on an isometric house. Solar panels sit on the roof, the battery on the wall and the grid cable runs off along the ground, and every wire goes through the inverter.
+- A pulse runs along each wire in the direction its power flows, faster and longer the more power it carries.
+- Each value hangs next to what it measures; the grid has none, as its cable carries the flow. Numbers roll to their new value and units slide along with them when a reading changes (turn this off with `animate_numbers: false`).
+- `grid` (with power outage), `solar`, `battery` (with state of charge) and `home` take Power Flow Card Plus' options, at the top level of the card instead of under `entities`. Individual devices are not drawn yet.
+- The battery's icon follows its state of charge, as in Power Flow Card Plus, and its charge bar turns yellow and red below thresholds you set with `battery.state_of_charge_severity` (default: red below 15 %, yellow below 30 %). Under its value, the battery shows its state of charge and whether it is charging or discharging.
+- During a grid outage the grid cable goes dead and an optional `generator`, wired to the inverter and never to the grid cable, appears and carries the generator's power.
+- A visual editor with a page per node and an Advanced page.

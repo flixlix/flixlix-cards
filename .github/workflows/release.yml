@@ -80,13 +80,14 @@ jobs:
             fi
           fi
 
-          # IMPORTANT: Only proceed if we're on main branch
-          # The changesets action switches to changeset-release/main to prepare the PR
+          # IMPORTANT: Detect (and later build) from the pushed main commit only.
+          # While changesets are pending, the changesets action leaves us on changeset-release/main,
+          # which it has already pushed as the version PR: go back to the commit that was pushed,
+          # so a package versioned by hand (outside changesets) is still released.
           current_branch=$(git branch --show-current)
           if [ "$current_branch" != "main" ]; then
-            echo "::notice::Not on main branch (on $current_branch), skipping release detection"
-            echo "packages=[]" >> "$GITHUB_OUTPUT"
-            exit 0
+            echo "::notice::On $current_branch after changesets, switching back to ${{ github.sha }}"
+            git checkout --quiet --force "${{ github.sha }}"
           fi
 
           # Only check commits that are actually on main (not the version PR commit)
@@ -157,7 +158,8 @@ jobs:
                     continue
                   fi
 
-                  if [ -n "$old_version" ] && [ -n "$new_version" ] && [ "$old_version" != "$new_version" ] && [ -n "$name" ]; then
+                  # A package new in this push (no old version) is released too, unless it is still 0.0.0.
+                  if [ -n "$new_version" ] && [ "$new_version" != "0.0.0" ] && [ "$old_version" != "$new_version" ] && [ -n "$name" ]; then
                     clean_name=$(echo "$name" | sed 's|^@.*/||')
                     tag_name="v${new_version}"
 
@@ -301,8 +303,8 @@ jobs:
             # Extract changelog
             NOTES="Release v${VERSION}"
             if [ -f "${PKG_DIR}/CHANGELOG.md" ]; then
-              VER_RE=$(printf '%s' "$VERSION" | sed 's/\./\\./g')
-              EXTRACTED=$(sed -n "/^## ${VER_RE}\$/,/^## /p" "${PKG_DIR}/CHANGELOG.md" | sed '1d;$d' | sed '/^$/d')
+              # The lines under this version's heading, up to the next version's (or the end).
+              EXTRACTED=$(awk -v heading="## ${VERSION}" '$0 == heading { found = 1; next } /^## / { found = 0 } found' "${PKG_DIR}/CHANGELOG.md" | sed '/^$/d')
               [ -n "$EXTRACTED" ] && NOTES="$EXTRACTED"
             fi
 
