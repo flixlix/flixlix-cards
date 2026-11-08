@@ -1,8 +1,9 @@
+import { type HomeAssistant } from "custom-card-helpers";
 import { describe, expect, test } from "vite-plus/test";
 import { userEvent } from "vite-plus/test/browser/context";
-import { fakeHass } from "@flixlix-cards/shared/testing/fake-hass";
+import { emitTemplate, fakeHass, withStates } from "@flixlix-cards/shared/testing/fake-hass";
 import { expectFlowCard, flowScenarios } from "@flixlix-cards/shared/testing/flow-scenarios";
-import { mountCard } from "@flixlix-cards/shared/testing/mount-card";
+import { type MountedCard, mountCard } from "@flixlix-cards/shared/testing/mount-card";
 import { PowerFlowCardPlus } from "./power-flow-card-plus";
 
 describe("power flow card scenarios", () => {
@@ -172,5 +173,74 @@ describe("layout", () => {
     await card.resize(500);
     expect(card.text("span.individual-right-top")).toBe("3 W");
     expect(card.text("span.individual-right-bottom")).toBe("4 W");
+  });
+});
+
+const priceTemplate = "{{ states('sensor.cost') }}";
+
+const watchedConfig = {
+  type: "custom:power-flow-card-plus",
+  entities: {
+    grid: { entity: "sensor.grid" },
+    solar: { entity: "sensor.solar" },
+    home: { entity: "sensor.home", secondary_info: { template: priceTemplate } },
+  },
+};
+
+const mountWatched = async () => {
+  const hass = fakeHass({
+    states: { "sensor.grid": "300", "sensor.solar": "100", "light.kitchen": "off" },
+    templates: { [priceTemplate]: "1.20 €" },
+  });
+  return { hass, ...(await mountCard(PowerFlowCardPlus, watchedConfig, hass)) };
+};
+
+/** Toggles a light the card does not show, one Lit update per toggle. */
+const toggleKitchenLight = async (card: MountedCard, hass: HomeAssistant, times: number) => {
+  if (times === 0) {
+    return;
+  }
+  const next = withStates(hass, { "light.kitchen": times % 2 ? "on" : "off" });
+  card.card.hass = next;
+  await card.card.updateComplete;
+  await toggleKitchenLight(card, next, times - 1);
+};
+
+describe("updates", () => {
+  test("changes to an entity the card does not show neither compute nor render", async () => {
+    const { hass, ...card } = await mountWatched();
+    await toggleKitchenLight(card, hass, 100);
+    await card.settle();
+    expect(card.updates()).toBe(0);
+  });
+
+  test("a change to a shown entity updates the card once", async () => {
+    const { hass, updates, setHass, text } = await mountWatched();
+    await setHass(withStates(hass, { "sensor.solar": "250" }));
+    expect(updates()).toBe(1);
+    expect(text(".solar .solar")).toBe("250 W");
+  });
+
+  test("a new template result updates the card", async () => {
+    const { hass, settle, text } = await mountWatched();
+    emitTemplate(hass, priceTemplate, "1.25 €");
+    await settle();
+    expect(text(".home .secondary-info")).toBe("1.25 €");
+  });
+
+  test("a template result arriving with an unrelated change still updates the card", async () => {
+    const { card, hass, settle, text } = await mountWatched();
+    emitTemplate(hass, priceTemplate, "1.25 €");
+    card.hass = withStates(hass, { "light.kitchen": "on" });
+    await settle();
+    expect(text(".home .secondary-info")).toBe("1.25 €");
+  });
+
+  test("a new config updates the card", async () => {
+    const { card, hass, setHass, text } = await mountWatched();
+    const solar = { entity: "sensor.roof" };
+    card.setConfig({ ...watchedConfig, entities: { ...watchedConfig.entities, solar } });
+    await setHass(withStates(hass, { "sensor.roof": "400" }));
+    expect(text(".solar .solar")).toBe("400 W");
   });
 });

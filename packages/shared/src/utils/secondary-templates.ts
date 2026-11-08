@@ -5,7 +5,7 @@ import {
 import { type FlowCardPlusConfig, type TemplatesObj } from "@flixlix-cards/shared/types";
 import { type HomeAssistant } from "custom-card-helpers";
 import { type UnsubscribeFunc } from "home-assistant-js-websocket";
-import { type ReactiveController, type ReactiveControllerHost } from "lit";
+import { type ReactiveController, type ReactiveElement } from "lit";
 
 const individualTopic = (index: number) => `individual${index}Secondary`;
 
@@ -30,7 +30,7 @@ export class SecondaryTemplates implements ReactiveController {
   private readonly _subscriptions = new Map<string, Promise<UnsubscribeFunc>>();
 
   constructor(
-    private readonly _host: ReactiveControllerHost & HTMLElement,
+    private readonly _host: ReactiveElement,
     private readonly _context: () => { hass?: HomeAssistant; config?: FlowCardPlusConfig }
   ) {
     _host.addController(this);
@@ -64,8 +64,10 @@ export class SecondaryTemplates implements ReactiveController {
   }
 
   private _setResult(topic: string, result: RenderTemplateResult) {
-    this._results = { ...this._results, [topic]: result };
-    this._host.requestUpdate();
+    const previous = this._results;
+    this._results = { ...previous, [topic]: result };
+    // Named, so a host that skips updates for an unrelated `hass` still sees the new result.
+    this._host.requestUpdate("secondaryTemplates", previous, { hasChanged: () => true });
   }
 
   private _connectAll() {

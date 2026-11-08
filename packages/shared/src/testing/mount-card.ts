@@ -1,10 +1,12 @@
 import { type HomeAssistant } from "custom-card-helpers";
+import { type ReactiveController } from "lit";
 import { defineHaElements } from "./ha-elements";
 
 type CardElement = HTMLElement & {
   hass?: HomeAssistant;
   setConfig(config: object): void;
   updateComplete: Promise<boolean>;
+  addController(controller: ReactiveController): void;
 };
 
 const frozenMotion = new CSSStyleSheet();
@@ -71,6 +73,8 @@ export type MountedCard = {
   setHass: (hass: HomeAssistant) => Promise<void>;
   resize: (width: number) => Promise<void>;
   settle: () => Promise<void>;
+  /** Lit updates (state computed and rendered) the card ran since it was mounted and settled. */
+  updates: () => number;
 };
 
 let mounted: HTMLElement | undefined;
@@ -97,6 +101,12 @@ export const mountCard = async (
   if (!root) {
     throw new Error(`mountCard: <${card.localName}> rendered no shadow root`);
   }
+  let updates = 0;
+  card.addController({
+    hostUpdated: () => {
+      updates += 1;
+    },
+  });
   return {
     card,
     root,
@@ -111,5 +121,6 @@ export const mountCard = async (
       await settle(card);
     },
     settle: () => settle(card),
+    updates: () => updates,
   };
 };

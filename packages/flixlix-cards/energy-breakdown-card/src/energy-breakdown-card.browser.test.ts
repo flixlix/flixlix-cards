@@ -1,6 +1,11 @@
 import { describe, expect, test } from "vite-plus/test";
 import { userEvent } from "vite-plus/test/browser/context";
-import { energyCollection, fakeHass, sensor } from "@flixlix-cards/shared/testing/fake-hass";
+import {
+  energyCollection,
+  fakeHass,
+  sensor,
+  withStates,
+} from "@flixlix-cards/shared/testing/fake-hass";
 import { mountCard } from "@flixlix-cards/shared/testing/mount-card";
 import { EnergyBreakdownCard } from "./energy-breakdown-card";
 
@@ -168,6 +173,31 @@ describe("energy breakdown over the dashboard's period", () => {
       "EV charger 3 kWh 75%",
       "Heat pump 1 kWh 25%",
       "Oven 0 kWh 0%",
+    ]);
+  });
+});
+
+const mountBars = async () => {
+  const hass = fakeHass({ states: { ...states, "light.kitchen": "off" } });
+  const config = { type: "custom:energy-breakdown-card", chart_type: "bar", entities };
+  return { hass, ...(await mountCard(EnergyBreakdownCard, config, hass)) };
+};
+
+describe("updates", () => {
+  test("a change to an entity the card does not show does not render", async () => {
+    const { hass, setHass, updates } = await mountBars();
+    await setHass(withStates(hass, { "light.kitchen": "on" }));
+    expect(updates()).toBe(0);
+  });
+
+  test("a change to a shown entity updates the card once", async () => {
+    const { root, hass, setHass, updates } = await mountBars();
+    await setHass(withStates(hass, { "sensor.oven": kWh("5.5", "Oven") }));
+    expect(updates()).toBe(1);
+    expect(legend(root)).toEqual([
+      "Oven 5.5 kWh 55%",
+      "Heat pump 3 kWh 30%",
+      "EV charger 1.5 kWh 15%",
     ]);
   });
 });

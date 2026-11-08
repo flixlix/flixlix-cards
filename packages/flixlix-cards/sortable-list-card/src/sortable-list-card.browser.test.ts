@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vite-plus/test";
 import { userEvent } from "vite-plus/test/browser/context";
-import { fakeHass, sensor } from "@flixlix-cards/shared/testing/fake-hass";
+import { fakeHass, sensor, withStates } from "@flixlix-cards/shared/testing/fake-hass";
 import { mountCard } from "@flixlix-cards/shared/testing/mount-card";
 import { SortableListCard } from "./sortable-list-card";
 
@@ -101,5 +101,22 @@ describe("sortable list card", () => {
     );
     expect(text(".warning")).toBe("Entity input_text.missing not found.");
     expect(rows(root)).toEqual(["Alpha 1", "Bravo 2", "Charlie 3"]);
+  });
+});
+
+const order = (value: string) => sensor(value, { unit: undefined });
+
+describe("updates", () => {
+  test("a change to an entity the card does not show does not render", async () => {
+    const { hass, setHass, updates } = await mountList("b,a,c");
+    await setHass(withStates(hass, { "light.kitchen": "on" }));
+    expect(updates()).toBe(0);
+  });
+
+  test("a new order in the entity re-sorts the list", async () => {
+    const { root, hass, setHass, updates } = await mountList("b,a,c");
+    await setHass(withStates(hass, { "input_text.order": order("c,b,a") }));
+    expect(updates()).toBeGreaterThan(0);
+    expect(rows(root)).toEqual(["Charlie 1", "Bravo 2", "Alpha 3"]);
   });
 });
