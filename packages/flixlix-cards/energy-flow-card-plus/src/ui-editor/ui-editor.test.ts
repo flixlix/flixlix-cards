@@ -212,6 +212,26 @@ describe("energy flow ui editor", () => {
     });
   });
 
+  test("filling a separated field over a combined entity keeps only consumption and production", async () => {
+    const { editor, lastConfig } = await mountEditor({
+      entities: { grid: { entity: "sensor.grid" } },
+    });
+
+    query(editor, 'link-subpage[path="grid"]').dispatchEvent(
+      new CustomEvent("open-sub-element-editor", { detail: { open: true } })
+    );
+    await editor.updateComplete;
+    // What ha-form emits: the nested "Separated" form spreads the old string into the object.
+    const spread = Object.fromEntries(Array.from("sensor.grid", (char, index) => [index, char]));
+    query(editor, "ha-form").dispatchEvent(
+      new CustomEvent("value-changed", {
+        detail: { value: { entity: { ...spread, consumption: "sensor.grid_import" } } },
+      })
+    );
+
+    expect(lastConfig()?.entities.grid).toEqual({ entity: { consumption: "sensor.grid_import" } });
+  });
+
   test.each(["grid", "solar", "battery"])(
     "the %s page edits its own unit, unit white space and decimals",
     async (page) => {
