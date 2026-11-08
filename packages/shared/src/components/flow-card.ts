@@ -3,6 +3,7 @@ import { type CardMainContext, type FlowCardPlusConfig } from "@flixlix-cards/sh
 import { type HomeAssistant } from "custom-card-helpers";
 import { html, nothing } from "lit";
 import { batteryElement } from "./battery";
+import { type FlowLayout } from "./flows/geometry";
 import { flowElement } from "./flows/index";
 import { gridElement } from "./grid";
 import { homeElement } from "./home";
@@ -27,11 +28,7 @@ const topRow = ({ main, config, cardState }: RowContext) => {
     ${individualElement(main, config, "left-top", { slot: individualSlots.leftTop, animate })}
     ${
       layout.hasRightIndividual
-        ? individualElement(main, config, "right-top", {
-            slot: individualSlots.rightTop,
-            animate,
-            hasBottomRow: layout.showBottomRow,
-          })
+        ? individualElement(main, config, "right-top", { slot: individualSlots.rightTop, animate })
         : nothing
     }
   </div>`;
@@ -40,7 +37,7 @@ const topRow = ({ main, config, cardState }: RowContext) => {
 /** Grid and the home. */
 const middleRow = ({ main, config, cardState }: RowContext) => {
   const { nodes, layout } = cardState;
-  return html`<div class="row">
+  return html`<div class="row middle">
     ${nodes.grid.has ? gridElement(main, config, nodes.grid) : spacer} ${spacer}
     ${
       !config.entities.home?.hide
@@ -81,7 +78,9 @@ export const flowCard = (
   config: FlowCardPlusConfig,
   cardState: ReadyCardState,
   hass: HomeAssistant,
-  contentId: string
+  contentId: string,
+  /** Where the node circles were measured; until then the lines use a nominal layout. */
+  flowLayout: FlowLayout | undefined
 ) => {
   const rows = { main, config, cardState };
   return html`
@@ -97,7 +96,7 @@ export const flowCard = (
         id=${contentId}
         style=${config.style_card_content ?? ""}
       >
-        ${topRow(rows)} ${middleRow(rows)} ${bottomRow(rows)} ${flowElement(config, cardState)}
+        ${topRow(rows)} ${middleRow(rows)} ${bottomRow(rows)} ${flowElement(cardState, flowLayout)}
       </div>
       ${dashboardLinkElement(config, hass)}
     </ha-card>

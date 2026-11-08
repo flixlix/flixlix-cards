@@ -1,13 +1,13 @@
 import { html, nothing, svg } from "lit";
-import { classMap } from "lit/directives/class-map.js";
+import { keyed } from "lit/directives/keyed.js";
 import { type Flows } from "./index";
 
-const batteryFromGridDot = (animate: boolean, grid: Flows["grid"], flows: Flows["flows"]) => {
+const batteryFromGridDot = ({ animate, grid, flows, paths }: Flows) => {
   if (!animate || !grid.state.toBattery) {
     return nothing;
   }
 
-  return svg`<circle r="1" class="battery-from-grid" vector-effect="non-scaling-stroke">
+  return svg`<circle r=${paths.scale} class="battery-from-grid" vector-effect="non-scaling-stroke">
       <animateMotion
         dur="${flows.batteryGrid.durationSeconds}s"
         repeatCount="indefinite"
@@ -20,13 +20,13 @@ const batteryFromGridDot = (animate: boolean, grid: Flows["grid"], flows: Flows[
     </circle>`;
 };
 
-const batteryToGridDot = (animate: boolean, battery: Flows["battery"], flows: Flows["flows"]) => {
+const batteryToGridDot = ({ animate, battery, flows, paths }: Flows) => {
   if (!animate || !battery.state.toGrid) {
     return nothing;
   }
 
   return svg`
-    <circle r="1" class="battery-to-grid" vector-effect="non-scaling-stroke">
+    <circle r=${paths.scale} class="battery-to-grid" vector-effect="non-scaling-stroke">
       <animateMotion dur="${flows.batteryGrid.durationSeconds}s" repeatCount="indefinite" calcMode="paced">
         <mpath xlink:href="#battery-grid" />
       </animateMotion>
@@ -34,32 +34,18 @@ const batteryToGridDot = (animate: boolean, battery: Flows["battery"], flows: Fl
   `;
 };
 
-type FlowBatteryToGridFlows = Pick<Flows, Exclude<keyof Flows, "solar">>;
-
-export const flowBatteryToGrid = ({
-  battery,
-  grid,
-  lineClasses,
-  animate,
-  flows,
-}: FlowBatteryToGridFlows) => {
-  if (!flows.batteryGrid.visible) {
+export const flowBatteryToGrid = (context: Flows) => {
+  const { flows, paths } = context;
+  if (!flows.batteryGrid.visible || !paths.batteryToGrid) {
     return nothing;
   }
-  return html`<div class="lines ${classMap(lineClasses)}">
-    <svg
-      viewBox="0 0 100 100"
-      xmlns="http://www.w3.org/2000/svg"
-      preserveAspectRatio="xMidYMid slice"
-      id="battery-grid-flow"
-    >
-      <path
-        id="battery-grid"
-        class="${flows.batteryGrid.lineClass}"
-        d="M45,100 v-15 c0,-30 -10,-30 -30,-30 h-20"
-        vector-effect="non-scaling-stroke"
-      ></path>
-      ${batteryFromGridDot(animate, grid, flows)} ${batteryToGridDot(animate, battery, flows)}
-    </svg>
-  </div>`;
+  return html`<svg class="flow" id="battery-grid-flow" viewBox=${context.viewBox}>
+    <path
+      id="battery-grid"
+      class="${flows.batteryGrid.lineClass}"
+      d=${paths.batteryToGrid}
+      vector-effect="non-scaling-stroke"
+    ></path>
+    ${keyed(paths.batteryToGrid, svg`${batteryFromGridDot(context)} ${batteryToGridDot(context)}`)}
+  </svg>`;
 };

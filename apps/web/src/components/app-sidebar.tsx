@@ -52,6 +52,7 @@ const SECTIONS: DocSection[] = [
       { label: "Installation", to: "/power-flow-card-plus/installation" },
       { label: "Configuration", to: "/power-flow-card-plus/configuration" },
       { label: "Examples", to: "/power-flow-card-plus/examples" },
+      { label: "Playground", to: "/power-flow-card-plus/playground" },
     ],
   },
   {

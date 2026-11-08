@@ -70,12 +70,19 @@ export default defineConfig({
       "flixlix/no-card-type-sniffing": "error",
       "flixlix/no-camelcase-event-binding": "error",
       "flixlix/no-mwc-elements": "error",
+      "flixlix/no-sliced-svg": "error",
       "flixlix/no-native-date-input": "error",
       "vite-plus/prefer-vite-plus-imports": "error",
     },
     overrides: [
       {
-        files: ["**/*.test.ts", "**/*.test.js", "packages/shared/src/testing/**"],
+        files: [
+          "**/*.test.ts",
+          "**/*.test.js",
+          "packages/shared/src/testing/**",
+          // A partial `hass` asserted to the full type, for the docs and the tests.
+          "packages/shared/src/preview/fake-hass.ts",
+        ],
         rules: {
           "typescript/no-non-null-assertion": "off",
           "typescript/no-unsafe-member-access": "off",

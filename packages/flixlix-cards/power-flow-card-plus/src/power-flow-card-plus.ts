@@ -1,3 +1,4 @@
+import { FlowLayoutController } from "@flixlix-cards/shared/components/flows/measure";
 import {
   computeCardState,
   type CardState,
@@ -47,6 +48,7 @@ export class PowerFlowCardPlus extends LitElement {
     hass: this.hass,
     clickableEntities: this._config.clickable_entities,
   }));
+  private readonly _flowLayout = new FlowLayoutController(this, "power-flow-card-plus");
   private readonly _templates = new SecondaryTemplates(this, () => ({
     hass: this.hass,
     config: this._config,
@@ -131,7 +133,14 @@ export class PowerFlowCardPlus extends LitElement {
     if (!this._config || !this.hass || cardState?.status !== "ready") {
       return nothing;
     }
-    return flowCard(this._actions, this._config, cardState, this.hass, "power-flow-card-plus");
+    return flowCard(
+      this._actions,
+      this._config,
+      cardState,
+      this.hass,
+      "power-flow-card-plus",
+      this._flowLayout.layout
+    );
   }
 
   protected updated(changedProps: PropertyValues): void {

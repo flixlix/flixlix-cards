@@ -1,7 +1,5 @@
-import { expect } from "vite-plus/test";
 import { type FlowCardPlusConfig } from "../types";
-import { sensor, type StateFixtures } from "./fake-hass";
-import { type MountedCard } from "./mount-card";
+import { sensor, type StateFixtures } from "../preview/fake-hass";
 
 /** What a mounted flow card must show; selectors are queried in the card's shadow root. */
 export type FlowExpectation = {
@@ -285,7 +283,11 @@ export const flowScenarios: FlowScenario[] = [
         "span.individual-right-top": "30 W",
         "span.individual-right-bottom": "20 W",
       },
-      shown: [".individual-right-top", ".individual-right-bottom", ".lines.multi-individual"],
+      shown: [
+        ".individual-right-top",
+        ".individual-right-bottom",
+        "#individual-top-right-home-flow",
+      ],
     },
   },
   {
@@ -301,7 +303,11 @@ export const flowScenarios: FlowScenario[] = [
     width: 340,
     expect: {
       text: { "span.individual-left-top": "10 W", "span.individual-left-bottom": "20 W" },
-      hidden: [".individual-right-top", ".individual-right-bottom", ".lines.multi-individual"],
+      hidden: [
+        ".individual-right-top",
+        ".individual-right-bottom",
+        "#individual-top-right-home-flow",
+      ],
     },
   },
   {
@@ -528,14 +534,6 @@ export const flowScenarios: FlowScenario[] = [
   },
 ];
 
-const durationSeconds = (root: ShadowRoot, selector: string) => {
-  const duration = root.querySelector(`${selector} animateMotion`)?.getAttribute("dur");
-  if (!duration) {
-    throw new Error(`no moving dot at ${selector}`);
-  }
-  return Number.parseFloat(duration);
-};
-
 /** A screenshot name for a scenario. */
 export const screenshotName = (scenario: FlowScenario): string =>
   scenario.name
@@ -545,32 +543,3 @@ export const screenshotName = (scenario: FlowScenario): string =>
 
 /** `500 W` → `500 Wh`: the energy card shows the same numbers as energy. */
 export const asEnergyUnits = (text: string): string => text.replace(/(\d) ([kM]?)W\b/g, "$1 $2Wh");
-
-/** Asserts a mounted flow card against a scenario's expectation. */
-export const expectFlowCard = (
-  { root, text, markup }: MountedCard,
-  expectation: FlowExpectation,
-  units: (text: string) => string = (same) => same
-): void => {
-  for (const [selector, expected] of Object.entries(expectation.text ?? {})) {
-    expect(text(selector), selector).toBe(units(expected));
-  }
-  for (const selector of expectation.shown ?? []) {
-    expect(root.querySelector(selector), `${selector} shown`).not.toBeNull();
-  }
-  for (const selector of expectation.hidden ?? []) {
-    expect(root.querySelector(selector), `${selector} hidden`).toBeNull();
-  }
-  for (const [selector, tokens] of Object.entries(expectation.classes ?? {})) {
-    const classList = [...(root.querySelector(selector)?.classList ?? [])];
-    expect(classList, selector).toEqual(expect.arrayContaining(tokens));
-  }
-  const durations = (expectation.fastestFirst ?? []).map((selector) =>
-    durationSeconds(root, selector)
-  );
-  const slowerEachStep = durations
-    .slice(1)
-    .every((duration, index) => (durations[index] ?? Number.POSITIVE_INFINITY) < duration);
-  expect(slowerEachStep, `dot durations ${durations.join(" < ")}`).toBe(true);
-  expect(markup()).not.toMatch(/NaN|undefined/);
-};

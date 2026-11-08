@@ -1,6 +1,6 @@
 import { type HomeAssistant } from "custom-card-helpers";
 import { type ReactiveController } from "lit";
-import { defineHaElements } from "./ha-elements";
+import { defineHaElements, haDashboardStyle } from "../preview/ha-elements";
 
 type CardElement = HTMLElement & {
   hass?: HomeAssistant;
@@ -25,23 +25,6 @@ const freezeMotion = (root: ShadowRoot) => {
     svg.setCurrentTime(0);
   });
 };
-
-/** Home Assistant's default light theme, as far as the cards read it. */
-const theme = `
-  --primary-text-color: #212121;
-  --secondary-text-color: #727272;
-  --disabled-text-color: #bdbdbd;
-  --primary-color: #03a9f4;
-  --card-background-color: #fff;
-  --secondary-background-color: #e5e5e5;
-  --divider-color: rgba(0, 0, 0, 0.12);
-  --energy-grid-consumption-color: #488fc2;
-  --energy-grid-return-color: #8353d1;
-  --energy-solar-color: #ff9800;
-  --energy-non-fossil-color: #0f9d58;
-  --energy-battery-out-color: #4db6ac;
-  --energy-battery-in-color: #f06292;
-`;
 
 const nextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 
@@ -89,7 +72,7 @@ export const mountCard = async (
   defineHaElements();
   mounted?.remove();
   const container = document.createElement("div");
-  container.style.cssText = `${theme} width: ${width}px; padding: 8px; font-family: sans-serif;`;
+  container.style.cssText = `${haDashboardStyle()} width: ${width}px; padding: 8px;`;
   const card = new Card();
   card.setConfig(config);
   card.hass = hass;

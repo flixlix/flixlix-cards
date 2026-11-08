@@ -5,6 +5,7 @@ import {
   type IndividualObject,
 } from "@flixlix-cards/shared/types";
 import { html, nothing, svg, type SVGTemplateResult, type TemplateResult } from "lit";
+import { keyed } from "lit/directives/keyed.js";
 import { spacer } from "./spacer";
 import { type IndividualKey, individualSecondarySpan } from "./spans/individual-secondary-span";
 
@@ -84,11 +85,10 @@ const dotPaths: Record<IndividualKey, SVGTemplateResult> = {
   "right-bottom": svg`<mpath xlink:href="#individual-bottom-right-home" />`,
 };
 
-const flowDot = (slot: IndividualSlot, key: IndividualKey, animate: boolean) => {
+const flowDot = (slot: IndividualSlot, key: IndividualKey, animate: boolean, radius = 1.75) => {
   if (!animate || !isFlowing(slot.node)) {
     return nothing;
   }
-  const radius = key.startsWith("left") ? 1.75 : 1;
   const vertical = key.endsWith("top") ? "top" : "bottom";
   return svg`<circle r="${radius}" class="individual-${vertical}" vector-effect="non-scaling-stroke">
     <animateMotion
@@ -108,20 +108,7 @@ type Parts = {
   label: TemplateResult;
   circle: TemplateResult;
   dot: SVGTemplateResult | typeof nothing;
-  hasBottomRow: boolean;
 };
-
-const rightFlow = (path: SVGTemplateResult, dot: Parts["dot"]) =>
-  html`<div class="right-individual-flow-container">
-    <svg
-      viewBox="0 0 100 100"
-      xmlns="http://www.w3.org/2000/svg"
-      preserveAspectRatio="xMidYMid slice"
-      class="right-individual-flow"
-    >
-      ${path} ${dot}
-    </svg>
-  </div>`;
 
 /** Where label, circle and line sit for each slot around the home. */
 const layouts: Record<IndividualKey, (parts: Parts) => TemplateResult> = {
@@ -149,42 +136,31 @@ const layouts: Record<IndividualKey, (parts: Parts) => TemplateResult> = {
       }
       ${circle} ${label}
     </div>`,
-  "right-top": ({ slot, label, circle, dot, hasBottomRow }) =>
+  "right-top": ({ label, circle }) =>
     html`<div class="circle-container individual-top individual-right individual-right-top">
       ${label} ${circle}
-      ${
-        slot.flow.visible
-          ? rightFlow(
-              svg`<path
-                id="individual-top-right-home"
-                class="${slot.flow.lineClass}"
-                d="M${hasBottomRow ? 45 : 47},0 v15 c0,${
-                  hasBottomRow ? "30 -10,30 -30,30" : "35 -10,35 -30,35"
-                } h-20"
-                vector-effect="non-scaling-stroke"
-              />`,
-              dot
-            )
-          : nothing
-      }
     </div>`,
-  "right-bottom": ({ slot, label, circle, dot }) =>
+  "right-bottom": ({ label, circle }) =>
     html`<div class="circle-container individual-bottom individual-right individual-right-bottom">
       ${circle} ${label}
-      ${
-        slot.flow.visible
-          ? rightFlow(
-              svg`<path
-                id="individual-bottom-right-home"
-                class="${slot.flow.lineClass}"
-                d="M45,100 v-15 c0,-30 -10,-30 -30,-30 h-20"
-                vector-effect="non-scaling-stroke"
-              />`,
-              dot
-            )
-          : nothing
-      }
     </div>`,
+};
+
+/** The line from a right-column individual into the home; drawn in the card's flow overlay. */
+export const rightIndividualFlow = (
+  slot: IndividualSlot | undefined,
+  key: "right-top" | "right-bottom",
+  d: string | undefined,
+  { animate, scale, viewBox }: { animate: boolean; scale: number; viewBox: string }
+) => {
+  if (!slot?.flow.visible || !d) {
+    return nothing;
+  }
+  const id = key === "right-top" ? "individual-top-right-home" : "individual-bottom-right-home";
+  return html`<svg class="flow individual-${key}" id="${id}-flow" viewBox=${viewBox}>
+    <path id=${id} class="${slot.flow.lineClass}" d=${d} vector-effect="non-scaling-stroke" />
+    ${keyed(d, flowDot(slot, key, animate, scale))}
+  </svg>`;
 };
 
 /** An individual device in one of the four slots around the home, with its line to the home. */
@@ -192,11 +168,7 @@ export const individualElement = (
   main: CardMainContext,
   config: FlowCardPlusConfig,
   key: IndividualKey,
-  {
-    slot,
-    animate,
-    hasBottomRow = false,
-  }: { slot: IndividualSlot | undefined; animate: boolean; hasBottomRow?: boolean }
+  { slot, animate }: { slot: IndividualSlot | undefined; animate: boolean }
 ) => {
   if (!slot) {
     return spacer;
@@ -206,6 +178,5 @@ export const individualElement = (
     label: html`<span class="label">${slot.node.name}</span>`,
     circle: individualCircle(main, config, slot.node, key),
     dot: flowDot(slot, key, animate),
-    hasBottomRow,
   });
 };

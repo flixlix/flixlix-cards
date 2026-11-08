@@ -183,32 +183,10 @@ const nonFossilAndHomeVars = (
   };
 };
 
-const lineVars = (
-  { grid, solar, battery }: StyledNodes,
-  config: FlowCardPlusConfig,
-  width: number
-) => {
+const lineVars = ({ grid }: StyledNodes, config: FlowCardPlusConfig) => {
   const zeroLines = config.display_zero_lines;
   const transparency = zeroLines?.mode === "transparency" ? zeroLines.transparency : undefined;
   const greyColor = zeroLines?.mode === "grey_out" ? zeroLines.grey_color : "";
-  const isCardWideEnough = width > 420;
-  const solarLines: CssVars = battery.has
-    ? {
-        "--lines-svg-not-flat-line-height": "106%",
-        "--lines-svg-not-flat-line-top": "-3%",
-        "--lines-svg-flat-width": "calc(100% - 160px)",
-        "--lines-svg-flat-left": "0",
-        "--lines-svg-not-flat-left": "0",
-      }
-    : {
-        "--lines-svg-not-flat-line-top": "-2%",
-        "--lines-svg-flat-width": isCardWideEnough ? "calc(100% - 154px)" : "calc(100% - 157px)",
-        "--lines-svg-not-flat-width": isCardWideEnough
-          ? "calc(103% - 172px)"
-          : "calc(103% - 169px)",
-        "--lines-svg-not-flat-left": "3px",
-        "--lines-svg-flat-left": "-3px",
-      };
   const vars: CssVars = {
     "--battery-grid-line": (grid.state.toBattery ?? 0) > 0 ? GRID_IN : GRID_OUT,
     "--transparency-unused-lines": transparency ? transparency.toString() : "0",
@@ -221,7 +199,6 @@ const lineVars = (
           "--greyed-out--line-color":
             typeof greyColor === "object" ? convertColorListToHex(greyColor) : greyColor,
         }),
-    ...(solar.has ? solarLines : {}),
   };
 };
 
@@ -257,8 +234,7 @@ export const computeCssVars = (
   config: FlowCardPlusConfig,
   nodes: StyledNodes,
   largestHomeSource: HomeRing["largestSource"],
-  individuals: IndividualObject[],
-  width: number
+  individuals: IndividualObject[]
 ): CssVars => {
   const { entities } = config;
   return {
@@ -267,7 +243,7 @@ export const computeCssVars = (
     ...solarVars(entities),
     ...batteryVars(nodes, entities),
     ...nonFossilAndHomeVars(nodes, entities, largestHomeSource),
-    ...lineVars(nodes, config, width),
+    ...lineVars(nodes, config),
     ...individualVars(individuals),
   };
 };
