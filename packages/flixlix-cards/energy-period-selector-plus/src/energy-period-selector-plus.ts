@@ -143,7 +143,7 @@ export class EnergyPeriodSelectorPlus extends LitElement implements LovelaceCard
   }
 
   protected willUpdate(changed: PropertyValues<this>): void {
-    if (this._period === "custom") {
+    if (this._datePickerShown) {
       void this._loadDatePicker();
     }
     if (!changed.has("hass")) {
@@ -155,6 +155,11 @@ export class EnergyPeriodSelectorPlus extends LitElement implements LovelaceCard
     if (this._collectionCreator) {
       Object.assign(this._collectionCreator, { hass: this.hass });
     }
+  }
+
+  /** HA's calendar opens from the date in custom mode, and in every mode with `date_picker`. */
+  private get _datePickerShown() {
+    return this._period === "custom" || this._config?.date_picker === true;
   }
 
   private get _weekStartsOn() {
@@ -279,9 +284,14 @@ export class EnergyPeriodSelectorPlus extends LitElement implements LovelaceCard
 
   private _dateRangeChanged = (event: DateRangeChangedEvent) => {
     const { startDate, endDate } = event.detail.value ?? {};
-    if (startDate instanceof Date && endDate instanceof Date) {
-      this._setRange({ start: startOfDay(startDate), end: endOfDay(endDate) });
+    if (!(startDate instanceof Date && endDate instanceof Date)) {
+      return;
     }
+    const range = { start: startOfDay(startDate), end: endOfDay(endDate) };
+    if (this._period !== "custom") {
+      this._period = detectPeriod(range, this._weekStartsOn);
+    }
+    this._setRange(range);
   };
 
   private _openDatePicker = (event: Event) => {
@@ -342,35 +352,40 @@ export class EnergyPeriodSelectorPlus extends LitElement implements LovelaceCard
       </div>`;
     }
     return html`<div class="selector">
-      <div class="range">
-        ${this._period === "custom" ? this._renderDateRange(range) : this._renderRangeLabel(range)}
-      </div>
+      <div class="range">${this._renderRange(range)}</div>
       <div class="actions">${this._renderPeriodButtons()} ${this._renderCompareButton()}</div>
     </div>`;
   }
 
-  private _renderRangeLabel(range: DateRange) {
-    const config = this._config;
+  private _renderRange(range: DateRange) {
+    return html`${
+      this._datePickerShown
+        ? this._renderDatePicker(range)
+        : html`<span class="label">${this._rangeLabel(range)}</span>`
+    }
+    ${this._config?.prev_next_buttons === false ? nothing : this._renderPrevNext()}
+    ${this._period === "custom" ? nothing : this._renderTodayButton()}`;
+  }
+
+  private _renderTodayButton() {
+    const type = this._config?.today_button_type;
+    if (type === false) {
+      return nothing;
+    }
     const today = this._localize(
       "ui.panel.lovelace.components.energy_period_selector.now",
       "Today"
     );
-    return html`<span class="label">${this._rangeLabel(range)}</span>
-      ${config?.prev_next_buttons === false ? nothing : this._renderPrevNext()}
-      ${
-        config?.today_button_type === false
-          ? nothing
-          : config?.today_button_type === "icon"
-            ? html`<button
-                class="icon-button"
-                title=${today}
-                aria-label=${today}
-                @click=${this._pickToday}
-              >
-                ${icon(mdiCalendarTodayOutline)}
-              </button>`
-            : html`<button class="text-button" @click=${this._pickToday}>${today}</button>`
-      }`;
+    return type === "icon"
+      ? html`<button
+          class="icon-button"
+          title=${today}
+          aria-label=${today}
+          @click=${this._pickToday}
+        >
+          ${icon(mdiCalendarTodayOutline)}
+        </button>`
+      : html`<button class="text-button" @click=${this._pickToday}>${today}</button>`;
   }
 
   private _renderPrevNext() {
@@ -397,7 +412,7 @@ export class EnergyPeriodSelectorPlus extends LitElement implements LovelaceCard
       </button>`;
   }
 
-  private _renderDateRange(range: DateRange) {
+  private _renderDatePicker(range: DateRange) {
     return html`<button class="label range-button" @click=${this._openDatePicker}>
         ${this._rangeLabel(range)}
       </button>
@@ -407,8 +422,7 @@ export class EnergyPeriodSelectorPlus extends LitElement implements LovelaceCard
         .startDate=${range.start}
         .endDate=${range.end}
         @value-changed=${this._dateRangeChanged}
-      ></ha-date-range-picker>
-      ${this._config?.prev_next_buttons === false ? nothing : this._renderPrevNext()}`;
+      ></ha-date-range-picker>`;
   }
 
   private _renderPeriodButtons() {
@@ -542,6 +556,12 @@ export class EnergyPeriodSelectorPlus extends LitElement implements LovelaceCard
     .periods button:last-child {
       border-start-end-radius: 18px;
       border-end-end-radius: 18px;
+    }
+    ha-date-range-picker {
+      /* HA's icon buttons are 48px; keep the row as tall as the card's own 36px buttons. */
+      --ha-icon-button-size: 36px;
+      --mdc-icon-button-size: 36px;
+      --mdc-icon-size: 22px;
     }
     .range-button {
       font-size: 20px;

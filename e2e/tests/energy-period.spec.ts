@@ -64,11 +64,17 @@ test("energy-period-selector-plus drives HA's own energy collection", async ({ p
     .toBe(true);
 });
 
-test("energy-period-selector-plus picks custom ranges in HA's own calendar", async ({ page }) => {
+test("energy-period-selector-plus picks custom ranges in HA's own calendar, at the same height", async ({
+  page,
+}) => {
   await openDashboard(page, CARD_DASHBOARDS["energy-flow-card-plus"]);
   const selector = page.locator("energy-period-selector-plus");
+  await selector.getByRole("button", { name: "Day" }).click();
+  const dayHeight = (await selector.boundingBox())?.height;
   await selector.getByRole("button", { name: "Custom" }).click();
   await expect(selector.locator('input[type="date"]')).toHaveCount(0);
+  await expect(selector.locator(".range > ha-date-range-picker")).toBeVisible();
+  expect((await selector.boundingBox())?.height).toBe(dayHeight);
 
   await selector.locator("button.range-button").click();
   const picker = selector.locator(".range > ha-date-range-picker");

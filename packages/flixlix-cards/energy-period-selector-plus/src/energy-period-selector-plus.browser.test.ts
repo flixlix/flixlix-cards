@@ -36,6 +36,35 @@ const button = (root: ShadowRoot, label: string) => {
   return match;
 };
 
+/** Stands in for HA's `ha-date-range-picker`, which only exists inside Home Assistant. */
+class FakeDateRangePicker extends HTMLElement {
+  startDate?: Date;
+  endDate?: Date;
+  opened = false;
+  open() {
+    this.opened = true;
+  }
+}
+
+const defineFakeDateRangePicker = () => {
+  if (!customElements.get("ha-date-range-picker")) {
+    customElements.define("ha-date-range-picker", FakeDateRangePicker);
+  }
+};
+
+const datePicker = (root: ShadowRoot) => {
+  const picker = root.querySelector("ha-date-range-picker");
+  if (!(picker instanceof FakeDateRangePicker)) {
+    throw new Error("no HA date range picker");
+  }
+  return picker;
+};
+
+const pickRange = (picker: Element, startDate: Date, endDate: Date) =>
+  picker.dispatchEvent(
+    new CustomEvent("value-changed", { detail: { value: { startDate, endDate } } })
+  );
+
 const pressedPeriod = (root: ShadowRoot) =>
   root.querySelector('.periods [aria-pressed="true"]')?.textContent?.trim();
 
@@ -110,17 +139,7 @@ describe("energy period selector plus", () => {
   });
 
   test("a range that is no calendar period is picked in HA's date range picker", async () => {
-    class FakeDateRangePicker extends HTMLElement {
-      startDate?: Date;
-      endDate?: Date;
-      opened = false;
-      open() {
-        this.opened = true;
-      }
-    }
-    if (!customElements.get("ha-date-range-picker")) {
-      customElements.define("ha-date-range-picker", FakeDateRangePicker);
-    }
+    defineFakeDateRangePicker();
     const { root, collection } = await mountSelector(
       { period_buttons: ["day", "custom"], custom_period_label: "Range" },
       energyCollection(date(5, 10), endOf(6, 8))
@@ -147,6 +166,28 @@ describe("energy period selector plus", () => {
       })
     );
     expect(periodOf(collection)).toEqual({ start: date(5, 1), end: endOf(5, 20) });
+  });
+
+  test("the date opens HA's calendar in every period with `date_picker`", async () => {
+    defineFakeDateRangePicker();
+    const { root, collection } = await mountSelector({ date_picker: true });
+    expect(pressedPeriod(root)).toBe("day");
+    expect(button(root, "Now")).toBeTruthy();
+
+    await userEvent.click(button(root, "May 15, 2024"));
+    expect(datePicker(root).opened).toBe(true);
+
+    pickRange(datePicker(root), date(4, 1), date(4, 30));
+    expect(periodOf(collection)).toEqual({ start: date(4, 1), end: endOf(4, 30) });
+    await expect.poll(() => pressedPeriod(root)).toBe("month");
+  });
+
+  test("without `date_picker` the date of a calendar period is plain text", async () => {
+    defineFakeDateRangePicker();
+    const { root } = await mountSelector();
+
+    expect(root.querySelector("ha-date-range-picker")).toBeNull();
+    expect(root.querySelector(".range-button")).toBeNull();
   });
 
   test("has HA load its date range picker when the custom range is shown", async () => {
