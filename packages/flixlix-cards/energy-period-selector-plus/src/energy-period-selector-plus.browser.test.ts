@@ -109,21 +109,57 @@ describe("energy period selector plus", () => {
     expect(pressedPeriod(root)).toBe("year");
   });
 
-  test("a range that is no calendar period shows editable dates", async () => {
+  test("a range that is no calendar period is picked in HA's date range picker", async () => {
+    class FakeDateRangePicker extends HTMLElement {
+      startDate?: Date;
+      endDate?: Date;
+      opened = false;
+      open() {
+        this.opened = true;
+      }
+    }
+    if (!customElements.get("ha-date-range-picker")) {
+      customElements.define("ha-date-range-picker", FakeDateRangePicker);
+    }
     const { root, collection } = await mountSelector(
       { period_buttons: ["day", "custom"], custom_period_label: "Range" },
       energyCollection(date(5, 10), endOf(6, 8))
     );
     expect(pressedPeriod(root)).toBe("Range");
-    const [start] = root.querySelectorAll("input");
-    if (!start) {
-      throw new Error("no date inputs");
+    expect(root.querySelector('input[type="date"]')).toBeNull();
+    const picker = root.querySelector("ha-date-range-picker");
+    if (!(picker instanceof FakeDateRangePicker)) {
+      throw new Error("no HA date range picker");
     }
+    expect({ start: picker.startDate, end: picker.endDate }).toEqual({
+      start: date(5, 10),
+      end: endOf(6, 8),
+    });
 
-    await userEvent.fill(start, "2024-05-01");
-    start.dispatchEvent(new Event("change"));
+    await userEvent.click(button(root, "May 10 – Jun 8, 2024"));
+    expect(picker.opened).toBe(true);
 
-    expect(periodOf(collection)).toEqual({ start: date(5, 1), end: endOf(6, 8) });
+    picker.dispatchEvent(
+      new CustomEvent("value-changed", {
+        detail: {
+          value: { startDate: new Date(2024, 4, 1, 13), endDate: new Date(2024, 4, 20, 8) },
+        },
+      })
+    );
+    expect(periodOf(collection)).toEqual({ start: date(5, 1), end: endOf(5, 20) });
+  });
+
+  test("has HA load its date range picker when the custom range is shown", async () => {
+    const defined = customElements.get.bind(customElements);
+    vi.spyOn(customElements, "get").mockImplementation((name) =>
+      name === "ha-date-range-picker" ? undefined : defined(name)
+    );
+    const createCardElement = vi.fn();
+    vi.stubGlobal("loadCardHelpers", async () => ({ createCardElement }));
+
+    await mountSelector({ period_buttons: ["custom"] }, energyCollection(date(5, 10), endOf(6, 8)));
+
+    expect(createCardElement).toHaveBeenCalledWith({ type: "energy-date-selection" });
   });
 
   test("fits a phone-sized card without overflowing", async () => {

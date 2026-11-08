@@ -51,14 +51,7 @@ const isSelectedPeriod = (value: unknown): value is SelectedPeriod =>
 const icon = (path: string) =>
   html`<svg viewBox="0 0 24 24" aria-hidden="true">${svg`<path d=${path}></path>`}</svg>`;
 
-/** `YYYY-MM-DD` in the browser's time zone, the format of `<input type="date">`. */
-const toDateInput = (date: Date) =>
-  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-
-const fromDateInput = (value: string): Date | undefined => {
-  const [year, month, day] = value.split("-").map(Number);
-  return year && month && day ? new Date(year, month - 1, day) : undefined;
-};
+const startOfDay = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
 
 const endOfDay = (date: Date) =>
   new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
@@ -71,6 +64,23 @@ const isCardHelpers = (value: unknown): value is CardHelpers =>
   "createCardElement" in value &&
   typeof value.createCardElement === "function";
 
+/** Creates one of HA's own cards; creating it makes HA load the card's module and elements. */
+const createHaCard = async (
+  config: object,
+  stillNeeded: () => boolean = () => true
+): Promise<unknown> => {
+  const helpers = await window.loadCardHelpers?.();
+  return isCardHelpers(helpers) && stillNeeded() ? helpers.createCardElement(config) : undefined;
+};
+
+/** HA's date range picker: a calendar popover with presets, as in HA's energy period selector. */
+const DATE_PICKER = "ha-date-range-picker";
+
+type DateRangeChangedEvent = CustomEvent<{ value?: { startDate?: unknown; endDate?: unknown } }>;
+
+const hasOpen = (element: Element | null): element is Element & { open: () => void } =>
+  element !== null && "open" in element && typeof element.open === "function";
+
 @customElement("energy-period-selector-plus")
 export class EnergyPeriodSelectorPlus extends LitElement implements LovelaceCard {
   @property({ attribute: false }) public hass!: HomeAssistant;
@@ -82,6 +92,7 @@ export class EnergyPeriodSelectorPlus extends LitElement implements LovelaceCard
   @state() private _collectionCreator?: HTMLElement;
 
   private _unwatch?: () => void;
+  private _datePickerRequested = false;
   private _creatorTimer?: ReturnType<typeof setTimeout>;
 
   public static async getConfigElement(): Promise<LovelaceCardEditor> {
@@ -132,6 +143,9 @@ export class EnergyPeriodSelectorPlus extends LitElement implements LovelaceCard
   }
 
   protected willUpdate(changed: PropertyValues<this>): void {
+    if (this._period === "custom") {
+      void this._loadDatePicker();
+    }
     if (!changed.has("hass")) {
       return;
     }
@@ -187,17 +201,28 @@ export class EnergyPeriodSelectorPlus extends LitElement implements LovelaceCard
     if (this._collectionCreator) {
       return;
     }
-    const helpers = await window.loadCardHelpers?.();
-    if (!isCardHelpers(helpers) || this._collection) {
-      return;
-    }
-    const card = helpers.createCardElement({
-      type: "energy-date-selection",
-      ...(this._config?.collection_key ? { collection_key: this._config.collection_key } : {}),
-    });
+    const card = await createHaCard(
+      {
+        type: "energy-date-selection",
+        ...(this._config?.collection_key ? { collection_key: this._config.collection_key } : {}),
+      },
+      () => !this._collection
+    );
     if (card instanceof HTMLElement) {
       this._collectionCreator = Object.assign(card, { hass: this.hass });
     }
+  }
+
+  /**
+   * HA only loads its date range picker with the cards that use it. Creating HA's energy date
+   * selection card loads it; the picker already rendered here upgrades once it is defined.
+   */
+  private async _loadDatePicker() {
+    if (this._datePickerRequested || customElements.get(DATE_PICKER)) {
+      return;
+    }
+    this._datePickerRequested = true;
+    await createHaCard({ type: "energy-date-selection" });
   }
 
   private _setRange(range: DateRange) {
@@ -252,25 +277,21 @@ export class EnergyPeriodSelectorPlus extends LitElement implements LovelaceCard
     void collection.refresh();
   };
 
-  private _startChanged = (event: Event) => {
-    const start = fromDateInput(this._inputValue(event));
-    if (start && this._range) {
-      const end = this._range.end < start ? endOfDay(start) : this._range.end;
-      this._setRange({ start, end });
+  private _dateRangeChanged = (event: DateRangeChangedEvent) => {
+    const { startDate, endDate } = event.detail.value ?? {};
+    if (startDate instanceof Date && endDate instanceof Date) {
+      this._setRange({ start: startOfDay(startDate), end: endOfDay(endDate) });
     }
   };
 
-  private _endChanged = (event: Event) => {
-    const end = fromDateInput(this._inputValue(event));
-    if (end && this._range) {
-      const start = end < this._range.start ? end : this._range.start;
-      this._setRange({ start, end: endOfDay(end) });
+  private _openDatePicker = (event: Event) => {
+    // The picker closes on clicks outside it, which this click would otherwise count as.
+    event.stopPropagation();
+    const picker = this.renderRoot.querySelector(DATE_PICKER);
+    if (hasOpen(picker)) {
+      picker.open();
     }
   };
-
-  private _inputValue(event: Event): string {
-    return event.target instanceof HTMLInputElement ? event.target.value : "";
-  }
 
   private _localize(key: string, fallback: string) {
     return nonEmpty(this.hass.localize(key)) ?? fallback;
@@ -322,7 +343,7 @@ export class EnergyPeriodSelectorPlus extends LitElement implements LovelaceCard
     }
     return html`<div class="selector">
       <div class="range">
-        ${this._period === "custom" ? this._renderDateInputs(range) : this._renderRangeLabel(range)}
+        ${this._period === "custom" ? this._renderDateRange(range) : this._renderRangeLabel(range)}
       </div>
       <div class="actions">${this._renderPeriodButtons()} ${this._renderCompareButton()}</div>
     </div>`;
@@ -376,22 +397,17 @@ export class EnergyPeriodSelectorPlus extends LitElement implements LovelaceCard
       </button>`;
   }
 
-  private _renderDateInputs({ start, end }: DateRange) {
-    return html`<input
-        type="date"
-        aria-label=${this._localize("ui.components.date-range-picker.start_date", "Start date")}
-        .value=${toDateInput(start)}
-        max=${toDateInput(end)}
-        @change=${this._startChanged}
-      />
-      <span aria-hidden="true">–</span>
-      <input
-        type="date"
-        aria-label=${this._localize("ui.components.date-range-picker.end_date", "End date")}
-        .value=${toDateInput(end)}
-        min=${toDateInput(start)}
-        @change=${this._endChanged}
-      />
+  private _renderDateRange(range: DateRange) {
+    return html`<button class="label range-button" @click=${this._openDatePicker}>
+        ${this._rangeLabel(range)}
+      </button>
+      <ha-date-range-picker
+        minimal
+        .hass=${this.hass}
+        .startDate=${range.start}
+        .endDate=${range.end}
+        @value-changed=${this._dateRangeChanged}
+      ></ha-date-range-picker>
       ${this._config?.prev_next_buttons === false ? nothing : this._renderPrevNext()}`;
   }
 
@@ -527,15 +543,12 @@ export class EnergyPeriodSelectorPlus extends LitElement implements LovelaceCard
       border-start-end-radius: 18px;
       border-end-end-radius: 18px;
     }
-    input[type="date"] {
-      font: inherit;
-      color: var(--primary-text-color);
-      background: var(--card-background-color, transparent);
-      border: 1px solid var(--divider-color);
-      border-radius: 8px;
-      padding: 6px 8px;
-      min-width: 0;
-      color-scheme: light dark;
+    .range-button {
+      font-size: 20px;
+      font-weight: 400;
+      border-color: transparent;
+      padding: 0 8px;
+      margin-inline-start: -8px;
     }
   `;
 }

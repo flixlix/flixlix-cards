@@ -63,3 +63,25 @@ test("energy-period-selector-plus drives HA's own energy collection", async ({ p
     )
     .toBe(true);
 });
+
+test("energy-period-selector-plus picks custom ranges in HA's own calendar", async ({ page }) => {
+  await openDashboard(page, CARD_DASHBOARDS["energy-flow-card-plus"]);
+  const selector = page.locator("energy-period-selector-plus");
+  await selector.getByRole("button", { name: "Custom" }).click();
+  await expect(selector.locator('input[type="date"]')).toHaveCount(0);
+
+  await selector.locator("button.range-button").click();
+  const picker = selector.locator(".range > ha-date-range-picker");
+  await picker.getByText("Yesterday", { exact: true }).click();
+
+  const yesterday = await page.evaluate(() => {
+    const date = new Date();
+    date.setDate(date.getDate() - 1);
+    return new Intl.DateTimeFormat("en", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    }).format(date);
+  });
+  await expect(selector.locator(".range > .label")).toHaveText(yesterday);
+});
