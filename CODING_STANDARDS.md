@@ -13,3 +13,4 @@ Read by `/code-review` (Standards axis). One line per standard. Mechanical rules
 - Never silence the linter or type checker (`oxlint-disable`, `@ts-expect-error`, `as any`, `as unknown as`); fix the type or the code.
 - A bug fix lands with a test that fails without it; a bug class that can recur lands with a rule in `packages/tooling/lint-rules`.
 - Card modules render; calculations (states, tolerance, distribution, flow rates) live in shared, pure, typed modules that take their inputs as arguments.
+- A change to a user-facing option or behaviour updates, in the same PR, the card's README, the docs site (`apps/web`), the UI editor schema (for config options) and a changeset.
