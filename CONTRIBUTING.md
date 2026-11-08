@@ -16,7 +16,7 @@ Thanks for your interest in contributing to the `flixlix-cards` monorepo! This r
 Each card is located in its own folder inside [`packages/flixlix-cards`](packages/flixlix-cards/):
 
 - `power-flow-card-plus`
-- `power-flow-house-card`
+- `home-flow-card`
 - `energy-flow-card-plus`
 - `energy-breakdown-card`
 - `sortable-list-card`

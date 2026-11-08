@@ -33,7 +33,7 @@
     "lucide-react": "catalog:",
     "nitro": "3.0.260311-beta",
     "power-flow-card-plus": "workspace:*",
-    "power-flow-house-card": "workspace:*",
+    "home-flow-card": "workspace:*",
     "react": "catalog:",
     "react-dom": "catalog:",
     "tailwindcss": "catalog:",

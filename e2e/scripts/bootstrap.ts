@@ -182,14 +182,12 @@ async function ensureStorageDashboard(
 }
 
 const houseCard = {
-  type: "custom:power-flow-house-card",
+  type: "custom:home-flow-card",
   title: "Edit me",
   clickable_entities: true,
-  entities: {
-    grid: { entity: "sensor.grid_power" },
-    solar: { entity: "sensor.solar_power" },
-    battery: { entity: "sensor.battery_power", state_of_charge: "sensor.battery_soc" },
-  },
+  grid: { entity: "sensor.grid_power" },
+  solar: { entity: "sensor.solar_power" },
+  battery: { entity: "sensor.battery_power", state_of_charge: "sensor.battery_soc" },
 };
 
 /** Seeded only when created, so changes made in its editor survive the next bootstrap. */
@@ -197,7 +195,7 @@ async function ensureHouseEditorDashboard(socket: HassSocket): Promise<void> {
   const created = await ensureStorageDashboard(
     socket,
     HOUSE_EDITOR_DASHBOARD,
-    "House card editor",
+    "Home flow card editor",
     "mdi:home-edit"
   );
   if (created) {

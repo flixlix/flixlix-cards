@@ -58,14 +58,14 @@ const SECTIONS: DocSection[] = [
     ],
   },
   {
-    label: "Power Flow House Card",
-    to: "/power-flow-house-card",
+    label: "Home Flow Card",
+    to: "/home-flow-card",
     icon: House,
     items: [
-      { label: "Overview", to: "/power-flow-house-card" },
-      { label: "Installation", to: "/power-flow-house-card/installation" },
-      { label: "Configuration", to: "/power-flow-house-card/configuration" },
-      { label: "Examples", to: "/power-flow-house-card/examples" },
+      { label: "Overview", to: "/home-flow-card" },
+      { label: "Installation", to: "/home-flow-card/installation" },
+      { label: "Configuration", to: "/home-flow-card/configuration" },
+      { label: "Examples", to: "/home-flow-card/examples" },
     ],
   },
   {

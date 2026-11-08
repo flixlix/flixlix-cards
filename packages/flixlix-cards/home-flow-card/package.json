@@ -1,5 +1,5 @@
 {
-  "name": "power-flow-house-card",
+  "name": "home-flow-card",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -15,10 +15,10 @@
     "solar",
     "battery"
   ],
-  "main": "./dist/power-flow-house-card.js",
+  "main": "./dist/home-flow-card.js",
   "exports": {
-    ".": "./dist/power-flow-house-card.js",
-    "./source": "./src/power-flow-house-card.ts"
+    ".": "./dist/home-flow-card.js",
+    "./source": "./src/home-flow-card.ts"
   },
   "repository": {
     "type": "git",

@@ -17,7 +17,7 @@ const partialHass: Partial<HomeAssistant> = {
 const hass = partialHass as HomeAssistant;
 
 const config = (entities: FlowCardPlusConfig["entities"]): FlowCardPlusConfig => ({
-  type: "custom:power-flow-house-card",
+  type: "custom:home-flow-card",
   min_flow_rate: 0.75,
   max_flow_rate: 6,
   max_expected_power: 2000,

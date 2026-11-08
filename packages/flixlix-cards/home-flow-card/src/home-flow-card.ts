@@ -59,11 +59,17 @@ import {
   DRAW_ORDER,
 } from "./scene";
 import { styles } from "./styles";
-import { DEFAULT_STATE_OF_CHARGE_SEVERITY, type PowerFlowHouseCardConfig } from "./types";
+import {
+  DEFAULT_STATE_OF_CHARGE_SEVERITY,
+  type FlowConfig,
+  fromEntities,
+  type HomeFlowCardConfig,
+  toFlowConfig,
+} from "./types";
 
 registerCustomCard({
-  type: "power-flow-house-card",
-  name: "Power Flow House Card",
+  type: "home-flow-card",
+  name: "Home Flow Card",
   description:
     "Power flows drawn on an isometric house: solar on the roof, a battery on the wall and every wire running through the inverter.",
   version: packageJson.version,
@@ -206,10 +212,11 @@ type Label = {
   entity: string | undefined;
 };
 
-@customElement("power-flow-house-card")
-export class PowerFlowHouseCard extends LitElement {
+@customElement("home-flow-card")
+export class HomeFlowCard extends LitElement {
   @property({ attribute: false }) public hass!: HomeAssistant;
-  @state() private _config!: PowerFlowHouseCardConfig;
+  /** The config in the `entities` shape the shared pipeline reads, with defaults filled in. */
+  @state() private _config!: FlowConfig;
   @state() private _width = 0;
   @state() private _pageHidden = isPageHidden();
   private _cardState?: CardState;
@@ -228,7 +235,8 @@ export class PowerFlowHouseCard extends LitElement {
     this._pageHidden = isPageHidden();
   };
 
-  setConfig(config: PowerFlowHouseCardConfig): void {
+  setConfig(cardConfig: HomeFlowCardConfig): void {
+    const config = toFlowConfig(cardConfig);
     assertRenderableFlowCardConfig(config);
     this._config = {
       ...config,
@@ -262,11 +270,11 @@ export class PowerFlowHouseCard extends LitElement {
 
   public static async getConfigElement(): Promise<LovelaceCardEditor> {
     await import("./ui-editor/ui-editor");
-    return document.createElement("power-flow-house-card-editor");
+    return document.createElement("home-flow-card-editor");
   }
 
   public static getStubConfig(hass: HomeAssistant): object {
-    return getDefaultConfig(hass, "power");
+    return fromEntities(getDefaultConfig(hass, "power"));
   }
 
   public getCardSize(): number {
@@ -619,6 +627,6 @@ export class PowerFlowHouseCard extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "power-flow-house-card": PowerFlowHouseCard;
+    "home-flow-card": HomeFlowCard;
   }
 }

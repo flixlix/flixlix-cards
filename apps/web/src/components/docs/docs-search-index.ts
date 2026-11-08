@@ -18,8 +18,8 @@ const BREAKDOWN = "Energy Breakdown Card";
 const BREAKDOWN_BASE = "/energy-breakdown-card" as const;
 const PERIOD = "Energy Period Selector Plus";
 const PERIOD_BASE = "/energy-period-selector-plus" as const;
-const HOUSE = "Power Flow House Card";
-const HOUSE_BASE = "/power-flow-house-card" as const;
+const HOUSE = "Home Flow Card";
+const HOUSE_BASE = "/home-flow-card" as const;
 const SORTABLE = "Sortable List Card";
 const SORTABLE_BASE = "/sortable-list-card" as const;
 

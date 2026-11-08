@@ -2,9 +2,9 @@ import { expect, test } from "vite-plus/test";
 import { page } from "vite-plus/test/browser/context";
 import { fakeHass, sensor, type StateFixtures } from "@flixlix-cards/shared/testing/fake-hass";
 import { mountCard } from "@flixlix-cards/shared/testing/mount-card";
-import { PowerFlowHouseCard } from "./power-flow-house-card";
+import { HomeFlowCard } from "./home-flow-card";
 
-const entities = {
+const nodes = {
   solar: { entity: "sensor.solar" },
   battery: { entity: "sensor.battery", state_of_charge: "sensor.battery_soc" },
   grid: { entity: "sensor.grid" },
@@ -12,8 +12,8 @@ const entities = {
 
 const mountHouse = async (states: StateFixtures, config: object = {}) => {
   const { card } = await mountCard(
-    PowerFlowHouseCard,
-    { type: "custom:power-flow-house-card", entities, animate_numbers: false, ...config },
+    HomeFlowCard,
+    { type: "custom:home-flow-card", ...nodes, animate_numbers: false, ...config },
     fakeHass({ states })
   );
   return page.elementLocator(card);
@@ -42,7 +42,7 @@ test("a sunny noon, charging and exporting", async () => {
 test("grid and home only", async () => {
   const card = await mountHouse(
     { "sensor.grid": "800" },
-    { entities: { grid: { entity: "sensor.grid" } } }
+    { grid: { entity: "sensor.grid" }, solar: undefined, battery: undefined }
   );
   await expect.element(card).toMatchScreenshot("grid-only");
 });

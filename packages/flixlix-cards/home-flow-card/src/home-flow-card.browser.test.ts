@@ -9,10 +9,10 @@ import {
 import { mountCard } from "@flixlix-cards/shared/testing/mount-card";
 import { mdiBatteryHigh, mdiBatteryLow } from "@mdi/js";
 import NumberFlow from "number-flow";
-import { PowerFlowHouseCard } from "./power-flow-house-card";
-import { type PowerFlowHouseCardConfig } from "./types";
+import { HomeFlowCard } from "./home-flow-card";
+import { type HomeFlowCardConfig } from "./types";
 
-const allNodes: PowerFlowHouseCardConfig["entities"] = {
+const allNodes: Pick<HomeFlowCardConfig, "solar" | "battery" | "grid"> = {
   solar: { entity: "sensor.solar" },
   battery: { entity: "sensor.battery", state_of_charge: "sensor.battery_soc" },
   grid: { entity: "sensor.grid" },
@@ -27,13 +27,13 @@ const evening: StateFixtures = {
 };
 
 const mountHouse = (
-  options: Partial<PowerFlowHouseCardConfig> = {},
+  options: Partial<HomeFlowCardConfig> = {},
   states: StateFixtures = evening,
   width?: number
 ) =>
   mountCard(
-    PowerFlowHouseCard,
-    { type: "custom:power-flow-house-card", entities: allNodes, ...options },
+    HomeFlowCard,
+    { type: "custom:home-flow-card", ...allNodes, ...options },
     fakeHass({ states }),
     { width }
   );
@@ -79,7 +79,7 @@ const iconOf = async (soc: string) => {
 };
 
 /** The fill of the battery's charge bar for a state of charge. */
-const barOf = async (soc: string, options: Partial<PowerFlowHouseCardConfig> = {}) => {
+const barOf = async (soc: string, options: Partial<HomeFlowCardConfig> = {}) => {
   const { root } = await mountHouse(options, {
     ...evening,
     "sensor.battery_soc": sensor(soc, { unit: "%" }),
@@ -91,7 +91,7 @@ const barOf = async (soc: string, options: Partial<PowerFlowHouseCardConfig> = {
     ?.getAttribute("fill");
 };
 
-describe("power flow house card", () => {
+describe("home flow card", () => {
   test("labels every configured node with its value", async () => {
     const { root } = await mountHouse();
 
@@ -104,7 +104,7 @@ describe("power flow house card", () => {
 
   test("draws only what is configured", async () => {
     const { root } = await mountHouse(
-      { entities: { grid: { entity: "sensor.grid" } } },
+      { grid: { entity: "sensor.grid" }, solar: undefined, battery: undefined },
       {
         "sensor.grid": "800",
       }
@@ -155,9 +155,7 @@ describe("power flow house card", () => {
       entity: "sensor.battery",
       state_of_charge_severity: { red: 20, yellow: 60 },
     };
-    expect(await barOf("40", { entities: { ...allNodes, battery: custom } })).toBe(
-      "var(--house-soc-yellow)"
-    );
+    expect(await barOf("40", { battery: custom })).toBe("var(--house-soc-yellow)");
   });
 
   test("switching from discharging to charging brings in a new direction word", async () => {
@@ -204,12 +202,7 @@ describe("power flow house card", () => {
 
   test("a power outage shows the grid offline", async () => {
     const { root } = await mountHouse(
-      {
-        entities: {
-          ...allNodes,
-          grid: { entity: "sensor.grid", power_outage: { entity: "binary_sensor.outage" } },
-        },
-      },
+      { grid: { entity: "sensor.grid", power_outage: { entity: "binary_sensor.outage" } } },
       { ...evening, "binary_sensor.outage": sensor("on", { unit: undefined }) }
     );
 

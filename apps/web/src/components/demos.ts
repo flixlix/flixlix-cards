@@ -48,12 +48,10 @@ export const powerDemo: Demo = {
 export const houseDemo: Demo = {
   configs: [
     {
-      type: "custom:power-flow-house-card",
-      entities: {
-        grid: { entity: "sensor.grid_power" },
-        solar: { entity: "sensor.solar_power" },
-        battery: { entity: "sensor.battery_power", state_of_charge: "sensor.battery_soc" },
-      },
+      type: "custom:home-flow-card",
+      grid: { entity: "sensor.grid_power" },
+      solar: { entity: "sensor.solar_power" },
+      battery: { entity: "sensor.battery_power", state_of_charge: "sensor.battery_soc" },
     },
   ],
   states: {

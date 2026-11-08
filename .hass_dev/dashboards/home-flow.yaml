@@ -1,9 +1,9 @@
-# Power Flow House Card playground. It reads the same sensors as the Power Flow dashboard, so the
+# Home Flow Card playground. It reads the same sensors as the Power Flow dashboard, so the
 # scenarios and sliders there drive these cards too.
-title: Power Flow House
+title: Home Flow
 views:
-  - title: Power Flow House
-    path: power-flow-house
+  - title: Home Flow
+    path: home-flow
     type: sections
     max_columns: 3
     sections:
@@ -38,43 +38,40 @@ views:
           - type: heading
             heading: Solar, battery and grid
             icon: mdi:home-lightning-bolt
-          - type: custom:power-flow-house-card
+          - type: custom:home-flow-card
             title: Combined entities
             clickable_entities: true
-            entities:
-              grid:
-                entity: sensor.grid_power
-                power_outage:
-                  entity: input_boolean.power_outage
-                  state_alert: "on"
-              solar:
-                entity: sensor.solar_power
-              battery:
-                entity: sensor.battery_power
-                state_of_charge: sensor.battery_soc
-              home:
-                entity: sensor.home_power
-          - type: custom:power-flow-house-card
+            grid:
+              entity: sensor.grid_power
+              power_outage:
+                entity: input_boolean.power_outage
+                state_alert: "on"
+            solar:
+              entity: sensor.solar_power
+            battery:
+              entity: sensor.battery_power
+              state_of_charge: sensor.battery_soc
+            home:
+              entity: sensor.home_power
+          - type: custom:home-flow-card
             title: Split entities, plain numbers
             animate_numbers: false
-            entities:
-              grid:
-                entity:
-                  consumption: sensor.grid_import_power
-                  production: sensor.grid_export_power
-              solar:
-                entity: sensor.solar_power
-              battery:
-                entity:
-                  consumption: sensor.battery_discharge_power
-                  production: sensor.battery_charge_power
-                state_of_charge: sensor.battery_soc
+            grid:
+              entity:
+                consumption: sensor.grid_import_power
+                production: sensor.grid_export_power
+            solar:
+              entity: sensor.solar_power
+            battery:
+              entity:
+                consumption: sensor.battery_discharge_power
+                production: sensor.battery_charge_power
+              state_of_charge: sensor.battery_soc
       - type: grid
         cards:
           - type: heading
             heading: Grid only
             icon: mdi:transmission-tower
-          - type: custom:power-flow-house-card
-            entities:
-              grid:
-                entity: sensor.grid_power
+          - type: custom:home-flow-card
+            grid:
+              entity: sensor.grid_power

@@ -14,7 +14,7 @@ const loadPreview = () =>
     import("@flixlix-cards/shared/preview/ha-elements"),
     import("@flixlix-cards/shared/preview/fake-hass"),
     import("power-flow-card-plus/source"),
-    import("power-flow-house-card/source"),
+    import("home-flow-card/source"),
     import("energy-flow-card-plus/source"),
     import("energy-breakdown-card/source"),
     import("energy-period-selector-plus/source"),

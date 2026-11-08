@@ -26,24 +26,23 @@ import {
 import { OptionList } from "./option-list";
 import { PageTOC, type TocItem } from "./page-toc";
 
-const TITLE = "Power Flow House Card";
-const PKG = "power-flow-house-card";
-const CARD_TYPE = "custom:power-flow-house-card";
-const BASE_PATH = "/power-flow-house-card";
-const REPO_URL = "https://github.com/flixlix/power-flow-house-card";
+const TITLE = "Home Flow Card";
+const PKG = "home-flow-card";
+const CARD_TYPE = "custom:home-flow-card";
+const BASE_PATH = "/home-flow-card";
+const REPO_URL = "https://github.com/flixlix/home-flow-card";
 const HACS_REDIRECT =
-  "https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=power-flow-house-card&category=Dashboard";
-const RELEASE_URL = "https://github.com/flixlix/power-flow-house-card/releases/latest";
+  "https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=home-flow-card&category=Dashboard";
+const RELEASE_URL = "https://github.com/flixlix/home-flow-card/releases/latest";
 
 const MINIMAL_CONFIG = `type: ${CARD_TYPE}
-entities:
-  grid:
-    entity: sensor.grid_power
-  solar:
-    entity: sensor.solar_power
-  battery:
-    entity: sensor.battery_power
-    state_of_charge: sensor.battery_soc`;
+grid:
+  entity: sensor.grid_power
+solar:
+  entity: sensor.solar_power
+battery:
+  entity: sensor.battery_power
+  state_of_charge: sensor.battery_soc`;
 
 function HighlightItem({ children }: { children: React.ReactNode }) {
   return (
@@ -104,11 +103,11 @@ export function OverviewPage() {
       <Prose className="mt-4">
         <p>
           <strong>{TITLE}</strong> reads the same sensors as{" "}
-          <Link to="/power-flow-card-plus">Power Flow Card Plus</Link> and takes the same{" "}
-          <code>entities</code> config, so you can try it by changing the card&apos;s{" "}
-          <code>type</code>. Instead of circles and lines, every node is wired to the inverter on
-          the house wall: a pulse runs along a wire in the direction its power flows, faster and
-          longer the more power it carries.
+          <Link to="/power-flow-card-plus">Power Flow Card Plus</Link>, and its <code>grid</code>,{" "}
+          <code>solar</code>, <code>battery</code> and <code>home</code> take the same options, at
+          the top level of the card. Instead of circles and lines, every node is wired to the
+          inverter on the house wall: a pulse runs along a wire in the direction its power flows,
+          faster and longer the more power it carries.
         </p>
         <p>
           It shows solar, battery, grid and home for now. Individual devices are not drawn yet; use
@@ -139,7 +138,7 @@ export function OverviewPage() {
             to={`${BASE_PATH}/configuration`}
             icon={BookOpen}
             title="Configuration"
-            description="The card's own options; entities as in Power Flow Card Plus."
+            description="The nodes and the card's own options."
           />
           <SectionCard
             to={`${BASE_PATH}/examples`}
@@ -279,14 +278,14 @@ export function InstallationPage() {
 const CARD_OPTIONS: OptionRow[] = [
   { name: "type", type: "string", required: true, description: <code>{CARD_TYPE}</code> },
   {
-    name: "entities",
+    name: "grid / solar / battery / home",
     type: "object",
-    required: true,
     description: (
       <>
         <code>grid</code>, <code>solar</code>, <code>battery</code> and <code>home</code>,
-        configured as in <Link to="/power-flow-card-plus/configuration">Power Flow Card Plus</Link>.
-        Leave one out and it is not drawn.
+        configured as in <Link to="/power-flow-card-plus/configuration">Power Flow Card Plus</Link>,
+        at the top level of the card. Leave one out and it is not drawn; one of grid, solar or
+        battery is required.
       </>
     ),
   },
@@ -305,7 +304,7 @@ const CARD_OPTIONS: OptionRow[] = [
     description: "Tapping a value opens its entity, or runs the node's tap/hold actions.",
   },
   {
-    name: "entities.battery.state_of_charge_severity",
+    name: "battery.state_of_charge_severity",
     type: "object",
     default: "{ red: 15, yellow: 30 }",
     description: (
@@ -368,9 +367,11 @@ export function ConfigurationPage() {
         />
 
         <Callout variant="tip" title="Coming from Power Flow Card Plus?">
-          Your <code>entities</code> work as they are: change <code>type</code> to{" "}
-          <code>{CARD_TYPE}</code>. Options that only change Power Flow Card Plus&apos; circles and
-          lines (for example <code>display_zero_lines</code>) have no effect here.
+          Change <code>type</code> to <code>{CARD_TYPE}</code> and move <code>grid</code>,{" "}
+          <code>solar</code>, <code>battery</code> and <code>home</code> out of{" "}
+          <code>entities</code> to the top level; their options stay the same. Options that only
+          change Power Flow Card Plus&apos; circles and lines (for example{" "}
+          <code>display_zero_lines</code>) have no effect here.
         </Callout>
 
         <CategorySection
@@ -440,20 +441,19 @@ export function ExamplesPage() {
         <CodeBlock
           language="yaml"
           code={`type: ${CARD_TYPE}
-entities:
-  grid:
-    entity:
-      consumption: sensor.grid_import_power
-      production: sensor.grid_export_power
-    power_outage:
-      entity: binary_sensor.grid_outage
-  solar:
-    entity: sensor.solar_power
-  battery:
-    entity:
-      consumption: sensor.battery_discharge_power
-      production: sensor.battery_charge_power
-    state_of_charge: sensor.battery_soc`}
+grid:
+  entity:
+    consumption: sensor.grid_import_power
+    production: sensor.grid_export_power
+  power_outage:
+    entity: binary_sensor.grid_outage
+solar:
+  entity: sensor.solar_power
+battery:
+  entity:
+    consumption: sensor.battery_discharge_power
+    production: sensor.battery_charge_power
+  state_of_charge: sensor.battery_soc`}
         />
       </Section>
 
@@ -464,9 +464,8 @@ entities:
         <CodeBlock
           language="yaml"
           code={`type: ${CARD_TYPE}
-entities:
-  grid:
-    entity: sensor.grid_power`}
+grid:
+  entity: sensor.grid_power`}
         />
       </Section>
 
@@ -479,11 +478,10 @@ entities:
           code={`type: ${CARD_TYPE}
 animate_numbers: false
 disable_dots: true
-entities:
-  grid:
-    entity: sensor.grid_power
-  solar:
-    entity: sensor.solar_power`}
+grid:
+  entity: sensor.grid_power
+solar:
+  entity: sensor.solar_power`}
         />
       </Section>
 

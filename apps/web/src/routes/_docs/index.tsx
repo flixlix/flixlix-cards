@@ -60,8 +60,8 @@ const CARDS: CardEntry[] = [
     ],
   },
   {
-    to: "/power-flow-house-card",
-    title: "Power Flow House Card",
+    to: "/home-flow-card",
+    title: "Home Flow Card",
     icon: House,
     accent: {
       chip: "bg-orange-500/10 text-orange-600 ring-orange-500/25 dark:text-orange-400",
@@ -79,7 +79,7 @@ const CARDS: CardEntry[] = [
       </>
     ),
     bullets: [
-      { id: "config", content: "Power Flow Card Plus' entities config" },
+      { id: "config", content: "Power Flow Card Plus' node options, at the top level" },
       { id: "numbers", content: "Numbers that roll to their new value" },
       { id: "battery", content: "Battery icon and charge colours from its state of charge" },
       { id: "theme", content: "Greys from your theme, light and dark" },
