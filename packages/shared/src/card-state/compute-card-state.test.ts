@@ -774,6 +774,27 @@ describe("secondary info", () => {
     expect(individualSecondaryShown(false)).toBe(false);
     expect(individualSecondaryShown(true)).toBe(true);
   });
+
+  test.each([
+    ["heating", true, "heating"],
+    ["42.4", true, `42${thinSpace}W`],
+    ["unavailable", false, `0${thinSpace}W`],
+    ["unknown", false, `0${thinSpace}W`],
+  ])("an individual secondary state of %s is shown=%s as %s", (state, show, text) => {
+    const { nodes } = ready(
+      compute({
+        config: config({
+          entities: {
+            individual: [{ entity: "sensor.heat_pump", secondary_info: { entity: "sensor.mode" } }],
+          },
+        }),
+        hass: hassWith({ "sensor.mode": state }),
+        readings: readings({ individuals: [500] }),
+      })
+    );
+
+    expect(nodes.individuals[0]?.secondary).toMatchObject({ show, text });
+  });
 });
 
 describe("home balance", () => {

@@ -1,4 +1,4 @@
-import { getEntityStateObj } from "@flixlix-cards/shared/states/utils/get-entity-state-obj";
+import { getFirstEntityName } from "@flixlix-cards/shared/states/utils/mutli-entity";
 import { type IndividualDeviceType, type IndividualObject } from "@flixlix-cards/shared/types";
 import {
   computeFieldIcon,
@@ -33,10 +33,13 @@ const unconfigured: IndividualObject = {
   },
 };
 
+const missingStates = new Set(["", "unavailable", "unknown"]);
+
+/** The secondary entity's state, numeric or text such as "heating"; null while it is missing. */
 const secondaryReading = (hass: HomeAssistant, field: IndividualDeviceType) => {
   const entity = field.secondary_info?.entity;
-  const state = entity === undefined ? undefined : getEntityStateObj(hass, entity)?.state;
-  if (state === undefined || state === "") {
+  const state = entity === undefined ? undefined : hass.states[getFirstEntityName(entity)]?.state;
+  if (state === undefined || missingStates.has(state)) {
     return null;
   }
   const value = isNumberValue(state) ? Number(state) : state;
