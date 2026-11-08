@@ -36,8 +36,9 @@ for those.
 
 [![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=home-flow-card&category=plugin)
 
-Or in HACS, open **⋮ → Custom repositories**, add `https://github.com/flixlix/home-flow-card` with
-category **Dashboard**, and download **Home Flow Card**.
+Or by hand: on Home Assistant 2026.11 and newer, go to **Settings → Marketplace → Add from link**,
+enter `https://github.com/flixlix/home-flow-card` and install **Home Flow Card**. Before 2026.11, in
+HACS open **⋮ → Custom repositories**, add the same URL with category **Dashboard**, and download it.
 
 To install manually, copy `home-flow-card.js` from the
 [latest release](https://github.com/flixlix/home-flow-card/releases/latest) into `config/www/` and

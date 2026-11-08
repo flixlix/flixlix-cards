@@ -314,12 +314,12 @@ function breakdownPages(): SearchEntry[] {
     },
     {
       title: "Installation",
-      description: "HACS custom repository and manual installation instructions.",
+      description: "Marketplace, HACS custom repository and manual installation instructions.",
       to: `${BREAKDOWN_BASE}/installation`,
       breadcrumb: BREAKDOWN,
       card: "breakdown",
       type: "page",
-      keywords: ["hacs", "custom repository", "install", "resource", "lovelace"],
+      keywords: ["marketplace", "hacs", "custom repository", "install", "resource", "lovelace"],
     },
     {
       title: "Configuration",
@@ -517,12 +517,20 @@ function sortablePages(): SearchEntry[] {
     },
     {
       title: "Installation",
-      description: "HACS custom repository and manual installation instructions.",
+      description: "Marketplace, HACS custom repository and manual installation instructions.",
       to: `${SORTABLE_BASE}/installation`,
       breadcrumb: SORTABLE,
       card: "sortable",
       type: "page",
-      keywords: ["hacs", "custom repository", "install", "resource", "lovelace", "input_text"],
+      keywords: [
+        "marketplace",
+        "hacs",
+        "custom repository",
+        "install",
+        "resource",
+        "lovelace",
+        "input_text",
+      ],
     },
     {
       title: "Configuration",
@@ -680,8 +688,8 @@ function periodPages(): SearchEntry[] {
       PERIOD,
       "page",
       "Installation",
-      "HACS custom repository and manual installation instructions.",
-      ["hacs", "custom repository", "install", "resource", "lovelace"]
+      "Marketplace, HACS custom repository and manual installation instructions.",
+      ["marketplace", "hacs", "custom repository", "install", "resource", "lovelace"]
     ),
     periodEntry(
       `${PERIOD_BASE}/configuration`,
@@ -823,8 +831,8 @@ function houseEntries(): SearchEntry[] {
       HOUSE,
       "page",
       "Installation",
-      "HACS custom repository and manual installation instructions.",
-      ["hacs", "custom repository", "install", "resource", "lovelace"]
+      "Marketplace, HACS custom repository and manual installation instructions.",
+      ["marketplace", "hacs", "custom repository", "install", "resource", "lovelace"]
     ),
     houseEntry(
       `${HOUSE_BASE}/configuration`,

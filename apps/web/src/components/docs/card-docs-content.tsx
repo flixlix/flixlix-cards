@@ -287,29 +287,23 @@ export function InstallationPage({ cardKey }: { cardKey: CardKey }) {
       <PageHeader
         eyebrow={v.title}
         title="Installation"
-        description="HACS is the recommended way to install the card. Manual installation is also supported."
+        description="Install it from Home Assistant's Marketplace, or from HACS before 2026.11. Manual installation is also supported."
       />
 
-      <Section title="HACS (recommended)" id="hacs">
+      <Section title="Marketplace or HACS (recommended)" id="hacs">
         <Prose>
           <p>
-            The card is part of the <strong>HACS Default</strong> repositories. If you don't have
-            HACS yet, follow the{" "}
-            <a
-              href="https://hacs.xyz/docs/setup/prerequisites"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              HACS prerequisites
-            </a>
-            .
+            The card is in the default catalog, which Home Assistant&apos;s{" "}
+            <strong>Marketplace</strong> (2026.11 and newer) and <strong>HACS</strong> (before
+            2026.11) share.
           </p>
           <ol>
             <li>
-              Open HACS in your Home Assistant instance and search for <strong>{v.title}</strong>.
+              Go to <strong>Settings → Marketplace</strong>, or open <strong>HACS</strong> before
+              2026.11, and search for <strong>{v.title}</strong>.
             </li>
             <li>
-              Press <strong>Download</strong> and confirm.
+              Select <strong>Install</strong> (<strong>Download</strong> in HACS) and confirm.
             </li>
             <li>
               Reload your dashboard, then add the card via the UI or paste the YAML from the{" "}
@@ -319,7 +313,7 @@ export function InstallationPage({ cardKey }: { cardKey: CardKey }) {
         </Prose>
         <Button asChild variant="outline" size="sm">
           <a href={v.hacsRedirect} target="_blank" rel="noopener noreferrer">
-            Open in HACS
+            Open in Home Assistant
           </a>
         </Button>
       </Section>
@@ -349,12 +343,16 @@ export function InstallationPage({ cardKey }: { cardKey: CardKey }) {
           </p>
         </Prose>
         <CodeBlock language="text" code={`/local/${v.cardSlug}.js`} />
-        <Callout variant="tip" title="HACS users">
-          When installed via HACS the path becomes{" "}
+        <Callout variant="tip" title="Installed from the Marketplace or HACS?">
+          It registers the resource for you. The Marketplace serves it from
+          <code>
+            /local/community/{v.cardSlug}/{v.cardSlug}.js
+          </code>
+          ; HACS used
           <code>
             /hacsfiles/{v.cardSlug}/{v.cardSlug}.js
           </code>
-          . HACS usually registers it automatically.
+          , which keeps working.
         </Callout>
       </Section>
 
