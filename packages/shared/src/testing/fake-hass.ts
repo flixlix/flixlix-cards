@@ -120,23 +120,53 @@ const statisticsResponse = async (
   return Object.fromEntries(Object.entries(growth).map(([id, change]) => [id, [{ change }]]));
 };
 
+type TemplateSubscriber = (result: unknown) => void;
+
+const templateSubscribers = new WeakMap<Connection, Map<string, TemplateSubscriber>>();
+
+const renderedTemplate = (result: string) => ({
+  result,
+  listeners: { all: false, domains: [], entities: [], time: false },
+});
+
+/** Sends a new rendered result to the card subscribed to the template. */
+export const emitTemplate = (hass: HomeAssistant, template: string, result: string): void => {
+  const subscriber = templateSubscribers.get(hass.connection)?.get(template);
+  if (!subscriber) {
+    throw new Error(`emitTemplate: nothing subscribed to ${template}`);
+  }
+  subscriber(renderedTemplate(result));
+};
+
 const fakeConnection = (options: FakeHassOptions): Connection => {
   const templates = options.templates ?? {};
+  const subscribers = new Map<string, TemplateSubscriber>();
   const connection: Partial<Connection> & { _energy?: FakeEnergyCollection } = {
-    subscribeMessage: vi.fn(async (callback: (result: unknown) => void, message: MessageBase) => {
+    subscribeMessage: vi.fn(async (callback: TemplateSubscriber, message: MessageBase) => {
       const template = String(message.template);
+      if (message.type === "render_template") {
+        subscribers.set(template, callback);
+      }
       if (message.type === "render_template" && template in templates) {
-        callback({
-          result: templates[template],
-          listeners: { all: false, domains: [], entities: [], time: false },
-        });
+        callback(renderedTemplate(templates[template] ?? ""));
       }
       return async () => undefined;
     }),
     ...(options.energyCollection ? { _energy: options.energyCollection } : {}),
   };
-  return connection as Connection;
+  const fake = connection as Connection;
+  templateSubscribers.set(fake, subscribers);
+  return fake;
 };
+
+/**
+ * The next `hass` Home Assistant hands out after the given states changed: a new object in which
+ * every other entity keeps its state object.
+ */
+export const withStates = (hass: HomeAssistant, states: StateFixtures): HomeAssistant => ({
+  ...hass,
+  states: { ...hass.states, ...entities(states) },
+});
 
 /** A Home Assistant frontend object for mounting cards without Home Assistant. */
 export const fakeHass = (options: FakeHassOptions = {}): HomeAssistant => {

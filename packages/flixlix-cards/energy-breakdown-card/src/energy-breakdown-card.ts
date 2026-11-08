@@ -7,6 +7,7 @@ import {
 } from "@flixlix-cards/shared/states/utils/energy-period";
 import { getEnergyEntityState } from "@flixlix-cards/shared/utils/get-energy-entity-state";
 import { registerCustomCard } from "@flixlix-cards/shared/utils/register-custom-card";
+import { cardShouldUpdate } from "@flixlix-cards/shared/utils/relevant-change";
 import {
   type ActionConfig,
   type HomeAssistant,
@@ -134,13 +135,19 @@ export class EnergyBreakdownCard extends LitElement implements LovelaceCard {
     super.disconnectedCallback();
   }
 
+  protected shouldUpdate(changed: PropertyValues<this>): boolean {
+    if (!this._config) {
+      return true;
+    }
+    this._ensureEnergyPeriodListener();
+    const entityIds = this._config.entities.map(({ entity }) => entity);
+    return cardShouldUpdate(changed, this.hass, entityIds);
+  }
+
   protected willUpdate(changed: PropertyValues): void {
     super.willUpdate?.(changed);
     if (!this._config || !this.hass) {
       return;
-    }
-    if (changed.has("hass") || changed.has("_config")) {
-      this._ensureEnergyPeriodListener();
     }
     if (changed.has("_config")) {
       void this._refreshEnergyData();

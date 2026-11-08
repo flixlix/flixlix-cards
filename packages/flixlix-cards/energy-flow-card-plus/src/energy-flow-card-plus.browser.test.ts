@@ -2,7 +2,9 @@ import { describe, expect, test } from "vite-plus/test";
 import {
   energyCollection,
   fakeHass,
+  sensor,
   type StateFixtures,
+  withStates,
 } from "@flixlix-cards/shared/testing/fake-hass";
 import {
   asEnergyUnits,
@@ -93,5 +95,37 @@ describe("energy period", () => {
     expect(hass.callWS).toHaveBeenLastCalledWith(
       expect.objectContaining({ start_time: day(2).start.toISOString() })
     );
+  });
+});
+
+const mountLive = async () => {
+  const hass = fakeHass({
+    states: {
+      "sensor.grid": sensor("1000", { unit: "Wh" }),
+      "sensor.solar": sensor("2000", { unit: "Wh" }),
+      "light.kitchen": "off",
+    },
+    energyCollection: energyCollection(day(1).start, day(1).end),
+  });
+  const config = {
+    type: "custom:energy-flow-card-plus",
+    energy_date_selection: false,
+    entities: { grid: { entity: "sensor.grid" }, solar: { entity: "sensor.solar" } },
+  };
+  return { hass, ...(await mountCard(EnergyFlowCardPlus, config, hass)) };
+};
+
+describe("updates", () => {
+  test("a change to an entity the card does not show neither computes nor renders", async () => {
+    const { hass, setHass, updates } = await mountLive();
+    await setHass(withStates(hass, { "light.kitchen": "on" }));
+    expect(updates()).toBe(0);
+  });
+
+  test("a change to a shown entity updates the card once", async () => {
+    const { hass, setHass, updates, text } = await mountLive();
+    await setHass(withStates(hass, { "sensor.solar": sensor("3000", { unit: "Wh" }) }));
+    expect(updates()).toBe(1);
+    expect(text(".solar .solar")).toBe("3 kWh");
   });
 });

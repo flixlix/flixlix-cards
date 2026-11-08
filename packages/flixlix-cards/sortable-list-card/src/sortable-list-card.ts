@@ -1,4 +1,5 @@
 import { registerCustomCard } from "@flixlix-cards/shared/utils/register-custom-card";
+import { cardShouldUpdate } from "@flixlix-cards/shared/utils/relevant-change";
 import {
   type HomeAssistant,
   type LovelaceCard,
@@ -96,6 +97,14 @@ export class SortableListCard extends LitElement implements LovelaceCard {
     }
     this._cancelFlip();
     super.disconnectedCallback();
+  }
+
+  protected shouldUpdate(changed: PropertyValues<this>): boolean {
+    const { entity, items = [] } = this._config ?? {};
+    const entityIds = [entity, ...items.map((item) => item.entity)].filter(
+      (id): id is string => id !== undefined
+    );
+    return cardShouldUpdate(changed, this.hass, entityIds);
   }
 
   protected willUpdate(changed: PropertyValues): void {

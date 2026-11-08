@@ -1,7 +1,8 @@
 import { type FlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { defaultValues } from "@flixlix-cards/shared/utils/get-default-config";
 import { isNumberValue, nonEmpty, round } from "@flixlix-cards/shared/utils/utils";
-import { type HomeAssistant, formatNumber } from "custom-card-helpers";
+import { formatNumber } from "@flixlix-cards/shared/utils/format-number";
+import { type HomeAssistant } from "custom-card-helpers";
 import { type UnitFamily } from "./types";
 
 export type Formatter = (value: number | string | null, options?: FormatOptions) => string;

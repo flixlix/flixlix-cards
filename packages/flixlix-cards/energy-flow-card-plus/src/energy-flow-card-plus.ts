@@ -1,4 +1,9 @@
-import { computeCardState, type CardState, energyReadings } from "@flixlix-cards/shared/card-state";
+import {
+  computeCardState,
+  type CardState,
+  energyReadings,
+  watchedEntities,
+} from "@flixlix-cards/shared/card-state";
 import { flowCard } from "@flixlix-cards/shared/components/flow-card";
 import { styles } from "@flixlix-cards/shared/style";
 import {
@@ -19,6 +24,7 @@ import {
 import { EntityActions } from "@flixlix-cards/shared/utils/entity-actions";
 import { defaultValues, getDefaultConfig } from "@flixlix-cards/shared/utils/get-default-config";
 import { registerCustomCard } from "@flixlix-cards/shared/utils/register-custom-card";
+import { cardShouldUpdate } from "@flixlix-cards/shared/utils/relevant-change";
 import { SecondaryTemplates } from "@flixlix-cards/shared/utils/secondary-templates";
 import { coerceNumber } from "@flixlix-cards/shared/utils/utils";
 import { type HomeAssistant, type LovelaceCardEditor } from "custom-card-helpers";
@@ -41,6 +47,7 @@ export class EnergyFlowCardPlus extends LitElement {
   @property({ attribute: false }) public hass!: HomeAssistant;
   @state() private _config!: EnergyFlowCardPlusConfig;
   @state() private _width = 0;
+  @state() private _pageHidden = isPageHidden();
   @state() private _energyWindow: EnergyPeriodWindow | null = null;
   @state() private _energyGrowthMap: Record<string, number> = {};
   @state() private _energyDataLoaded = false;
@@ -54,6 +61,7 @@ export class EnergyFlowCardPlus extends LitElement {
   private _cardState?: CardState;
   private _appliedCardState?: CardState;
   private _resizeObserver?: ResizeObserver;
+  private _observedContent?: HTMLElement;
   private readonly _actions = new EntityActions(this, () => ({
     hass: this.hass,
     clickableEntities: this._config.clickable_entities,
@@ -63,9 +71,7 @@ export class EnergyFlowCardPlus extends LitElement {
     config: this._config,
   }));
   private _handleVisibilityChange = () => {
-    if (!isPageHidden()) {
-      this.requestUpdate();
-    }
+    this._pageHidden = isPageHidden();
   };
 
   setConfig(config: EnergyFlowCardPlusConfig): void {
@@ -106,6 +112,7 @@ export class EnergyFlowCardPlus extends LitElement {
   public disconnectedCallback() {
     this._resizeObserver?.disconnect();
     this._resizeObserver = undefined;
+    this._observedContent = undefined;
     if (typeof document !== "undefined") {
       document.removeEventListener("visibilitychange", this._handleVisibilityChange);
     }
@@ -129,14 +136,19 @@ export class EnergyFlowCardPlus extends LitElement {
     return 3;
   }
 
+  protected shouldUpdate(changedProps: PropertyValues<this>): boolean {
+    if (!this._config) {
+      return true;
+    }
+    this._ensureEnergyPeriodListener();
+    this._ensureFossilDataSubscription();
+    return cardShouldUpdate(changedProps, this.hass, watchedEntities(this._config));
+  }
+
   protected willUpdate(changedProps: PropertyValues): void {
     super.willUpdate(changedProps);
     if (!this._config || !this.hass) {
       return;
-    }
-    if (changedProps.has("hass") || changedProps.has("_config")) {
-      this._ensureEnergyPeriodListener();
-      this._ensureFossilDataSubscription();
     }
     if (changedProps.has("_config")) {
       void this._refreshEnergyData();
@@ -153,7 +165,7 @@ export class EnergyFlowCardPlus extends LitElement {
         ),
         templates: this._templates.templates(this._config),
         width: this._width,
-        pageHidden: isPageHidden(),
+        pageHidden: this._pageHidden,
       },
       this._cardState
     );
@@ -322,12 +334,14 @@ export class EnergyFlowCardPlus extends LitElement {
 
   private _observeWidth() {
     const content = this.shadowRoot?.querySelector<HTMLElement>("#energy-flow-card-plus");
-    if (!content) {
+    if (!content || content === this._observedContent) {
       return;
     }
+    this._observedContent = content;
+    this._resizeObserver?.disconnect();
     this._resizeObserver ??= new ResizeObserver(([entry]) => {
       if (entry) {
-        this._width = Math.round(entry.contentRect.width);
+        this._width = Math.round(entry.target.getBoundingClientRect().width);
       }
     });
     this._resizeObserver.observe(content);
