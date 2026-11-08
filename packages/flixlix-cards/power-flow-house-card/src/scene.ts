@@ -1,5 +1,6 @@
 import { type HouseNode } from "@flixlix-cards/shared/card-state";
-import { mdiBatteryHigh, mdiFlash, mdiHome } from "@mdi/js";
+import { type ChargeLevel } from "@flixlix-cards/shared/utils/severity";
+import { mdiFlash, mdiHome } from "@mdi/js";
 
 /** A point in house space: x along the ridge, y towards the viewer's left, z up. */
 export type Point = readonly [x: number, y: number, z: number];
@@ -13,6 +14,41 @@ export const project = ([x, y, z]: Point): ScreenPoint => [
   (x - y) * COS_30 * UNIT,
   (x + y) * 0.5 * UNIT - z * UNIT,
 ];
+
+const round2 = (value: number) => Math.round(value * 100) / 100;
+const pointText = ([x, y]: ScreenPoint) => `${round2(x)} ${round2(y)}`;
+
+/** The point `distance` from `from` towards `to`. */
+const towards = (from: ScreenPoint, to: ScreenPoint, distance: number): ScreenPoint => {
+  const length = Math.hypot(to[0] - from[0], to[1] - from[1]) || 1;
+  return [
+    from[0] + ((to[0] - from[0]) * distance) / length,
+    from[1] + ((to[1] - from[1]) * distance) / length,
+  ];
+};
+
+/**
+ * An SVG path through `points` with each bend rounded by `radius`, never more than half of the
+ * segments on either side, so short steps stay sensible.
+ */
+export const roundedPath = (points: readonly ScreenPoint[], radius: number): string => {
+  const [first, ...rest] = points;
+  if (!first) {
+    return "";
+  }
+  const bends = rest.slice(0, -1).map((corner, index) => {
+    const before = points[index] ?? corner;
+    const after = points[index + 2] ?? corner;
+    const reach = Math.min(
+      radius,
+      Math.hypot(corner[0] - before[0], corner[1] - before[1]) / 2,
+      Math.hypot(after[0] - corner[0], after[1] - corner[1]) / 2
+    );
+    return `L${pointText(towards(corner, before, reach))}Q${pointText(corner)} ${pointText(towards(corner, after, reach))}`;
+  });
+  const last = rest[rest.length - 1];
+  return `M${pointText(first)}${bends.join("")}${last ? `L${pointText(last)}` : ""}`;
+};
 
 /** Maps a face's own 2D coordinates (along the face, down) onto the screen, for icons. */
 export const faceTransform = (face: "front" | "gable", at: Point): string => {
@@ -134,10 +170,18 @@ const SOC_STRIP = { y0: 2.25, y1: 2.47, z0: 0.8, z1: 3 } as const;
 
 const onBattery = (y: number, z: number, offset = 0): Point => [BATTERY_FACE_X + offset, y, z];
 
-/** `soc` in [0, 1], or null without a state of charge entity. */
-const battery = (soc: number | null): Shape[] => [
+/** How the battery looks: its icon's path and its charge bar. */
+export type BatteryLook = {
+  icon: string;
+  /** In [0, 1], or null without a state of charge entity. */
+  soc: number | null;
+  /** The bar's colour; without one it takes the card's own charge colour. */
+  level?: ChargeLevel;
+};
+
+const battery = ({ icon, soc, level }: BatteryLook): Shape[] => [
   ...box([LENGTH, 1, 0.5], [0.45, 1.6, 2.8]),
-  { kind: "icon", face: "gable", at: onBattery(1.65, 2), size: 0.9, path: mdiBatteryHigh },
+  { kind: "icon", face: "gable", at: onBattery(1.65, 2), size: 0.9, path: icon },
   face(
     "soc-track",
     onBattery(SOC_STRIP.y0, SOC_STRIP.z0),
@@ -147,13 +191,17 @@ const battery = (soc: number | null): Shape[] => [
   ),
   ...(soc === null
     ? []
-    : [socFill(SOC_STRIP.z0 + (SOC_STRIP.z1 - SOC_STRIP.z0) * Math.min(Math.max(soc, 0), 1), soc)]),
+    : [
+        socFill(
+          SOC_STRIP.z0 + (SOC_STRIP.z1 - SOC_STRIP.z0) * Math.min(Math.max(soc, 0), 1),
+          level
+        ),
+      ]),
 ];
 
-const LOW_STATE_OF_CHARGE = 0.15;
-const socFill = (top: number, soc: number): Face =>
+const socFill = (top: number, level: ChargeLevel | undefined): Face =>
   face(
-    soc > LOW_STATE_OF_CHARGE ? "soc" : "soc-low",
+    level ? `soc-${level}` : "soc",
     onBattery(SOC_STRIP.y0, SOC_STRIP.z0, 0.01),
     onBattery(SOC_STRIP.y1, SOC_STRIP.z0, 0.01),
     onBattery(SOC_STRIP.y1, top, 0.01),
@@ -179,7 +227,8 @@ const inverter = (): Shape[] => [
   },
 ];
 
-export type ScenePresence = { solar: boolean; battery: boolean; soc: number | null };
+/** What the house shows: panels with solar, the battery when there is one. */
+export type ScenePresence = { solar: boolean; battery?: BatteryLook };
 
 /** Walls and roof: drawn before the wires, which run on them. */
 export const houseShell = (): SceneGroup => ({ node: "home", shapes: house() });
@@ -188,16 +237,16 @@ export const houseShell = (): SceneGroup => ({ node: "home", shapes: house() });
  * What the wires connect, drawn over the wires: each wire runs into its fixture, so the fixture
  * hides the wire's end the way it would in 3D.
  */
-export const fixtures = ({ solar, battery: hasBattery, soc }: ScenePresence): SceneGroup[] => [
+export const fixtures = ({ solar, battery: look }: ScenePresence): SceneGroup[] => [
   ...(solar ? [{ node: "solar" as const, shapes: panels() }] : []),
-  ...(hasBattery ? [{ node: "battery" as const, shapes: battery(soc) }] : []),
+  ...(look ? [{ node: "battery" as const, shapes: battery(look) }] : []),
   { node: "outlet", shapes: outlet() },
   { node: "inverter", shapes: inverter() },
 ];
 
 /** The grid cable runs on past the card's edge, fading out after its label points at it. */
 const GRID_CABLE_END = 40;
-const GRID_LABEL_X = 16;
+const GRID_LABEL_X = 18;
 export const GRID_CABLE_START: Point = [LENGTH + 0.07, INVERTER_Y, 0.02];
 const ON_FRONT = FRONT + 0.07;
 const ON_GABLE = LENGTH + 0.07;
@@ -220,7 +269,7 @@ export const WIRE_ROUTES: Record<HouseNode, Point[]> = {
     [ON_GABLE, INVERTER_Y, INVERTER_Z],
   ],
   home: [
-    [OUTLET_X, ON_FRONT, INVERTER_Z],
+    [OUTLET.x1, ON_FRONT, INVERTER_Z],
     [LENGTH - 0.03, ON_FRONT, INVERTER_Z],
     [ON_GABLE, FRONT - 0.03, INVERTER_Z],
     [ON_GABLE, INVERTER.y1, INVERTER_Z],
@@ -237,26 +286,23 @@ export const DRAW_ORDER: readonly ({ wire: HouseNode } | { part: SceneGroup["nod
   { part: "battery" },
   { wire: "battery" }, // from the battery's visible side into the inverter's back
   { part: "inverter" },
-  { wire: "home" }, // onto the inverter's visible side, from inside the outlet
-  { wire: "solar" }, // onto the inverter's top, from under the panels
   { part: "outlet" },
+  { wire: "home" }, // onto the inverter's and the outlet's visible sides
+  { wire: "solar" }, // onto the inverter's top, from under the panels
   { part: "solar" },
 ];
 
 /**
  * Where each node's label hangs: the leader line starts at `at` and runs `leader` screen units up
- * (negative) or down, and the text runs right from it, or left with `side: "left"`. The anchors
- * keep leaders and labels clear of the wires, the panels and each other.
+ * (negative) or down, with the label's text running right from it. The anchors keep leaders and
+ * labels clear of the wires, the panels and each other.
  */
-export const LABEL_ANCHORS: Record<
-  HouseNode,
-  { at: Point; leader: number; side?: "left" | "right" }
-> = {
+export const LABEL_ANCHORS: Record<HouseNode, { at: Point; leader: number }> = {
   solar: { at: onRoof(4.2, PANELS.y0), leader: -40 },
   home: { at: [8.1, FRONT + 0.13, 2.35], leader: 44 },
   battery: { at: onBattery(1.8, 3.3), leader: -50 },
-  // below the cable and to its left: the cable falls away to the right
-  grid: { at: [GRID_LABEL_X, INVERTER_Y, 0], leader: 18, side: "left" },
+  // above the cable, out past the battery: the cable falls away under the label
+  grid: { at: [GRID_LABEL_X, INVERTER_Y, 0], leader: -20 },
 };
 
 /** The house's footprint and the shadow it casts towards the back right. */

@@ -7,6 +7,7 @@ import {
   withStates,
 } from "@flixlix-cards/shared/testing/fake-hass";
 import { mountCard } from "@flixlix-cards/shared/testing/mount-card";
+import { mdiBatteryHigh, mdiBatteryLow } from "@mdi/js";
 import NumberFlow from "number-flow";
 import { PowerFlowHouseCard } from "./power-flow-house-card";
 import { type PowerFlowHouseCardConfig } from "./types";
@@ -61,6 +62,28 @@ const stateOfCharge = (root: ShadowRoot) =>
     ?.textContent?.replace(/\s+/g, " ")
     .trim();
 
+/** The path of the battery's icon for a state of charge. */
+const iconOf = async (soc: string) => {
+  const { root } = await mountHouse(
+    {},
+    { ...evening, "sensor.battery_soc": sensor(soc, { unit: "%" }) }
+  );
+  return root.querySelector(".node.battery g path")?.getAttribute("d");
+};
+
+/** The fill of the battery's charge bar for a state of charge. */
+const barOf = async (soc: string, options: Partial<PowerFlowHouseCardConfig> = {}) => {
+  const { root } = await mountHouse(options, {
+    ...evening,
+    "sensor.battery_soc": sensor(soc, { unit: "%" }),
+  });
+  return root
+    .querySelector(
+      '.node.battery polygon[fill^="var(--house-soc-"]:not([fill="var(--house-soc-track)"])'
+    )
+    ?.getAttribute("fill");
+};
+
 describe("power flow house card", () => {
   test("labels every configured node with its value", async () => {
     const { root } = await mountHouse();
@@ -111,6 +134,20 @@ describe("power flow house card", () => {
     ).toBe("▲ 22 %");
   });
 
+  test("the battery icon follows its state of charge, as in Power Flow Card Plus", async () => {
+    expect(await iconOf("90")).toBe(mdiBatteryHigh);
+    expect(await iconOf("20")).toBe(mdiBatteryLow);
+  });
+
+  test("the charge bar is red below its red threshold, yellow below its yellow one, else green", async () => {
+    expect(await barOf("10")).toBe("var(--house-soc-red)");
+    expect(await barOf("20")).toBe("var(--house-soc-yellow)");
+    expect(await barOf("80")).toBe("var(--house-soc-green)");
+    expect(await barOf("40", { state_of_charge_severity: { red: 20, yellow: 60 } })).toBe(
+      "var(--house-soc-yellow)"
+    );
+  });
+
   test("disable_dots keeps the wires still", async () => {
     const { root } = await mountHouse({ disable_dots: true });
 
@@ -149,26 +186,6 @@ describe("power flow house card", () => {
 
     expect(reading(root, "grid")).toBe("—");
     expect(labelOf(root, "grid").textContent).toContain("Power Outage");
-  });
-
-  test("the low-carbon share sits under the grid", async () => {
-    const { root } = await mountHouse(
-      {
-        entities: {
-          ...allNodes,
-          fossil_fuel_percentage: {
-            entity: "sensor.fossil",
-            state_type: "percentage",
-            secondary_info: {},
-          },
-        },
-      },
-      { ...evening, "sensor.grid": "1000", "sensor.fossil": sensor("40", { unit: "%" }) }
-    );
-
-    expect(
-      labelOf(root, "grid").querySelector(".extra")?.textContent?.replace(/\s+/g, " ").trim()
-    ).toBe("60 % Low-carbon");
   });
 
   test("tapping a label opens its entity's more-info dialog", async () => {

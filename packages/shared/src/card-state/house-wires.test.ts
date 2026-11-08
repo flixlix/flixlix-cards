@@ -140,6 +140,15 @@ describe("house wires", () => {
     expect(solar?.reading).toEqual({ value: 1.23, unit: "kW", decimals: 2 });
   });
 
+  test("intensity places the power in the expected range", () => {
+    const [solar, battery, , home] = wiresFor(allNodes, { solar: 500, fromBattery: 2500 });
+
+    expect(solar?.intensity).toBeCloseTo(0.25, 2);
+    expect(battery?.intensity).toBe(1);
+    expect(home?.intensity).toBe(1);
+    expect(wiresFor(allNodes, {})[0]?.intensity).toBe(0);
+  });
+
   test("more power pulses faster", () => {
     const [solar, battery] = wiresFor(allNodes, { solar: 300, toBattery: 0, fromBattery: 1500 });
     expect(battery?.durationSeconds).toBeLessThan(solar?.durationSeconds ?? 0);

@@ -18,6 +18,11 @@ export type HouseWire = {
   intoInverter: boolean;
   /** Seconds per pulse, from the card's flow rate model. */
   durationSeconds: number;
+  /**
+   * Where the power sits in the card's expected range, in [0, 1]: 0 at `min_expected_power` or
+   * below, 1 at `max_expected_power` or above. Pulses grow longer with it.
+   */
+  intensity: number;
   /** CSS colour of the power on the wire; home takes the colour of its largest source. */
   color: string;
   reading: ScaledReading;
@@ -70,6 +75,12 @@ const homeWire = (state: ReadyCardState): Wire => ({
 
 const isWire = (wire: Wire | undefined): wire is Wire => wire !== undefined;
 
+const intensity = (config: FlowCardPlusConfig, power: number): number => {
+  const range = config.max_expected_power - config.min_expected_power;
+  const share = range > 0 ? (power - config.min_expected_power) / range : 1;
+  return Number.isFinite(share) ? Math.min(Math.max(share, 0), 1) : 0;
+};
+
 /** The wires of the nodes the card shows, in drawing order: solar, battery, grid, home. */
 export const houseWires = (config: FlowCardPlusConfig, state: ReadyCardState): HouseWire[] => {
   const { entities } = config;
@@ -91,6 +102,7 @@ export const houseWires = (config: FlowCardPlusConfig, state: ReadyCardState): H
     intoInverter,
     color,
     durationSeconds: flowRate(config, power, supplied),
+    intensity: intensity(config, power),
     reading: scaledReading(config, "power", power, {
       unit: entityOf[node]?.unit_of_measurement,
       decimals: entityOf[node]?.decimals,

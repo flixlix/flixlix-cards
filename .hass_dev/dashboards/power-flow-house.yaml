@@ -32,7 +32,6 @@ views:
               - input_number.battery_soc
               - input_number.grid_import_power
               - input_number.grid_export_power
-              - input_number.fossil_percentage
               - input_boolean.power_outage
       - type: grid
         cards:
@@ -55,9 +54,6 @@ views:
                 state_of_charge: sensor.battery_soc
               home:
                 entity: sensor.home_power
-              fossil_fuel_percentage:
-                entity: sensor.fossil_percentage
-                state_type: percentage
           - type: custom:power-flow-house-card
             title: Split entities, plain numbers
             animate_numbers: false

@@ -23,7 +23,7 @@ import {
   waitForRunning,
   writeToken,
 } from "../src/hass.ts";
-import { EDITOR_DASHBOARD } from "../src/dashboards.ts";
+import { EDITOR_DASHBOARD, HOUSE_EDITOR_DASHBOARD } from "../src/dashboards.ts";
 
 type OnboardingStep = "user" | "core_config" | "analytics" | "integration";
 
@@ -155,20 +155,56 @@ async function importEnergyHistory(socket: HassSocket): Promise<void> {
   console.warn(`Imported energy history for ${ENERGY_METERS.length} meters`);
 }
 
-async function ensureEditorDashboard(socket: HassSocket): Promise<void> {
+/** Creates a storage dashboard unless it exists; returns whether it was created. */
+async function ensureStorageDashboard(
+  socket: HassSocket,
+  urlPath: string,
+  title: string,
+  icon: string
+): Promise<boolean> {
   const dashboards = await socket.call({ type: "lovelace/dashboards/list" });
   const exists =
     Array.isArray(dashboards) &&
-    dashboards.some((dashboard) => isObject(dashboard) && dashboard.url_path === EDITOR_DASHBOARD);
-  if (!exists) {
+    dashboards.some((dashboard) => isObject(dashboard) && dashboard.url_path === urlPath);
+  if (exists) {
+    return false;
+  }
+  await socket.call({
+    type: "lovelace/dashboards/create",
+    url_path: urlPath,
+    title,
+    icon,
+    mode: "storage",
+    show_in_sidebar: true,
+    require_admin: false,
+  });
+  return true;
+}
+
+const houseCard = {
+  type: "custom:power-flow-house-card",
+  title: "Edit me",
+  clickable_entities: true,
+  entities: {
+    grid: { entity: "sensor.grid_power" },
+    solar: { entity: "sensor.solar_power" },
+    battery: { entity: "sensor.battery_power", state_of_charge: "sensor.battery_soc" },
+  },
+};
+
+/** Seeded only when created, so changes made in its editor survive the next bootstrap. */
+async function ensureHouseEditorDashboard(socket: HassSocket): Promise<void> {
+  const created = await ensureStorageDashboard(
+    socket,
+    HOUSE_EDITOR_DASHBOARD,
+    "House card editor",
+    "mdi:home-edit"
+  );
+  if (created) {
     await socket.call({
-      type: "lovelace/dashboards/create",
-      url_path: EDITOR_DASHBOARD,
-      title: "Card editors",
-      icon: "mdi:pencil",
-      mode: "storage",
-      show_in_sidebar: true,
-      require_admin: false,
+      type: "lovelace/config/save",
+      url_path: HOUSE_EDITOR_DASHBOARD,
+      config: { views: [{ title: "House card", path: "house", cards: [houseCard] }] },
     });
   }
 }
@@ -183,7 +219,8 @@ async function main() {
     await ensureLongLivedToken(socket);
     await saveEnergyPrefs(socket);
     await importEnergyHistory(socket);
-    await ensureEditorDashboard(socket);
+    await ensureStorageDashboard(socket, EDITOR_DASHBOARD, "Card editors", "mdi:pencil");
+    await ensureHouseEditorDashboard(socket);
   } finally {
     socket.close();
   }

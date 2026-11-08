@@ -23,7 +23,14 @@ import { registerCustomCard } from "@flixlix-cards/shared/utils/register-custom-
 import { cardShouldUpdate } from "@flixlix-cards/shared/utils/relevant-change";
 import { SecondaryTemplates } from "@flixlix-cards/shared/utils/secondary-templates";
 import { coerceNumber } from "@flixlix-cards/shared/utils/utils";
-import { mdiLeaf } from "@mdi/js";
+import { chargeLevel } from "@flixlix-cards/shared/utils/severity";
+import {
+  mdiBattery,
+  mdiBatteryHigh,
+  mdiBatteryLow,
+  mdiBatteryMedium,
+  mdiBatteryOutline,
+} from "@mdi/js";
 import {
   type HomeAssistant,
   type LovelaceCardEditor,
@@ -40,6 +47,7 @@ import {
   type Point,
   type SceneGroup,
   project,
+  roundedPath,
   fixtures,
   GRID_CABLE_START,
   houseShell,
@@ -50,7 +58,7 @@ import {
   DRAW_ORDER,
 } from "./scene";
 import { styles } from "./styles";
-import { type PowerFlowHouseCardConfig } from "./types";
+import { DEFAULT_STATE_OF_CHARGE_SEVERITY, type PowerFlowHouseCardConfig } from "./types";
 
 registerCustomCard({
   type: "power-flow-house-card",
@@ -113,9 +121,7 @@ const reversed = (points: readonly Point[]): Point[] =>
 const route = (wire: HouseWire) => {
   const fromNode = WIRE_ROUTES[wire.node];
   const points = wire.intoInverter ? fromNode : reversed(fromNode);
-  return points
-    .map((point, index) => `${index === 0 ? "M" : "L"}${project(point).join(" ")}`)
-    .join("");
+  return roundedPath(points.map(project), BEND_RADIUS);
 };
 
 /**
@@ -147,6 +153,27 @@ const gridFade = (box: Box) => {
 /** The grid cable fades out towards the card's edge. */
 const fadeOf = (wire: HouseWire) => (wire.node === "grid" ? "url(#house-grid-cable)" : nothing);
 
+/**
+ * The battery's icons, by the name the card state picks: dynamic by state of charge, as in Power
+ * Flow Card Plus, or the user's own. Icons outside this set are drawn as a plain battery.
+ */
+const BATTERY_ICONS: Record<string, string> = {
+  "mdi:battery": mdiBattery,
+  "mdi:battery-high": mdiBatteryHigh,
+  "mdi:battery-medium": mdiBatteryMedium,
+  "mdi:battery-low": mdiBatteryLow,
+  "mdi:battery-outline": mdiBatteryOutline,
+};
+
+/** How round a wire's bends are, in screen units. */
+const BEND_RADIUS = 4;
+
+/**
+ * A pulse's length grows with its wire's power; the pattern's period matches the animation's
+ * offset in the stylesheet, so the loop stays seamless whatever the length.
+ */
+const PULSE = { shortest: 6, longest: 36, period: 70 } as const;
+
 /** Pulses travel this many times slower than the flow rate's seconds per dot. */
 const PULSE_SLOWDOWN = 2.5;
 
@@ -173,7 +200,7 @@ type Label = {
   name: string;
   /** Shown after the name, e.g. the state of charge. */
   inline?: TemplateResult;
-  /** A second line under the name, e.g. the low-carbon share. */
+  /** A second line under the name, e.g. the power outage alert. */
   extra?: TemplateResult;
   nameClass?: string;
   actions: ActionConfigSet;
@@ -342,8 +369,19 @@ export class PowerFlowHouseCard extends LitElement {
     const soc = nodes.battery.state_of_charge.state;
     const parts = fixtures({
       solar: nodes.solar.has,
-      battery: nodes.battery.has,
-      soc: typeof soc === "number" ? soc / 100 : null,
+      battery: nodes.battery.has
+        ? {
+            icon: BATTERY_ICONS[nodes.battery.icon] ?? mdiBattery,
+            soc: typeof soc === "number" ? soc / 100 : null,
+            level:
+              typeof soc === "number"
+                ? chargeLevel(
+                    soc,
+                    this._config.state_of_charge_severity ?? DEFAULT_STATE_OF_CHARGE_SEVERITY
+                  )
+                : undefined,
+          }
+        : undefined,
     });
     const shape = (item: Shape) =>
       item.kind === "face"
@@ -388,7 +426,8 @@ export class PowerFlowHouseCard extends LitElement {
   private _wires(wires: HouseWire[], animate: boolean) {
     const power = (wire: HouseWire) => {
       const d = route(wire);
-      const duration = `animation-duration: ${wire.durationSeconds * PULSE_SLOWDOWN}s`;
+      const dash = PULSE.shortest + (PULSE.longest - PULSE.shortest) * wire.intensity;
+      const duration = `animation-duration: ${wire.durationSeconds * PULSE_SLOWDOWN}s; stroke-dasharray: ${dash} ${PULSE.period - dash}`;
       return svg`<g class="power ${wire.node}" style=${`--wire-color: ${wire.color}`} mask=${fadeOf(wire)}>
         <path class="flow" d=${d}></path>
         ${animate ? svg`<path class="pulse" d=${d} style=${duration}></path>` : nothing}
@@ -460,10 +499,6 @@ export class PowerFlowHouseCard extends LitElement {
     return {
       ...base,
       reading: wire.reading,
-      extra: nodes.nonFossil.has
-        ? html`<svg viewBox="0 0 24 24"><path d=${mdiLeaf}></path></svg>${nodes.nonFossil.display}
-            ${nodes.nonFossil.name}`
-        : undefined,
       entity: nodes.grid.mainEntity,
     };
   }
@@ -487,9 +522,8 @@ export class PowerFlowHouseCard extends LitElement {
     const [x, y] = project(anchor.at);
     const end = y + anchor.leader;
     const height = LABEL_HEIGHT + (label.extra ? EXTRA_LINE_HEIGHT : 0);
-    const reach = anchor.side === "left" ? 10 - LABEL_WIDTH : LABEL_WIDTH - 10;
     extent.include([x, end + Math.sign(anchor.leader) * height], 4);
-    extent.include([x + reach, end], 4);
+    extent.include([x - 10 + LABEL_WIDTH, end], 4);
     return svg`<g class="leader">
       <path d="M${x} ${y}V${end}" stroke="var(--house-leader)" stroke-width="0.8"></path>
       <circle cx=${x} cy=${y} r="1.6" fill="var(--house-leader)"></circle>
@@ -498,7 +532,7 @@ export class PowerFlowHouseCard extends LitElement {
 
   /** A label at the end of its leader, above or below its anchor, running right or left. */
   private _label(label: Label, position: string, anchor: (typeof LABEL_ANCHORS)[HouseNode]) {
-    const placement = `${anchor.leader > 0 ? "down" : "up"} ${anchor.side ?? "right"}`;
+    const placement = anchor.leader > 0 ? "down" : "up";
     const clickable = this._config.clickable_entities;
     const { actions, entity } = label;
     return html`<div

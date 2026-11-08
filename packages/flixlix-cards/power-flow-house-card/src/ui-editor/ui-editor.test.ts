@@ -53,6 +53,8 @@ describe("editor", () => {
       "base_decimals",
       "kilo_decimals",
       "kilo_threshold",
+      "red",
+      "yellow",
     ]);
     editor.remove();
   });
@@ -62,13 +64,22 @@ describe("editor", () => {
     expect(await formData({ animate_numbers: false })).toMatchObject({ animate_numbers: false });
   });
 
+  test("shows the default battery charge colours until the user sets their own", async () => {
+    expect(await formData({})).toMatchObject({
+      state_of_charge_severity: { red: 15, yellow: 30 },
+    });
+    expect(await formData({ state_of_charge_severity: { red: 10 } })).toMatchObject({
+      state_of_charge_severity: { red: 10 },
+    });
+  });
+
   test("links to a page per node", async () => {
     const { editor } = await mountEditor();
     const pages = [...(editor.shadowRoot?.querySelectorAll("link-subpage") ?? [])].map((link) =>
       link.getAttribute("path")
     );
 
-    expect(pages).toEqual(["grid", "solar", "battery", "fossil_fuel_percentage", "home"]);
+    expect(pages).toEqual(["grid", "solar", "battery", "home"]);
     editor.remove();
   });
 

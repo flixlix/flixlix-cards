@@ -24,7 +24,9 @@ export const styles = css`
     --house-icon: #8a8e96;
     --house-soc-track: #e1e2e6;
     --house-soc: #3fc28a;
-    --house-soc-low: var(--error-color, #db4437);
+    --house-soc-green: var(--success-color, #43a047);
+    --house-soc-yellow: var(--warning-color, #ffa600);
+    --house-soc-red: var(--error-color, #db4437);
     --house-track: #c9ccd2;
     --house-ground: #eceef1;
     --house-shadow: rgba(60, 65, 80, 0.22);
@@ -117,6 +119,7 @@ export const styles = css`
   .pulse {
     stroke: var(--wire-color);
     stroke-width: 1.8;
+    /* period 70, as PULSE in the card; each wire sets its own dash length */
     stroke-dasharray: 18 52;
     animation: pulse linear infinite;
   }
@@ -150,19 +153,6 @@ export const styles = css`
 
   .label.down {
     transform: translate(calc(var(--house-unit, 1px) * -10), 0);
-  }
-
-  .label.left {
-    text-align: right;
-    transform: translate(calc(-100% + var(--house-unit, 1px) * 10), -100%);
-  }
-
-  .label.down.left {
-    transform: translate(calc(-100% + var(--house-unit, 1px) * 10), 0);
-  }
-
-  .label.left .name {
-    justify-content: flex-end;
   }
 
   .label.clickable {
@@ -201,12 +191,6 @@ export const styles = css`
     font-size: calc(var(--house-unit, 1px) * 9.5);
     font-weight: 500;
     color: var(--secondary-text-color);
-  }
-
-  .name svg {
-    width: 1.1em;
-    height: 1.1em;
-    fill: var(--energy-non-fossil-color, #0f9d58);
   }
 
   .state-of-charge {

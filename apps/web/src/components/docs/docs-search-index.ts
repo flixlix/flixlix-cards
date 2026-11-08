@@ -849,10 +849,16 @@ function houseEntries(): SearchEntry[] {
     ]),
     option("clickable_entities", "Tap a value to open its entity.", "card-options"),
     option("disable_dots", "Keep the wires still.", "card-options", ["pulses"]),
+    option("state_of_charge_severity", "Battery charge bar colours.", "card-options", [
+      "battery",
+      "red",
+      "yellow",
+      "threshold",
+    ]),
     option("kilo_threshold", "From how many watts values are in kW.", "numbers"),
     option("kilo_decimals", "Decimals of values in kW.", "numbers"),
     example("solar-battery", "Solar and a battery", "The full house."),
-    example("split", "Separate import and export sensors", "Split entities, low-carbon, outage."),
+    example("split", "Separate import and export sensors", "Split entities and power outage."),
     example("grid-only", "Grid only", "No solar or battery."),
     example("still", "Still numbers and wires", "animate_numbers and disable_dots off."),
   ];

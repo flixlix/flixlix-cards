@@ -107,8 +107,8 @@ export function OverviewPage() {
           <Link to="/power-flow-card-plus">Power Flow Card Plus</Link> and takes the same{" "}
           <code>entities</code> config, so you can try it by changing the card&apos;s{" "}
           <code>type</code>. Instead of circles and lines, every node is wired to the inverter on
-          the house wall: a pulse runs along a wire in the direction its power flows, faster the
-          more power it carries.
+          the house wall: a pulse runs along a wire in the direction its power flows, faster and
+          longer the more power it carries.
         </p>
         <p>
           It shows solar, battery, grid and home for now. Individual devices are not drawn yet; use
@@ -121,8 +121,8 @@ export function OverviewPage() {
           <HighlightItem>Solar on the roof, battery on the wall, grid to the street</HighlightItem>
           <HighlightItem>Only what you configure is drawn</HighlightItem>
           <HighlightItem>Numbers that roll to their new value</HighlightItem>
-          <HighlightItem>Battery state of charge, charging or discharging</HighlightItem>
-          <HighlightItem>Low-carbon share and power outages on the grid</HighlightItem>
+          <HighlightItem>Battery icon and charge colours from its state of charge</HighlightItem>
+          <HighlightItem>Power outages on the grid</HighlightItem>
           <HighlightItem>Greys taken from your theme, light and dark</HighlightItem>
         </ul>
       </Section>
@@ -284,10 +284,9 @@ const CARD_OPTIONS: OptionRow[] = [
     required: true,
     description: (
       <>
-        <code>grid</code>, <code>solar</code>, <code>battery</code>, <code>home</code> and{" "}
-        <code>fossil_fuel_percentage</code>, configured as in{" "}
-        <Link to="/power-flow-card-plus/configuration">Power Flow Card Plus</Link>. Leave one out
-        and it is not drawn.
+        <code>grid</code>, <code>solar</code>, <code>battery</code> and <code>home</code>,
+        configured as in <Link to="/power-flow-card-plus/configuration">Power Flow Card Plus</Link>.
+        Leave one out and it is not drawn.
       </>
     ),
   },
@@ -304,6 +303,18 @@ const CARD_OPTIONS: OptionRow[] = [
     type: "boolean",
     default: "false",
     description: "Tapping a value opens its entity, or runs the node's tap/hold actions.",
+  },
+  {
+    name: "state_of_charge_severity",
+    type: "object",
+    default: "{ red: 15, yellow: 30 }",
+    description: (
+      <>
+        The battery&apos;s charge bar colours, in %: red below <code>red</code>, yellow below{" "}
+        <code>yellow</code>, green above both. Its icon follows the state of charge as in Power Flow
+        Card Plus.
+      </>
+    ),
   },
   {
     name: "disable_dots",
@@ -424,10 +435,7 @@ export function ExamplesPage() {
 
       <Section id="split" title="Separate import and export sensors">
         <Prose>
-          <p>
-            One sensor per direction, the low-carbon share under the grid, and the power-outage
-            alert.
-          </p>
+          <p>One sensor per direction and the power-outage alert.</p>
         </Prose>
         <CodeBlock
           language="yaml"
@@ -445,10 +453,7 @@ entities:
     entity:
       consumption: sensor.battery_discharge_power
       production: sensor.battery_charge_power
-    state_of_charge: sensor.battery_soc
-  fossil_fuel_percentage:
-    entity: sensor.grid_fossil_fuel_percentage
-    state_type: percentage`}
+    state_of_charge: sensor.battery_soc`}
         />
       </Section>
 

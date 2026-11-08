@@ -14,10 +14,11 @@ the same `entities` config, so you can try it by changing the card's `type`.
 ## Features
 
 - Solar on the roof, a battery on the wall, the grid cable to the street; only what you configure is drawn
-- A pulse runs along each wire in the direction its power flows, faster the more power it carries
+- A pulse runs along each wire in the direction its power flows, faster and longer the more power it carries
 - Numbers roll to their new value when a reading changes (`animate_numbers`)
-- Battery state of charge, and whether it is charging (▲) or discharging (▼)
-- The low-carbon share and power outages on the grid
+- The battery's icon follows its state of charge, as in Power Flow Card Plus; its charge bar turns yellow and red at thresholds you set
+- Whether the battery is charging (▲) or discharging (▼)
+- Power outages on the grid
 - Greys taken from your theme, in light and dark
 - Visual editor
 
@@ -32,20 +33,21 @@ resource (`/local/power-flow-house-card.js`, type `module`).
 
 ## Configuration
 
-| Name                 | Type    | Default | Description                                                                                                                                                 |
-| -------------------- | ------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `type`               | string  | —       | `custom:power-flow-house-card`                                                                                                                              |
-| `entities`           | object  | —       | `grid`, `solar`, `battery`, `home` and `fossil_fuel_percentage`, as in [Power Flow Card Plus](https://cards.flixlix.com/power-flow-card-plus/configuration) |
-| `title`              | string  | —       | Card title                                                                                                                                                  |
-| `animate_numbers`    | boolean | `true`  | Roll each number to its new value when a reading changes. Always still when your system asks for reduced motion                                             |
-| `clickable_entities` | boolean | `false` | Tapping a value opens its entity, or runs the node's tap/hold actions                                                                                       |
-| `disable_dots`       | boolean | `false` | Keep the wires still: no pulses, only the colour of the power they carry                                                                                    |
-| `base_decimals`      | number  | `0`     | Decimals of values in W                                                                                                                                     |
-| `kilo_decimals`      | number  | `1`     | Decimals of values in kW                                                                                                                                    |
-| `kilo_threshold`     | number  | `1000`  | From how many watts a value is shown in kW                                                                                                                  |
-| `min_flow_rate`      | number  | `0.75`  | Seconds per pulse at the most power                                                                                                                         |
-| `max_flow_rate`      | number  | `6`     | Seconds per pulse at the least power                                                                                                                        |
-| `max_expected_power` | number  | `2000`  | Power at which pulses run their fastest                                                                                                                     |
+| Name                       | Type    | Default                   | Description                                                                                                                       |
+| -------------------------- | ------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `type`                     | string  | —                         | `custom:power-flow-house-card`                                                                                                    |
+| `entities`                 | object  | —                         | `grid`, `solar`, `battery` and `home`, as in [Power Flow Card Plus](https://cards.flixlix.com/power-flow-card-plus/configuration) |
+| `title`                    | string  | —                         | Card title                                                                                                                        |
+| `animate_numbers`          | boolean | `true`                    | Roll each number to its new value when a reading changes. Always still when your system asks for reduced motion                   |
+| `clickable_entities`       | boolean | `false`                   | Tapping a value opens its entity, or runs the node's tap/hold actions                                                             |
+| `disable_dots`             | boolean | `false`                   | Keep the wires still: no pulses, only the colour of the power they carry                                                          |
+| `state_of_charge_severity` | object  | `{ red: 15, yellow: 30 }` | Battery charge bar colours, in %: red below `red`, yellow below `yellow`, green above both                                        |
+| `base_decimals`            | number  | `0`                       | Decimals of values in W                                                                                                           |
+| `kilo_decimals`            | number  | `1`                       | Decimals of values in kW                                                                                                          |
+| `kilo_threshold`           | number  | `1000`                    | From how many watts a value is shown in kW                                                                                        |
+| `min_flow_rate`            | number  | `0.75`                    | Seconds per pulse at the most power                                                                                               |
+| `max_flow_rate`            | number  | `6`                       | Seconds per pulse at the least power                                                                                              |
+| `max_expected_power`       | number  | `2000`                    | Power at which pulses run their fastest                                                                                           |
 
 Options that only change Power Flow Card Plus' circles and lines (for example `display_zero_lines`)
 have no effect here.
@@ -76,7 +78,10 @@ entities:
       entity: binary_sensor.grid_outage
   solar:
     entity: sensor.solar_power
-  fossil_fuel_percentage:
-    entity: sensor.grid_fossil_fuel_percentage
-    state_type: percentage
+  battery:
+    entity: sensor.battery_power
+    state_of_charge: sensor.battery_soc
+state_of_charge_severity:
+  red: 10
+  yellow: 25
 ```

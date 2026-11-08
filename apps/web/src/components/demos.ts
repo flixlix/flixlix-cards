@@ -53,10 +53,6 @@ export const houseDemo: Demo = {
         grid: { entity: "sensor.grid_power" },
         solar: { entity: "sensor.solar_power" },
         battery: { entity: "sensor.battery_power", state_of_charge: "sensor.battery_soc" },
-        fossil_fuel_percentage: {
-          entity: "sensor.grid_fossil_fuel_percentage",
-          state_type: "percentage",
-        },
       },
     },
   ],
@@ -65,7 +61,6 @@ export const houseDemo: Demo = {
     "sensor.solar_power": "4200",
     "sensor.battery_power": "-1600",
     "sensor.battery_soc": percent("68"),
-    "sensor.grid_fossil_fuel_percentage": percent("34"),
   },
   width: 440,
 };

@@ -81,7 +81,7 @@ const CARDS: CardEntry[] = [
     bullets: [
       { id: "config", content: "Power Flow Card Plus' entities config" },
       { id: "numbers", content: "Numbers that roll to their new value" },
-      { id: "battery", content: "Battery state of charge and direction" },
+      { id: "battery", content: "Battery icon and charge colours from its state of charge" },
       { id: "theme", content: "Greys from your theme, light and dark" },
     ],
   },
