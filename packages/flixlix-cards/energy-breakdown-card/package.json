@@ -18,7 +18,8 @@
   ],
   "main": "./dist/energy-breakdown-card.js",
   "exports": {
-    ".": "./dist/energy-breakdown-card.js"
+    ".": "./dist/energy-breakdown-card.js",
+    "./source": "./src/energy-breakdown-card.ts"
   },
   "repository": {
     "type": "git",
