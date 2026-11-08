@@ -182,17 +182,25 @@ function configOptions(
     make("min_flow_rate", "Time (s) for the fastest dot to travel a line."),
     make("max_flow_rate", "Time (s) for the slowest dot to travel a line."),
     make("clickable_entities", "Open the entity's more-info dialog when clicking a circle."),
-    make("min_expected_power", "Minimum value for the new flow formula.", "flow-formula"),
-    make("max_expected_power", "Maximum value for the new flow formula.", "flow-formula"),
+    ...(card === "energy"
+      ? []
+      : [
+          make("min_expected_power", "Minimum value for the new flow formula.", "flow-formula"),
+          make("max_expected_power", "Maximum value for the new flow formula.", "flow-formula"),
+        ]),
     make("display_zero_lines", "Behavior of inactive lines.", "display-zero-lines"),
     make("full_size", "Experimental, fill the screen in panel mode."),
     make("style_ha_card", "CSS applied to the card container."),
     make("style_card_content", "CSS applied to the content area."),
-    make(
-      "use_new_flow_rate_model",
-      "Switch to the new (more intuitive) flow formula.",
-      "flow-formula"
-    ),
+    ...(card === "energy"
+      ? []
+      : [
+          make(
+            "use_new_flow_rate_model",
+            "New (absolute) flow formula, on by default; false for the relative one.",
+            "flow-formula"
+          ),
+        ]),
     make("sort_individual_devices", "Sort individual devices by value, then id, then name."),
     make("allow_layout_break", "Force showing up to 4 individual devices."),
     make("tap_action", "Action triggered on tap.", "actions"),
@@ -216,7 +224,11 @@ function configOptions(
     make("subtract_individual", "Subtract individual devices from home consumption.", "home"),
     make("override_state", "Use the home entity state directly.", "home"),
     make("state_type", "fossil_fuel_percentage state type, power or percentage.", "fossil-fuel"),
-    make("calculate_flow_rate", "Use formula or fixed dot interval (seconds).", "fossil-fuel"),
+    make(
+      "calculate_flow_rate",
+      "Calculated rate by default; false = fixed pace, number = seconds.",
+      "fossil-fuel"
+    ),
     make("inverted_animation", "Reverse dot direction for an individual device.", "individual"),
     make("decimals", "Decimals for a grid, solar, battery or individual device value.", "grid"),
     make(

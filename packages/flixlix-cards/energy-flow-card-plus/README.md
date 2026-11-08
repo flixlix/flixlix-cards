@@ -130,13 +130,10 @@ Else, if you prefer the graphical editor, use the menu to add the resource:
 | max_flow_rate               | `number`  |                    6                     | Represents how much time it takes for the slowest dot to travel from one end to the other in seconds.                                                                                                                                                                                                                                          |
 | kilo_threshold              | `number`  |                    0                     | The number of Wh to display before converting to and displaying kWh. Setting of 0 will always display in kWh.                                                                                                                                                                                                                                  |
 | clickable_entities          | `boolean` |                  false                   | If true, clicking on the entity will open the entity's more info dialog.                                                                                                                                                                                                                                                                       |
-| min_expected_power          | `number`  |                   0.01                   | Represents the minimum amount of energy (in Wh) expected to flow through the system for the selected period. Only used in the [New Flow Formula](#new-flow-formula).                                                                                                                                                                           |
-| max_expected_power          | `number`  |                   2000                   | Represents the maximum amount of energy (in Wh) expected to flow through the system for the selected period. Only used in the [New Flow Formula](#new-flow-formula).                                                                                                                                                                           |
 | display_zero_lines          | `object`  |             `{mode: "show"}`             | Check [Display Zero Lines](#display-zero-lines)                                                                                                                                                                                                                                                                                                |
 | full_size                   | `boolean` |                  false                   | Warning: This option is experimental. To use this option, you must set your view to panel mode. If set to true, the card will take up the full height of the screen. And the Card should go to the center of the screen.                                                                                                                       |
 | style_ha_card               | `css`     |                                          | [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) Styling to apply to the container of the card (border and background of the card).                                                                                                                                                                                                     |
 | style_card_content          | `css`     |                                          | [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) Styling to apply to the content of the card (all circles and lines of the card).                                                                                                                                                                                                       |
-| use_new_flow_rate_model     | `boolean` |                  false                   | If `true`, the card will use the [New Flow Formula](#new-flow-formula).                                                                                                                                                                                                                                                                        |
 | sort_individual_devices     | `boolean` |           true (since v0.3.1)            | If `true`, sort devices in order of power consumption -> entity id -> alphabetically.                                                                                                                                                                                                                                                          |
 | allow_layout_break          | `boolean` |                  false                   | Always allow up to 4 individual devices to show, even when there is not enough space, causing visual layout break.                                                                                                                                                                                                                             |
 | collection_key              | `string`  |                                          | Bind this card to a specific Home Assistant energy data collection. Defaults to the energy collection of the active dashboard. Pass the key (e.g. `energy_living_room`) of the dashboard whose selected period should drive this card. Useful when more than one energy dashboard exists. See [Energy Collection Key](#energy-collection-key). |
@@ -273,7 +270,7 @@ The Individual fields must be an array of objects. Each object must follow the f
 | display_zero_state  | `boolean`             | `true`          | If set to `true`, the state will be shown even if it is `0`. If set to `false`, the state will be hidden if it is `0`.                                                                                                                                                                                                                                                                                                                                         |
 | state_type          | `string`              | `power`         | The type of state to use for the entity. Can be `power` or `percentage`. When set to `power` the state will be the amount of energy from the grid that is low-carbon. When set to `percentage` the state will be the percentage of energy from the grid that is low-carbon.                                                                                                                                                                                    |
 | unit_white_space    | `boolean`             | `true`          | If set to `false` will not add any whitespace between unit and state. Otherwise, white space will be added.                                                                                                                                                                                                                                                                                                                                                    |
-| calculate_flow_rate | `boolean` or `number` | `false`         | If set to `true`, the flow rate will be calculated by using the flow rate formula (either the new or the old one, depending on your configuration). If set to a number, the flow rate will be set to that number. For example, defining the value `10` will ensure one dot will flow every 10 seconds.                                                                                                                                                         |
+| calculate_flow_rate | `boolean` or `number` | `true`          | When unset or `true`, the flow rate is calculated with the [Flow Formula](#flow-formula). If `false`, dots flow at a fixed pace. If set to a number, the flow rate will be set to that number. For example, defining the value `10` will ensure one dot will flow every 10 seconds.                                                                                                                                                                            |
 
 #### Color Object
 
@@ -315,15 +312,15 @@ This Feature allows you to configure an additional small text for each Individua
 
 This feature allows you to configure how the card handles a Grid Power Outage scenario.
 
-| Name                | Type                  | Description                                                                                                                                                                                                                                                                                            |
-| ------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| entity              | `string` required     | Entity ID providing a state that changes when there is a Power Outage. (eg: `binary_sensor.grid_connection_status`). Doesn't need to be a binary_sensor.                                                                                                                                               |
-| entity_generator    | `string`              | Entity ID providing the power of a Generator. (eg: `sensor.generator_power`). This is optional, meaning if you don't use this, the card will assume the grid is the only source of power.                                                                                                              |
-| state_alert         | `string`              | The state the provided entity is at when there is a power outage. Default is `on`, meaning if the entity's state is `on` the card will assume there is a power outage.                                                                                                                                 |
-| icon_alert          | `string`              | An icon path to be override the grid icon when there is a power outage. Default is `mdi:transmission-tower-off`.                                                                                                                                                                                       |
-| label_alert         | `string`              | A text that will be displayed below the icon when there is a power outage.                                                                                                                                                                                                                             |
-| calculate_flow_rate | `boolean` or `number` | `false`                                                                                                                                                                                                                                                                                                |
-|                     |                       | If set to `true`, the flow rate will be calculated by using the flow rate formula (either the new or the old one, depending on your configuration). If set to a number, the flow rate will be set to that number. For example, defining the value `10` will ensure one dot will flow every 10 seconds. |
+| Name                | Type                  | Description                                                                                                                                                                                                                                                                         |
+| ------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| entity              | `string` required     | Entity ID providing a state that changes when there is a Power Outage. (eg: `binary_sensor.grid_connection_status`). Doesn't need to be a binary_sensor.                                                                                                                            |
+| entity_generator    | `string`              | Entity ID providing the power of a Generator. (eg: `sensor.generator_power`). This is optional, meaning if you don't use this, the card will assume the grid is the only source of power.                                                                                           |
+| state_alert         | `string`              | The state the provided entity is at when there is a power outage. Default is `on`, meaning if the entity's state is `on` the card will assume there is a power outage.                                                                                                              |
+| icon_alert          | `string`              | An icon path to be override the grid icon when there is a power outage. Default is `mdi:transmission-tower-off`.                                                                                                                                                                    |
+| label_alert         | `string`              | A text that will be displayed below the icon when there is a power outage.                                                                                                                                                                                                          |
+| calculate_flow_rate | `boolean` or `number` | `true`                                                                                                                                                                                                                                                                              |
+|                     |                       | When unset or `true`, the flow rate is calculated with the [Flow Formula](#flow-formula). If `false`, dots flow at a fixed pace. If set to a number, the flow rate will be set to that number. For example, defining the value `10` will ensure one dot will flow every 10 seconds. |
 
 #### Energy Collection Key
 
@@ -499,7 +496,7 @@ This should give you something like this:
 
 ### Flow Formula
 
-This formula is based on the official formula used by the Energy Distribution card.
+This formula is based on the official formula used by the Energy Distribution card. Each line's flow rate is relative to all the other lines.
 
 ```js
 max - (value / totalLines) * (max - min);
@@ -510,45 +507,7 @@ max - (value / totalLines) * (max - min);
 //   solarToGrid + batteryConsumption + batteryFromGrid + batteryToGrid
 ```
 
-### New Flow Formula
-
-In contrast to the old flow formula, this formula calculates the flow rate independently from other lines, making it more intuitive to interpret the perceived power. This means that a state of `10W` will always flow with the same velocity, no matter what other lines are doing. In other words this flow rate is calculated in absolute and not relative values.
-
-To get this new Flow Formula to work, simply set `use_new_flow_rate_model` in the main configuration to true. You may want to play around with the `max_expected_power`, `min_expected_power`, `max_flow_rate` and `min_flow_rate` to get the speeds that you wish
-
-The dot speed (one over the duration) grows linearly with the value, so twice the power looks about twice as fast. Values outside the expected range use the slowest or fastest speed.
-
-```js
-progress = clamp((value - minIn) / (maxIn - minIn), 0, 1);
-speed = 1 / minOut + progress * (1 / maxOut - 1 / minOut);
-return 1 / speed; // seconds for one dot to travel the line
-
-// value = value of the current line to calculate (eg: grid to home)
-//
-// minIn = amount of watts at which the lowest speed will be selected.
-//   ↳ In your configuration this is `min_expected_power`
-//   ↳ eg: setting this at `100` means that at `100` watts, the dots will still flow at the lowest speed
-// maxIn = amount of watts at which the highest speed will be selected.
-//   ↳ In your configuration this is `max_expected_power`
-//   ↳ eg: setting this at `2000` means that everything more than `2000` will flow at the highest speed selected
-//
-// minOut = amount of watts at which the lowest speed will be selected.
-//   ↳ In your configuration this is `max_flow_rate`
-//   ↳ eg: setting this at `5` means that one dot will take `5` second to travel
-// maxOut = amount of watts at which the highest speed will be selected.
-//   ↳ In your configuration this is `min_flow_rate`
-//   ↳ eg: setting this at `1` means that one dot will take `1` second to travel
-```
-
-The following video aims to show the diffence between the two flow formulas:
-
-<https://user-images.githubusercontent.com/61006057/231479254-91d6c625-8f38-4abb-b9ba-8dd24d6395f3.mp4>
-
-Notice that when the Power changes to only coming from the sun, the old formula accelerates to maintain a constant amount of dots/second.
-Using the new formula is more intuitive, since you can immediately see that the Solar Power is relatively low since the dots are flowing very slowly.
-On the old Flow Formula you might think that the sun is producing a lot of power, which in this case is not true.
-
-At the end of the day these are two options and depending on what you're interested, one might suit you better than the other, that's why I kept the old formula, you have the choice. 🙂
+The energy card always uses this relative formula. It shows totals in Wh for the selected period, which don't fit a fixed power scale, so the absolute "new flow formula" from Power Flow Card Plus is not available here: `use_new_flow_rate_model`, `min_expected_power` and `max_expected_power` have no effect on this card.
 
 ### To-Do List
 
