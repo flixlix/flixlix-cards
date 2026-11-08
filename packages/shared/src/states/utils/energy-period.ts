@@ -117,6 +117,59 @@ const getSuggestedPeriod = (start: Date, end: Date): "hour" | "day" | "month" =>
   return "hour";
 };
 
+/** HA stores its presets as `today`, `this_week`, …; older versions stored `week`, … */
+const toEnergyPeriodKey = (stored: string | null): EnergyPeriodKey | undefined => {
+  const key = stored?.replace(/^this_/, "");
+  return key === "today" ||
+    key === "yesterday" ||
+    key === "week" ||
+    key === "month" ||
+    key === "year"
+    ? key
+    : undefined;
+};
+
+/** The localStorage key under which HA remembers the last picked preset of a collection. */
+export const energyDefaultPeriodStorageKey = (hass: HomeAssistant, collectionKey?: string) =>
+  `energy-default-period-${resolveConnectionKey(hass, collectionKey)}`;
+
+/** The parts of HA's energy collection a period selector drives. */
+export type EnergyPeriodControls = {
+  start: Date;
+  end?: Date;
+  /** `"previous"`/`"yoy"` while comparing, `""` otherwise; a boolean in older HA. */
+  compare?: unknown;
+  setPeriod: (start: Date, end?: Date) => void;
+  setCompare: (mode: string) => void;
+  refresh: () => unknown;
+};
+
+const isEnergyPeriodControls = (value: unknown): value is EnergyPeriodControls =>
+  isObject(value) &&
+  value.start instanceof Date &&
+  typeof value.setPeriod === "function" &&
+  typeof value.setCompare === "function" &&
+  typeof value.refresh === "function";
+
+/**
+ * The energy collection HA's own energy cards created for this dashboard. Never creates one:
+ * a collection created by a card bundles a copy of HA's data loader, which breaks as soon as
+ * HA changes its energy preferences.
+ */
+export const findEnergyCollection = (
+  hass: HomeAssistant,
+  collectionKey?: string
+): EnergyPeriodControls | null => {
+  const connection = getConnection(hass);
+  for (const key of [resolveConnectionKey(hass, collectionKey), "_energy"]) {
+    const candidate = connection?.[key];
+    if (isEnergyPeriodControls(candidate)) {
+      return candidate;
+    }
+  }
+  return null;
+};
+
 export const getGlobalEnergyPeriodWindow = (
   hass: HomeAssistant,
   collectionKey?: string
@@ -146,14 +199,8 @@ export const getGlobalEnergyPeriodWindow = (
 
   let period: EnergyPeriodKey = "today";
   for (const key of collectionKeysToCheck) {
-    const stored = localStorage.getItem(`energy-default-period-${key}`);
-    if (
-      stored === "today" ||
-      stored === "yesterday" ||
-      stored === "week" ||
-      stored === "month" ||
-      stored === "year"
-    ) {
+    const stored = toEnergyPeriodKey(localStorage.getItem(`energy-default-period-${key}`));
+    if (stored) {
       period = stored;
       break;
     }

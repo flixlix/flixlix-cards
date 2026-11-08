@@ -472,6 +472,85 @@ importers:
         specifier: 'catalog:'
         version: 6.1.1(typescript@6.0.3)(vite@7.3.2(@types/node@22.19.17)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.46.2))
 
+  packages/flixlix-cards/energy-period-selector-plus:
+    dependencies:
+      '@flixlix-cards/shared':
+        specifier: workspace:*
+        version: link:../../shared
+      '@mdi/js':
+        specifier: catalog:packages
+        version: 7.4.47
+      custom-card-helpers:
+        specifier: catalog:packages
+        version: 2.0.0(lit@3.3.3)
+      home-assistant-js-websocket:
+        specifier: catalog:packages
+        version: 9.8.1
+      lit:
+        specifier: catalog:packages
+        version: 3.3.3
+    devDependencies:
+      '@babel/core':
+        specifier: catalog:packages
+        version: 7.29.0
+      '@babel/preset-env':
+        specifier: catalog:packages
+        version: 7.29.3(@babel/core@7.29.0)
+      '@flixlix-cards/bundler':
+        specifier: workspace:*
+        version: link:../../tooling/bundler
+      '@flixlix-cards/testing':
+        specifier: workspace:*
+        version: link:../../tooling/testing
+      '@flixlix-cards/typescript-config':
+        specifier: workspace:*
+        version: link:../../tooling/typescript-config
+      '@rollup/plugin-babel':
+        specifier: catalog:packages
+        version: 7.0.0(@babel/core@7.29.0)(@types/babel__core@7.20.5)(rollup@4.68.0)
+      '@rollup/plugin-commonjs':
+        specifier: catalog:packages
+        version: 29.0.2(rollup@4.68.0)
+      '@rollup/plugin-json':
+        specifier: catalog:packages
+        version: 6.1.0(rollup@4.68.0)
+      '@rollup/plugin-node-resolve':
+        specifier: catalog:packages
+        version: 16.0.3(rollup@4.68.0)
+      '@rollup/plugin-terser':
+        specifier: catalog:packages
+        version: 1.0.0(rollup@4.68.0)
+      '@rollup/plugin-typescript':
+        specifier: catalog:packages
+        version: 12.3.1(rollup@4.68.0)(tslib@2.8.1)(typescript@6.0.3)
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.19.17
+      '@vitest/browser-playwright':
+        specifier: catalog:packages
+        version: 5.1.0(msw@2.14.2(@types/node@22.19.17)(typescript@6.0.3))(playwright@1.64.1)(vite@7.3.2(@types/node@22.19.17)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.46.2))(vitest@5.1.0)
+      playwright:
+        specifier: catalog:packages
+        version: 1.64.1
+      rollup:
+        specifier: catalog:packages
+        version: 4.68.0
+      rollup-plugin-minify-html-literals:
+        specifier: catalog:packages
+        version: 1.2.6(rollup@4.68.0)
+      rollup-plugin-serve:
+        specifier: catalog:packages
+        version: 1.1.1
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vite-plus:
+        specifier: catalog:packages
+        version: 1.5.0(@types/node@22.19.17)(@vitest/browser-playwright@5.1.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.27.7)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.14.2(@types/node@22.19.17)(typescript@6.0.3))(playwright@1.64.1)(terser@5.46.2)(typescript@6.0.3)
+      vite-tsconfig-paths:
+        specifier: 'catalog:'
+        version: 6.1.1(typescript@6.0.3)(vite@7.3.2(@types/node@22.19.17)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.46.2))
+
   packages/flixlix-cards/power-flow-card-plus:
     dependencies:
       '@flixlix-cards/shared':
@@ -7130,6 +7209,19 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@babel/helper-create-class-features-plugin@7.29.3(@babel/core@7.29.13)':
+    dependencies:
+      '@babel/core': 7.29.13
+      '@babel/helper-annotate-as-pure': 7.27.3
+      '@babel/helper-member-expression-to-functions': 7.28.5
+      '@babel/helper-optimise-call-expression': 7.27.1
+      '@babel/helper-replace-supers': 7.28.6(@babel/core@7.29.13)
+      '@babel/helper-skip-transparent-expression-wrappers': 7.27.1
+      '@babel/traverse': 7.29.0
+      semver: 6.3.1
+    transitivePeerDependencies:
+      - supports-color
+
   '@babel/helper-create-regexp-features-plugin@7.28.5(@babel/core@7.29.0)':
     dependencies:
       '@babel/core': 7.29.0
@@ -7154,7 +7246,7 @@ snapshots:
 
   '@babel/helper-member-expression-to-functions@7.28.5':
     dependencies:
-      '@babel/traverse': 7.29.0
+      '@babel/traverse': 7.29.13
       '@babel/types': 7.29.11
     transitivePeerDependencies:
       - supports-color
@@ -7176,6 +7268,15 @@ snapshots:
   '@babel/helper-module-transforms@7.28.6(@babel/core@7.29.0)':
     dependencies:
       '@babel/core': 7.29.0
+      '@babel/helper-module-imports': 7.28.6
+      '@babel/helper-validator-identifier': 7.28.5
+      '@babel/traverse': 7.29.0
+    transitivePeerDependencies:
+      - supports-color
+
+  '@babel/helper-module-transforms@7.28.6(@babel/core@7.29.13)':
+    dependencies:
+      '@babel/core': 7.29.13
       '@babel/helper-module-imports': 7.28.6
       '@babel/helper-validator-identifier': 7.28.5
       '@babel/traverse': 7.29.0
@@ -7215,6 +7316,15 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@babel/helper-replace-supers@7.28.6(@babel/core@7.29.13)':
+    dependencies:
+      '@babel/core': 7.29.13
+      '@babel/helper-member-expression-to-functions': 7.28.5
+      '@babel/helper-optimise-call-expression': 7.27.1
+      '@babel/traverse': 7.29.0
+    transitivePeerDependencies:
+      - supports-color
+
   '@babel/helper-skip-transparent-expression-wrappers@7.27.1':
     dependencies:
       '@babel/traverse': 7.29.0
@@ -7236,8 +7346,8 @@ snapshots:
 
   '@babel/helper-wrap-function@7.28.6':
     dependencies:
-      '@babel/template': 7.28.6
-      '@babel/traverse': 7.29.0
+      '@babel/template': 7.29.7
+      '@babel/traverse': 7.29.13
       '@babel/types': 7.29.11
     transitivePeerDependencies:
       - supports-color
@@ -7322,9 +7432,19 @@ snapshots:
       '@babel/core': 7.29.0
       '@babel/helper-plugin-utils': 7.28.6
 
+  '@babel/plugin-syntax-jsx@7.28.6(@babel/core@7.29.13)':
+    dependencies:
+      '@babel/core': 7.29.13
+      '@babel/helper-plugin-utils': 7.28.6
+
   '@babel/plugin-syntax-typescript@7.28.6(@babel/core@7.29.0)':
     dependencies:
       '@babel/core': 7.29.0
+      '@babel/helper-plugin-utils': 7.28.6
+
+  '@babel/plugin-syntax-typescript@7.28.6(@babel/core@7.29.13)':
+    dependencies:
+      '@babel/core': 7.29.13
       '@babel/helper-plugin-utils': 7.28.6
 
   '@babel/plugin-syntax-unicode-sets-regex@7.18.6(@babel/core@7.29.0)':
@@ -7501,6 +7621,14 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@babel/plugin-transform-modules-commonjs@7.28.6(@babel/core@7.29.13)':
+    dependencies:
+      '@babel/core': 7.29.13
+      '@babel/helper-module-transforms': 7.28.6(@babel/core@7.29.13)
+      '@babel/helper-plugin-utils': 7.28.6
+    transitivePeerDependencies:
+      - supports-color
+
   '@babel/plugin-transform-modules-systemjs@7.29.0(@babel/core@7.29.0)':
     dependencies:
       '@babel/core': 7.29.0
@@ -7653,14 +7781,14 @@ snapshots:
       '@babel/core': 7.29.0
       '@babel/helper-plugin-utils': 7.28.6
 
-  '@babel/plugin-transform-typescript@7.28.6(@babel/core@7.29.0)':
+  '@babel/plugin-transform-typescript@7.28.6(@babel/core@7.29.13)':
     dependencies:
-      '@babel/core': 7.29.0
+      '@babel/core': 7.29.13
       '@babel/helper-annotate-as-pure': 7.27.3
-      '@babel/helper-create-class-features-plugin': 7.29.3(@babel/core@7.29.0)
+      '@babel/helper-create-class-features-plugin': 7.29.3(@babel/core@7.29.13)
       '@babel/helper-plugin-utils': 7.28.6
       '@babel/helper-skip-transparent-expression-wrappers': 7.27.1
-      '@babel/plugin-syntax-typescript': 7.28.6(@babel/core@7.29.0)
+      '@babel/plugin-syntax-typescript': 7.28.6(@babel/core@7.29.13)
     transitivePeerDependencies:
       - supports-color
 
@@ -7771,14 +7899,14 @@ snapshots:
       '@babel/types': 7.29.0
       esutils: 2.0.3
 
-  '@babel/preset-typescript@7.28.5(@babel/core@7.29.0)':
+  '@babel/preset-typescript@7.28.5(@babel/core@7.29.13)':
     dependencies:
-      '@babel/core': 7.29.0
+      '@babel/core': 7.29.13
       '@babel/helper-plugin-utils': 7.28.6
       '@babel/helper-validator-option': 7.27.1
-      '@babel/plugin-syntax-jsx': 7.28.6(@babel/core@7.29.0)
-      '@babel/plugin-transform-modules-commonjs': 7.28.6(@babel/core@7.29.0)
-      '@babel/plugin-transform-typescript': 7.28.6(@babel/core@7.29.0)
+      '@babel/plugin-syntax-jsx': 7.28.6(@babel/core@7.29.13)
+      '@babel/plugin-transform-modules-commonjs': 7.28.6(@babel/core@7.29.13)
+      '@babel/plugin-transform-typescript': 7.28.6(@babel/core@7.29.13)
     transitivePeerDependencies:
       - supports-color
 
@@ -10013,7 +10141,7 @@ snapshots:
 
   '@tanstack/router-utils@1.161.7':
     dependencies:
-      '@babel/core': 7.29.0
+      '@babel/core': 7.29.13
       '@babel/generator': 7.29.1
       '@babel/parser': 7.29.3
       '@babel/types': 7.29.0
@@ -10725,7 +10853,7 @@ snapshots:
 
   babel-dead-code-elimination@1.0.12:
     dependencies:
-      '@babel/core': 7.29.0
+      '@babel/core': 7.29.13
       '@babel/parser': 7.29.3
       '@babel/traverse': 7.29.0
       '@babel/types': 7.29.0
@@ -12809,10 +12937,10 @@ snapshots:
 
   shadcn@4.6.0(@types/node@22.19.17)(typescript@6.0.3):
     dependencies:
-      '@babel/core': 7.29.0
+      '@babel/core': 7.29.13
       '@babel/parser': 7.29.3
-      '@babel/plugin-transform-typescript': 7.28.6(@babel/core@7.29.0)
-      '@babel/preset-typescript': 7.28.5(@babel/core@7.29.0)
+      '@babel/plugin-transform-typescript': 7.28.6(@babel/core@7.29.13)
+      '@babel/preset-typescript': 7.28.5(@babel/core@7.29.13)
       '@dotenvx/dotenvx': 1.64.0
       '@modelcontextprotocol/sdk': 1.29.0(zod@3.25.76)
       '@types/validate-npm-package-name': 4.0.2

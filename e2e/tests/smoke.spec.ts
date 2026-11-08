@@ -7,6 +7,7 @@ const expectedCards: Record<string, Record<string, number>> = {
   [CARD_DASHBOARDS["energy-flow-card-plus"]]: {
     "energy-flow-card-plus": 1,
     "energy-breakdown-card": 1,
+    "energy-period-selector-plus": 1,
   },
   [CARD_DASHBOARDS["energy-breakdown-card"]]: { "energy-breakdown-card": 3 },
   [CARD_DASHBOARDS["sortable-list-card"]]: { "sortable-list-card": 2 },

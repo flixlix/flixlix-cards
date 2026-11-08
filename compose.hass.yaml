@@ -15,3 +15,4 @@ services:
       - ./packages/flixlix-cards/energy-flow-card-plus/dist:/config/www/energy-flow-card-plus:ro
       - ./packages/flixlix-cards/energy-breakdown-card/dist:/config/www/energy-breakdown-card:ro
       - ./packages/flixlix-cards/sortable-list-card/dist:/config/www/sortable-list-card:ro
+      - ./packages/flixlix-cards/energy-period-selector-plus/dist:/config/www/energy-period-selector-plus:ro

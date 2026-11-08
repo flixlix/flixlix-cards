@@ -51,7 +51,9 @@ export type StatisticsFixture =
 export type FakeEnergyCollection = {
   start: Date;
   end: Date;
+  compare: string;
   setPeriod: (start: Date, end: Date) => void;
+  setCompare: (compare: string) => void;
   refresh: () => void;
   subscribe: (callback: (data: unknown) => void) => () => void;
 };
@@ -75,9 +77,13 @@ export const energyCollection = (
   return {
     start,
     end,
+    compare: "",
     setPeriod(nextStart, nextEnd) {
       this.start = nextStart;
       this.end = nextEnd;
+    },
+    setCompare(compare) {
+      this.compare = compare;
     },
     refresh() {
       subscribers.forEach((callback) => callback(data));
@@ -98,6 +104,14 @@ const translations: Record<string, string> = {
     "Go to the energy dashboard",
   "ui.panel.lovelace.cards.energy.loading": "Loading…",
   "ui.panel.lovelace.cards.energy.no_data": "There is no data to show.",
+  "ui.panel.lovelace.components.energy_period_selector.now": "Now",
+  "ui.panel.lovelace.components.energy_period_selector.previous": "Previous",
+  "ui.panel.lovelace.components.energy_period_selector.next": "Next",
+  "ui.panel.lovelace.components.energy_period_selector.compare": "Compare data",
+  "ui.components.calendar.event.rrule.day": "day",
+  "ui.components.calendar.event.rrule.week": "week",
+  "ui.components.calendar.event.rrule.month": "month",
+  "ui.components.calendar.event.rrule.year": "year",
 };
 
 const entities = (states: StateFixtures): HomeAssistant["states"] =>
