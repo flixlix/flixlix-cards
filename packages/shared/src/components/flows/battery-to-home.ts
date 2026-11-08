@@ -1,26 +1,18 @@
-import { type FlowCardPlusConfig } from "@flixlix-cards/shared/types";
-import { checkShouldShowDots } from "@flixlix-cards/shared/utils/check-should-show-dots";
-import {
-  checkHasBottomIndividual,
-  checkHasRightIndividual,
-} from "@flixlix-cards/shared/utils/compute-individual-position";
-import { showLine } from "@flixlix-cards/shared/utils/show-line";
-import { styleLine } from "@flixlix-cards/shared/utils/style-line";
 import { html, nothing, svg } from "lit";
 import { classMap } from "lit/directives/class-map.js";
 import { type Flows } from "./index";
 
 const batteryToHomeDot = (
-  config: FlowCardPlusConfig,
+  animate: boolean,
   battery: FlowBatteryToHomeFlows["battery"],
-  newDur: FlowBatteryToHomeFlows["newDur"]
+  flows: Flows["flows"]
 ) => {
-  if (!checkShouldShowDots(config) || !battery.state.toHome) {
+  if (!animate || !battery.state.toHome) {
     return nothing;
   }
 
   return svg`<circle r="1" class="battery-home" vector-effect="non-scaling-stroke">
-      <animateMotion dur="${newDur.batteryToHome}s" repeatCount="indefinite" calcMode="paced">
+      <animateMotion dur="${flows.batteryToHome.durationSeconds}s" repeatCount="indefinite" calcMode="paced">
         <mpath xlink:href="#battery-home" />
       </animateMotion>
     </circle>`;
@@ -28,23 +20,18 @@ const batteryToHomeDot = (
 
 type FlowBatteryToHomeFlows = Pick<Flows, Exclude<keyof Flows, "solar">>;
 
-export const flowBatteryToHome = (
-  config: FlowCardPlusConfig,
-  { battery, grid, individual, newDur }: FlowBatteryToHomeFlows
-) => {
-  const shouldShow =
-    battery.has && showLine(config, battery.state.toHome ?? 0) && !config.entities.home?.hide;
-  if (!shouldShow) {
+export const flowBatteryToHome = ({
+  battery,
+  grid,
+  lineClasses,
+  animate,
+  flows,
+}: FlowBatteryToHomeFlows) => {
+  if (!flows.batteryToHome.visible) {
     return nothing;
   }
 
-  return html`<div
-    class="lines ${classMap({
-      high: battery.has || checkHasBottomIndividual(individual),
-      "individual1-individual2": !battery.has && individual.every((i) => i?.has),
-      "multi-individual": checkHasRightIndividual(individual),
-    })}"
-  >
+  return html`<div class="lines ${classMap(lineClasses)}">
     <svg
       viewBox="0 0 100 100"
       xmlns="http://www.w3.org/2000/svg"
@@ -53,11 +40,11 @@ export const flowBatteryToHome = (
     >
       <path
         id="battery-home"
-        class="battery-home ${styleLine(battery.state.toHome ?? 0, config)}"
+        class="battery-home ${flows.batteryToHome.lineClass}"
         d="M55,100 v-${grid.has ? 15 : 17} c0,-30 10,-30 30,-30 h20"
         vector-effect="non-scaling-stroke"
       ></path>
-      ${batteryToHomeDot(config, battery, newDur)}
+      ${batteryToHomeDot(animate, battery, flows)}
     </svg>
   </div>`;
 };

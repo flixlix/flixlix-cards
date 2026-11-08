@@ -3,7 +3,7 @@ import { type HomeAssistant } from "custom-card-helpers";
 import { afterEach, describe, expect, test, vi } from "vite-plus/test";
 import { EnergyBreakdownCard } from "./energy-breakdown-card";
 import { type EnergyBreakdownCardConfig } from "./types";
-import { describeDonutSegment, resolveSegments } from "./utils";
+import { describeDonutSegment, energyInUnit, resolveSegments } from "./utils";
 
 type EntityState = HomeAssistant["states"][string];
 
@@ -122,6 +122,13 @@ describe("energy-breakdown-card", () => {
     });
     expect(segments).toHaveLength(2);
     expect(segments.find((s) => s.name === "Other")).toBeUndefined();
+  });
+
+  test("energyInUnit converts period statistics (Wh) into the entity's unit", () => {
+    expect(energyInUnit(6000, "kWh")).toBe(6);
+    expect(energyInUnit(2_500_000, "MWh")).toBe(2.5);
+    expect(energyInUnit(6000, "Wh")).toBe(6000);
+    expect(energyInUnit(6000, undefined)).toBe(6000);
   });
 
   test("getCardSize returns sensible default", () => {

@@ -1,4 +1,4 @@
-import { describe, expect, test, vi } from "vite-plus/test";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vite-plus/test";
 import { type HomeAssistant, NumberFormat, TimeFormat } from "custom-card-helpers";
 import { type Connection } from "home-assistant-js-websocket";
 import { type PowerFlowCardPlusConfig } from "@flixlix-cards/shared/types";
@@ -39,48 +39,18 @@ function makeHass(states: Record<string, string> = {}): HomeAssistant {
   return hass as HomeAssistant;
 }
 
-function makeCard(config: PowerFlowCardPlusConfig, hass: ReturnType<typeof makeHass>) {
+const thinSpace = "\u2009";
+
+async function renderCard(config: PowerFlowCardPlusConfig, hass: HomeAssistant) {
   const card = new PowerFlowCardPlus();
   card.setConfig(config);
   card.hass = hass;
-  card.connectedCallback();
-  return card as unknown as {
-    render: () => unknown;
-    _computeRenderData: () => ReturnType<typeof computeRenderDataShape>;
-  };
+  document.body.append(card);
+  await card.updateComplete;
+  const root = card.shadowRoot!;
+  const text = (selector: string) => root.querySelector(selector)?.textContent?.trim();
+  return { card, root, text };
 }
-
-// Used only as a type reference — actual return shape is inferred from _computeRenderData
-declare function computeRenderDataShape(): {
-  grid: {
-    has: boolean;
-    state: {
-      fromGrid: number | null;
-      toGrid: number | null;
-      toBattery: number | null;
-      toHome: number | null;
-    };
-  };
-  solar: {
-    has: boolean;
-    state: {
-      total: number | null;
-      toHome: number | null;
-      toGrid: number | null;
-      toBattery: number | null;
-    };
-  };
-  battery: {
-    has: boolean | string;
-    state: {
-      fromBattery: number | null;
-      toBattery: number | null;
-      toGrid: number | null;
-      toHome: number | null;
-    };
-  };
-  individualObjs: Array<{ has: boolean; state: number | null }>;
-};
 
 describe("render", () => {
   test("renders correctly", () => {
@@ -100,106 +70,71 @@ describe("render", () => {
   });
 });
 
-describe("_computeRenderData", () => {
-  test("case 1: grid-only consumption — fromGrid is the entity value and toHome follows", () => {
-    const config = {
-      type: "custom:power-flow-card-plus",
-      entities: {
-        grid: { entity: "sensor.grid" },
-      },
-    } as PowerFlowCardPlusConfig;
-    const hass = makeHass({ "sensor.grid": "500" });
-    const card = makeCard(config, hass);
-    const data = card._computeRenderData();
+describe("rendered values", () => {
+  test("grid-only consumption is shown on the grid and the home", async () => {
+    const { text, root } = await renderCard(
+      {
+        type: "custom:power-flow-card-plus",
+        entities: { grid: { entity: "sensor.grid" } },
+      } as PowerFlowCardPlusConfig,
+      makeHass({ "sensor.grid": "500" })
+    );
 
-    expect(data.grid.state.fromGrid).toBe(500);
-    // toHome = max(fromGrid - toBattery, 0) = max(500 - 0, 0) = 500
-    expect(data.grid.state.toHome).toBe(500);
-    // No solar entity configured
-    expect(data.solar.has).toBe(false);
-    // No battery entity configured → battery.has is falsy
-    expect(data.battery.has).toBeFalsy();
+    expect(text(".grid .consumption")).toBe(`500${thinSpace}W`);
+    expect(text("#home-circle")).toContain(`500${thinSpace}W`);
+    expect(root.querySelector(".circle-container.solar")).toBeNull();
+    expect(root.querySelector(".circle-container.battery")).toBeNull();
   });
 
-  test("case 2: solar covers home and grid is zero — dependency rule zeroes grid toHome", () => {
-    const config = {
-      type: "custom:power-flow-card-plus",
-      entities: {
-        grid: { entity: "sensor.grid" },
-        solar: { entity: "sensor.solar" },
-      },
-    } as PowerFlowCardPlusConfig;
-    // grid produces nothing (0W), solar produces 1000W
-    const hass = makeHass({ "sensor.grid": "0", "sensor.solar": "1000" });
-    const card = makeCard(config, hass);
-    const data = card._computeRenderData();
+  test("solar covering the home leaves the grid line without dots", async () => {
+    const { text, root } = await renderCard(
+      {
+        type: "custom:power-flow-card-plus",
+        entities: { grid: { entity: "sensor.grid" }, solar: { entity: "sensor.solar" } },
+      } as PowerFlowCardPlusConfig,
+      makeHass({ "sensor.grid": "0", "sensor.solar": "1000" })
+    );
 
-    expect(data.solar.state.total).toBe(1000);
-    // fromGrid === 0 → the dependency rule at lines 791-794 forces toHome and toBattery to 0
-    expect(data.grid.state.fromGrid).toBe(0);
-    expect(data.grid.state.toHome).toBe(0);
-    expect(data.grid.state.toBattery).toBe(0);
-    // Solar covers all home consumption
-    expect(data.solar.state.toHome).toBe(1000);
+    expect(text(".grid .consumption")).toBe(`0${thinSpace}W`);
+    expect(text("#home-circle")).toContain(`1${thinSpace}kW`);
+    expect(root.querySelector("#grid-home-flow circle")).toBeNull();
+    expect(root.querySelector("#solar-home-flow circle")).not.toBeNull();
   });
 
-  test("case 3: tolerance zeroing — grid below tolerance is treated as 0", () => {
-    const config = {
-      type: "custom:power-flow-card-plus",
-      entities: {
-        grid: { entity: "sensor.grid", display_zero_tolerance: 5 },
-      },
-    } as PowerFlowCardPlusConfig;
-    // 3W is below the 5W tolerance
-    const hass = makeHass({ "sensor.grid": "3" });
-    const card = makeCard(config, hass);
-    const data = card._computeRenderData();
+  test("grid below its zero tolerance shows as 0", async () => {
+    const { text } = await renderCard(
+      {
+        type: "custom:power-flow-card-plus",
+        entities: { grid: { entity: "sensor.grid", display_zero_tolerance: 5 } },
+      } as PowerFlowCardPlusConfig,
+      makeHass({ "sensor.grid": "3" })
+    );
 
-    expect(data.grid.state.fromGrid).toBe(0);
-    // Dependency rule: fromGrid === 0 → toHome and toBattery also zeroed
-    expect(data.grid.state.toHome).toBe(0);
-    expect(data.grid.state.toBattery).toBe(0);
+    expect(text(".grid .consumption")).toBe(`0${thinSpace}W`);
   });
 
-  test("case 4: negative individual entity stays visible (Plan 001 regression guard)", () => {
-    const config = {
-      type: "custom:power-flow-card-plus",
-      entities: {
-        grid: { entity: "sensor.grid" },
-        individual: [{ entity: "sensor.device" }],
-      },
-    } as PowerFlowCardPlusConfig;
-    // Individual state is negative; getIndividualState applies Math.abs so state === 50
-    const hass = makeHass({ "sensor.grid": "100", "sensor.device": "-50" });
-    const card = makeCard(config, hass);
-    const data = card._computeRenderData();
+  test("an individual device with a negative reading stays visible", async () => {
+    const { text } = await renderCard(
+      {
+        type: "custom:power-flow-card-plus",
+        entities: { grid: { entity: "sensor.grid" }, individual: [{ entity: "sensor.device" }] },
+      } as PowerFlowCardPlusConfig,
+      makeHass({ "sensor.grid": "100", "sensor.device": "-50" })
+    );
 
-    expect(data.individualObjs).toHaveLength(1);
-    const individual = data.individualObjs[0];
-    // has === true: the device is visible even with a negative raw state
-    expect(individual?.has).toBe(true);
-    // getIndividualState returns Math.abs of the raw value
-    expect(individual?.state).toBe(50);
+    expect(text(".individual-left-top")).toBe(`50${thinSpace}W`);
   });
 
-  test("case 5: unavailable entity — no NaN in grid state fields", () => {
-    const config = {
-      type: "custom:power-flow-card-plus",
-      entities: {
-        grid: { entity: "sensor.grid" },
-        solar: { entity: "sensor.solar" },
-      },
-    } as PowerFlowCardPlusConfig;
-    // "unavailable" is not a number; getEntityState returns null → getEntityStateWatts returns 0
-    const hass = makeHass({ "sensor.grid": "unavailable", "sensor.solar": "unavailable" });
-    const card = makeCard(config, hass);
-    const data = card._computeRenderData();
+  test("unavailable entities render without NaN", async () => {
+    const { root } = await renderCard(
+      {
+        type: "custom:power-flow-card-plus",
+        entities: { grid: { entity: "sensor.grid" }, solar: { entity: "sensor.solar" } },
+      } as PowerFlowCardPlusConfig,
+      makeHass({ "sensor.grid": "unavailable", "sensor.solar": "unavailable" })
+    );
 
-    expect(Number.isNaN(data.grid.state.fromGrid)).toBe(false);
-    expect(Number.isNaN(data.grid.state.toGrid)).toBe(false);
-    expect(Number.isNaN(data.grid.state.toBattery)).toBe(false);
-    expect(Number.isNaN(data.grid.state.toHome)).toBe(false);
-    expect(Number.isNaN(data.solar.state.total)).toBe(false);
+    expect(root.innerHTML).not.toContain("NaN");
   });
 });
 
@@ -256,5 +191,153 @@ describe("secondary info template subscriptions", () => {
     await vi.waitFor(() => {
       expect(unsubscribed).toEqual(subscribed);
     });
+  });
+});
+
+async function mountSolar(solar: Record<string, unknown>, options: Record<string, unknown> = {}) {
+  const card = new PowerFlowCardPlus();
+  card.setConfig({
+    type: "custom:power-flow-card-plus",
+    entities: { solar: { entity: "sensor.solar", ...solar } },
+    clickable_entities: true,
+    ...options,
+  } as PowerFlowCardPlusConfig);
+  card.hass = makeHass({ "sensor.solar": "500" });
+  const dispatched: Array<{ type: string; detail: unknown }> = [];
+  for (const type of ["hass-action", "hass-more-info"]) {
+    card.addEventListener(type, (ev) => {
+      dispatched.push({ type, detail: ev instanceof CustomEvent ? ev.detail : undefined });
+    });
+  }
+  document.body.append(card);
+  const circle = await vi.waitFor(() => {
+    const element = card.shadowRoot?.querySelector<HTMLElement>(".circle-container.solar .circle");
+    if (!element) {
+      throw new Error("solar circle not rendered");
+    }
+    return element;
+  });
+  const actions = () =>
+    dispatched.map(({ type, detail }) =>
+      type === "hass-action" && typeof detail === "object" && detail && "action" in detail
+        ? detail.action
+        : type
+    );
+  return { circle, dispatched, actions };
+}
+
+const tap = (node: HTMLElement) => {
+  node.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+  node.dispatchEvent(new PointerEvent("pointerup", { bubbles: true }));
+  node.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+};
+
+const allActions = {
+  tap_action: { action: "toggle" },
+  hold_action: { action: "more-info" },
+  double_tap_action: { action: "navigate", navigation_path: "/energy" },
+};
+
+describe("entity actions", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    document.body.replaceChildren();
+  });
+
+  test("a tap without a double-tap action fires tap_action immediately", async () => {
+    const { circle, dispatched } = await mountSolar({ tap_action: { action: "toggle" } });
+
+    tap(circle);
+
+    expect(dispatched).toEqual([
+      {
+        type: "hass-action",
+        detail: {
+          action: "tap",
+          config: { entity: "sensor.solar", tap_action: { action: "toggle" } },
+        },
+      },
+    ]);
+  });
+
+  test("an entity without actions opens more-info on tap", async () => {
+    const { circle, dispatched } = await mountSolar({});
+
+    tap(circle);
+
+    expect(dispatched).toEqual([{ type: "hass-more-info", detail: { entityId: "sensor.solar" } }]);
+  });
+
+  test("a single tap waits out the double-tap window before firing tap_action", async () => {
+    const { circle, actions } = await mountSolar(allActions);
+
+    tap(circle);
+    vi.advanceTimersByTime(249);
+    expect(actions()).toEqual([]);
+
+    vi.advanceTimersByTime(1);
+    expect(actions()).toEqual(["tap"]);
+  });
+
+  test("a double tap fires only double_tap_action", async () => {
+    const { circle, actions } = await mountSolar(allActions);
+
+    tap(circle);
+    tap(circle);
+    circle.dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
+    vi.advanceTimersByTime(1000);
+
+    expect(actions()).toEqual(["double_tap"]);
+  });
+
+  test("a double tap without double_tap_action fires tap_action for each tap", async () => {
+    const { circle, actions } = await mountSolar({ tap_action: { action: "toggle" } });
+
+    tap(circle);
+    tap(circle);
+    circle.dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
+    vi.advanceTimersByTime(1000);
+
+    expect(actions()).toEqual(["tap", "tap"]);
+  });
+
+  test("holding for 500 ms fires hold_action and swallows the release tap", async () => {
+    const { circle, actions } = await mountSolar(allActions);
+
+    circle.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+    vi.advanceTimersByTime(499);
+    expect(actions()).toEqual([]);
+
+    vi.advanceTimersByTime(1);
+    circle.dispatchEvent(new PointerEvent("pointerup", { bubbles: true }));
+    circle.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    vi.advanceTimersByTime(1000);
+    expect(actions()).toEqual(["hold"]);
+
+    tap(circle);
+    vi.advanceTimersByTime(250);
+    expect(actions()).toEqual(["hold", "tap"]);
+  });
+
+  test("releasing or cancelling before 500 ms is not a hold", async () => {
+    const { circle, actions } = await mountSolar(allActions);
+
+    circle.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+    vi.advanceTimersByTime(400);
+    circle.dispatchEvent(new PointerEvent("pointercancel", { bubbles: true }));
+    vi.advanceTimersByTime(1000);
+
+    expect(actions()).toEqual([]);
+  });
+
+  test("with clickable_entities off the node takes no pointer input", async () => {
+    const { circle } = await mountSolar(allActions, { clickable_entities: false });
+
+    expect(circle.classList).toContain("pointer-events-none");
+    expect(circle.querySelector("ha-ripple")).toHaveProperty("disabled", true);
   });
 });

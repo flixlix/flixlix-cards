@@ -13,7 +13,12 @@ export default defineConfig({
       perf: "error",
     },
     env: { builtin: true, browser: true },
-    ignorePatterns: ["**/dist/**", "**/node_modules/**", "apps/web/src/routeTree.gen.ts"],
+    ignorePatterns: [
+      ".claude/**",
+      "**/dist/**",
+      "**/node_modules/**",
+      "apps/web/src/routeTree.gen.ts",
+    ],
     options: {
       typeAware: true,
       typeCheck: true,
@@ -57,9 +62,13 @@ export default defineConfig({
       "unicorn/filename-case": ["error", { case: "kebabCase" }],
       "no-underscore-dangle": "off",
       // Repo-specific guards for bugs that already shipped once
+      complexity: ["error", { max: 20 }],
+      "flixlix/cognitive-complexity": ["error", { max: 15 }],
       "flixlix/no-index-fallback": "error",
       "flixlix/no-identity-arithmetic": "error",
       "flixlix/no-reactive-mutation": "error",
+      "flixlix/no-card-type-sniffing": "error",
+      "flixlix/no-camelcase-event-binding": "error",
       "vite-plus/prefer-vite-plus-imports": "error",
     },
     overrides: [
@@ -74,6 +83,9 @@ export default defineConfig({
           "vitest/require-mock-type-parameters": "off",
           "vitest/no-disabled-tests": "error",
           "vitest/no-focused-tests": "error",
+          // Vitest's expect takes a failure message; scenario tables assert through expectFlowCard.
+          "vitest/valid-expect": ["error", { maxArgs: 2 }],
+          "vitest/expect-expect": ["error", { assertFunctionNames: ["expect", "expectFlowCard"] }],
         },
       },
       {
@@ -92,6 +104,30 @@ export default defineConfig({
         },
       },
       {
+        // Cards render; calculations belong in shared/card-state.
+        files: ["packages/flixlix-cards/*-flow-card-plus/src/**"],
+        excludeFiles: ["**/*.test.ts"],
+        rules: {
+          "max-lines": ["error", { max: 450, skipBlankLines: true, skipComments: true }],
+          "max-lines-per-function": [
+            "error",
+            { max: 120, skipBlankLines: true, skipComments: true },
+          ],
+        },
+      },
+      {
+        files: ["packages/shared/src/card-state/**"],
+        excludeFiles: ["**/*.test.ts"],
+        rules: {
+          "flixlix/no-mutation": "error",
+          "no-param-reassign": ["error", { props: true }],
+          "max-lines-per-function": [
+            "error",
+            { max: 80, skipBlankLines: true, skipComments: true },
+          ],
+        },
+      },
+      {
         files: ["packages/shared/src/utils/logging.ts"],
         rules: { "no-console": "off" },
       },
@@ -106,10 +142,10 @@ export default defineConfig({
     arrowParens: "always",
     sortPackageJson: false,
     ignorePatterns: [
+      ".claude",
       "**/dist",
       "**/node_modules",
       ".pnpm-store",
-      ".turbo",
       "*.log",
       ".output",
       "routeTree.gen.ts",

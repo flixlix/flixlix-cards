@@ -1,4 +1,4 @@
-import { describe, expect, test, vi } from "vite-plus/test";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vite-plus/test";
 import { type HomeAssistant, NumberFormat, TimeFormat } from "custom-card-helpers";
 import { type Connection } from "home-assistant-js-websocket";
 import { type EnergyFlowCardPlusConfig } from "@flixlix-cards/shared/types";
@@ -40,44 +40,20 @@ function makeHass(states: Record<string, string> = {}): HomeAssistant {
   return hass as HomeAssistant;
 }
 
-function makeCard(config: EnergyFlowCardPlusConfig, hass: ReturnType<typeof makeHass>) {
+const thinSpace = "\u2009";
+
+/** Renders the card and waits for its energy period data to load. */
+async function renderCard(config: EnergyFlowCardPlusConfig, hass: HomeAssistant) {
   const card = new EnergyFlowCardPlus();
   card.hass = hass;
   card.setConfig(config);
-  card.connectedCallback();
-  return card as unknown as {
-    render: () => unknown;
-    _computeRenderData: () => {
-      grid: {
-        has: boolean;
-        state: {
-          fromGrid: number | null;
-          toGrid: number | null;
-          toBattery: number | null;
-          toHome: number | null;
-        };
-      };
-      solar: {
-        has: boolean;
-        state: {
-          total: number | null;
-          toHome: number | null;
-          toGrid: number | null;
-          toBattery: number | null;
-        };
-      };
-      battery: {
-        has: boolean | string;
-        state: {
-          fromBattery: number | null;
-          toBattery: number | null;
-          toGrid: number | null;
-          toHome: number | null;
-        };
-      };
-      individualObjs: Array<{ has: boolean; state: number | null }>;
-    };
-  };
+  document.body.append(card);
+  await vi.waitFor(() => {
+    expect(card.shadowRoot?.querySelector("#energy-flow-card-plus")).not.toBeNull();
+  });
+  const root = card.shadowRoot!;
+  const text = (selector: string) => root.querySelector(selector)?.textContent?.trim();
+  return { root, text };
 }
 
 describe("render", () => {
@@ -130,75 +106,49 @@ const readingHassStates = (config: EnergyFlowCardPlusConfig): EnergyFlowCardPlus
   energy_date_selection: false,
 });
 
-describe("_computeRenderData (energy card)", () => {
-  test("case 1: basic grid + solar split with known totals", () => {
-    // energy_date_selection: false → reads directly from hass.states (no growthMap needed)
-    const config = readingHassStates({
-      type: "custom:energy-flow-card-plus",
-      entities: {
-        grid: { entity: "sensor.grid_energy" },
-        solar: { entity: "sensor.solar_energy" },
-      },
-    } as EnergyFlowCardPlusConfig);
-    const hass = makeHass({
-      "sensor.grid_energy": "300",
-      "sensor.solar_energy": "700",
-    });
-    const card = makeCard(config, hass);
-    const data = card._computeRenderData();
+describe("rendered values", () => {
+  test("grid and solar energy add up on the home", async () => {
+    const { text } = await renderCard(
+      readingHassStates({
+        type: "custom:energy-flow-card-plus",
+        entities: {
+          grid: { entity: "sensor.grid_energy" },
+          solar: { entity: "sensor.solar_energy" },
+        },
+      } as EnergyFlowCardPlusConfig),
+      makeHass({ "sensor.grid_energy": "300", "sensor.solar_energy": "700" })
+    );
 
-    // Grid string entity → fromGrid uses getEnergyEntityStateLocal(entity), toGrid = 0
-    expect(data.grid.state.fromGrid).toBe(300);
-    expect(data.grid.state.toGrid).toBe(0);
-    // Solar total
-    expect(data.solar.state.total).toBe(700);
-    // Solar covers home: toHome = total - toGrid - toBattery = 700 - 0 - 0 = 700
-    expect(data.solar.state.toHome).toBe(700);
-    // Grid toHome = max(fromGrid - toBattery, 0) = max(300 - 0, 0) = 300
-    expect(data.grid.state.toHome).toBe(300);
+    expect(text(".grid .consumption")).toBe(`300${thinSpace}Wh`);
+    expect(text(".solar .solar")).toBe(`700${thinSpace}Wh`);
+    expect(text("#home-circle")).toContain(`1${thinSpace}kWh`);
   });
 
-  test("case 2: tolerance zeroing via adjustZeroTolerance — grid below tolerance is zeroed", () => {
-    const config = readingHassStates({
-      type: "custom:energy-flow-card-plus",
-      entities: {
-        grid: { entity: "sensor.grid_energy", display_zero_tolerance: 10 },
-      },
-    } as EnergyFlowCardPlusConfig);
-    // 7Wh is below the 10Wh tolerance
-    const hass = makeHass({ "sensor.grid_energy": "7" });
-    const card = makeCard(config, hass);
-    const data = card._computeRenderData();
+  test("grid below its zero tolerance shows as 0", async () => {
+    const { text } = await renderCard(
+      readingHassStates({
+        type: "custom:energy-flow-card-plus",
+        entities: { grid: { entity: "sensor.grid_energy", display_zero_tolerance: 10 } },
+      } as EnergyFlowCardPlusConfig),
+      makeHass({ "sensor.grid_energy": "7" })
+    );
 
-    expect(data.grid.state.fromGrid).toBe(0);
-    // Dependency rule: fromGrid === 0 → toHome and toBattery also 0
-    expect(data.grid.state.toHome).toBe(0);
-    expect(data.grid.state.toBattery).toBe(0);
+    expect(text(".grid .consumption")).toBe(`0${thinSpace}Wh`);
   });
 
-  test("case 3: no-NaN guarantee — unavailable entity produces only numeric output", () => {
-    const config = readingHassStates({
-      type: "custom:energy-flow-card-plus",
-      entities: {
-        grid: { entity: "sensor.grid_energy" },
-        solar: { entity: "sensor.solar_energy" },
-      },
-    } as EnergyFlowCardPlusConfig);
-    // Neither entity has a numeric state; growthMap not involved (energy_date_selection: false)
-    // getEntityState returns null → getEntityStateWh returns 0
-    const hass = makeHass({
-      "sensor.grid_energy": "unavailable",
-      "sensor.solar_energy": "unavailable",
-    });
-    const card = makeCard(config, hass);
-    const data = card._computeRenderData();
+  test("unavailable entities render without NaN", async () => {
+    const { root } = await renderCard(
+      readingHassStates({
+        type: "custom:energy-flow-card-plus",
+        entities: {
+          grid: { entity: "sensor.grid_energy" },
+          solar: { entity: "sensor.solar_energy" },
+        },
+      } as EnergyFlowCardPlusConfig),
+      makeHass({ "sensor.grid_energy": "unavailable", "sensor.solar_energy": "unavailable" })
+    );
 
-    expect(Number.isNaN(data.grid.state.fromGrid)).toBe(false);
-    expect(Number.isNaN(data.grid.state.toGrid)).toBe(false);
-    expect(Number.isNaN(data.grid.state.toBattery)).toBe(false);
-    expect(Number.isNaN(data.grid.state.toHome)).toBe(false);
-    expect(Number.isNaN(data.solar.state.total)).toBe(false);
-    expect(Number.isNaN(data.solar.state.toHome)).toBe(false);
+    expect(root.innerHTML).not.toContain("NaN");
   });
 });
 
@@ -256,5 +206,153 @@ describe("secondary info template subscriptions", () => {
     await vi.waitFor(() => {
       expect(unsubscribed).toEqual(subscribed);
     });
+  });
+});
+
+async function mountSolar(solar: Record<string, unknown>, options: Record<string, unknown> = {}) {
+  const card = new EnergyFlowCardPlus();
+  card.setConfig({
+    type: "custom:energy-flow-card-plus",
+    entities: { solar: { entity: "sensor.solar", ...solar } },
+    clickable_entities: true,
+    ...options,
+  } as EnergyFlowCardPlusConfig);
+  card.hass = makeHass({ "sensor.solar": "500" });
+  const dispatched: Array<{ type: string; detail: unknown }> = [];
+  for (const type of ["hass-action", "hass-more-info"]) {
+    card.addEventListener(type, (ev) => {
+      dispatched.push({ type, detail: ev instanceof CustomEvent ? ev.detail : undefined });
+    });
+  }
+  document.body.append(card);
+  const circle = await vi.waitFor(() => {
+    const element = card.shadowRoot?.querySelector<HTMLElement>(".circle-container.solar .circle");
+    if (!element) {
+      throw new Error("solar circle not rendered");
+    }
+    return element;
+  });
+  const actions = () =>
+    dispatched.map(({ type, detail }) =>
+      type === "hass-action" && typeof detail === "object" && detail && "action" in detail
+        ? detail.action
+        : type
+    );
+  return { circle, dispatched, actions };
+}
+
+const tap = (node: HTMLElement) => {
+  node.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+  node.dispatchEvent(new PointerEvent("pointerup", { bubbles: true }));
+  node.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+};
+
+const allActions = {
+  tap_action: { action: "toggle" },
+  hold_action: { action: "more-info" },
+  double_tap_action: { action: "navigate", navigation_path: "/energy" },
+};
+
+describe("entity actions", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    document.body.replaceChildren();
+  });
+
+  test("a tap without a double-tap action fires tap_action immediately", async () => {
+    const { circle, dispatched } = await mountSolar({ tap_action: { action: "toggle" } });
+
+    tap(circle);
+
+    expect(dispatched).toEqual([
+      {
+        type: "hass-action",
+        detail: {
+          action: "tap",
+          config: { entity: "sensor.solar", tap_action: { action: "toggle" } },
+        },
+      },
+    ]);
+  });
+
+  test("an entity without actions opens more-info on tap", async () => {
+    const { circle, dispatched } = await mountSolar({});
+
+    tap(circle);
+
+    expect(dispatched).toEqual([{ type: "hass-more-info", detail: { entityId: "sensor.solar" } }]);
+  });
+
+  test("a single tap waits out the double-tap window before firing tap_action", async () => {
+    const { circle, actions } = await mountSolar(allActions);
+
+    tap(circle);
+    vi.advanceTimersByTime(249);
+    expect(actions()).toEqual([]);
+
+    vi.advanceTimersByTime(1);
+    expect(actions()).toEqual(["tap"]);
+  });
+
+  test("a double tap fires only double_tap_action", async () => {
+    const { circle, actions } = await mountSolar(allActions);
+
+    tap(circle);
+    tap(circle);
+    circle.dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
+    vi.advanceTimersByTime(1000);
+
+    expect(actions()).toEqual(["double_tap"]);
+  });
+
+  test("a double tap without double_tap_action fires tap_action for each tap", async () => {
+    const { circle, actions } = await mountSolar({ tap_action: { action: "toggle" } });
+
+    tap(circle);
+    tap(circle);
+    circle.dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
+    vi.advanceTimersByTime(1000);
+
+    expect(actions()).toEqual(["tap", "tap"]);
+  });
+
+  test("holding for 500 ms fires hold_action and swallows the release tap", async () => {
+    const { circle, actions } = await mountSolar(allActions);
+
+    circle.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+    vi.advanceTimersByTime(499);
+    expect(actions()).toEqual([]);
+
+    vi.advanceTimersByTime(1);
+    circle.dispatchEvent(new PointerEvent("pointerup", { bubbles: true }));
+    circle.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    vi.advanceTimersByTime(1000);
+    expect(actions()).toEqual(["hold"]);
+
+    tap(circle);
+    vi.advanceTimersByTime(250);
+    expect(actions()).toEqual(["hold", "tap"]);
+  });
+
+  test("releasing or cancelling before 500 ms is not a hold", async () => {
+    const { circle, actions } = await mountSolar(allActions);
+
+    circle.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+    vi.advanceTimersByTime(400);
+    circle.dispatchEvent(new PointerEvent("pointercancel", { bubbles: true }));
+    vi.advanceTimersByTime(1000);
+
+    expect(actions()).toEqual([]);
+  });
+
+  test("with clickable_entities off the node takes no pointer input", async () => {
+    const { circle } = await mountSolar(allActions, { clickable_entities: false });
+
+    expect(circle.classList).toContain("pointer-events-none");
+    expect(circle.querySelector("ha-ripple")).toHaveProperty("disabled", true);
   });
 });

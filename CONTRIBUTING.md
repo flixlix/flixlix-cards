@@ -9,7 +9,7 @@ Thanks for your interest in contributing to the `flixlix-cards` monorepo! This r
 
 - **Node.js** (LTS recommended): [Download](https://nodejs.org/en/download)
 - **pnpm**: [Install Instructions](https://pnpm.io/installation)
-- **Docker** (only required for local Home Assistant development via `pnpm start:hass`): [Get Started](https://www.docker.com/get-started/)
+- **Docker** (for the local Home Assistant via `pnpm hass:up` and for the visual tests via `pnpm test:visual`): [Get Started](https://www.docker.com/get-started/)
 
 ## Monorepo Structure
 
@@ -38,41 +38,19 @@ Each package contains its source code, changelogs, and relevant scripts.
    cd packages/flixlix-cards/power-flow-card-plus
    ```
 
-3. **(Optional) Start Home Assistant locally** for testing (from the repo root):
+3. **(Optional) Start Home Assistant locally** (from the repo root, needs Docker):
 
    ```bash
-   pnpm start:hass
+   pnpm hass:up
    ```
 
-   You only need Docker for this step. Alternatively, use your own Home Assistant instance instead.
+   This builds the cards, starts Home Assistant at <http://localhost:8123> (user `dev`, password `dev`) with dummy entities and one dashboard per card already loading the built cards. See [`e2e/README.md`](e2e/README.md). Alternatively, use your own Home Assistant instance.
 
-4. **Build and serve the card you’re working on:**  
-   Most cards support a `watch` script for live rebuilding. Run it from the card's package folder:
+4. **Rebuild on change:** run `pnpm dev` in the card's package folder and reload the browser. With your own instance, add `http://<your-ip>:5001/<card-filename>.js` as a dashboard resource instead.
 
-   ```bash
-   pnpm dev
-   ```
+5. **Run the end-to-end tests** against that instance with `pnpm e2e`.
 
-5. **Add the built card to Home Assistant’s dashboard resources:**  
-   (Change the filename to match the card you’re developing.)
-
-   ```text
-   http://<your-ip>:5001/<card-filename>.js
-   ```
-
-   Example for Power Flow Card Plus:
-
-   ```text
-   http://<your-ip>:5001/power-flow-card-plus.js
-   ```
-
-6. **Open Home Assistant:**
-
-   ```text
-   http://localhost:8123
-   ```
-
-   Complete onboarding if needed, add the card to a dashboard, and test your changes.
+6. **Stop it** with `pnpm hass:down` (`pnpm hass:reset` wipes its state).
 
 7. **Make your code changes.** Follow [`CODING_STANDARDS.md`](CODING_STANDARDS.md), then run the checks below before committing.
 
@@ -84,10 +62,27 @@ The repo uses [Vite+](https://viteplus.dev) (`vp`): Oxfmt for formatting, Oxlint
 pnpm check      # format check + lint + type-aware checks
 pnpm format     # apply formatting
 pnpm typecheck  # tsc per package
-pnpm test       # Vitest per package
+pnpm test       # Vitest per package: node tests, then browser tests in Chromium
 ```
 
 CI runs the same commands; a pull request must pass all of them with zero lint errors.
+
+### Browser and visual tests
+
+Each card has `<card>.browser.test.ts` files next to its source that mount the card in a real Chromium (Vitest browser mode with Playwright) against a fake Home Assistant: `fakeHass`, `mountCard` and the shared `flowScenarios` table live in [`packages/shared/src/testing`](packages/shared/src/testing/). Install Chromium once:
+
+```bash
+pnpm --filter power-flow-card-plus exec playwright install chromium
+```
+
+`<card>.visual.browser.test.ts` files compare screenshots. Fonts render differently per OS, so they run only inside the pinned Playwright Docker image:
+
+```bash
+pnpm test:visual         # compare against the committed baselines
+pnpm test:visual:update  # rewrite the baselines after an intended visual change
+```
+
+Failed comparisons leave the actual and diff images in `packages/flixlix-cards/<card>/.vitest/attachments/`. When bumping `playwright` in `pnpm-workspace.yaml`, bump the image tag in `.github/workflows/test.yaml` and regenerate the baselines.
 
 ## Changesets
 

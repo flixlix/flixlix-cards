@@ -26,15 +26,15 @@
   },
   "homepage": "https://github.com/flixlix/energy-flow-card-plus#readme",
   "scripts": {
-    "build": "pnpm dlx rollup -c",
+    "build": "rollup -c",
     "release": "pnpm build && pnpm changeset tag",
     "clean": "rimraf dist node_modules",
     "start": "rollup -wc",
     "dev": "rollup -c --watch",
     "typecheck": "tsc --noEmit",
-    "test": "vp test run",
-    "test:watch": "vp test",
-    "start:hass": "docker run --rm -p8123:8123 -v ./.hass_dev:/config homeassistant/home-assistant:beta"
+    "test": "vp test run --coverage && vp test run --config vitest.browser.config.ts --project dom",
+    "test:visual": "vp test run --config vitest.browser.config.ts --project visual",
+    "test:watch": "vp test"
   },
   "dependencies": {
     "@flixlix-cards/shared": "workspace:*",
@@ -61,7 +61,9 @@
     "@rollup/plugin-typescript": "catalog:packages",
     "@types/node": "catalog:",
     "@types/sortablejs": "catalog:packages",
+    "@vitest/browser-playwright": "catalog:packages",
     "conventional-changelog-conventionalcommits": "catalog:packages",
+    "playwright": "catalog:packages",
     "rollup": "catalog:packages",
     "rollup-plugin-minify-html-literals": "catalog:packages",
     "rollup-plugin-serve": "catalog:packages",

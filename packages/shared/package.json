@@ -5,6 +5,7 @@
   "license": "MIT",
   "type": "module",
   "exports": {
+    "./card-state": "./src/card-state/index.ts",
     "./i18n": "./src/i18n/index.ts",
     "./style": "./src/style/index.ts",
     "./types": "./src/types/index.ts",
@@ -13,7 +14,8 @@
     "./states/*": "./src/states/*.ts",
     "./utils/*": "./src/utils/*.ts",
     "./const/*": "./src/const/*.ts",
-    "./ui-editor/*": "./src/ui-editor/*.ts"
+    "./ui-editor/*": "./src/ui-editor/*.ts",
+    "./testing/*": "./src/testing/*.ts"
   },
   "peerDependencies": {
     "custom-card-helpers": "catalog:packages",
@@ -21,9 +23,9 @@
     "lit": "catalog:packages"
   },
   "scripts": {
-    "clean": "rimraf dist node_modules .turbo",
+    "clean": "rimraf dist node_modules",
     "typecheck": "tsc --noEmit",
-    "test": "vp test run",
+    "test": "vp test run --coverage",
     "test:watch": "vp test"
   },
   "devDependencies": {
@@ -31,6 +33,9 @@
     "@flixlix-cards/typescript-config": "workspace:*",
     "@types/node": "catalog:",
     "@types/sortablejs": "catalog:packages",
+    "@vitest/browser-playwright": "catalog:packages",
+    "fast-check": "catalog:packages",
+    "playwright": "catalog:packages",
     "typescript": "catalog:",
     "vite-plus": "catalog:packages"
   },

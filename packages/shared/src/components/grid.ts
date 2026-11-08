@@ -1,27 +1,49 @@
 import {
   type CardMainContext,
   type ComboEntity,
-  type ConfigEntities,
   type FlowCardPlusConfig,
   type GridObject,
-  type TemplatesObj,
 } from "@flixlix-cards/shared/types";
-import { displayValue } from "@flixlix-cards/shared/utils/display-value";
 import { html, nothing } from "lit";
+import { type DisplayState, directionShown } from "./display-state";
 import { generalSecondarySpan } from "./spans/general-secondary-span";
 
 const gridEntityId = (grid: GridObject, direction: keyof ComboEntity) =>
   typeof grid.entity === "object" ? grid.entity[direction] : grid.entity;
 
+const returnShown = (grid: GridObject, displayState: DisplayState): boolean => {
+  const { fromGrid, toGrid } = grid.state;
+  if (toGrid === null || grid.powerOutage.isOutage) {
+    return false;
+  }
+  return directionShown(displayState, {
+    nonZero: toGrid > 0,
+    oneWay: (fromGrid === null || fromGrid === 0) && toGrid !== 0,
+  });
+};
+
+/** During an outage, consumption shows the generator's output if there is one. */
+const consumptionShown = (grid: GridObject, displayState: DisplayState): boolean => {
+  const { fromGrid, toGrid } = grid.state;
+  if (grid.powerOutage.isOutage) {
+    return !!grid.powerOutage.entityGenerator;
+  }
+  if (fromGrid === null) {
+    return false;
+  }
+  return directionShown(displayState, {
+    nonZero: fromGrid > 0,
+    oneWay: toGrid === null || toGrid === 0,
+  });
+};
+
 export const gridElement = (
   main: CardMainContext,
   config: FlowCardPlusConfig,
-  {
-    entities,
-    grid,
-    templatesObj,
-  }: { entities: ConfigEntities; grid: GridObject; templatesObj: TemplatesObj }
+  grid: GridObject
 ) => {
+  const { entities } = config;
+  const displayState = entities.grid?.display_state;
   const disableEntityClick = !config.clickable_entities;
   const circleTarget = () => {
     const outageTarget = grid.powerOutage.entityGenerator ?? entities.grid?.power_outage?.entity;
@@ -32,6 +54,8 @@ export const gridElement = (
   return html`<div class="circle-container grid">
     <div
       class="circle ${disableEntityClick ? "pointer-events-none" : ""}"
+      tabindex=${disableEntityClick ? nothing : 0}
+      role=${disableEntityClick ? nothing : "button"}
       @click=${(e: MouseEvent) => {
         const target = circleTarget();
         main.onEntityClick(e, grid, target);
@@ -50,7 +74,7 @@ export const gridElement = (
       @pointercancel=${(e: PointerEvent) => {
         main.onEntityPointerUp(e);
       }}
-      @keyDown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
+      @keydown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
         if (e.key === "Enter") {
           const target = circleTarget();
           main.openDetails(e, entities.grid, target, "tap");
@@ -58,17 +82,10 @@ export const gridElement = (
       }}
     >
       <ha-ripple .disabled=${disableEntityClick}></ha-ripple>
-      ${generalSecondarySpan(main.hass, main, config, templatesObj, grid, "grid")}
+      ${generalSecondarySpan(main, grid.secondary, "grid")}
       ${grid.icon !== " " ? html` <ha-icon id="grid-icon" .icon=${grid.icon}></ha-icon>` : nothing}
       ${
-        (entities.grid?.display_state === "two_way" ||
-          entities.grid?.display_state === undefined ||
-          (entities.grid?.display_state === "one_way_no_zero" && (grid.state.toGrid ?? 0) > 0) ||
-          (entities.grid?.display_state === "one_way" &&
-            (grid.state.fromGrid === null || grid.state.fromGrid === 0) &&
-            grid.state.toGrid !== 0)) &&
-        grid.state.toGrid !== null &&
-        !grid.powerOutage.isOutage
+        returnShown(grid, displayState)
           ? html`<span
               class="return"
               @click=${(e: MouseEvent) => {
@@ -89,7 +106,7 @@ export const gridElement = (
               @pointercancel=${(e: PointerEvent) => {
                 main.onEntityPointerUp(e);
               }}
-              @keyDown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
+              @keydown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
                 if (e.key === "Enter") {
                   const target = gridEntityId(grid, "production");
                   main.openDetails(e, entities.grid, target, "tap");
@@ -98,19 +115,12 @@ export const gridElement = (
             >
               <ha-icon class="small" .icon=${"mdi:arrow-left"}></ha-icon>
 
-              ${displayValue(main.hass, config, grid.state.toGrid, {})}
+              ${grid.display.toGrid}
             </span>`
           : nothing
       }
       ${
-        ((entities.grid?.display_state === "two_way" ||
-          entities.grid?.display_state === undefined ||
-          (entities.grid?.display_state === "one_way_no_zero" && (grid.state.fromGrid ?? 0) > 0) ||
-          (entities.grid?.display_state === "one_way" &&
-            (grid.state.toGrid === null || grid.state.toGrid === 0))) &&
-          grid.state.fromGrid !== null &&
-          !grid.powerOutage.isOutage) ||
-        (grid.powerOutage.isOutage && !!grid.powerOutage.entityGenerator)
+        consumptionShown(grid, displayState)
           ? html` <span
               class="consumption"
               @click=${(e: MouseEvent) => {
@@ -131,7 +141,7 @@ export const gridElement = (
               @pointercancel=${(e: PointerEvent) => {
                 main.onEntityPointerUp(e);
               }}
-              @keyDown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
+              @keydown=${(e: { key: string; stopPropagation: () => void; target: HTMLElement }) => {
                 if (e.key === "Enter") {
                   const target = gridEntityId(grid, "consumption");
                   main.openDetails(e, entities.grid, target, "tap");
@@ -139,7 +149,7 @@ export const gridElement = (
               }}
             >
               <ha-icon class="small" .icon=${"mdi:arrow-right"}></ha-icon>
-              ${displayValue(main.hass, config, grid.state.fromGrid, {})}
+              ${grid.display.fromGrid}
             </span>`
           : nothing
       }

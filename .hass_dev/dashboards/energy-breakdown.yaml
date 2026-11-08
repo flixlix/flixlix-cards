@@ -1,0 +1,77 @@
+# Energy Breakdown Card playground: energy totals over the selected period, and a live power
+# breakdown driven by the device sliders.
+title: Energy Breakdown
+views:
+  - title: Energy Breakdown
+    path: energy-breakdown
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Energy over the period
+            icon: mdi:calendar
+          - type: energy-date-selection
+          - type: custom:energy-breakdown-card
+            title: Device energy (donut)
+            chart_type: donut
+            energy_date_selection: true
+            show_total: true
+            show_legend_value: true
+            show_legend_percentage: true
+            entities:
+              - entity: sensor.ev_charger_energy
+                name: EV
+              - entity: sensor.heat_pump_energy
+                name: Heat pump
+              - entity: sensor.washing_machine_energy
+                name: Washer
+          - type: custom:energy-breakdown-card
+            title: Device energy (bar)
+            chart_type: bar
+            energy_date_selection: true
+            entities:
+              - entity: sensor.ev_charger_energy
+                name: EV
+              - entity: sensor.heat_pump_energy
+                name: Heat pump
+              - entity: sensor.washing_machine_energy
+                name: Washer
+      - type: grid
+        cards:
+          - type: heading
+            heading: Live power
+            icon: mdi:flash
+          - type: custom:energy-breakdown-card
+            title: Device power, top 4 + others
+            chart_type: donut
+            max_items: 4
+            group_others: true
+            sort: true
+            entities:
+              - entity: sensor.ev_charger_power
+                name: EV
+              - entity: sensor.heat_pump_power
+                name: Heat pump
+              - entity: sensor.washing_machine_power
+                name: Washer
+              - entity: sensor.dryer_power
+                name: Dryer
+              - entity: sensor.dishwasher_power
+                name: Dishwasher
+              - entity: sensor.fridge_power
+                name: Fridge
+          - type: entities
+            title: Device power
+            show_header_toggle: false
+            entities:
+              - input_number.ev_charger_power
+              - input_number.heat_pump_power
+              - input_number.washing_machine_power
+              - input_number.dryer_power
+              - input_number.dishwasher_power
+              - input_number.fridge_power
+              - input_boolean.devices_available
+              - script.scenario_more_than_four_individuals
+              - script.scenario_all_zero

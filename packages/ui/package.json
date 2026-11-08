@@ -30,7 +30,6 @@
   "devDependencies": {
     "@flixlix-cards/typescript-config": "workspace:*",
     "@tailwindcss/postcss": "^4.2.4",
-    "@turbo/gen": "^2.9.7",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

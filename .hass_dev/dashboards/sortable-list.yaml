@@ -1,0 +1,49 @@
+# Sortable List Card playground: reorder the rows and watch input_text.device_priority follow.
+title: Sortable List
+views:
+  - title: Sortable List
+    path: sortable-list
+    type: sections
+    max_columns: 2
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Reorder
+            icon: mdi:sort
+          - type: custom:sortable-list-card
+            title: Device priority
+            entity: input_text.device_priority
+            show_state: true
+            items:
+              - key: ev_charger
+                entity: sensor.ev_charger_power
+                name: EV charger
+              - key: heat_pump
+                entity: sensor.heat_pump_power
+                name: Heat pump
+              - key: washing_machine
+                entity: sensor.washing_machine_power
+                name: Washing machine
+              - key: dryer
+                entity: sensor.dryer_power
+                name: Dryer
+          - type: custom:sortable-list-card
+            title: Plain keys, no arrows
+            show_arrows: false
+            items:
+              - key: alpha
+                name: Alpha
+              - key: beta
+                name: Beta
+              - key: gamma
+                name: Gamma
+      - type: grid
+        cards:
+          - type: heading
+            heading: Stored order
+            icon: mdi:database
+          - type: entities
+            show_header_toggle: false
+            entities:
+              - input_text.device_priority

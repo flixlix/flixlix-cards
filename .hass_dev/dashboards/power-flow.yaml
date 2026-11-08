@@ -1,0 +1,188 @@
+# Power Flow Card Plus playground. Run a scenario or move the sliders; every card on the page
+# reads the same sensors, so the variants can be compared side by side.
+title: Power Flow
+views:
+  - title: Power Flow
+    path: power-flow
+    type: sections
+    max_columns: 4
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Scenarios
+            icon: mdi:play-box-multiple
+          - type: entities
+            title: Run a scenario
+            show_header_toggle: false
+            entities:
+              - script.scenario_default
+              - script.scenario_all_zero
+              - script.scenario_solar_exporting
+              - script.scenario_battery_charging_from_grid
+              - script.scenario_battery_discharging_to_grid
+              - script.scenario_grid_outage_generator
+              - script.scenario_below_tolerance
+              - script.scenario_negative_individual
+              - script.scenario_unavailable_sensors
+              - script.scenario_more_than_four_individuals
+              - script.scenario_solver_regression
+          - type: entities
+            title: Availability
+            show_header_toggle: false
+            entities:
+              - input_boolean.grid_available
+              - input_boolean.solar_available
+              - input_boolean.battery_available
+              - input_boolean.home_available
+              - input_boolean.devices_available
+              - input_boolean.power_outage
+      - type: grid
+        cards:
+          - type: heading
+            heading: Knobs
+            icon: mdi:tune-vertical
+          - type: entities
+            title: Split readings (combined ones follow via the scenarios)
+            show_header_toggle: false
+            entities:
+              - input_number.grid_import_power
+              - input_number.grid_export_power
+              - input_number.solar_power
+              - input_number.battery_charge_power
+              - input_number.battery_discharge_power
+              - input_number.battery_soc
+              - input_number.home_power
+              - input_number.generator_power
+              - input_number.fossil_percentage
+          - type: entities
+            title: Combined readings (positive = from grid / from battery)
+            show_header_toggle: false
+            entities:
+              - input_number.grid_power
+              - input_number.battery_power
+          - type: entities
+            title: Individual devices
+            show_header_toggle: false
+            entities:
+              - input_number.ev_charger_power
+              - input_number.heat_pump_power
+              - input_number.washing_machine_power
+              - input_number.dryer_power
+              - input_number.dishwasher_power
+              - input_number.fridge_power
+      - type: grid
+        cards:
+          - type: heading
+            heading: Combined vs split entities
+            icon: mdi:flash
+          - type: custom:power-flow-card-plus
+            title: Combined entities
+            clickable_entities: true
+            entities:
+              grid:
+                entity: sensor.grid_power
+              solar:
+                entity: sensor.solar_power
+              battery:
+                entity: sensor.battery_power
+                state_of_charge: sensor.battery_soc
+              home:
+                entity: sensor.home_power
+              fossil_fuel_percentage:
+                entity: sensor.fossil_percentage
+                display_zero: true
+              individual:
+                - entity: sensor.ev_charger_power
+                  name: EV
+                  icon: mdi:car-electric
+                - entity: sensor.heat_pump_power
+                  name: Heat pump
+                  icon: mdi:heat-pump
+          - type: custom:power-flow-card-plus
+            title: Split entities
+            clickable_entities: true
+            entities:
+              grid:
+                entity:
+                  consumption: sensor.grid_import_power
+                  production: sensor.grid_export_power
+              solar:
+                entity: sensor.solar_power
+              battery:
+                entity:
+                  consumption: sensor.battery_discharge_power
+                  production: sensor.battery_charge_power
+                state_of_charge: sensor.battery_soc
+              home:
+                entity: sensor.home_power
+      - type: grid
+        cards:
+          - type: heading
+            heading: Edge cases
+            icon: mdi:alert-circle-outline
+          - type: custom:power-flow-card-plus
+            title: Power outage with generator
+            entities:
+              grid:
+                entity: sensor.grid_power
+                power_outage:
+                  entity: input_boolean.power_outage
+                  state_alert: "on"
+                  label_alert: Outage
+                  entity_generator: sensor.generator_power
+              solar:
+                entity: sensor.solar_power
+              battery:
+                entity: sensor.battery_power
+                state_of_charge: sensor.battery_soc
+          - type: custom:power-flow-card-plus
+            title: Zero tolerance 10 W, zeros hidden
+            display_zero_lines:
+              mode: hide
+            entities:
+              grid:
+                entity: sensor.grid_power
+                display_zero: false
+                display_zero_tolerance: 10
+              solar:
+                entity: sensor.solar_power
+                display_zero: false
+                display_zero_tolerance: 10
+              battery:
+                entity: sensor.battery_power
+                display_zero: false
+                display_zero_tolerance: 10
+              individual:
+                - entity: sensor.ev_charger_power
+                  name: EV
+                  display_zero: false
+                  display_zero_tolerance: 10
+          - type: custom:power-flow-card-plus
+            title: Six individuals
+            sort_individual_devices: true
+            entities:
+              grid:
+                entity: sensor.grid_power
+              solar:
+                entity: sensor.solar_power
+              individual:
+                - entity: sensor.ev_charger_power
+                  name: EV
+                  icon: mdi:car-electric
+                  show_direction: true
+                - entity: sensor.heat_pump_power
+                  name: Heat pump
+                  icon: mdi:heat-pump
+                - entity: sensor.washing_machine_power
+                  name: Washer
+                  icon: mdi:washing-machine
+                - entity: sensor.dryer_power
+                  name: Dryer
+                  icon: mdi:tumble-dryer
+                - entity: sensor.dishwasher_power
+                  name: Dishwasher
+                  icon: mdi:dishwasher
+                - entity: sensor.fridge_power
+                  name: Fridge
+                  icon: mdi:fridge

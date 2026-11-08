@@ -24,3 +24,10 @@ export function coerceNumber(value: unknown, fallbackValue = 0) {
 /** Treats `""` as missing, so `nonEmpty(x) ?? fallback` falls back for both. */
 export const nonEmpty = (value: string | null | undefined): string | undefined =>
   value === null || value === undefined || value === "" ? undefined : value;
+
+/** A sorted copy; `Array.prototype.toSorted` needs ES2023. */
+export const sortedCopy = <T>(items: ReadonlyArray<T>, compare: (a: T, b: T) => number): T[] => {
+  const copy = [...items];
+  copy.sort(compare);
+  return copy;
+};

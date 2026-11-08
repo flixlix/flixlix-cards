@@ -73,6 +73,13 @@ export function getEntityUnit(hass: HomeAssistant, entity?: string): string | un
   return hass.states[entity]?.attributes.unit_of_measurement;
 }
 
+const WH_PER_UNIT: Record<string, number> = { Wh: 1, kWh: 1000, MWh: 1_000_000, GWh: 1e9 };
+
+/** Period statistics arrive in Wh; shows them in the unit the entity is labelled with. */
+export function energyInUnit(wattHours: number, unit: string | undefined): number {
+  return wattHours / (WH_PER_UNIT[unit ?? "Wh"] ?? 1);
+}
+
 export function formatValue(
   hass: HomeAssistant,
   value: number,

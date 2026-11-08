@@ -44,4 +44,29 @@ describe("compute-field-attributes", () => {
     expect(computeFieldName(hass, split, "Fallback Name")).toBe("Grid Import");
     expect(computeFieldIcon(hass, split, "mdi:fallback")).toBe("mdi:transmission-tower");
   });
+
+  test("a split entity falls back to production metadata, then to the fallback", () => {
+    const hass = fakeHass({
+      states: {
+        "sensor.grid_import": fakeEntity("sensor.grid_import", "100"),
+        "sensor.grid_export": fakeEntity("sensor.grid_export", "20", {
+          friendly_name: "Grid Export",
+          icon: "mdi:transmission-tower-export",
+        }),
+      },
+    });
+    const split = {
+      entity: { consumption: "sensor.grid_import", production: "sensor.grid_export" },
+      use_metadata: true,
+    };
+    const unnamed = { entity: "sensor.grid_import", use_metadata: true };
+
+    expect(computeFieldName(hass, split, "Fallback Name")).toBe("Grid Export");
+    expect(computeFieldIcon(hass, split, "mdi:fallback")).toBe("mdi:transmission-tower-export");
+    expect(computeFieldName(hass, unnamed, "Fallback Name")).toBe("Fallback Name");
+    expect(computeFieldIcon(hass, unnamed, "mdi:fallback")).toBe("mdi:fallback");
+    expect(computeFieldIcon(hass, { entity: "sensor.grid_import" }, "mdi:fallback")).toBe(
+      "mdi:fallback"
+    );
+  });
 });

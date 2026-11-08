@@ -31,13 +31,14 @@
   },
   "homepage": "https://github.com/flixlix/flixlix-cards#readme",
   "scripts": {
-    "build": "pnpm dlx rollup -c",
+    "build": "rollup -c",
     "release": "pnpm build && pnpm changeset tag",
     "clean": "rimraf dist node_modules",
     "start": "rollup -wc",
     "dev": "rollup -c --watch",
     "typecheck": "tsc --noEmit",
-    "test": "vp test run",
+    "test": "vp test run --coverage && vp test run --config vitest.browser.config.ts --project dom",
+    "test:visual": "vp test run --config vitest.browser.config.ts --project visual",
     "test:watch": "vp test"
   },
   "dependencies": {
@@ -62,6 +63,8 @@
     "@rollup/plugin-terser": "catalog:packages",
     "@rollup/plugin-typescript": "catalog:packages",
     "@types/node": "catalog:",
+    "@vitest/browser-playwright": "catalog:packages",
+    "playwright": "catalog:packages",
     "rollup": "catalog:packages",
     "rollup-plugin-minify-html-literals": "catalog:packages",
     "rollup-plugin-serve": "catalog:packages",

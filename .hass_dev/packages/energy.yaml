@@ -1,0 +1,61 @@
+# Energy meters for the energy cards. Their history is imported by `pnpm hass:bootstrap`
+# (e2e/scripts/bootstrap.ts) with known totals per day; the recorder ignores them (see
+# configuration.yaml), so the imported statistics are all there is.
+template:
+  - sensor:
+      - name: Grid Import Energy
+        unique_id: e2e_grid_import_energy
+        icon: mdi:transmission-tower-import
+        device_class: energy
+        unit_of_measurement: kWh
+        state_class: total_increasing
+        state: "0"
+      - name: Grid Export Energy
+        unique_id: e2e_grid_export_energy
+        icon: mdi:transmission-tower-export
+        device_class: energy
+        unit_of_measurement: kWh
+        state_class: total_increasing
+        state: "0"
+      - name: Solar Energy
+        unique_id: e2e_solar_energy
+        icon: mdi:solar-power
+        device_class: energy
+        unit_of_measurement: kWh
+        state_class: total_increasing
+        state: "0"
+      - name: Battery Charge Energy
+        unique_id: e2e_battery_charge_energy
+        icon: mdi:battery-arrow-down
+        device_class: energy
+        unit_of_measurement: kWh
+        state_class: total_increasing
+        state: "0"
+      - name: Battery Discharge Energy
+        unique_id: e2e_battery_discharge_energy
+        icon: mdi:battery-arrow-up
+        device_class: energy
+        unit_of_measurement: kWh
+        state_class: total_increasing
+        state: "0"
+      - name: EV Charger Energy
+        unique_id: e2e_ev_charger_energy
+        icon: mdi:car-electric
+        device_class: energy
+        unit_of_measurement: kWh
+        state_class: total_increasing
+        state: "0"
+      - name: Heat Pump Energy
+        unique_id: e2e_heat_pump_energy
+        icon: mdi:heat-pump
+        device_class: energy
+        unit_of_measurement: kWh
+        state_class: total_increasing
+        state: "0"
+      - name: Washing Machine Energy
+        unique_id: e2e_washing_machine_energy
+        icon: mdi:washing-machine
+        device_class: energy
+        unit_of_measurement: kWh
+        state_class: total_increasing
+        state: "0"

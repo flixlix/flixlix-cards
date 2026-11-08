@@ -23,7 +23,13 @@ import {
   type EnergyBreakdownEntityConfig,
   type ResolvedSegment,
 } from "./types";
-import { describeDonutSegment, formatValue, resolveSegments } from "./utils";
+import {
+  describeDonutSegment,
+  energyInUnit,
+  formatValue,
+  getEntityUnit,
+  resolveSegments,
+} from "./utils";
 
 registerCustomCard({
   type: "energy-breakdown-card",
@@ -350,7 +356,11 @@ export class EnergyBreakdownCard extends LitElement implements LovelaceCard {
     const useEnergy = this._isEnergyMode();
     const resolveValue = useEnergy
       ? (entity: string) =>
-          getEnergyEntityState(this.hass, this._energyGrowthMap, true, entity) ?? 0
+          energyInUnit(
+            getEnergyEntityState(this.hass, this._energyGrowthMap, true, entity),
+            this._config?.entities.find((e) => e.entity === entity)?.unit_of_measurement ??
+              getEntityUnit(this.hass, entity)
+          )
       : undefined;
     const { segments, total } = resolveSegments(this.hass, this._config, resolveValue);
     const chartType = this._config.chart_type ?? "donut";

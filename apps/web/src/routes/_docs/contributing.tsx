@@ -121,9 +121,9 @@ function ContributingPage() {
       <Section id="repo-layout" title="2. Repository layout">
         <Prose>
           <p>
-            <code>flixlix-cards</code> is a Turborepo + pnpm monorepo. Each card is its own package
-            in <code>packages/flixlix-cards</code>. The docs site you're reading right now lives in{" "}
-            <code>apps/web</code>.
+            <code>flixlix-cards</code> is a pnpm monorepo driven by Vite+ (<code>vp run</code>).
+            Each card is its own package in <code>packages/flixlix-cards</code>. The docs site
+            you're reading right now lives in <code>apps/web</code>.
           </p>
         </Prose>
         <CodeBlock
@@ -138,10 +138,9 @@ function ContributingPage() {
 │  │  └─ energy-breakdown-card/
 │  ├─ shared/                   # shared utilities & i18n
 │  ├─ ui/                       # shadcn-style UI primitives
-│  ├─ utils/                    # tiny helpers (cn)
 │  └─ tooling/                  # bundler, lint rules, test & tsconfig presets
 ├─ pnpm-workspace.yaml
-└─ turbo.json`}
+└─ vite.config.ts             # lint, format and task config`}
         />
       </Section>
 
@@ -175,10 +174,11 @@ pnpm dev`}
           To test the card end-to-end, you need a Home Assistant instance. From the repo root you
           can spin one up via Docker:
           <br />
-          <code>pnpm start:hass</code>
+          <code>pnpm hass:up</code>
           <br />
-          Then open <code>http://localhost:8123</code> and add the local resource{" "}
-          <code>http://&lt;your-ip&gt;:5001/&lt;card-filename&gt;.js</code> to your dashboard.
+          Then open <code>http://localhost:8123</code> and log in as <code>dev</code> /{" "}
+          <code>dev</code>: every card already has its own dashboard with dummy entities. Keep{" "}
+          <code>pnpm dev</code> running and reload to see your changes.
         </Callout>
       </Section>
 

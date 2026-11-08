@@ -633,7 +633,7 @@ const CONTRIBUTING_SECTIONS: SearchEntry[] = [
     breadcrumb: "How to contribute",
     card: "general",
     type: "section",
-    keywords: ["turborepo", "workspace"],
+    keywords: ["vite+", "vp run", "workspace"],
   },
   {
     title: "Local setup",
@@ -721,6 +721,20 @@ export const SEARCH_ENTRIES: SearchEntry[] = [
   ...CONTRIBUTING_SECTIONS,
 ];
 
+/** Exact match beats prefix match beats substring match. */
+function matchScore(value: string, q: string, weight: number): number {
+  if (!value) {
+    return 0;
+  }
+  if (value === q) {
+    return weight * 4;
+  }
+  if (value.startsWith(q)) {
+    return weight * 2;
+  }
+  return value.includes(q) ? weight : 0;
+}
+
 function score(query: string, entry: SearchEntry): number {
   const q = query.toLowerCase().trim();
   if (!q) {
@@ -734,19 +748,7 @@ function score(query: string, entry: SearchEntry): number {
     ...(entry.keywords ?? []).map((k) => ({ value: k.toLowerCase(), weight: 5 })),
   ];
 
-  let total = 0;
-  for (const { value, weight } of haystacks) {
-    if (!value) {
-      continue;
-    }
-    if (value === q) {
-      total += weight * 4;
-    } else if (value.startsWith(q)) {
-      total += weight * 2;
-    } else if (value.includes(q)) {
-      total += weight;
-    }
-  }
+  let total = haystacks.reduce((sum, { value, weight }) => sum + matchScore(value, q, weight), 0);
 
   // tokens: every word in the query must appear somewhere
   const tokens = q.split(/\s+/).filter(Boolean);
