@@ -69,7 +69,7 @@ const NODES = ["grid", "solar", "battery", "home"] as const;
  * shared pipeline reads a generator as the grid's `power_outage.entity_generator`.
  */
 export const toFlowConfig = (config: HomeFlowCardConfig): FlowConfig => {
-  const { grid, solar, battery, home, ...options } = config;
+  const { grid, solar, battery, home, car, ...options } = config;
   const nodes: HomeFlowNodes = {
     grid:
       grid?.power_outage && options.generator
@@ -85,7 +85,8 @@ export const toFlowConfig = (config: HomeFlowCardConfig): FlowConfig => {
   const entities = Object.fromEntries(
     NODES.flatMap((node) => (nodes[node] === undefined ? [] : [[node, nodes[node]]]))
   );
-  return { ...options, entities };
+  // a car without its entity, e.g. one cleared in the editor, is not drawn at all
+  return { ...options, ...(car?.entity ? { car } : {}), entities };
 };
 
 /** Lifts the nodes of an `entities`-shaped config, e.g. a suggested one, to the top level. */

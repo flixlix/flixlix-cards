@@ -279,7 +279,7 @@ export const GRID_CABLE_START: Point = [LENGTH + 0.07, INVERTER_Y, 0.02];
 const ON_FRONT = FRONT + 0.07;
 const ON_GABLE = LENGTH + 0.07;
 /** Where the car's wire drops down the front wall, out of sight behind the car. */
-const CAR_WIRE_X = 2.4;
+const CAR_WIRE_X = 4.2;
 /** The generator's wire runs parallel to the grid cable, just behind it. */
 const GENERATOR_WIRE_Y = INVERTER.y0 + 0.1;
 

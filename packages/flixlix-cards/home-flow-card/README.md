@@ -28,7 +28,7 @@ meeting at the inverter. One look tells you where your power comes from and wher
   grid's place. A nearly empty battery turns its charge bar yellow, then red, at thresholds you
   choose.
 - **Your car, too.** An optional electric car parks in front of the house, wired to the home's
-  outlet, with its charging power and state of charge on its label. Unplugged it waits faded,
+  outlet, with its power and state of charge on its label. Unplugged it waits faded,
   without its cable; away, it is not drawn at all, on conditions you choose.
 
 Only what you configure is drawn: solar alone, a battery and the grid, or the whole house.

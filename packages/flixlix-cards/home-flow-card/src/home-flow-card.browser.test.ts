@@ -119,12 +119,19 @@ const carCharging: StateFixtures = {
 
 const car = { car: { entity: "sensor.car_power", state_of_charge: "sensor.car_soc" } };
 
+/** Where the car's pulse starts, for a car drawing `power`. */
+const carPulseStart = async (power: string) => {
+  const { root } = await mountHouse(car, { ...carCharging, "sensor.car_power": power });
+  return startOf(root.querySelector(".power.car .pulse")?.getAttribute("d") ?? "");
+};
+
 describe("a car", () => {
-  test("charging: its power, state of charge and direction under its name", async () => {
+  test("charging: its power, and its state of charge without the battery's words", async () => {
     const { root } = await mountHouse(car, carCharging);
 
     expect(reading(root, "car")).toBe("7.4 kW");
-    expect(batteryLine(root, "car")).toBe("64 % · charging");
+    expect(batteryLine(root, "car")).toBe("64 %");
+    expect(labelOf(root, "car").querySelector(".charging, .discharging")).toBeNull();
     expect(labelOf(root, "car").querySelector(".name")?.textContent).toBe("Car");
   });
 
@@ -136,12 +143,10 @@ describe("a car", () => {
   });
 
   test("feeding the home, its power runs back to the outlet", async () => {
-    const { root } = await mountHouse(car, {
-      ...carCharging,
-      "sensor.car_power": sensor("-3", { unit: "kW" }),
-    });
+    const charging = await carPulseStart("7400");
+    const feeding = await carPulseStart("-3000");
 
-    expect(batteryLine(root, "car")).toBe("64 % · discharging");
+    expect(feeding).not.toBe(charging);
   });
 
   test("is drawn again for a dark theme", async () => {
@@ -194,6 +199,28 @@ describe("a car", () => {
 
     expect(root.querySelector(".track.car")).toBeNull();
     expect(reading(root, "car")).toBe("64 %");
+  });
+
+  test("leaves the house exactly where it is without a car", async () => {
+    const plain = await mountHouse({}, carCharging);
+    const { root } = await mountHouse(car, carCharging);
+
+    expect(root.querySelector("svg")?.getAttribute("viewBox")).toBe(
+      plain.root.querySelector("svg")?.getAttribute("viewBox")
+    );
+  });
+
+  test("without its entity it is ignored, as when cleared in the editor", async () => {
+    const plain = await mountHouse({}, carCharging);
+    const { root } = await mountHouse(
+      { car: { entity: "", state_of_charge: "sensor.car_soc" } },
+      carCharging
+    );
+
+    expect(root.querySelector(".label.car")).toBeNull();
+    expect(root.querySelector("svg")?.getAttribute("viewBox")).toBe(
+      plain.root.querySelector("svg")?.getAttribute("viewBox")
+    );
   });
 
   test("is not drawn without one", async () => {

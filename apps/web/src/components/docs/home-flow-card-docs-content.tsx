@@ -416,8 +416,7 @@ const CARD_OPTIONS: OptionRow[] = [
         An electric car parked in front of the house, wired to the home&apos;s outlet.{" "}
         <code>entity</code> is its charging power, positive while it charges and negative while it
         feeds the home; <code>state_of_charge</code> (optional) shows its battery level on its
-        label, next to whether it is charging. <code>name</code> (optional) defaults to
-        &quot;Car&quot;.
+        label, under its power. <code>name</code> (optional) defaults to &quot;Car&quot;.
       </>
     ),
   },

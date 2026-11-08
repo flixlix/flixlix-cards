@@ -89,7 +89,7 @@ const idleCarLabel = (car: NonNullable<CarConfig>, language: string): Label => (
   entity: car.entity,
 });
 
-/** The car's power, with its state of charge and whether it charges, like the battery's. */
+/** The car's power, with its state of charge under it. */
 const carLabel = (
   wire: HouseWire | undefined,
   car: CarConfig,
@@ -103,11 +103,11 @@ const carLabel = (
     car && {
       ...idleCarLabel(car, language),
       reading: wire.reading,
-      status: batteryStatus(
-        wire,
-        { state: car.charge, unit: "%", unit_white_space: true, decimals: 0 },
-        language
-      ),
+      // only its state of charge: "charging" and its colours belong to the battery
+      status:
+        car.charge === null
+          ? undefined
+          : { charge: { value: car.charge, decimals: 0, suffix: " %" }, word: "" },
     }
   );
 };
