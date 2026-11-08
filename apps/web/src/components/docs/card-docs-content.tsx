@@ -472,26 +472,31 @@ const ADVANCED_CARD_OPTIONS = (v: Variant): OptionRow[] => [
     default: "6",
     description: "Time (s) for the slowest dot to travel an entire line.",
   },
-  {
-    name: "min_expected_power",
-    type: "number",
-    default: "0.01",
-    description: (
-      <>
-        Minimum value used by the <a href="#flow-formula">new flow formula</a>.
-      </>
-    ),
-  },
-  {
-    name: "max_expected_power",
-    type: "number",
-    default: "2000",
-    description: (
-      <>
-        Maximum value used by the <a href="#flow-formula">new flow formula</a>.
-      </>
-    ),
-  },
+  // The energy card always uses the relative formula, so these never apply there
+  ...(v.key === "energy"
+    ? []
+    : [
+        {
+          name: "min_expected_power",
+          type: "number",
+          default: "0.01",
+          description: (
+            <>
+              Minimum value used by the <a href="#flow-formula">new flow formula</a>.
+            </>
+          ),
+        },
+        {
+          name: "max_expected_power",
+          type: "number",
+          default: "2000",
+          description: (
+            <>
+              Maximum value used by the <a href="#flow-formula">new flow formula</a>.
+            </>
+          ),
+        },
+      ]),
   {
     name: "display_zero_lines",
     type: "object",
@@ -506,12 +511,21 @@ const ADVANCED_CARD_OPTIONS = (v: Variant): OptionRow[] => [
   },
   { name: "style_ha_card", type: "css", description: "CSS applied to the card container." },
   { name: "style_card_content", type: "css", description: "CSS applied to the content area." },
-  {
-    name: "use_new_flow_rate_model",
-    type: "boolean",
-    default: "false",
-    description: "Switch to the new (more intuitive) flow formula.",
-  },
+  ...(v.key === "energy"
+    ? []
+    : [
+        {
+          name: "use_new_flow_rate_model",
+          type: "boolean",
+          default: "true",
+          description: (
+            <>
+              Use the <a href="#flow-formula">new (absolute) flow formula</a>. Set{" "}
+              <code>false</code> for the legacy relative formula.
+            </>
+          ),
+        },
+      ]),
   {
     name: "sort_individual_devices",
     type: "boolean",
@@ -892,8 +906,9 @@ const FOSSIL_OPTIONS: OptionRow[] = [
   {
     name: "calculate_flow_rate",
     type: "boolean | number",
-    default: "false",
-    description: "Use the flow formula or a fixed dot interval (seconds).",
+    default: "true",
+    description:
+      "Unset or true uses the calculated flow rate, false a fixed pace, a number a fixed dot interval (seconds).",
   },
 ];
 
@@ -972,8 +987,9 @@ const POWER_OUTAGE_OPTIONS: OptionRow[] = [
   {
     name: "calculate_flow_rate",
     type: "boolean | number",
-    default: "false",
-    description: "Use the formula or a fixed dot interval (seconds).",
+    default: "true",
+    description:
+      "Unset or true uses the calculated flow rate, false a fixed pace, a number a fixed dot interval (seconds).",
   },
 ];
 
@@ -1548,19 +1564,29 @@ entities:
           title="Flow formulas"
           icon={Calculator}
           accent="violet"
-          description="The card animates dots along the lines. There are two formulas controlling how fast they travel."
+          description={
+            cardKey === "energy"
+              ? "The card animates dots along the lines. It always uses the relative formula: period totals in Wh don't fit an absolute power scale, so use_new_flow_rate_model, min_expected_power and max_expected_power have no effect."
+              : "The card animates dots along the lines. There are two formulas controlling how fast they travel."
+          }
         >
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className={cardKey === "energy" ? "grid gap-4" : "grid gap-4 md:grid-cols-2"}>
             <div className="bg-card rounded-lg border p-4">
               <div className="mb-2 flex items-center gap-2">
                 <span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide">
-                  Default
+                  {cardKey === "energy" ? "Always used" : "Optional"}
                 </span>
                 <h3 className="text-foreground text-sm font-semibold">Legacy (relative)</h3>
               </div>
               <p className="text-muted-foreground mb-3 text-xs leading-relaxed">
                 Each line's flow rate is calculated relative to all the others. When one line
                 dominates, dots accelerate to keep a roughly constant dot count.
+                {cardKey === "energy" ? null : (
+                  <>
+                    {" "}
+                    Set <code>use_new_flow_rate_model: false</code> to use it.
+                  </>
+                )}
               </p>
               <CodeBlock
                 language="js"
@@ -1571,25 +1597,27 @@ entities:
 // totalLines = sum of all line values`}
               />
             </div>
-            <div className="bg-card rounded-lg border p-4">
-              <div className="mb-2 flex items-center gap-2">
-                <span className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide">
-                  Recommended
-                </span>
-                <h3 className="text-foreground text-sm font-semibold">New (absolute)</h3>
-              </div>
-              <p className="text-muted-foreground mb-3 text-xs leading-relaxed">
-                Speed maps directly to the value. A constant value always animates at the same speed
-                regardless of other lines. Set <code>use_new_flow_rate_model: true</code> and tune
-                the <code>min/max_expected_power</code> + <code>min/max_flow_rate</code> pairs.
-              </p>
-              <CodeBlock
-                language="js"
-                code={`progress = clamp((value - minIn) / (maxIn - minIn), 0, 1);
+            {cardKey === "energy" ? null : (
+              <div className="bg-card rounded-lg border p-4">
+                <div className="mb-2 flex items-center gap-2">
+                  <span className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide">
+                    Default
+                  </span>
+                  <h3 className="text-foreground text-sm font-semibold">New (absolute)</h3>
+                </div>
+                <p className="text-muted-foreground mb-3 text-xs leading-relaxed">
+                  Speed maps directly to the value. A constant value always animates at the same
+                  speed regardless of other lines. Used by default; tune the{" "}
+                  <code>min/max_expected_power</code> + <code>min/max_flow_rate</code> pairs.
+                </p>
+                <CodeBlock
+                  language="js"
+                  code={`progress = clamp((value - minIn) / (maxIn - minIn), 0, 1);
 speed = 1 / minOut + progress * (1 / maxOut - 1 / minOut);
 return 1 / speed;`}
-              />
-            </div>
+                />
+              </div>
+            )}
           </div>
         </CategorySection>
 
