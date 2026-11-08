@@ -194,10 +194,10 @@ const ON_GABLE = LENGTH + 0.07;
  * the grid from below.
  */
 export const WIRE_ROUTES: Record<HouseNode, Point[]> = {
-  // straight from the panels over the gable's edge, then down the wall: one bend
+  // from the panels along the roof, parallel to its ridge, then down the gable: one bend
   solar: [
     onRoof(PANELS.x1, INVERTER_Y),
-    [ON_GABLE, INVERTER_Y, roofHeight(INVERTER_Y) - FASCIA - 0.2],
+    onRoof(ON_GABLE, INVERTER_Y),
     [ON_GABLE, INVERTER_Y, INVERTER.z1],
   ],
   battery: [

@@ -100,19 +100,19 @@ export const styles = css`
 
   .track {
     stroke: var(--house-track);
-    stroke-width: 0.8;
+    stroke-width: 1;
   }
 
   .flow {
     stroke: var(--wire-color);
-    stroke-width: 1;
-    opacity: 0.3;
+    stroke-width: 1.2;
+    opacity: 0.35;
   }
 
   .pulse {
     stroke: var(--wire-color);
-    stroke-width: 1.4;
-    stroke-dasharray: 22 48;
+    stroke-width: 1.8;
+    stroke-dasharray: 18 52;
     animation: pulse linear infinite;
   }
 
