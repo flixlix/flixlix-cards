@@ -15,7 +15,9 @@ const batteryToHomeDot = (
   battery: FlowBatteryToHomeFlows["battery"],
   newDur: FlowBatteryToHomeFlows["newDur"]
 ) => {
-  if (!checkShouldShowDots(config) || !battery.state.toHome) return nothing;
+  if (!checkShouldShowDots(config) || !battery.state.toHome) {
+    return nothing;
+  }
 
   return svg`<circle r="1" class="battery-home" vector-effect="non-scaling-stroke">
       <animateMotion dur="${newDur.batteryToHome}s" repeatCount="indefinite" calcMode="paced">
@@ -31,8 +33,10 @@ export const flowBatteryToHome = (
   { battery, grid, individual, newDur }: FlowBatteryToHomeFlows
 ) => {
   const shouldShow =
-    battery.has && showLine(config, battery.state.toHome) && !config.entities.home?.hide;
-  if (!shouldShow) return nothing;
+    battery.has && showLine(config, battery.state.toHome ?? 0) && !config.entities.home?.hide;
+  if (!shouldShow) {
+    return nothing;
+  }
 
   return html`<div
     class="lines ${classMap({
@@ -49,7 +53,7 @@ export const flowBatteryToHome = (
     >
       <path
         id="battery-home"
-        class="battery-home ${styleLine(battery.state.toHome || 0, config)}"
+        class="battery-home ${styleLine(battery.state.toHome ?? 0, config)}"
         d="M55,100 v-${grid.has ? 15 : 17} c0,-30 10,-30 30,-30 h20"
         vector-effect="non-scaling-stroke"
       ></path>

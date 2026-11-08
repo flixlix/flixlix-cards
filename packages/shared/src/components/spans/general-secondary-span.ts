@@ -1,7 +1,7 @@
 import {
-  type ActionConfigSet,
   type CardMainContext,
   type FlowCardPlusConfig,
+  type SecondaryInfoObject,
   type TemplatesObj,
 } from "@flixlix-cards/shared/types";
 import { displayValue } from "@flixlix-cards/shared/utils/display-value";
@@ -16,25 +16,12 @@ export const generalSecondarySpan = (
   main: CardMainContext,
   config: FlowCardPlusConfig,
   templatesObj: TemplatesObj,
-  field: {
-    secondary: {
-      has: any;
-      template: any;
-      entity: any;
-      icon: any;
-      state: string | number | null;
-      unit: string | undefined;
-      unit_white_space: boolean | undefined;
-      decimals: number | undefined;
-      accept_negative: boolean | undefined;
-      tap_action?: ActionConfigSet["tap_action"];
-      hold_action?: ActionConfigSet["hold_action"];
-      double_tap_action?: ActionConfigSet["double_tap_action"];
-    };
-  },
+  field: { secondary: SecondaryInfoObject },
   key: SecondaryKey
 ) => {
-  if (!field?.secondary?.has && !field?.secondary?.template) return nothing;
+  if (!field.secondary.has && !field.secondary.template) {
+    return nothing;
+  }
 
   return baseSecondarySpan({
     main,

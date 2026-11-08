@@ -15,7 +15,9 @@ const solarToGridDot = (
   solar: Flows["solar"],
   newDur: Flows["newDur"]
 ) => {
-  if (!checkShouldShowDots(config) || !solar.state.toGrid || !solar.has) return nothing;
+  if (!checkShouldShowDots(config) || !solar.state.toGrid || !solar.has) {
+    return nothing;
+  }
 
   return svg`<circle r="1" class="return" vector-effect="non-scaling-stroke">
       <animateMotion dur="${newDur.solarToGrid}s" repeatCount="indefinite" calcMode="paced">
@@ -29,8 +31,10 @@ export const flowSolarToGrid = (
   { battery, grid, individual, solar, newDur }: Flows
 ) => {
   const shouldShow =
-    grid.has && grid.hasReturnToGrid && solar.has && showLine(config, solar.state.toGrid || 0);
-  if (!shouldShow) return nothing;
+    grid.has && grid.hasReturnToGrid && solar.has && showLine(config, solar.state.toGrid ?? 0);
+  if (!shouldShow) {
+    return nothing;
+  }
 
   return html`<div
     class="lines ${classMap({
@@ -47,10 +51,10 @@ export const flowSolarToGrid = (
     >
       <path
         id="return"
-        class="return ${styleLine(solar.state.toGrid || 0, config)}"
-        d="M${battery.has ? 45 : 47},0 v15 c0,${battery.has
-          ? "30 -10,30 -30,30"
-          : "35 -10,35 -30,35"} h-20"
+        class="return ${styleLine(solar.state.toGrid ?? 0, config)}"
+        d="M${battery.has ? 45 : 47},0 v15 c0,${
+          battery.has ? "30 -10,30 -30,30" : "35 -10,35 -30,35"
+        } h-20"
         vector-effect="non-scaling-stroke"
       ></path>
       ${solarToGridDot(config, solar, newDur)}

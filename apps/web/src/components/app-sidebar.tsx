@@ -105,21 +105,28 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   // When the route changes, automatically open the section that contains the
   // new page. Sections the user has already opened/closed manually keep their
   // current state.
-  React.useEffect(() => {
+  const [previousPathname, setPreviousPathname] = React.useState(pathname);
+  if (pathname !== previousPathname) {
+    setPreviousPathname(pathname);
     setOpenSections((prev) => {
       const next = new Set(prev);
       for (const section of SECTIONS) {
-        if (isSectionActive(pathname, section.to)) next.add(section.to);
+        if (isSectionActive(pathname, section.to)) {
+          next.add(section.to);
+        }
       }
       return next;
     });
-  }, [pathname]);
+  }
 
   function setSectionOpen(sectionTo: string, open: boolean) {
     setOpenSections((prev) => {
       const next = new Set(prev);
-      if (open) next.add(sectionTo);
-      else next.delete(sectionTo);
+      if (open) {
+        next.add(sectionTo);
+      } else {
+        next.delete(sectionTo);
+      }
       return next;
     });
   }

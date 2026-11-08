@@ -3,7 +3,7 @@ import { type ConfigPage, type PowerFlowCardPlusConfig } from "@flixlix-cards/sh
 import { mdiArrowLeft } from "@mdi/js";
 import { fireEvent, type HomeAssistant } from "custom-card-helpers";
 import { css, type CSSResultGroup, html, LitElement, type TemplateResult } from "lit";
-import { property } from "lit-element";
+import { property } from "lit/decorators.js";
 
 declare global {
   interface HASSDomEvents {
@@ -31,9 +31,9 @@ export class SubpageHeader extends LitElement {
     `;
   }
 
-  private _goBack(): void {
+  private _goBack = (): void => {
     fireEvent(this, "go-back");
-  }
+  };
 
   static get styles(): CSSResultGroup {
     return css`
@@ -50,10 +50,6 @@ export class SubpageHeader extends LitElement {
       }
     `;
   }
-}
-
-if (!customElements.get("subpage-header")) {
-  customElements.define("subpage-header", SubpageHeader);
 }
 
 declare global {

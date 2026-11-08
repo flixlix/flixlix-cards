@@ -50,7 +50,7 @@ export interface HASSDomEvent<T> extends Event {
  * @return {Event} The new event that was fired.
  */
 export const fireEvent = <HassEvent extends ValidHassDomEvent>(
-  node: HTMLElement | Window,
+  node: EventTarget,
   type: HassEvent,
   detail?: HASSDomEvents[HassEvent],
   options?: {
@@ -59,14 +59,12 @@ export const fireEvent = <HassEvent extends ValidHassDomEvent>(
     composed?: boolean;
   }
 ) => {
-  options = options || {};
-  detail = detail === null || detail === undefined ? ({} as HASSDomEvents[HassEvent]) : detail;
-  const event = new Event(type, {
-    bubbles: options.bubbles === undefined ? true : options.bubbles,
-    cancelable: Boolean(options.cancelable),
-    composed: options.composed === undefined ? true : options.composed,
+  const event = new CustomEvent(type, {
+    bubbles: options?.bubbles ?? true,
+    cancelable: Boolean(options?.cancelable),
+    composed: options?.composed ?? true,
+    detail: detail ?? {},
   });
-  (event as any).detail = detail;
   node.dispatchEvent(event);
   return event;
 };

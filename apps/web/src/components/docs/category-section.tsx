@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import * as React from "react";
 
-import { cn } from "@flixlix-cards/cn";
+import { cn } from "cn";
 
 import { CodeBlock } from "./doc-primitives";
 

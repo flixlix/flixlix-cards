@@ -18,6 +18,9 @@ Each card is located in its own folder inside [`packages/flixlix-cards`](package
 - `power-flow-card-plus`
 - `energy-flow-card-plus`
 - `energy-breakdown-card`
+- `sortable-list-card`
+
+Shared logic, components and types live in [`packages/shared`](packages/shared/).
 
 Each package contains its source code, changelogs, and relevant scripts.
 
@@ -71,7 +74,20 @@ Each package contains its source code, changelogs, and relevant scripts.
 
    Complete onboarding if needed, add the card to a dashboard, and test your changes.
 
-7. **Make your code changes.** Commit them following the repository’s style and conventions.
+7. **Make your code changes.** Follow [`CODING_STANDARDS.md`](CODING_STANDARDS.md), then run the checks below before committing.
+
+## Checks
+
+The repo uses [Vite+](https://viteplus.dev) (`vp`): Oxfmt for formatting, Oxlint (type-aware) for linting and Vitest for tests. Configuration lives in the root [`vite.config.ts`](vite.config.ts); repo-specific lint rules live in [`packages/tooling/lint-rules`](packages/tooling/lint-rules/).
+
+```bash
+pnpm check      # format check + lint + type-aware checks
+pnpm format     # apply formatting
+pnpm typecheck  # tsc per package
+pnpm test       # Vitest per package
+```
+
+CI runs the same commands; a pull request must pass all of them with zero lint errors.
 
 ## Changesets
 
@@ -90,6 +106,7 @@ This monorepo uses [Changesets](https://github.com/changesets/changesets) to man
 ## Questions & Help
 
 If you have questions, get stuck, or need clarification:
+
 - Check the card’s own README for usage details or quirks.
 - Feel free to create an issue on GitHub describing your problem or question.
 

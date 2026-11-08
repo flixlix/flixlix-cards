@@ -10,6 +10,21 @@ import {
 
 type SchemaField = Record<string, unknown>;
 
+type ValueChangedEvent<T> = CustomEvent<{ value?: T }>;
+
+function inputValue(event: Event): string {
+  const target = event.target;
+  return target && "value" in target && typeof target.value === "string" ? target.value : "";
+}
+
+function blankToUndefined(value: string | undefined): string | undefined {
+  return value === "" ? undefined : value;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 const SCHEMA: SchemaField[] = [
   { name: "title", selector: { text: {} } },
   { name: "entity", selector: { entity: {} } },
@@ -69,7 +84,9 @@ export class SortableListCardEditor extends LitElement implements LovelaceCardEd
   }
 
   protected render() {
-    if (!this.hass || !this._config) return nothing;
+    if (!this.hass || !this._config) {
+      return nothing;
+    }
     const data: Record<string, unknown> = {
       value_format: "csv",
       show_handle: true,
@@ -104,11 +121,13 @@ export class SortableListCardEditor extends LitElement implements LovelaceCardEd
             pull its name, icon and state automatically.
           </p>
         </header>
-        ${items.length
-          ? html`<div class="item-list">
-              ${items.map((item, index) => this._renderItemRow(item, index))}
-            </div>`
-          : html`<div class="empty-list">No items yet — add one below.</div>`}
+        ${
+          items.length
+            ? html`<div class="item-list">
+                ${items.map((item, index) => this._renderItemRow(item, index))}
+              </div>`
+            : html`<div class="empty-list">No items yet — add one below.</div>`
+        }
         <div class="add-row">
           <ha-button raised @click=${this._addItem}>Add item</ha-button>
         </div>
@@ -119,8 +138,9 @@ export class SortableListCardEditor extends LitElement implements LovelaceCardEd
   private _renderItemRow(item: SortableListItemConfig, index: number) {
     const expanded = this._expanded[index] ?? false;
     const stateObj = item.entity ? this.hass.states[item.entity] : undefined;
-    const friendly = stateObj?.attributes?.friendly_name as string | undefined;
-    const label = item.name || friendly || item.key || item.entity || "(unnamed)";
+    const friendly = stateObj?.attributes?.friendly_name;
+    const label =
+      [item.name, friendly, item.key, item.entity].find((part) => !!part) ?? "(unnamed)";
     return html`
       <div class="item-card">
         <div class="item-card-header">
@@ -131,9 +151,11 @@ export class SortableListCardEditor extends LitElement implements LovelaceCardEd
             @click=${() => this._toggleExpanded(index)}
             title=${expanded ? "Collapse" : "Expand"}
           >
-            ${item.icon
-              ? html`<ha-icon class="item-icon" .icon=${item.icon}></ha-icon>`
-              : html`<span class="item-rank">${index + 1}</span>`}
+            ${
+              item.icon
+                ? html`<ha-icon class="item-icon" .icon=${item.icon}></ha-icon>`
+                : html`<span class="item-rank">${index + 1}</span>`
+            }
             <span class="item-title">${label}</span>
             <span class="item-chevron ${expanded ? "open" : ""}">▾</span>
           </button>
@@ -146,50 +168,52 @@ export class SortableListCardEditor extends LitElement implements LovelaceCardEd
             ✕
           </button>
         </div>
-        ${expanded
-          ? html`
-              <div class="item-card-body">
-                <div class="field full-width">
-                  <ha-entity-picker
-                    allow-custom-entity
-                    .hass=${this.hass}
-                    .value=${item.entity ?? ""}
-                    .label=${"Entity (optional)"}
-                    @value-changed=${(e: CustomEvent) =>
-                      this._patchItem(index, { entity: e.detail.value || undefined })}
-                  ></ha-entity-picker>
+        ${
+          expanded
+            ? html`
+                <div class="item-card-body">
+                  <div class="field full-width">
+                    <ha-entity-picker
+                      allow-custom-entity
+                      .hass=${this.hass}
+                      .value=${item.entity ?? ""}
+                      .label=${"Entity (optional)"}
+                      @value-changed=${(e: ValueChangedEvent<string>) =>
+                        this._patchItem(index, { entity: blankToUndefined(e.detail.value) })}
+                    ></ha-entity-picker>
+                  </div>
+                  <div class="field-grid">
+                    <ha-textfield
+                      label="Key"
+                      helper=${item.entity ? "Defaults to the entity id" : "Required"}
+                      .value=${item.key ?? ""}
+                      @input=${(e: Event) =>
+                        this._patchItem(index, {
+                          key: blankToUndefined(inputValue(e)),
+                        })}
+                    ></ha-textfield>
+                    <ha-textfield
+                      label="Name"
+                      .value=${item.name ?? ""}
+                      @input=${(e: Event) =>
+                        this._patchItem(index, {
+                          name: blankToUndefined(inputValue(e)),
+                        })}
+                    ></ha-textfield>
+                  </div>
+                  <div class="field full-width">
+                    <ha-icon-picker
+                      .hass=${this.hass}
+                      .value=${item.icon ?? ""}
+                      .label=${"Icon"}
+                      @value-changed=${(e: ValueChangedEvent<string>) =>
+                        this._patchItem(index, { icon: blankToUndefined(e.detail.value) })}
+                    ></ha-icon-picker>
+                  </div>
                 </div>
-                <div class="field-grid">
-                  <ha-textfield
-                    label="Key"
-                    helper=${item.entity ? "Defaults to the entity id" : "Required"}
-                    .value=${item.key ?? ""}
-                    @input=${(e: Event) =>
-                      this._patchItem(index, {
-                        key: (e.target as HTMLInputElement).value || undefined,
-                      })}
-                  ></ha-textfield>
-                  <ha-textfield
-                    label="Name"
-                    .value=${item.name ?? ""}
-                    @input=${(e: Event) =>
-                      this._patchItem(index, {
-                        name: (e.target as HTMLInputElement).value || undefined,
-                      })}
-                  ></ha-textfield>
-                </div>
-                <div class="field full-width">
-                  <ha-icon-picker
-                    .hass=${this.hass}
-                    .value=${item.icon ?? ""}
-                    .label=${"Icon"}
-                    @value-changed=${(e: CustomEvent) =>
-                      this._patchItem(index, { icon: e.detail.value || undefined })}
-                  ></ha-icon-picker>
-                </div>
-              </div>
-            `
-          : nothing}
+              `
+            : nothing
+        }
       </div>
     `;
   }
@@ -214,22 +238,23 @@ export class SortableListCardEditor extends LitElement implements LovelaceCardEd
             label="Service"
             placeholder="input_text.set_value"
             .value=${action?.service ?? ""}
-            @input=${(e: Event) =>
-              this._patchSaveAction({ service: (e.target as HTMLInputElement).value.trim() })}
+            @input=${(e: Event) => this._patchSaveAction({ service: inputValue(e).trim() })}
           ></ha-textfield>
         </div>
-        ${hasYamlEditor
-          ? html`<div class="field full-width yaml">
-              <span class="yaml-label">Service data</span>
-              <ha-yaml-editor
-                .hass=${this.hass}
-                .defaultValue=${action?.data ?? { value: "{value}" }}
-                @value-changed=${this._onSaveDataChanged}
-              ></ha-yaml-editor>
-            </div>`
-          : html`<p class="section-help">
-              Switch the card to YAML mode to edit the service data.
-            </p>`}
+        ${
+          hasYamlEditor
+            ? html`<div class="field full-width yaml">
+                <span class="yaml-label">Service data</span>
+                <ha-yaml-editor
+                  .hass=${this.hass}
+                  .defaultValue=${action?.data ?? { value: "{value}" }}
+                  @value-changed=${this._onSaveDataChanged}
+                ></ha-yaml-editor>
+              </div>`
+            : html`<p class="section-help">
+                Switch the card to YAML mode to edit the service data.
+              </p>`
+        }
       </section>
     `;
   }
@@ -239,74 +264,96 @@ export class SortableListCardEditor extends LitElement implements LovelaceCardEd
   }
 
   private _addItem = () => {
-    if (!this._config) return;
+    if (!this._config) {
+      return;
+    }
     const items = [...(this._config.items ?? []), {} as SortableListItemConfig];
     this._update({ items });
     this._expanded = { ...this._expanded, [items.length - 1]: true };
   };
 
   private _patchItem(index: number, patch: Partial<SortableListItemConfig>) {
-    if (!this._config) return;
+    if (!this._config) {
+      return;
+    }
     const items = [...(this._config.items ?? [])];
     const current = items[index];
-    if (!current) return;
-    const merged: SortableListItemConfig = { ...current, ...patch };
-    (Object.keys(merged) as (keyof SortableListItemConfig)[]).forEach((k) => {
-      if (!merged[k]) delete merged[k];
-    });
-    items[index] = merged;
+    if (!current) {
+      return;
+    }
+    items[index] = Object.fromEntries(
+      Object.entries({ ...current, ...patch }).filter(([, value]) => !!value)
+    );
     this._update({ items });
   }
 
   private _removeItem(index: number) {
-    if (!this._config) return;
+    if (!this._config) {
+      return;
+    }
     const items = [...(this._config.items ?? [])];
     items.splice(index, 1);
     const expanded: Record<number, boolean> = {};
     Object.keys(this._expanded).forEach((k) => {
       const num = Number(k);
       const value = this._expanded[num];
-      if (value === undefined) return;
-      if (num < index) expanded[num] = value;
-      else if (num > index) expanded[num - 1] = value;
+      if (value === undefined) {
+        return;
+      }
+      if (num < index) {
+        expanded[num] = value;
+      } else if (num > index) {
+        expanded[num - 1] = value;
+      }
     });
     this._expanded = expanded;
     this._update({ items });
   }
 
   private _patchSaveAction(patch: Partial<SortableListSaveAction>) {
-    if (!this._config) return;
+    if (!this._config) {
+      return;
+    }
     const current = this._config.save_action ?? { service: "" };
     const merged: SortableListSaveAction = { ...current, ...patch };
     if (!merged.service) {
       this._update({ save_action: undefined });
       return;
     }
-    if (!merged.data || Object.keys(merged.data).length === 0) delete merged.data;
-    if (!merged.target || Object.keys(merged.target).length === 0) delete merged.target;
+    if (!merged.data || Object.keys(merged.data).length === 0) {
+      delete merged.data;
+    }
+    if (!merged.target || Object.keys(merged.target).length === 0) {
+      delete merged.target;
+    }
     this._update({ save_action: merged });
   }
 
-  private _onSaveDataChanged = (event: CustomEvent) => {
-    if (event.detail?.isValid === false) return;
+  private _onSaveDataChanged = (event: CustomEvent<{ value?: unknown; isValid?: boolean }>) => {
+    if (event.detail?.isValid === false) {
+      return;
+    }
     const value = event.detail?.value;
-    this._patchSaveAction({
-      data: value && typeof value === "object" && !Array.isArray(value) ? value : undefined,
-    });
+    this._patchSaveAction({ data: isRecord(value) ? value : undefined });
   };
 
-  private _onGeneralChanged = (event: CustomEvent) => {
-    const incoming = event.detail.value as Partial<SortableListCardConfig>;
-    this._update(incoming);
+  private _onGeneralChanged = (event: CustomEvent<{ value: Partial<SortableListCardConfig> }>) => {
+    this._update(event.detail.value);
   };
 
   private _update(patch: Partial<SortableListCardConfig>) {
-    if (!this._config) return;
+    if (!this._config) {
+      return;
+    }
     const next: SortableListCardConfig = { ...this._config, ...patch };
     (Object.keys(next) as (keyof SortableListCardConfig)[]).forEach((key) => {
-      if (key === "items" || key === "type") return;
-      const value = next[key];
-      if (value === undefined || value === "") delete next[key];
+      if (key === "items" || key === "type") {
+        return;
+      }
+      const value: unknown = next[key];
+      if (value === undefined || value === "") {
+        delete next[key];
+      }
     });
     this._config = next;
     fireEvent(this, "config-changed", { config: next });

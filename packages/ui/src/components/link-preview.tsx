@@ -1,12 +1,13 @@
 "use client";
 
-import { cn } from "@flixlix-cards/cn";
+import { cn } from "cn";
 import { AnimatePresence, motion, useMotionValue, useSpring, useTransform } from "motion/react";
 import React, {
   createContext,
   type ReactNode,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -38,17 +39,13 @@ export const LinkPreview = ({ children }: LinkPreviewProps) => {
   const [isHovering, setIsHovering] = useState(false);
   const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
   const triggerRef = useRef<HTMLElement>(null);
+  const context = useMemo(
+    () => ({ isHovering, setIsHovering, triggerRef, cursorPosition, setCursorPosition }),
+    [isHovering, cursorPosition]
+  );
 
   return (
-    <LinkPreviewContext.Provider
-      value={{
-        isHovering,
-        setIsHovering,
-        triggerRef,
-        cursorPosition,
-        setCursorPosition,
-      }}
-    >
+    <LinkPreviewContext.Provider value={context}>
       <div className="relative">{children}</div>
     </LinkPreviewContext.Provider>
   );
@@ -108,10 +105,14 @@ export const LinkPreviewContent = ({ children, className }: LinkPreviewContentPr
   const motionCursorY = useMotionValue(0);
 
   useEffect(() => {
-    if (!isHovering || !triggerRef.current) return;
+    if (!isHovering || !triggerRef.current) {
+      return undefined;
+    }
 
     const updatePosition = () => {
-      if (!triggerRef.current) return;
+      if (!triggerRef.current) {
+        return;
+      }
       const rect = triggerRef.current.getBoundingClientRect();
       setPosition({
         x: rect.right + 24,
@@ -144,7 +145,9 @@ export const LinkPreviewContent = ({ children, className }: LinkPreviewContentPr
   const springX = useSpring(offsetX, { bounce: 0 });
   const springY = useSpring(offsetY, { bounce: 0 });
 
-  if (!isWideEnough) return;
+  if (!isWideEnough) {
+    return null;
+  }
   return (
     <AnimatePresence>
       {isHovering && (

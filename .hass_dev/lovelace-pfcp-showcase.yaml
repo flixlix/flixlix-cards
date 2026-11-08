@@ -1,4 +1,4 @@
-title: PFCP Showcase 
+title: PFCP Showcase
 views:
   - type: sections
     sections:
@@ -70,7 +70,7 @@ views:
                 power_outage:
                   entity: input_boolean.power_outage_state
                   entity_generator: input_number.generator_power
-                  state_alert: 'on'
+                  state_alert: "on"
                   label_alert: Outage
             clickable_entities: true
             display_zero_lines: true
@@ -141,7 +141,7 @@ views:
           - type: heading
             heading: Separate entities
             heading_style: subtitle
-            icon: ''
+            icon: ""
           - type: custom:power-flow-card-plus
             entities:
               grid:
@@ -165,7 +165,7 @@ views:
             transparency_zero_lines: 0
             sort_individual_devices: false
           - type: heading
-            icon: ''
+            icon: ""
             heading: With SoC
             heading_style: subtitle
           - type: custom:power-flow-card-plus
@@ -201,7 +201,7 @@ views:
           - type: heading
             heading: 2 Individuals
             heading_style: subtitle
-            icon: ''
+            icon: ""
           - type: custom:power-flow-card-plus
             entities:
               grid: &ref_0
@@ -236,7 +236,7 @@ views:
             transparency_zero_lines: 0
             sort_individual_devices: false
           - type: heading
-            icon: ''
+            icon: ""
             heading: 4 Individuals
             heading_style: subtitle
           - type: custom:power-flow-card-plus

@@ -1,21 +1,25 @@
 import { type ConfigEntity } from "@flixlix-cards/shared/types";
 import { type HomeAssistant } from "custom-card-helpers";
 import { getEntityStateObj } from "../states/utils/get-entity-state-obj";
+import { nonEmpty } from "./utils";
 
 export const computeFieldIcon = (
   hass: HomeAssistant,
   field: ConfigEntity | undefined,
   fallback: string
 ): string => {
-  if (field?.icon) return field.icon;
+  if (field?.icon) {
+    return field.icon;
+  }
 
   if (field?.use_metadata) {
-    if (typeof field?.entity === "string")
-      return getEntityStateObj(hass, field?.entity)?.attributes?.icon || fallback;
+    if (typeof field?.entity === "string") {
+      return nonEmpty(getEntityStateObj(hass, field?.entity)?.attributes?.icon) ?? fallback;
+    }
 
     return (
-      getEntityStateObj(hass, field?.entity?.consumption)?.attributes?.icon ||
-      getEntityStateObj(hass, field?.entity?.production)?.attributes?.icon ||
+      nonEmpty(getEntityStateObj(hass, field?.entity?.consumption)?.attributes?.icon) ??
+      nonEmpty(getEntityStateObj(hass, field?.entity?.production)?.attributes?.icon) ??
       fallback
     );
   }
@@ -28,15 +32,18 @@ export const computeFieldName = (
   field: ConfigEntity | undefined,
   fallback: string
 ): string => {
-  if (field?.name) return field.name;
+  if (field?.name) {
+    return field.name;
+  }
 
   if (field?.use_metadata) {
-    if (typeof field?.entity === "string")
-      return getEntityStateObj(hass, field.entity)?.attributes?.friendly_name || fallback;
+    if (typeof field?.entity === "string") {
+      return nonEmpty(getEntityStateObj(hass, field.entity)?.attributes?.friendly_name) ?? fallback;
+    }
 
     return (
-      getEntityStateObj(hass, field?.entity?.consumption)?.attributes?.friendly_name ||
-      getEntityStateObj(hass, field?.entity?.production)?.attributes?.friendly_name ||
+      nonEmpty(getEntityStateObj(hass, field?.entity?.consumption)?.attributes?.friendly_name) ??
+      nonEmpty(getEntityStateObj(hass, field?.entity?.production)?.attributes?.friendly_name) ??
       fallback
     );
   }

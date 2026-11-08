@@ -1,5 +1,6 @@
 import {
   type BaseConfigEntity,
+  type ColorValue,
   type ComboEntity,
   type GridPowerOutage,
   type IndividualDeviceType,
@@ -26,8 +27,8 @@ interface mainConfigOptions {
   mega_decimals: number;
   mega_threshold: number;
   full_size?: boolean;
-  style_ha_card?: any;
-  style_card_content?: any;
+  style_ha_card?: string;
+  style_card_content?: string;
   disable_dots?: boolean;
   no_labels?: boolean;
   display_zero_lines?: {
@@ -71,7 +72,7 @@ interface Battery extends BaseConfigEntity {
   show_state_of_charge?: boolean;
   display_zero?: boolean;
   color_state_of_charge_value?: "no_color" | "color_dynamically" | "production" | "consumption";
-  color_circle: "color_dynamically" | "production" | "consumption";
+  color_circle?: "color_dynamically" | "production" | "consumption" | "no_color";
   color_value?: boolean;
   color?: ComboEntity;
 }
@@ -80,14 +81,14 @@ interface Grid extends BaseConfigEntity {
   power_outage: GridPowerOutage;
   secondary_info?: SecondaryInfoType;
   display_zero?: boolean;
-  color_circle: "color_dynamically" | "production" | "consumption";
+  color_circle?: "color_dynamically" | "production" | "consumption" | "no_color";
   color_value?: boolean;
   color?: ComboEntity;
 }
 
 interface Solar extends BaseConfigEntity {
   entity: string;
-  color?: any;
+  color?: ColorValue;
   color_icon?: boolean;
   color_value?: boolean;
   color_label?: boolean;

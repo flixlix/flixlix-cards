@@ -34,7 +34,9 @@ const SECTION_LABELS: Record<string, string> = {
 };
 
 function humanize(part: string): string {
-  if (SECTION_LABELS[part]) return SECTION_LABELS[part];
+  if (SECTION_LABELS[part]) {
+    return SECTION_LABELS[part];
+  }
   return part
     .split("-")
     .map((p) => p.charAt(0).toUpperCase() + p.slice(1))

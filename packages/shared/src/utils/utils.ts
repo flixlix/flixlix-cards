@@ -12,7 +12,7 @@ export function isNumberValue(value: unknown): boolean {
   // parseFloat(value) handles most of the cases we're interested in (it treats null, empty string,
   // and other non-number values as NaN, where Number just uses 0) but it considers the string
   // '123hello' to be a valid number. Therefore we also check if Number(value) is NaN.
-  return !isNaN(parseFloat(value as string)) && !isNaN(Number(value));
+  return !isNaN(parseFloat(String(value))) && !isNaN(Number(value));
 }
 
 export function coerceNumber(value: unknown): number;
@@ -21,18 +21,6 @@ export function coerceNumber(value: unknown, fallbackValue = 0) {
   return isNumberValue(value) ? Number(value) : fallbackValue;
 }
 
-export function coerceStringArray(value: unknown, separator: string | RegExp = /\s+/): string[] {
-  const result: string[] = [];
-
-  if (value != null) {
-    const sourceValues = Array.isArray(value) ? value : `${value}`.split(separator);
-    for (const sourceValue of sourceValues) {
-      const trimmedString = `${sourceValue}`.trim();
-      if (trimmedString) {
-        result.push(trimmedString);
-      }
-    }
-  }
-
-  return result;
-}
+/** Treats `""` as missing, so `nonEmpty(x) ?? fallback` falls back for both. */
+export const nonEmpty = (value: string | null | undefined): string | undefined =>
+  value === null || value === undefined || value === "" ? undefined : value;

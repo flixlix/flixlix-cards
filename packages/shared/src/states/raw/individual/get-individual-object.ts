@@ -4,6 +4,7 @@ import {
   computeFieldName,
 } from "@flixlix-cards/shared/utils/compute-field-attributes";
 import { convertColorListToHex } from "@flixlix-cards/shared/utils/convert-color";
+import { nonEmpty } from "@flixlix-cards/shared/utils/utils";
 import { type ActionConfig, type HomeAssistant } from "custom-card-helpers";
 import { getIndividualSecondaryState, getIndividualState } from ".";
 import { hasIndividualObject } from "./has-individual-object";
@@ -46,7 +47,7 @@ export type IndividualObject = {
   displayZeroTolerance: number;
   icon: string;
   name: string;
-  color: any;
+  color: string | null;
   unit?: string;
   unit_white_space: boolean;
   decimals?: number;
@@ -70,6 +71,9 @@ export type IndividualObject = {
   };
 };
 
+const zeroOrEmptyAsNull = (state: string | number | null | undefined): string | number | null =>
+  state === 0 || state === "" || state === undefined ? null : state;
+
 export const getIndividualObject = ({
   hass,
   config,
@@ -83,14 +87,16 @@ export const getIndividualObject = ({
   useDateSelection?: boolean;
   field: IndividualDeviceType | undefined;
 }): IndividualObject => {
-  if (!field || !field?.entity) return fallbackIndividualObject;
+  if (!field || !field?.entity) {
+    return fallbackIndividualObject;
+  }
   const entity = field.entity;
   const state = getIndividualState({ hass, config, energyGrowthMap, useDateSelection, field });
-  const displayZero = field?.display_zero || false;
-  const displayZeroTolerance = field?.display_zero_tolerance || 0;
+  const displayZero = field?.display_zero ?? false;
+  const displayZeroTolerance = field?.display_zero_tolerance ?? 0;
   const has = hasIndividualObject(displayZero, state, displayZeroTolerance);
   const isStateNegative = state && state < 0;
-  const userConfiguredInvertAnimation = field?.inverted_animation || false;
+  const userConfiguredInvertAnimation = field?.inverted_animation ?? false;
   const invertAnimation = isStateNegative
     ? !userConfiguredInvertAnimation
     : userConfiguredInvertAnimation;
@@ -116,19 +122,19 @@ export const getIndividualObject = ({
     unit_white_space: field?.unit_white_space !== false,
     decimals: field?.decimals,
     invertAnimation,
-    showDirection: field?.show_direction || false,
+    showDirection: field?.show_direction ?? false,
     secondary: {
-      entity: field?.secondary_info?.entity || null,
-      template: field?.secondary_info?.template || null,
+      entity: nonEmpty(field?.secondary_info?.entity) ?? null,
+      template: nonEmpty(field?.secondary_info?.template) ?? null,
       has: field?.secondary_info?.entity !== undefined,
-      state: getIndividualSecondaryState(hass, field) || null,
-      accept_negative: field?.secondary_info?.accept_negative || false,
-      icon: field?.secondary_info?.icon || null,
-      unit: field?.secondary_info?.unit_of_measurement || null,
+      state: zeroOrEmptyAsNull(getIndividualSecondaryState(hass, field)),
+      accept_negative: field?.secondary_info?.accept_negative ?? false,
+      icon: nonEmpty(field?.secondary_info?.icon) ?? null,
+      unit: nonEmpty(field?.secondary_info?.unit_of_measurement) ?? null,
       unit_white_space: field?.secondary_info?.unit_white_space !== false,
-      displayZero: field?.secondary_info?.display_zero || false,
-      displayZeroTolerance: field?.secondary_info?.display_zero_tolerance || 0,
-      decimals: field?.secondary_info?.decimals || null,
+      displayZero: field?.secondary_info?.display_zero ?? false,
+      displayZeroTolerance: field?.secondary_info?.display_zero_tolerance ?? 0,
+      decimals: field?.secondary_info?.decimals ?? null,
       tap_action: field?.secondary_info?.tap_action,
       hold_action: field?.secondary_info?.hold_action,
       double_tap_action: field?.secondary_info?.double_tap_action,

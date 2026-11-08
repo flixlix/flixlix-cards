@@ -1,7 +1,6 @@
 {
   "extends": "@flixlix-cards/typescript-config/react-library.json",
   "compilerOptions": {
-    "baseUrl": ".",
     "paths": {
       "@flixlix-cards/ui/*": ["./src/*"],
       "react": ["./node_modules/@types/react"]

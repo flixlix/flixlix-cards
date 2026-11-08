@@ -4,6 +4,8 @@ import {
   type CardMainContext,
   type ConfigEntities,
   type FlowCardPlusConfig,
+  type GridObject,
+  type NonFossilObject,
   type NewDur,
   type TemplatesObj,
 } from "@flixlix-cards/shared/types";
@@ -19,8 +21,8 @@ interface NonFossil {
   newDur: NewDur;
   templatesObj: TemplatesObj;
   entities: ConfigEntities;
-  nonFossil: any;
-  grid: any;
+  nonFossil: NonFossilObject;
+  grid: GridObject;
   fossilEnergyConsumption?: FossilEnergyConsumption;
 }
 
@@ -29,8 +31,10 @@ export const nonFossilElement = (
   config: FlowCardPlusConfig,
   { nonFossil, entities, templatesObj, grid, newDur, fossilEnergyConsumption }: NonFossil
 ): TemplateResult => {
-  const disableEntityClick = config.clickable_entities === false;
-  if (!nonFossil.hasPercentage) return spacer;
+  const disableEntityClick = !config.clickable_entities;
+  if (!nonFossil.hasPercentage) {
+    return spacer;
+  }
   return html`<div class="circle-container low-carbon">
     <span class="label">${nonFossil.name}</span>
     <div
@@ -75,34 +79,41 @@ export const nonFossilElement = (
     >
       <ha-ripple .disabled=${disableEntityClick}></ha-ripple>
       ${generalSecondarySpan(main.hass, main, config, templatesObj, nonFossil, "nonFossilFuel")}
-      ${nonFossil.icon !== " "
-        ? html` <ha-icon id="low-carbon-icon" .icon=${nonFossil.icon}></ha-icon>`
-        : nothing}
-      ${entities.fossil_fuel_percentage?.display_zero_state !== false ||
-      (nonFossil.state.power || 0) > (entities.fossil_fuel_percentage?.display_zero_tolerance || 0)
-        ? html`
-            <span class="low-carbon"
-              >${displayNonFossilState(
-                main.hass,
-                config,
-                entities!.fossil_fuel_percentage!.entity,
-                grid.state.fromGrid,
-                fossilEnergyConsumption
-              )}</span
-            >
-          `
-        : nothing}
+      ${
+        nonFossil.icon !== " "
+          ? html` <ha-icon id="low-carbon-icon" .icon=${nonFossil.icon}></ha-icon>`
+          : nothing
+      }
+      ${
+        entities.fossil_fuel_percentage?.display_zero_state !== false ||
+        (nonFossil.state.power ?? 0) >
+          (entities.fossil_fuel_percentage?.display_zero_tolerance ?? 0)
+          ? html`
+              <span class="low-carbon"
+                >${displayNonFossilState(
+                  main.hass,
+                  config,
+                  nonFossil.entity,
+                  grid.state.fromGrid ?? 0,
+                  fossilEnergyConsumption
+                )}</span
+              >
+            `
+          : nothing
+      }
     </div>
-    ${showLine(config, nonFossil.state.power || 0)
-      ? html`
-          <svg width="80" height="30">
-            <path
-              d="M40 -10 v40"
-              class="low-carbon ${styleLine(nonFossil.state.power || 0, config)}"
-              id="low-carbon"
-            />
-            ${checkShouldShowDots(config) && nonFossil.has && nonFossil.state.power > 0
-              ? svg`<circle r="1.75" class="low-carbon" vector-effect="non-scaling-stroke">
+    ${
+      showLine(config, nonFossil.state.power ?? 0)
+        ? html`
+            <svg width="80" height="30">
+              <path
+                d="M40 -10 v40"
+                class="low-carbon ${styleLine(nonFossil.state.power ?? 0, config)}"
+                id="low-carbon"
+              />
+              ${
+                checkShouldShowDots(config) && nonFossil.has && (nonFossil.state.power ?? 0) > 0
+                  ? svg`<circle r="1.75" class="low-carbon" vector-effect="non-scaling-stroke">
                     <animateMotion
                       dur="${computeIndividualFlowRate(
                         entities.fossil_fuel_percentage?.calculate_flow_rate,
@@ -114,9 +125,11 @@ export const nonFossilElement = (
                       <mpath xlink:href="#low-carbon" />
                     </animateMotion>
                   </circle>`
-              : nothing}
-          </svg>
-        `
-      : nothing}
+                  : nothing
+              }
+            </svg>
+          `
+        : nothing
+    }
   </div>`;
 };

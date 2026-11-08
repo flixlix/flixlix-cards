@@ -1,5 +1,11 @@
 import { setupLogger } from "./logging";
 
+declare global {
+  interface Window {
+    customCards?: unknown[];
+  }
+}
+
 interface RegisterCardParams {
   type: string;
   name: string;
@@ -8,12 +14,8 @@ interface RegisterCardParams {
 }
 export function registerCustomCard(params: RegisterCardParams) {
   const readmeURL = `https://github.com/flixlix/${params.type}`;
-  const windowWithCards = window as unknown as Window & {
-    customCards: unknown[];
-  };
-  windowWithCards.customCards = windowWithCards.customCards || [];
-
-  windowWithCards.customCards.push({
+  window.customCards ??= [];
+  window.customCards.push({
     ...params,
     preview: true,
     documentationURL: readmeURL,

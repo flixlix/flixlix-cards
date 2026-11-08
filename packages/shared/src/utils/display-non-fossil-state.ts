@@ -14,7 +14,7 @@ import { type HomeAssistant } from "custom-card-helpers";
 export const displayNonFossilState = (
   hass: HomeAssistant,
   config: FlowCardPlusConfig,
-  entityFossil: string,
+  entityFossil: string | undefined,
   totalFromGrid: number,
   fossilEnergyConsumption?: FossilEnergyConsumption
 ): string | number => {
@@ -33,13 +33,17 @@ export const displayNonFossilState = (
 
     if (unitOfMeasurement === unit) {
       let value = nonFossilEnergy;
-      if (displayZeroTolerance && value < displayZeroTolerance) value = 0;
+      if (displayZeroTolerance && value < displayZeroTolerance) {
+        value = 0;
+      }
       return displayValue(hass, config, value, {
         unitWhiteSpace,
       });
     }
     let value = nonFossilPercentage;
-    if (displayZeroTolerance && value < displayZeroTolerance) value = 0;
+    if (displayZeroTolerance && value < displayZeroTolerance) {
+      value = 0;
+    }
     return displayValue(hass, config, value, {
       unit: "%",
       unitWhiteSpace,

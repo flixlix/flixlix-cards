@@ -3,6 +3,8 @@ import {
   type CardMainContext,
   type ConfigEntities,
   type FlowCardPlusConfig,
+  type GridObject,
+  type HomeObject,
   type NewDur,
   type TemplatesObj,
 } from "@flixlix-cards/shared/types";
@@ -10,10 +12,10 @@ import { html, nothing, svg } from "lit";
 import { generalSecondarySpan } from "./spans/general-secondary-span";
 
 interface Home {
-  home: any;
+  home: HomeObject;
   entities: ConfigEntities;
   templatesObj: TemplatesObj;
-  grid: any;
+  grid: GridObject;
   newDur: NewDur;
   homeUsageToDisplay: string;
   homeSolarCircumference: number;
@@ -42,13 +44,13 @@ export const homeElement = (
 ) => {
   const showHomeLabel = individual.filter((i) => i.has).length <= 1;
   const isHomeEntityDefined = entities.home?.entity !== undefined;
-  const noActionSet = ["none", undefined];
+  const noActionSet = new Set(["none", undefined]);
   const staticAction =
-    !noActionSet.includes(entities.home?.tap_action?.action) ||
-    !noActionSet.includes(entities.home?.hold_action?.action) ||
-    !noActionSet.includes(entities.home?.double_tap_action?.action);
+    !noActionSet.has(entities.home?.tap_action?.action) ||
+    !noActionSet.has(entities.home?.hold_action?.action) ||
+    !noActionSet.has(entities.home?.double_tap_action?.action);
   const isClickable = isHomeEntityDefined || staticAction;
-  const disableEntityClick = config.clickable_entities === false || !isClickable;
+  const disableEntityClick = !config.clickable_entities || !isClickable;
 
   return html`
     <div class="circle-container home">
@@ -81,66 +83,81 @@ export const homeElement = (
         ${home.icon !== " " ? html`<ha-icon id="home-icon" .icon=${home.icon}></ha-icon>` : nothing}
         ${homeUsageToDisplay}
         <svg class="home-circle-sections">
-          ${homeSolarCircumference !== undefined
-            ? svg`<circle
+          ${
+            homeSolarCircumference !== undefined
+              ? svg`<circle
                   class="solar"
                   cx="40"
                   cy="40"
                   r="38"
-                  stroke-dasharray="${homeSolarCircumference} ${CIRCLE_CIRCUMFERENCE -
-                  homeSolarCircumference}"
+                  stroke-dasharray="${homeSolarCircumference} ${
+                    CIRCLE_CIRCUMFERENCE - homeSolarCircumference
+                  }"
                   shape-rendering="geometricPrecision"
                   stroke-dashoffset="-${CIRCLE_CIRCUMFERENCE - homeSolarCircumference}"
                 />`
-            : nothing}
-          ${homeBatteryCircumference
-            ? svg`<circle
+              : nothing
+          }
+          ${
+            homeBatteryCircumference
+              ? svg`<circle
                   class="battery"
                   cx="40"
                   cy="40"
                   r="38"
-                  stroke-dasharray="${homeBatteryCircumference} ${CIRCLE_CIRCUMFERENCE -
-                  homeBatteryCircumference}"
-                  stroke-dashoffset="-${CIRCLE_CIRCUMFERENCE -
-                  homeBatteryCircumference -
-                  (homeSolarCircumference || 0)}"
+                  stroke-dasharray="${homeBatteryCircumference} ${
+                    CIRCLE_CIRCUMFERENCE - homeBatteryCircumference
+                  }"
+                  stroke-dashoffset="-${
+                    CIRCLE_CIRCUMFERENCE - homeBatteryCircumference - (homeSolarCircumference || 0)
+                  }"
                   shape-rendering="geometricPrecision"
                 />`
-            : nothing}
-          ${homeNonFossilCircumference !== undefined
-            ? svg`<circle
+              : nothing
+          }
+          ${
+            homeNonFossilCircumference !== undefined
+              ? svg`<circle
                   class="low-carbon"
                   cx="40"
                   cy="40"
                   r="38"
-                  stroke-dasharray="${homeNonFossilCircumference} ${CIRCLE_CIRCUMFERENCE -
-                  homeNonFossilCircumference}"
-                  stroke-dashoffset="-${CIRCLE_CIRCUMFERENCE -
-                  homeNonFossilCircumference -
-                  (homeBatteryCircumference || 0) -
-                  (homeSolarCircumference || 0)}"
+                  stroke-dasharray="${homeNonFossilCircumference} ${
+                    CIRCLE_CIRCUMFERENCE - homeNonFossilCircumference
+                  }"
+                  stroke-dashoffset="-${
+                    CIRCLE_CIRCUMFERENCE -
+                    homeNonFossilCircumference -
+                    (homeBatteryCircumference || 0) -
+                    (homeSolarCircumference || 0)
+                  }"
                   shape-rendering="geometricPrecision"
                 />`
-            : nothing}
+              : nothing
+          }
           <circle
             class="grid"
             cx="40"
             cy="40"
             r="38"
-            stroke-dasharray="${homeGridCircumference ??
-            CIRCLE_CIRCUMFERENCE -
-              homeSolarCircumference! -
-              (homeBatteryCircumference || 0)} ${homeGridCircumference !== undefined
-              ? CIRCLE_CIRCUMFERENCE - homeGridCircumference
-              : homeSolarCircumference! + (homeBatteryCircumference || 0)}"
+            stroke-dasharray="${
+              homeGridCircumference ??
+              CIRCLE_CIRCUMFERENCE - homeSolarCircumference - (homeBatteryCircumference || 0)
+            } ${
+              homeGridCircumference !== undefined
+                ? CIRCLE_CIRCUMFERENCE - homeGridCircumference
+                : homeSolarCircumference + (homeBatteryCircumference || 0)
+            }"
             stroke-dashoffset="0"
             shape-rendering="geometricPrecision"
           />
         </svg>
       </div>
-      ${!showHomeLabel
-        ? html`<span class="label"></span>`
-        : html`<span class="label">${home.name}</span>`}
+      ${
+        !showHomeLabel
+          ? html`<span class="label"></span>`
+          : html`<span class="label">${home.name}</span>`
+      }
     </div>
   `;
 };

@@ -1,3 +1,4 @@
+import { nonEmpty } from "@flixlix-cards/shared/utils/utils";
 import * as ca from "./languages/ca.json";
 import * as cs from "./languages/cs.json";
 import * as de from "./languages/de.json";
@@ -40,24 +41,26 @@ const languages: Record<string, unknown> = {
 
 const defaultLang = "en";
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
 function getTranslatedString(key: string, lang: string): string | undefined {
-  try {
-    return key
-      .split(".")
-      .reduce((o, i) => (o as Record<string, unknown>)[i], languages[lang]) as string;
-  } catch {
-    return undefined;
+  let node: unknown = languages[lang];
+  for (const part of key.split(".")) {
+    if (!isRecord(node)) {
+      return undefined;
+    }
+    node = node[part];
   }
+  return typeof node === "string" ? node : undefined;
 }
 
 export function setupCustomlocalize(key: string) {
-  const lang = (localStorage.getItem("selectedLanguage") || "en")
+  const lang = (nonEmpty(localStorage.getItem("selectedLanguage")) ?? "en")
     .replace(/['"]+/g, "")
     .replace("-", "_");
 
-  let translated = getTranslatedString(key, lang);
-  if (!translated) translated = getTranslatedString(key, defaultLang);
-  return translated ?? key;
+  return nonEmpty(getTranslatedString(key, lang)) ?? getTranslatedString(key, defaultLang) ?? key;
 }
 
 export default setupCustomlocalize;

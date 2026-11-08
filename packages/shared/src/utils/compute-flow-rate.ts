@@ -7,7 +7,9 @@ const newFlowRateMapRange = (
   minIn: number,
   maxIn: number
 ): number => {
-  if (value > maxIn) return maxOut;
+  if (value > maxIn) {
+    return maxOut;
+  }
   return ((value - minIn) * (maxOut - minOut)) / (maxIn - minIn) + minOut;
 };
 

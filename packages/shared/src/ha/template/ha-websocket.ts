@@ -1,4 +1,4 @@
-import { type UnsubscribeFunc } from "home-assistant-js-websocket";
+import { type Connection, type UnsubscribeFunc } from "home-assistant-js-websocket";
 
 interface TemplateListeners {
   all: boolean;
@@ -12,7 +12,7 @@ export interface RenderTemplateResult {
 }
 
 export const subscribeRenderTemplate = (
-  conn: any,
+  conn: Connection,
   onChange: (result: RenderTemplateResult) => void,
   params: {
     template: string;
@@ -22,7 +22,7 @@ export const subscribeRenderTemplate = (
     strict?: boolean;
   }
 ): Promise<UnsubscribeFunc> =>
-  conn.subscribeMessage((msg: RenderTemplateResult) => onChange(msg), {
+  conn.subscribeMessage<RenderTemplateResult>((msg) => onChange(msg), {
     type: "render_template",
     ...params,
   });

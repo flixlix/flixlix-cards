@@ -5,7 +5,7 @@ import { PanelLeftIcon } from "lucide-react";
 import { Slot } from "radix-ui";
 import * as React from "react";
 
-import { cn } from "@flixlix-cards/cn";
+import { cn } from "cn";
 import { Button } from "@flixlix-cards/ui/components/button";
 import { Input } from "@flixlix-cards/ui/components/input";
 import { Separator } from "@flixlix-cards/ui/components/separator";
@@ -31,6 +31,10 @@ const SIDEBAR_WIDTH = "16rem";
 const SIDEBAR_WIDTH_MOBILE = "18rem";
 const SIDEBAR_WIDTH_ICON = "3rem";
 const SIDEBAR_KEYBOARD_SHORTCUT = "b";
+
+type CSSVariables = Record<`--${string}`, string>;
+
+const SIDEBAR_MOBILE_STYLE: CSSVariables = { "--sidebar-width": SIDEBAR_WIDTH_MOBILE };
 
 type SidebarContextProps = {
   state: "expanded" | "collapsed";
@@ -90,7 +94,7 @@ function SidebarProvider({
 
   // Helper to toggle the sidebar.
   const toggleSidebar = React.useCallback(() => {
-    return isMobile ? setOpenMobile((open) => !open) : setOpen((open) => !open);
+    return isMobile ? setOpenMobile((isOpen) => !isOpen) : setOpen((isOpen) => !isOpen);
   }, [isMobile, setOpen, setOpenMobile]);
 
   // Adds a keyboard shortcut to toggle the sidebar.
@@ -185,11 +189,7 @@ function Sidebar({
           data-slot="sidebar"
           data-mobile="true"
           className="w-(--sidebar-width) bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
-          style={
-            {
-              "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
-            } as React.CSSProperties
-          }
+          style={SIDEBAR_MOBILE_STYLE}
           side={side}
         >
           <SheetHeader className="sr-only">
@@ -588,9 +588,8 @@ function SidebarMenuSkeleton({
   showIcon?: boolean;
 }) {
   // Random width between 50 to 90%.
-  const width = React.useMemo(() => {
-    return `${Math.floor(Math.random() * 40) + 50}%`;
-  }, []);
+  const [width] = React.useState(() => `${Math.floor(Math.random() * 40) + 50}%`);
+  const skeletonStyle: CSSVariables = { "--skeleton-width": width };
 
   return (
     <div
@@ -603,11 +602,7 @@ function SidebarMenuSkeleton({
       <Skeleton
         className="h-4 max-w-(--skeleton-width) flex-1"
         data-sidebar="menu-skeleton-text"
-        style={
-          {
-            "--skeleton-width": width,
-          } as React.CSSProperties
-        }
+        style={skeletonStyle}
       />
     </div>
   );

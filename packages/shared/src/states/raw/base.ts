@@ -18,13 +18,19 @@ export const getSecondaryState = (
 ) => {
   const entity = config.entities?.[field]?.secondary_info?.entity;
 
-  if (typeof entity !== "string") return null;
+  if (typeof entity !== "string") {
+    return null;
+  }
 
   const entityObj = hass.states[getFirstEntityName(entity)];
-  if (!entityObj) return null;
+  if (!entityObj) {
+    return null;
+  }
   const secondaryState = entityObj.state;
 
-  if (isNumberValue(secondaryState)) return Number(secondaryState);
+  if (isNumberValue(secondaryState)) {
+    return Number(secondaryState);
+  }
 
   return secondaryState;
 };
@@ -36,16 +42,20 @@ export const getFieldInState = (
 ) => {
   const entity = config.entities[field]?.entity;
 
-  if (entity === undefined) return null;
+  if (entity === undefined) {
+    return null;
+  }
 
   if (typeof entity === "string") {
     const state = getEntityStateWatts(hass, entity);
 
-    if (isEntityInverted(config, field)) return onlyPositive(state);
+    if (isEntityInverted(config, field)) {
+      return onlyPositive(state);
+    }
 
     return onlyNegative(state);
   }
-  return getEntityStateWatts(hass, entity!.production);
+  return getEntityStateWatts(hass, entity.production);
 };
 
 export const getFieldOutState = (
@@ -55,14 +65,18 @@ export const getFieldOutState = (
 ) => {
   const entity = config.entities[field]?.entity;
 
-  if (entity === undefined) return null;
+  if (entity === undefined) {
+    return null;
+  }
 
   if (typeof entity === "string") {
     const state = getEntityStateWatts(hass, entity);
 
-    if (isEntityInverted(config, field)) return onlyNegative(state);
+    if (isEntityInverted(config, field)) {
+      return onlyNegative(state);
+    }
 
     return onlyPositive(state);
   }
-  return getEntityStateWatts(hass, entity!.consumption);
+  return getEntityStateWatts(hass, entity.consumption);
 };

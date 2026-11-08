@@ -13,7 +13,7 @@ import {
 import * as React from "react";
 
 import { HeroFlow } from "@/components/hero-flow";
-import { cn } from "@flixlix-cards/cn";
+import { cn } from "cn";
 import { Button } from "@flixlix-cards/ui/components/button";
 
 export const Route = createFileRoute("/_docs/")({
@@ -27,7 +27,7 @@ type CardEntry = {
   accent: { chip: string; border: string };
   media: React.ReactNode;
   description: React.ReactNode;
-  bullets: React.ReactNode[];
+  bullets: { id: string; content: React.ReactNode }[];
 };
 
 const CARDS: CardEntry[] = [
@@ -58,10 +58,10 @@ const CARDS: CardEntry[] = [
       </>
     ),
     bullets: [
-      "UI editor & YAML support",
-      "Up to 4 individual devices",
-      <>Bidirectional grid &amp; battery flows</>,
-      "Power outage handling and templates",
+      { id: "editor", content: "UI editor & YAML support" },
+      { id: "devices", content: "Up to 4 individual devices" },
+      { id: "bidirectional", content: "Bidirectional grid & battery flows" },
+      { id: "outage", content: "Power outage handling and templates" },
     ],
   },
   {
@@ -91,12 +91,17 @@ const CARDS: CardEntry[] = [
       </>
     ),
     bullets: [
-      "Binds to Home Assistant energy collections",
-      "Same flexible config style as Power Flow",
-      <>
-        Multiple dashboard support via <code>collection_key</code>
-      </>,
-      "Translatable labels in 14+ languages",
+      { id: "collections", content: "Binds to Home Assistant energy collections" },
+      { id: "config-style", content: "Same flexible config style as Power Flow" },
+      {
+        id: "dashboards",
+        content: (
+          <>
+            Multiple dashboard support via <code>collection_key</code>
+          </>
+        ),
+      },
+      { id: "translations", content: "Translatable labels in 14+ languages" },
     ],
   },
   {
@@ -121,12 +126,17 @@ const CARDS: CardEntry[] = [
       </>
     ),
     bullets: [
-      "Donut and stacked-bar variants",
-      "Optional legend with values & percentages",
-      <>
-        <code>group_others</code> + <code>max_items</code> to keep things tidy
-      </>,
-      "Custom HACS repository (not yet in the default index)",
+      { id: "variants", content: "Donut and stacked-bar variants" },
+      { id: "legend", content: "Optional legend with values & percentages" },
+      {
+        id: "grouping",
+        content: (
+          <>
+            <code>group_others</code> + <code>max_items</code> to keep things tidy
+          </>
+        ),
+      },
+      { id: "hacs", content: "Custom HACS repository (not yet in the default index)" },
     ],
   },
   {
@@ -145,10 +155,10 @@ const CARDS: CardEntry[] = [
       </>
     ),
     bullets: [
-      "Drag or use arrows to reorder",
-      "Persist via any service with placeholders",
-      "Entity-backed items (name, icon, state)",
-      "Custom HACS repository (not yet in the default index)",
+      { id: "reorder", content: "Drag or use arrows to reorder" },
+      { id: "persist", content: "Persist via any service with placeholders" },
+      { id: "entities", content: "Entity-backed items (name, icon, state)" },
+      { id: "hacs", content: "Custom HACS repository (not yet in the default index)" },
     ],
   },
 ];
@@ -231,8 +241,8 @@ function IndexPage() {
               </h3>
               <p className="text-muted-foreground text-sm leading-relaxed">{card.description}</p>
               <ul className="text-muted-foreground mb-2 list-disc space-y-1 pl-5 text-sm leading-relaxed">
-                {card.bullets.map((bullet, i) => (
-                  <li key={i}>{bullet}</li>
+                {card.bullets.map((bullet) => (
+                  <li key={bullet.id}>{bullet.content}</li>
                 ))}
               </ul>
               <span className="text-primary mt-auto inline-flex items-center gap-1 text-sm font-medium">

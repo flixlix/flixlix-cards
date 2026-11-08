@@ -1,7 +1,7 @@
 import { Avatar as AvatarPrimitive } from "radix-ui";
 import * as React from "react";
 
-import { cn } from "@flixlix-cards/cn";
+import { cn } from "cn";
 
 function Avatar({
   className,

@@ -9,7 +9,7 @@
     "experimentalDecorators": true,
     "useDefineForClassFields": false,
     "emitDecoratorMetadata": true,
-    "types": ["vitest/globals"],
+    "types": [],
     "paths": {
       "@/*": ["./src/*"]
     }

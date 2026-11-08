@@ -4,35 +4,20 @@
   "tasks": {
     "build": {
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": [
-        "dist/**",
-        ".next/**",
-        "!.next/cache/**",
-        ".output/**",
-        ".vercel/output/**"
-      ],
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**", ".output/**", ".vercel/output/**"],
       "dependsOn": ["^build"]
     },
     "test": {
       "cache": true,
       "outputs": ["coverage/**"],
       "dependsOn": ["^build"],
-      "inputs": [
-        "$TURBO_DEFAULT$", 
-        "$TURBO_ROOT$/packages/testing/vitest-base.js"
-      ]
-    },
-    "precommit": {
-      "cache": false,
-      "dependsOn": ["^test", "^lint", "^format:check"],
-      "inputs": ["$TURBO_DEFAULT$"]
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/packages/tooling/testing/vitest-base.js"]
     },
     "typecheck": {
       "cache": false,
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$"]
     },
-    "lint": {},
     "dev": {
       "cache": false,
       "persistent": true,
@@ -40,12 +25,6 @@
       "with": ["dev"]
     },
     "clean": {
-      "cache": false
-    },
-    "format": {
-      "cache": false
-    },
-    "format:check": {
       "cache": false
     }
   }

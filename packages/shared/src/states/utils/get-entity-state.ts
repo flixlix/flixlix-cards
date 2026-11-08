@@ -16,7 +16,9 @@ export const getEntityState = (hass: HomeAssistant, entity: string | undefined):
   let tempNumber: number;
   for (const id of ids) {
     const stateObj = hass.states[id];
-    if (!stateObj) continue;
+    if (!stateObj) {
+      continue;
+    }
     tempNumber = coerceNumber(stateObj.state);
     endResult = endResult + tempNumber;
   }

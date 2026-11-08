@@ -25,15 +25,20 @@ export const individualRightBottomElement = (
   config: FlowCardPlusConfig,
   { individualObj, templatesObj, displayState, newDur }: TopIndividual
 ) => {
-  if (!individualObj) return spacer;
-  const disableEntityClick = config.clickable_entities === false;
+  if (!individualObj) {
+    return spacer;
+  }
+  const disableEntityClick = !config.clickable_entities;
 
   const indexOfIndividual = config?.entities?.individual?.findIndex(
     (e) => e.entity === individualObj.entity
   );
-  if (indexOfIndividual === -1 || indexOfIndividual === undefined) return spacer;
+  if (indexOfIndividual === -1 || indexOfIndividual === undefined) {
+    return spacer;
+  }
 
-  const duration = newDur.individual[indexOfIndividual] || 1.66;
+  const flowDuration = newDur.individual[indexOfIndividual];
+  const duration = flowDuration === undefined || flowDuration === 0 ? 1.66 : flowDuration;
 
   return html`<div
     class="circle-container individual-bottom individual-right individual-right-bottom"
@@ -71,41 +76,49 @@ export const individualRightBottomElement = (
         indexOfIndividual,
         "right-bottom"
       )}
-      ${individualObj.icon !== " "
-        ? html` <ha-icon id="individual-right-bottom-icon" .icon=${individualObj.icon}></ha-icon>`
-        : nothing}
-      ${individualObj?.field?.display_zero_state !== false ||
-      (individualObj.state || 0) > (individualObj.displayZeroTolerance ?? 0)
-        ? html` <span class="individual-bottom individual-right-bottom">
-            ${individualObj?.showDirection
-              ? html`<ha-icon
-                  class="small"
-                  .icon=${individualObj.invertAnimation ? "mdi:arrow-down" : "mdi:arrow-up"}
-                ></ha-icon>`
-              : nothing}${displayState}
-          </span>`
-        : nothing}
+      ${
+        individualObj.icon !== " "
+          ? html` <ha-icon id="individual-right-bottom-icon" .icon=${individualObj.icon}></ha-icon>`
+          : nothing
+      }
+      ${
+        individualObj?.field?.display_zero_state !== false ||
+        (individualObj.state ?? 0) > (individualObj.displayZeroTolerance ?? 0)
+          ? html` <span class="individual-bottom individual-right-bottom">
+              ${
+                individualObj?.showDirection
+                  ? html`<ha-icon
+                      class="small"
+                      .icon=${individualObj.invertAnimation ? "mdi:arrow-down" : "mdi:arrow-up"}
+                    ></ha-icon>`
+                  : nothing
+              }${displayState}
+            </span>`
+          : nothing
+      }
     </div>
     <span class="label">${individualObj.name}</span>
-    ${showLine(config, individualObj.state || 0) && !config.entities.home?.hide
-      ? html`
-          <div class="right-individual-flow-container">
-            <svg
-              viewBox="0 0 100 100"
-              xmlns="http://www.w3.org/2000/svg"
-              preserveAspectRatio="xMidYMid slice"
-              class="right-individual-flow"
-            >
-              <path
-                id="individual-bottom-right-home"
-                class="${styleLine(individualObj.state || 0, config)}"
-                d="M45,100 v-15 c0,-30 -10,-30 -30,-30 h-20"
-                vector-effect="non-scaling-stroke"
-              />
-              ${checkShouldShowDots(config) &&
-              individualObj.state &&
-              individualObj.state >= (individualObj.displayZeroTolerance ?? 0)
-                ? svg`<circle r="1" class="individual-bottom" vector-effect="non-scaling-stroke">
+    ${
+      showLine(config, individualObj.state ?? 0) && !config.entities.home?.hide
+        ? html`
+            <div class="right-individual-flow-container">
+              <svg
+                viewBox="0 0 100 100"
+                xmlns="http://www.w3.org/2000/svg"
+                preserveAspectRatio="xMidYMid slice"
+                class="right-individual-flow"
+              >
+                <path
+                  id="individual-bottom-right-home"
+                  class="${styleLine(individualObj.state ?? 0, config)}"
+                  d="M45,100 v-15 c0,-30 -10,-30 -30,-30 h-20"
+                  vector-effect="non-scaling-stroke"
+                />
+                ${
+                  checkShouldShowDots(config) &&
+                  individualObj.state &&
+                  individualObj.state >= (individualObj.displayZeroTolerance ?? 0)
+                    ? svg`<circle r="1" class="individual-bottom" vector-effect="non-scaling-stroke">
                       <animateMotion
                         dur="${computeIndividualFlowRate(
                           individualObj?.field?.calculate_flow_rate,
@@ -119,10 +132,12 @@ export const individualRightBottomElement = (
                         <mpath xlink:href="#individual-bottom-right-home" />
                       </animateMotion>
                     </circle>`
-                : nothing}
-            </svg>
-          </div>
-        `
-      : nothing}
+                    : nothing
+                }
+              </svg>
+            </div>
+          `
+        : nothing
+    }
   </div>`;
 };

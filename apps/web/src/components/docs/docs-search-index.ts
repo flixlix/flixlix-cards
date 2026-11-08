@@ -302,107 +302,165 @@ function breakdownPages(): SearchEntry[] {
   ];
 }
 
+const breakdownConfigSection = (
+  id: string,
+  title: string,
+  description: string,
+  keywords?: string[]
+): SearchEntry => ({
+  title,
+  description,
+  to: `${BREAKDOWN_BASE}/configuration#${id}`,
+  breadcrumb: `${BREAKDOWN} → Configuration`,
+  card: "breakdown",
+  type: "section",
+  keywords,
+});
+
 function breakdownConfigSections(): SearchEntry[] {
-  const make = (
-    id: string,
-    title: string,
-    description: string,
-    keywords?: string[]
-  ): SearchEntry => ({
-    title,
-    description,
-    to: `${BREAKDOWN_BASE}/configuration#${id}`,
-    breadcrumb: `${BREAKDOWN} → Configuration`,
-    card: "breakdown",
-    type: "section",
-    keywords,
-  });
   return [
-    make("card-options", "Card options", "Type, title, chart variant, and entities."),
-    make("display", "Legend & tooltip", "Toggle and position the legend, tooltip, total, icons."),
-    make("data", "Data shaping", "Sort, group, decimals, and unit handling.", [
+    breakdownConfigSection(
+      "card-options",
+      "Card options",
+      "Type, title, chart variant, and entities."
+    ),
+    breakdownConfigSection(
+      "display",
+      "Legend & tooltip",
+      "Toggle and position the legend, tooltip, total, icons."
+    ),
+    breakdownConfigSection("data", "Data shaping", "Sort, group, decimals, and unit handling.", [
       "max_items",
       "group_others",
     ]),
-    make("appearance", "Chart appearance", "Donut/bar thickness and corner radius."),
-    make(
+    breakdownConfigSection(
+      "appearance",
+      "Chart appearance",
+      "Donut/bar thickness and corner radius."
+    ),
+    breakdownConfigSection(
       "energy-dashboard",
       "Energy dashboard sync",
       "Bind the card to the energy dashboard's selected period.",
       ["energy_date_selection", "collection_key"]
     ),
-    make("entity-options", "Entity options", "Per-entity name, color, icon, multiplier, actions."),
-    make("actions", "Actions", "tap_action, hold_action, double_tap_action."),
+    breakdownConfigSection(
+      "entity-options",
+      "Entity options",
+      "Per-entity name, color, icon, multiplier, actions."
+    ),
+    breakdownConfigSection("actions", "Actions", "tap_action, hold_action, double_tap_action."),
   ];
 }
 
+const breakdownConfigOption = (
+  name: string,
+  description: string,
+  sectionId = "card-options",
+  extraKeywords?: string[]
+): SearchEntry => ({
+  title: name,
+  description,
+  to: `${BREAKDOWN_BASE}/configuration#${sectionId}`,
+  breadcrumb: `${BREAKDOWN} → Configuration`,
+  card: "breakdown",
+  type: "option",
+  keywords: extraKeywords,
+});
+
 function breakdownConfigOptions(): SearchEntry[] {
-  const make = (
-    name: string,
-    description: string,
-    sectionId = "card-options",
-    extraKeywords?: string[]
-  ): SearchEntry => ({
-    title: name,
-    description,
-    to: `${BREAKDOWN_BASE}/configuration#${sectionId}`,
-    breadcrumb: `${BREAKDOWN} → Configuration`,
-    card: "breakdown",
-    type: "option",
-    keywords: extraKeywords,
-  });
   return [
-    make("type", "Card type identifier (required)."),
-    make("entities", "Array of energy sources to display (required).", "entity-options"),
-    make("title", "Optional card title."),
-    make("chart_type", "Visual variant: bar or donut.", "card-options", ["donut", "bar"]),
-    make("show_legend", "Show or hide the legend.", "display"),
-    make("legend_position", "bottom or right (donut only).", "display"),
-    make("show_tooltip", "Show tooltip on hover/tap.", "display"),
-    make("show_total", "Show total in donut center / bar header.", "display"),
-    make("show_legend_value", "Show formatted value in each legend row.", "display"),
-    make("show_legend_percentage", "Show percentage in each legend row.", "display"),
-    make("show_icons", "Show entity icons in the legend.", "display"),
-    make("sort", "Sort segments by value, descending.", "data"),
-    make("max_items", "Show only the top N largest sources.", "data"),
-    make("group_others", "Bundle remaining entities into an 'Other' segment.", "data"),
-    make("decimals", "Default decimals for formatted values.", "data"),
-    make("unit_of_measurement", "Fallback unit for entities without a unit.", "data"),
-    make("donut_thickness", "Donut ring thickness in px.", "appearance"),
-    make("bar_thickness", "Bar height in px.", "appearance"),
-    make("section_radius", "Corner radius for chart segments.", "appearance"),
-    make(
+    breakdownConfigOption("type", "Card type identifier (required)."),
+    breakdownConfigOption(
+      "entities",
+      "Array of energy sources to display (required).",
+      "entity-options"
+    ),
+    breakdownConfigOption("title", "Optional card title."),
+    breakdownConfigOption("chart_type", "Visual variant: bar or donut.", "card-options", [
+      "donut",
+      "bar",
+    ]),
+    breakdownConfigOption("show_legend", "Show or hide the legend.", "display"),
+    breakdownConfigOption("legend_position", "bottom or right (donut only).", "display"),
+    breakdownConfigOption("show_tooltip", "Show tooltip on hover/tap.", "display"),
+    breakdownConfigOption("show_total", "Show total in donut center / bar header.", "display"),
+    breakdownConfigOption(
+      "show_legend_value",
+      "Show formatted value in each legend row.",
+      "display"
+    ),
+    breakdownConfigOption(
+      "show_legend_percentage",
+      "Show percentage in each legend row.",
+      "display"
+    ),
+    breakdownConfigOption("show_icons", "Show entity icons in the legend.", "display"),
+    breakdownConfigOption("sort", "Sort segments by value, descending.", "data"),
+    breakdownConfigOption("max_items", "Show only the top N largest sources.", "data"),
+    breakdownConfigOption(
+      "group_others",
+      "Bundle remaining entities into an 'Other' segment.",
+      "data"
+    ),
+    breakdownConfigOption("decimals", "Default decimals for formatted values.", "data"),
+    breakdownConfigOption(
+      "unit_of_measurement",
+      "Fallback unit for entities without a unit.",
+      "data"
+    ),
+    breakdownConfigOption("donut_thickness", "Donut ring thickness in px.", "appearance"),
+    breakdownConfigOption("bar_thickness", "Bar height in px.", "appearance"),
+    breakdownConfigOption("section_radius", "Corner radius for chart segments.", "appearance"),
+    breakdownConfigOption(
       "energy_date_selection",
       "Use statistics growth for the energy dashboard's selected period.",
       "energy-dashboard"
     ),
-    make("collection_key", "Bind to a specific energy collection.", "energy-dashboard"),
-    make("color", "Per-entity color override.", "entity-options"),
-    make("icon", "Per-entity MDI icon.", "entity-options"),
-    make("name", "Per-entity name override.", "entity-options"),
-    make("multiplier", "Multiply the raw value (e.g. Wh → kWh).", "entity-options"),
-    make("tap_action", "Action triggered on tap.", "actions"),
-    make("hold_action", "Action triggered on long press.", "actions"),
-    make("double_tap_action", "Action triggered on double tap.", "actions"),
+    breakdownConfigOption(
+      "collection_key",
+      "Bind to a specific energy collection.",
+      "energy-dashboard"
+    ),
+    breakdownConfigOption("color", "Per-entity color override.", "entity-options"),
+    breakdownConfigOption("icon", "Per-entity MDI icon.", "entity-options"),
+    breakdownConfigOption("name", "Per-entity name override.", "entity-options"),
+    breakdownConfigOption(
+      "multiplier",
+      "Multiply the raw value (e.g. Wh → kWh).",
+      "entity-options"
+    ),
+    breakdownConfigOption("tap_action", "Action triggered on tap.", "actions"),
+    breakdownConfigOption("hold_action", "Action triggered on long press.", "actions"),
+    breakdownConfigOption("double_tap_action", "Action triggered on double tap.", "actions"),
   ];
 }
 
+const breakdownExample = (id: string, title: string, description: string): SearchEntry => ({
+  title,
+  description,
+  to: `${BREAKDOWN_BASE}/examples#${id}`,
+  breadcrumb: `${BREAKDOWN} → Examples`,
+  card: "breakdown",
+  type: "example",
+});
+
 function breakdownExamples(): SearchEntry[] {
-  const make = (id: string, title: string, description: string): SearchEntry => ({
-    title,
-    description,
-    to: `${BREAKDOWN_BASE}/examples#${id}`,
-    breadcrumb: `${BREAKDOWN} → Examples`,
-    card: "breakdown",
-    type: "example",
-  });
   return [
-    make("minimal", "Minimal (bar)", "Smallest config — just a list of entities."),
-    make("donut", "Donut with right legend", "Donut variant with custom colors."),
-    make("grouped-others", "Top sources with Other", "max_items + group_others."),
-    make("energy-dashboard", "Sync to energy dashboard period", "energy_date_selection: true."),
-    make("multi-dashboard", "Multiple energy dashboards", "Use collection_key to pick one."),
-    make("full-config", "Mix & match", "Reference config showing many options."),
+    breakdownExample("minimal", "Minimal (bar)", "Smallest config — just a list of entities."),
+    breakdownExample("donut", "Donut with right legend", "Donut variant with custom colors."),
+    breakdownExample("grouped-others", "Top sources with Other", "max_items + group_others."),
+    breakdownExample(
+      "energy-dashboard",
+      "Sync to energy dashboard period",
+      "energy_date_selection: true."
+    ),
+    breakdownExample(
+      "multi-dashboard",
+      "Multiple energy dashboards",
+      "Use collection_key to pick one."
+    ),
+    breakdownExample("full-config", "Mix & match", "Reference config showing many options."),
   ];
 }
 
@@ -447,88 +505,115 @@ function sortablePages(): SearchEntry[] {
   ];
 }
 
+const sortableConfigSection = (
+  id: string,
+  title: string,
+  description: string,
+  keywords?: string[]
+): SearchEntry => ({
+  title,
+  description,
+  to: `${SORTABLE_BASE}/configuration#${id}`,
+  breadcrumb: `${SORTABLE} → Configuration`,
+  card: "sortable",
+  type: "section",
+  keywords,
+});
+
 function sortableConfigSections(): SearchEntry[] {
-  const make = (
-    id: string,
-    title: string,
-    description: string,
-    keywords?: string[]
-  ): SearchEntry => ({
-    title,
-    description,
-    to: `${SORTABLE_BASE}/configuration#${id}`,
-    breadcrumb: `${SORTABLE} → Configuration`,
-    card: "sortable",
-    type: "section",
-    keywords,
-  });
   return [
-    make("card-options", "Card options", "Type, items, read-back entity, and value format.", [
-      "value_format",
+    sortableConfigSection(
+      "card-options",
+      "Card options",
+      "Type, items, read-back entity, and value format.",
+      ["value_format", "csv", "json"]
+    ),
+    sortableConfigSection(
+      "display",
+      "Display",
+      "Drag handle, arrow buttons, rank number, and entity state."
+    ),
+    sortableConfigSection(
+      "save-action",
+      "Save action",
+      "Persist the order through any service call.",
+      ["service", "placeholder", "value"]
+    ),
+    sortableConfigSection("item-options", "Item options", "Per-item key, entity, name, and icon."),
+  ];
+}
+
+const sortableConfigOption = (
+  name: string,
+  description: string,
+  sectionId = "card-options",
+  extraKeywords?: string[]
+): SearchEntry => ({
+  title: name,
+  description,
+  to: `${SORTABLE_BASE}/configuration#${sectionId}`,
+  breadcrumb: `${SORTABLE} → Configuration`,
+  card: "sortable",
+  type: "option",
+  keywords: extraKeywords,
+});
+
+function sortableConfigOptions(): SearchEntry[] {
+  return [
+    sortableConfigOption("type", "Card type identifier (required)."),
+    sortableConfigOption("items", "The list rows (required).", "item-options"),
+    sortableConfigOption("entity", "Entity whose state holds the current order (optional)."),
+    sortableConfigOption("value_format", "Store the order as csv or json.", "card-options", [
       "csv",
       "json",
     ]),
-    make("display", "Display", "Drag handle, arrow buttons, rank number, and entity state."),
-    make("save-action", "Save action", "Persist the order through any service call.", [
+    sortableConfigOption("title", "Optional card title."),
+    sortableConfigOption("show_handle", "Show the drag handle on each row.", "display"),
+    sortableConfigOption("show_arrows", "Show the up/down arrow buttons.", "display"),
+    sortableConfigOption("show_rank", "Show the position number on each row.", "display"),
+    sortableConfigOption("show_state", "Show the entity state as secondary text.", "display"),
+    sortableConfigOption("save_action", "Service called on every reorder.", "save-action", [
       "service",
-      "placeholder",
-      "value",
+      "script",
     ]),
-    make("item-options", "Item options", "Per-item key, entity, name, and icon."),
+    sortableConfigOption(
+      "key",
+      "Stable id stored in the order (defaults to entity).",
+      "item-options"
+    ),
+    sortableConfigOption("icon", "Per-item MDI icon override.", "item-options"),
+    sortableConfigOption("name", "Per-item label override.", "item-options"),
   ];
 }
 
-function sortableConfigOptions(): SearchEntry[] {
-  const make = (
-    name: string,
-    description: string,
-    sectionId = "card-options",
-    extraKeywords?: string[]
-  ): SearchEntry => ({
-    title: name,
-    description,
-    to: `${SORTABLE_BASE}/configuration#${sectionId}`,
-    breadcrumb: `${SORTABLE} → Configuration`,
-    card: "sortable",
-    type: "option",
-    keywords: extraKeywords,
-  });
-  return [
-    make("type", "Card type identifier (required)."),
-    make("items", "The list rows (required).", "item-options"),
-    make("entity", "Entity whose state holds the current order (optional)."),
-    make("value_format", "Store the order as csv or json.", "card-options", ["csv", "json"]),
-    make("title", "Optional card title."),
-    make("show_handle", "Show the drag handle on each row.", "display"),
-    make("show_arrows", "Show the up/down arrow buttons.", "display"),
-    make("show_rank", "Show the position number on each row.", "display"),
-    make("show_state", "Show the entity state as secondary text.", "display"),
-    make("save_action", "Service called on every reorder.", "save-action", ["service", "script"]),
-    make("key", "Stable id stored in the order (defaults to entity).", "item-options"),
-    make("icon", "Per-item MDI icon override.", "item-options"),
-    make("name", "Per-item label override.", "item-options"),
-  ];
-}
+const sortableExample = (id: string, title: string, description: string): SearchEntry => ({
+  title,
+  description,
+  to: `${SORTABLE_BASE}/examples#${id}`,
+  breadcrumb: `${SORTABLE} → Examples`,
+  card: "sortable",
+  type: "example",
+});
 
 function sortableExamples(): SearchEntry[] {
-  const make = (id: string, title: string, description: string): SearchEntry => ({
-    title,
-    description,
-    to: `${SORTABLE_BASE}/examples#${id}`,
-    breadcrumb: `${SORTABLE} → Examples`,
-    card: "sortable",
-    type: "example",
-  });
   return [
-    make("minimal", "Minimal (CSV input_text)", "Smallest config storing a CSV value."),
-    make("hems", "HEMS load priority", "Order battery, EV, heating for energy management."),
-    make("entity-backed", "Entity-backed rows + script", "Pull name/icon/state, save as JSON."),
-    make(
+    sortableExample("minimal", "Minimal (CSV input_text)", "Smallest config storing a CSV value."),
+    sortableExample(
+      "hems",
+      "HEMS load priority",
+      "Order battery, EV, heating for energy management."
+    ),
+    sortableExample(
+      "entity-backed",
+      "Entity-backed rows + script",
+      "Pull name/icon/state, save as JSON."
+    ),
+    sortableExample(
       "custom-service",
       "Write-only via a custom service",
       "No entity, fire a service on change."
     ),
-    make("bare", "Bare list", "Hide the handle, arrows, and rank."),
+    sortableExample("bare", "Bare list", "Hide the handle, arrows, and rank."),
   ];
 }
 
@@ -584,7 +669,7 @@ const CONTRIBUTING_SECTIONS: SearchEntry[] = [
     breadcrumb: "How to contribute",
     card: "general",
     type: "section",
-    keywords: ["eslint", "prettier", "typecheck", "vitest"],
+    keywords: ["vite+", "oxlint", "oxfmt", "lint", "format", "typecheck", "vitest"],
   },
   {
     title: "Add a changeset",
@@ -638,7 +723,9 @@ export const SEARCH_ENTRIES: SearchEntry[] = [
 
 function score(query: string, entry: SearchEntry): number {
   const q = query.toLowerCase().trim();
-  if (!q) return 0;
+  if (!q) {
+    return 0;
+  }
 
   const haystacks: { value: string; weight: number }[] = [
     { value: entry.title.toLowerCase(), weight: 10 },
@@ -649,32 +736,45 @@ function score(query: string, entry: SearchEntry): number {
 
   let total = 0;
   for (const { value, weight } of haystacks) {
-    if (!value) continue;
-    if (value === q) total += weight * 4;
-    else if (value.startsWith(q)) total += weight * 2;
-    else if (value.includes(q)) total += weight;
+    if (!value) {
+      continue;
+    }
+    if (value === q) {
+      total += weight * 4;
+    } else if (value.startsWith(q)) {
+      total += weight * 2;
+    } else if (value.includes(q)) {
+      total += weight;
+    }
   }
 
   // tokens: every word in the query must appear somewhere
   const tokens = q.split(/\s+/).filter(Boolean);
   if (tokens.length > 1) {
     const combined = haystacks.map((h) => h.value).join(" ");
-    if (tokens.every((t) => combined.includes(t))) total += 6;
-    else return 0; // multi-word queries require all tokens to match
+    if (tokens.every((t) => combined.includes(t))) {
+      total += 6;
+    } else {
+      return 0;
+    } // multi-word queries require all tokens to match
   }
 
   // boost type
-  if (entry.type === "page" && total > 0) total += 1;
+  if (entry.type === "page" && total > 0) {
+    total += 1;
+  }
 
   return total;
 }
 
 export function searchDocs(query: string, max = 8): SearchEntry[] {
   const q = query.trim();
-  if (!q) return [];
+  if (!q) {
+    return [];
+  }
   return SEARCH_ENTRIES.map((entry) => ({ entry, s: score(q, entry) }))
     .filter(({ s }) => s > 0)
-    .sort((a, b) => b.s - a.s)
+    .toSorted((a, b) => b.s - a.s)
     .slice(0, max)
     .map(({ entry }) => entry);
 }

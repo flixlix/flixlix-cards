@@ -11,6 +11,8 @@ export const getEnergyEntityState = (
   if (!useDateSelection) {
     return getEntityStateWh(hass, entity);
   }
-  if (!energyGrowthMap) throw new Error("Energy growth map is required");
+  if (!energyGrowthMap) {
+    throw new Error("Energy growth map is required");
+  }
   return getEntityEnergyFromGrowthMap(energyGrowthMap, entity);
 };
