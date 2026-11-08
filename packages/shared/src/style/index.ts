@@ -95,6 +95,16 @@ export const styles = css`
     overflow: hidden;
   }
 
+  /* The flow lines are drawn left to right, so the nodes they connect must not mirror. */
+  .row,
+  .lines {
+    direction: ltr;
+  }
+
+  .circle:dir(rtl) {
+    direction: rtl;
+  }
+
   .circle > ha-ripple {
     position: absolute;
     inset: 0;
@@ -123,10 +133,6 @@ export const styles = css`
     padding: 0 16px 16px;
     box-sizing: border-box;
     pointer-events: none;
-  }
-
-  :dir(rtl) .lines {
-    justify-content: flex-end;
   }
 
   .lines:not(.multi-individual) svg.flat-line {
