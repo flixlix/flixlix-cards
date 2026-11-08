@@ -34,6 +34,15 @@ async function mountEditor(options: Record<string, unknown>) {
   return { editor, lastConfig };
 }
 
+async function openAdvanced(options: Record<string, unknown>) {
+  const mounted = await mountEditor({ entities: {}, ...options });
+  query(mounted.editor, 'link-subpage[path="advanced"]').dispatchEvent(
+    new CustomEvent("open-sub-element-editor", { detail: { open: true } })
+  );
+  await mounted.editor.updateComplete;
+  return { ...mounted, form: query(mounted.editor, "ha-form") };
+}
+
 function query(root: Element, selector: string): HTMLElement {
   const element = root.shadowRoot?.querySelector<HTMLElement>(selector);
   if (!element) {
@@ -311,6 +320,44 @@ describe("power flow ui editor", () => {
     query(editor, "ha-form").dispatchEvent(new CustomEvent("value-changed", { detail: { value } }));
 
     expect(lastConfig()).toEqual(value);
+  });
+
+  test.each([
+    { options: {}, shown: "duration" },
+    { options: { use_new_flow_rate_model: true }, shown: "duration" },
+    { options: { use_new_flow_rate_model: false }, shown: "relative" },
+    { options: { flow_rate_model: "speed" }, shown: "speed" },
+    { options: { flow_rate_model: "duration", use_new_flow_rate_model: false }, shown: "duration" },
+  ])("the flow rate model select shows $shown for $options", async ({ options, shown }) => {
+    const { form } = await openAdvanced(options);
+
+    expect("data" in form && form.data).toMatchObject({ flow_rate_model: shown });
+  });
+
+  test("choosing a flow rate model writes flow_rate_model and drops the older alias", async () => {
+    const { form, lastConfig } = await openAdvanced({ use_new_flow_rate_model: false });
+    const value = {
+      type: "custom:power-flow-card-plus",
+      entities: {},
+      use_new_flow_rate_model: false,
+      flow_rate_model: "speed",
+    };
+
+    form.dispatchEvent(new CustomEvent("value-changed", { detail: { value } }));
+
+    expect(lastConfig()).toEqual({
+      type: "custom:power-flow-card-plus",
+      entities: {},
+      flow_rate_model: "speed",
+    });
+  });
+
+  test("setConfig rejects an unknown flow_rate_model so HA falls back to YAML", () => {
+    const editor = new PowerFlowCardPlusEditor();
+
+    expect(() => editor.setConfig(editorConfig({ entities: {}, flow_rate_model: "fast" }))).toThrow(
+      /flow_rate_model/
+    );
   });
 
   test("setConfig rejects unknown options so HA falls back to YAML", () => {

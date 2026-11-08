@@ -36,6 +36,10 @@
     "display_zero_tolerance": "Nultolerantie Weergeven",
     "double_tap_action": "Dubbel tik actie",
     "entity_generator": "Generator",
+    "flow_rate_model": "Stroomsnelheid Model",
+    "flow_rate_model_duration": "Duur (standaard)",
+    "flow_rate_model_relative": "Relatief",
+    "flow_rate_model_speed": "Snelheid",
     "fossil_fuel_percentage": "Fossiele Brandstof",
     "grey_color": "Grijstint",
     "grey_out": "Grijstint",
@@ -84,7 +88,6 @@
     "transparency": "Transparantie",
     "unit_of_measurement": "Eenheid",
     "unit_white_space": "Eenheid Spaties",
-    "use_metadata": "Metadata Gebruiken",
-    "use_new_flow_rate_model": "Nieuw Stroomsnelheid Model Gebruiken"
+    "use_metadata": "Metadata Gebruiken"
   }
 }

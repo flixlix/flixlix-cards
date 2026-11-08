@@ -1,5 +1,9 @@
 import { CIRCLE_CIRCUMFERENCE } from "@flixlix-cards/shared/const/circle";
-import { type FlowCardPlusConfig, type TemplatesObj } from "@flixlix-cards/shared/types";
+import {
+  type FlowCardPlusConfig,
+  type FlowRateModel,
+  type TemplatesObj,
+} from "@flixlix-cards/shared/types";
 import { type HomeAssistant, NumberFormat, TimeFormat } from "custom-card-helpers";
 import * as fc from "fast-check";
 import { describe, expect, test } from "vite-plus/test";
@@ -139,6 +143,19 @@ const rateConfig = (overrides: Partial<FlowCardPlusConfig> = {}) =>
 const gridToHome = (fromGrid: number, overrides: Partial<FlowCardPlusConfig> = {}) =>
   ready(compute({ config: rateConfig(overrides), readings: readings({ grid: { fromGrid } }) }))
     .flows.gridToHome.durationSeconds;
+
+const defaultsGridToHome = (fromGrid: number, overrides: Partial<FlowCardPlusConfig> = {}) =>
+  ready(compute({ config: config(overrides), readings: readings({ grid: { fromGrid } }) })).flows
+    .gridToHome.durationSeconds;
+const speedGridToHome = (fromGrid: number, overrides: Partial<FlowCardPlusConfig> = {}) =>
+  gridToHome(fromGrid, { flow_rate_model: "speed", ...overrides });
+const solarToHome = (overrides: Partial<FlowCardPlusConfig>) =>
+  ready(
+    compute({
+      config: rateConfig(overrides),
+      readings: readings({ grid: { fromGrid: 60 }, solar: { total: 20 } }),
+    })
+  ).flows.solarToHome.durationSeconds;
 
 const at = (fromGrid: number) => ({
   config: config({
@@ -462,50 +479,117 @@ describe("home ring", () => {
 });
 
 describe("flow durations", () => {
-  test("map the expected power range linearly onto dot speed, not duration", () => {
-    const speed = (fromGrid: number) => 1 / gridToHome(fromGrid);
+  test.each([
+    { fromGrid: 0, seconds: 6 },
+    { fromGrid: 500, seconds: 4.6875 },
+    { fromGrid: 1000, seconds: 3.375 },
+    { fromGrid: 1500, seconds: 2.0625 },
+    { fromGrid: 2000, seconds: 0.75 },
+    { fromGrid: 3000, seconds: 0.75 },
+  ])("default duration model: $fromGrid W takes $seconds s per dot", ({ fromGrid, seconds }) => {
+    expect(defaultsGridToHome(fromGrid)).toBeCloseTo(seconds, 2);
+  });
+
+  test("duration model: time per dot is linear across the expected power range", () => {
+    for (const fraction of [0, 0.1, 0.25, 0.5, 0.75, 0.9, 1]) {
+      expect(gridToHome(fraction * 100)).toBeCloseTo(10 - fraction * 9, 10);
+    }
+  });
+
+  test("duration model: below min_expected_power dots move slower than max_flow_rate", () => {
+    expect(gridToHome(10, { min_expected_power: 20 })).toBeCloseTo(10 + (10 * 9) / 80, 10);
+  });
+
+  test("speed model: 1000 W takes 1.33 s per dot with the defaults", () => {
+    expect(defaultsGridToHome(1000, { flow_rate_model: "speed" })).toBeCloseTo(1.333, 3);
+  });
+
+  test("speed model: maps the expected power range linearly onto dot speed, not duration", () => {
+    const speed = (fromGrid: number) => 1 / speedGridToHome(fromGrid);
     const slowest = 1 / 10;
     const fastest = 1;
 
-    expect(gridToHome(0)).toBe(10);
-    expect(gridToHome(100)).toBe(1);
-    expect(gridToHome(101)).toBe(1);
+    expect(speedGridToHome(0)).toBe(10);
+    expect(speedGridToHome(100)).toBe(1);
+    expect(speedGridToHome(101)).toBe(1);
     for (const fraction of [0.1, 0.25, 0.5, 0.75, 0.9]) {
       expect(speed(fraction * 100)).toBeCloseTo(slowest + fraction * (fastest - slowest), 10);
     }
   });
 
-  test("clamp to max_flow_rate below min_expected_power", () => {
-    expect(gridToHome(10, { min_expected_power: 20 })).toBe(10);
+  test("speed model: clamps to max_flow_rate below min_expected_power", () => {
+    expect(speedGridToHome(10, { min_expected_power: 20 })).toBe(10);
   });
 
-  test("more power never moves dots slower, and stays within the flow rate range", () => {
+  test.each(["duration", "speed"] as const)(
+    "%s model: more power never moves dots slower",
+    (model) => {
+      fc.assert(
+        fc.property(amount, amount, (a, b) => {
+          const [low, high] = [Math.min(a, b), Math.max(a, b)];
+          expect(gridToHome(high, { flow_rate_model: model })).toBeLessThanOrEqual(
+            gridToHome(low, { flow_rate_model: model })
+          );
+          expect(gridToHome(high, { flow_rate_model: model })).toBeGreaterThanOrEqual(1);
+        }),
+        RUNS
+      );
+    }
+  );
+
+  test("speed model: stays within the flow rate range", () => {
     fc.assert(
-      fc.property(amount, amount, (a, b) => {
-        const [low, high] = [Math.min(a, b), Math.max(a, b)];
-        expect(gridToHome(high)).toBeLessThanOrEqual(gridToHome(low));
-        expect(gridToHome(low)).toBeLessThanOrEqual(10);
-        expect(gridToHome(high)).toBeGreaterThanOrEqual(1);
+      fc.property(amount, (value) => {
+        expect(speedGridToHome(value)).toBeLessThanOrEqual(10);
+        expect(speedGridToHome(value)).toBeGreaterThanOrEqual(1);
       }),
       RUNS
     );
   });
 
-  test("stay positive and finite when min_flow_rate is 0", () => {
-    const duration = gridToHome(50, { min_flow_rate: 0 });
+  test("speed model: stays positive and finite when min_flow_rate is 0", () => {
+    const duration = speedGridToHome(50, { min_flow_rate: 0 });
 
     expect(duration).toBeGreaterThan(0);
     expect(Number.isFinite(duration)).toBe(true);
+  });
+
+  /** What YAML hands the card for `flow_rate_model: fast`. */
+  const unknownModel: FlowRateModel = JSON.parse('"fast"');
+
+  test.each<{ options: Partial<FlowCardPlusConfig>; model: FlowRateModel }>([
+    { options: {}, model: "duration" },
+    { options: { use_new_flow_rate_model: true }, model: "duration" },
+    { options: { use_new_flow_rate_model: false }, model: "relative" },
+    { options: { flow_rate_model: "speed" }, model: "speed" },
+    { options: { flow_rate_model: "relative" }, model: "relative" },
+    { options: { flow_rate_model: "duration", use_new_flow_rate_model: false }, model: "duration" },
+    { options: { flow_rate_model: "speed", use_new_flow_rate_model: false }, model: "speed" },
+    { options: { flow_rate_model: "relative", use_new_flow_rate_model: true }, model: "relative" },
+    { options: { flow_rate_model: unknownModel }, model: "duration" },
+    {
+      options: { flow_rate_model: unknownModel, use_new_flow_rate_model: false },
+      model: "relative",
+    },
+  ])("$options uses the $model model", ({ options, model }) => {
+    const byModel: Record<FlowRateModel, number> = {
+      duration: solarToHome({ flow_rate_model: "duration" }),
+      speed: solarToHome({ flow_rate_model: "speed" }),
+      relative: solarToHome({ flow_rate_model: "relative" }),
+    };
+
+    expect(new Set(Object.values(byModel)).size).toBe(3);
+    expect(solarToHome(options)).toBe(byModel[model]);
   });
 
   test("fall back to max_flow_rate when the expected power range is empty", () => {
     expect(gridToHome(50, { min_expected_power: 100 })).toBe(10);
   });
 
-  test("are relative to the total of all flows in the old model", () => {
+  test("are relative to the total of all flows in the relative model", () => {
     const { flows } = ready(
       compute({
-        config: rateConfig({ use_new_flow_rate_model: false }),
+        config: rateConfig({ flow_rate_model: "relative" }),
         readings: readings({ grid: { fromGrid: 75 }, solar: { total: 25 } }),
       })
     );

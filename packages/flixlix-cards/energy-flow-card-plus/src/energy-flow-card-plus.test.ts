@@ -124,6 +124,30 @@ describe("rendered values", () => {
     expect(text("#home-circle")).toContain(`1${thinSpace}kWh`);
   });
 
+  test.each(["duration", "speed", "relative"] as const)(
+    "dots always use the relative flow rate, even with flow_rate_model: %s",
+    async (model) => {
+      const { root } = await renderCard(
+        readingHassStates({
+          type: "custom:energy-flow-card-plus",
+          flow_rate_model: model,
+          use_new_flow_rate_model: true,
+          entities: {
+            grid: { entity: "sensor.grid_energy" },
+            solar: { entity: "sensor.solar_energy" },
+          },
+        } as EnergyFlowCardPlusConfig),
+        makeHass({ "sensor.grid_energy": "300", "sensor.solar_energy": "700" })
+      );
+
+      const seconds = Number.parseFloat(
+        root.querySelector("#solar-home-flow animateMotion")?.getAttribute("dur") ?? ""
+      );
+      // Solar is 70% of all flows: 6 s - 0.7 × (6 s - 0.75 s) with the default flow rates.
+      expect(seconds).toBeCloseTo(2.325, 3);
+    }
+  );
+
   test("grid below its zero tolerance shows as 0", async () => {
     const { text } = await renderCard(
       readingHassStates({
