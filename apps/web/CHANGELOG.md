@@ -1,5 +1,12 @@
 # @flixlix-cards/web
 
+## 1.1.1-beta.0
+
+### Patch Changes
+
+- Updated dependencies [[`2634c20`](https://github.com/flixlix/flixlix-cards/commit/2634c20f63aa3fcd3e3a93ae0a0bc42f4f4afc34), [`f8bed9e`](https://github.com/flixlix/flixlix-cards/commit/f8bed9ed8f3b87eaefe019444bd6b37a98856966), [`7cc309d`](https://github.com/flixlix/flixlix-cards/commit/7cc309d9d5a8f44c644e0c1160b93c67df588f54), [`35fae9f`](https://github.com/flixlix/flixlix-cards/commit/35fae9fee82bafb9038c91b06bda2476438a8e65), [`71c1005`](https://github.com/flixlix/flixlix-cards/commit/71c10057789be2164b533a87a2f39995cb3769fc), [`002654f`](https://github.com/flixlix/flixlix-cards/commit/002654f94eaecc53066db0cf3178c0db0d8eef39), [`7cc309d`](https://github.com/flixlix/flixlix-cards/commit/7cc309d9d5a8f44c644e0c1160b93c67df588f54), [`f8dbfb4`](https://github.com/flixlix/flixlix-cards/commit/f8dbfb4d9bfa59453444a77edb16720be4802cac), [`ef34736`](https://github.com/flixlix/flixlix-cards/commit/ef3473652a831b05b9cbbf967c9a487ae3dce5f7), [`ef910cc`](https://github.com/flixlix/flixlix-cards/commit/ef910cca8825a64e7bae4f8d274b94a3deeef6c6), [`a9f14aa`](https://github.com/flixlix/flixlix-cards/commit/a9f14aa2ab48ded8ec8a99eb6c9a0eb7031fe592), [`7cc309d`](https://github.com/flixlix/flixlix-cards/commit/7cc309d9d5a8f44c644e0c1160b93c67df588f54)]:
+  - power-flow-card-plus@0.4.0-beta.0
+
 ## 1.1.0
 
 ### Minor Changes
