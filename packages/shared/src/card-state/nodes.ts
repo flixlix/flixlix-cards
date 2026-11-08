@@ -3,6 +3,7 @@ import { getEntityState } from "@flixlix-cards/shared/states/utils/get-entity-st
 import { getFirstEntityName } from "@flixlix-cards/shared/states/utils/mutli-entity";
 import {
   type ActionConfigSet,
+  type BaseConfigEntity,
   type BatteryObject,
   type ConfigEntities,
   type GridObject,
@@ -84,6 +85,13 @@ const nodeActions = (entity: ActionConfigSet | undefined): ActionConfigSet => ({
   double_tap_action: entity?.double_tap_action,
 });
 
+/** A node's own `unit_of_measurement`, `unit_white_space` and `decimals`. */
+const nodeFormat = (entity: BaseConfigEntity | undefined) => ({
+  unit: entity?.unit_of_measurement,
+  unitWhiteSpace: entity?.unit_white_space,
+  decimals: entity?.decimals,
+});
+
 type GridConfig = ConfigEntities["grid"];
 
 const gridPowerOutage = (grid: GridConfig, outage: boolean): GridObject["powerOutage"] => {
@@ -115,6 +123,7 @@ export const gridNode = (context: NodeContext): GridObject => {
   const { hass, config } = input;
   const grid = config.entities.grid;
   const powerOutage = gridPowerOutage(grid, balance.outage);
+  const options = nodeFormat(grid);
   return {
     entity: grid?.entity,
     has: balance.presence.grid,
@@ -125,7 +134,10 @@ export const gridNode = (context: NodeContext): GridObject => {
       toBattery: flows.gridToBattery,
       toHome: flows.gridToHome,
     },
-    display: { fromGrid: format(totals.gridImport), toGrid: format(totals.gridExport) },
+    display: {
+      fromGrid: format(totals.gridImport, options),
+      toGrid: format(totals.gridExport, options),
+    },
     powerOutage,
     icon: balance.outage
       ? powerOutage.icon
@@ -184,7 +196,9 @@ export const solarNode = (context: NodeContext): SolarObject => {
       toBattery: flows.solarToBattery,
     },
     display:
-      solar?.display_zero_state !== false || ownProduction > 0 ? format(ownProduction) : undefined,
+      solar?.display_zero_state !== false || ownProduction > 0
+        ? format(ownProduction, nodeFormat(solar))
+        : undefined,
     icon: computeFieldIcon(hass, solar, "mdi:solar-power"),
     name: computeFieldName(
       hass,
@@ -235,6 +249,7 @@ export const batteryNode = ({ input, balance, format }: NodeContext): BatteryObj
   const soc =
     battery?.state_of_charge === undefined ? null : getEntityState(hass, battery.state_of_charge);
   const socFormat = stateOfChargeFormat(battery);
+  const options = nodeFormat(battery);
   return {
     entity: battery?.entity,
     has: balance.presence.battery,
@@ -258,8 +273,8 @@ export const batteryNode = ({ input, balance, format }: NodeContext): BatteryObj
       toHome: flows.batteryToHome,
     },
     display: {
-      toBattery: format(totals.batteryCharge),
-      fromBattery: format(totals.batteryDischarge),
+      toBattery: format(totals.batteryCharge, options),
+      fromBattery: format(totals.batteryDischarge, options),
       stateOfCharge: format(soc, { ...socFormat, accept_negative: true }),
     },
     ...nodeActions(battery),

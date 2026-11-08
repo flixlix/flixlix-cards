@@ -613,6 +613,35 @@ describe("display units", () => {
     expect(text(2_345_678)).toBe(`2.35${thinSpace}MWh`);
   });
 
+  test("grid, solar and battery use their own unit, unit white space and decimals", () => {
+    const { nodes } = ready(
+      compute({
+        config: config({
+          entities: {
+            grid: {
+              ...gridEntity,
+              unit_of_measurement: "L/min",
+              unit_white_space: false,
+              decimals: 1,
+            },
+            solar: { entity: "sensor.solar", decimals: 2 },
+            battery: { entity: "sensor.battery", unit_of_measurement: "L/min" },
+          },
+        }),
+        hass: hassWith({ "binary_sensor.outage": "off" }),
+        readings: readings({
+          grid: { fromGrid: 2.46 },
+          solar: { total: 1234 },
+          battery: { fromBattery: 300 },
+        }),
+      })
+    );
+
+    expect(nodes.grid.display.fromGrid).toBe("2.5L/min");
+    expect(nodes.solar.display).toBe(`1.23${thinSpace}kW`);
+    expect(nodes.battery.display.fromBattery).toBe(`300${thinSpace}L/min`);
+  });
+
   test("an explicit unit keeps the reading unscaled", () => {
     const { nodes } = ready(
       compute({

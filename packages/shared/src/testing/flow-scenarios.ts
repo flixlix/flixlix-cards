@@ -331,6 +331,27 @@ export const flowScenarios: FlowScenario[] = [
     },
   },
   {
+    name: "grid, solar and battery with their own unit, white space and decimals",
+    entities: {
+      grid: {
+        entity: "sensor.grid",
+        unit_of_measurement: "L/min",
+        unit_white_space: false,
+        decimals: 1,
+      },
+      solar: { entity: "sensor.solar", decimals: 2 },
+      battery: { entity: "sensor.battery", unit_of_measurement: "L/min" },
+    },
+    states: { "sensor.grid": "2.46", "sensor.solar": "1234", "sensor.battery": "300" },
+    expect: {
+      text: {
+        ".grid .consumption": "2.5L/min",
+        ".solar .solar": "1.23 kW",
+        ".battery .battery-out": "300 L/min",
+      },
+    },
+  },
+  {
     name: "secondary info from an entity and a template",
     visual: true,
     entities: {
