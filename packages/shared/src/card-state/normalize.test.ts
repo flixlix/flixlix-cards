@@ -145,6 +145,31 @@ describe("tolerance, outage and hidden nodes", () => {
     expect(result.presence.nonFossil).toBe(false);
   });
 
+  test.each<[boolean | undefined, boolean]>([
+    [undefined, false],
+    [true, true],
+  ])(
+    "grid import within the tolerance with display_zero %s shows non-fossil: %s",
+    (displayZero, expected) => {
+      const { presence } = normalize(
+        input(
+          {
+            grid: { ...grid, display_zero_tolerance: 20 },
+            fossil_fuel_percentage: {
+              entity: "sensor.fossil",
+              display_zero: displayZero,
+              secondary_info: {},
+            },
+          },
+          { "sensor.fossil": "40", "binary_sensor.outage": "off" }
+        ),
+        readings({ grid: single(12) })
+      );
+
+      expect(presence.nonFossil).toBe(expected);
+    }
+  );
+
   test("a hidden grid has no totals", () => {
     const { totals, presence } = normalize(
       input({ grid: { ...grid, display_zero: false, display_zero_tolerance: 10 } }),

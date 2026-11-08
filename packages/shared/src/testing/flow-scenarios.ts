@@ -213,6 +213,19 @@ export const flowScenarios: FlowScenario[] = [
     },
   },
   {
+    name: "grid import within the zero tolerance hides non-fossil",
+    entities: {
+      grid: { entity: "sensor.grid", display_zero_tolerance: 20 },
+      fossil_fuel_percentage: { entity: "sensor.fossil", secondary_info: {} },
+    },
+    states: { "sensor.grid": "12", "sensor.fossil": sensor("40", { unit: "%" }) },
+    energy: true,
+    expect: {
+      text: { ".grid .consumption": "0 W" },
+      hidden: [".circle-container.low-carbon", dot(flows.gridToHome)],
+    },
+  },
+  {
     name: "display_zero false hides idle nodes",
     entities: {
       grid: { entity: "sensor.grid" },
