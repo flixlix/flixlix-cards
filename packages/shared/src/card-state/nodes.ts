@@ -50,7 +50,7 @@ const secondaryInfo = (
   templateResult: string | undefined
 ): SecondaryInfoObject => {
   const state = secondaryState(input.hass, info?.entity);
-  const has = info?.entity !== undefined;
+  const has = !!info?.entity;
   const accept_negative = info?.accept_negative ?? false;
   return {
     entity: info?.entity,
@@ -98,7 +98,7 @@ type GridConfig = ConfigEntities["grid"];
 const gridPowerOutage = (grid: GridConfig, outage: boolean): GridObject["powerOutage"] => {
   const powerOutage = grid?.power_outage;
   return {
-    has: powerOutage?.entity !== undefined,
+    has: !!powerOutage?.entity,
     isOutage: outage,
     icon: powerOutage?.icon_alert?.length ? powerOutage.icon_alert : "mdi:transmission-tower-off",
     name: powerOutage?.label_alert ?? html`Power<br />Outage`,
@@ -293,7 +293,7 @@ export const homeNode = (context: NodeContext, label: string): HomeObject => {
   const home = config.entities.home;
   return {
     entity: home?.entity,
-    has: home?.entity !== undefined,
+    has: !!home?.entity,
     state: null,
     icon: computeFieldIcon(hass, home, "mdi:home"),
     name: computeFieldName(hass, home, label),

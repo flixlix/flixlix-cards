@@ -1,6 +1,6 @@
 import { computeNonFossilFromCollection } from "@flixlix-cards/shared/states/utils/energy-period";
 import { getEntityState } from "@flixlix-cards/shared/states/utils/get-entity-state";
-import { type ConfigEntities } from "@flixlix-cards/shared/types";
+import { type ComboEntity, type ConfigEntities } from "@flixlix-cards/shared/types";
 import { type HomeAssistant } from "custom-card-helpers";
 import { adjustZeroTolerance } from "./tolerance";
 import { type CardStateInput, type ReadyReadings, type TwoWayReading } from "./types";
@@ -79,12 +79,16 @@ const solarProduction = (input: NormalizeInput, readings: ReadyReadings): number
 
 export const isOutage = (hass: HomeAssistant, entities: ConfigEntities): boolean => {
   const outage = entities.grid?.power_outage;
-  const outageState = outage?.entity === undefined ? undefined : hass.states[outage.entity]?.state;
+  const outageState = outage?.entity ? hass.states[outage.entity]?.state : undefined;
   return entities.grid !== undefined && outageState === (outage?.state_alert ?? "on");
 };
 
-const hasBatteryEntity = (battery: ConfigEntities["battery"]): boolean => {
-  const entity = battery?.entity;
+/**
+ * A node is configured only with an entity: a non-empty id, or split entities with one side set.
+ * An empty one, as the visual editor leaves after clearing the field, does not count.
+ */
+const hasEntity = (field: { entity?: string | ComboEntity } | undefined): boolean => {
+  const entity = field?.entity;
   return typeof entity === "object" ? !!(entity.consumption || entity.production) : !!entity;
 };
 
@@ -141,12 +145,9 @@ const presenceOf = (
 ): Omit<Presence, "nonFossil"> => {
   const { entities } = input.config;
   return {
-    grid:
-      entities.grid?.entity !== undefined && shownWithTotals(entities.grid, nodes.toleratedGrid),
-    solar:
-      entities.solar?.entity !== undefined &&
-      (entities.solar.display_zero !== false || nodes.solar > 0),
-    battery: hasBatteryEntity(entities.battery) && shownWithTotals(entities.battery, nodes.battery),
+    grid: hasEntity(entities.grid) && shownWithTotals(entities.grid, nodes.toleratedGrid),
+    solar: hasEntity(entities.solar) && (entities.solar?.display_zero !== false || nodes.solar > 0),
+    battery: hasEntity(entities.battery) && shownWithTotals(entities.battery, nodes.battery),
     individuals: individuals.map((total, index) => {
       const field = entities.individual?.[index];
       return !!field?.entity && (field.display_zero === true || total > 0);
@@ -161,7 +162,7 @@ const nonFossilShown = (
   nonFossilImport: number
 ): boolean => {
   const fossil = input.config.entities.fossil_fuel_percentage;
-  if (fossil?.entity === undefined || !gridShown || outage) {
+  if (!fossil?.entity || !gridShown || outage) {
     return false;
   }
   return fossil.display_zero === true || nonFossilImport > 0;

@@ -2,7 +2,7 @@ import { type FlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { type HomeAssistant, NumberFormat, TimeFormat } from "custom-card-helpers";
 import { describe, expect, test } from "vite-plus/test";
 import { computeCardState } from "./compute-card-state";
-import { houseWires } from "./house-wires";
+import { type CarReading, houseWires } from "./house-wires";
 import { type ReadyReadings } from "./types";
 
 /** A `hass` whose outage sensor reads `on` while there is an outage. */
@@ -70,7 +70,7 @@ const readings = (power: Power): ReadyReadings => ({
   individuals: [],
 });
 
-const wiresFor = (cardConfig: FlowCardPlusConfig, power: Power) => {
+const wiresFor = (cardConfig: FlowCardPlusConfig, power: Power, car?: CarReading) => {
   const state = computeCardState({
     config: cardConfig,
     hass: hassWith(power.outage ?? false),
@@ -87,7 +87,7 @@ const wiresFor = (cardConfig: FlowCardPlusConfig, power: Power) => {
   if (state.status !== "ready") {
     throw new Error("expected a ready card state");
   }
-  return houseWires(cardConfig, state);
+  return houseWires(cardConfig, state, car);
 };
 
 const summary = (cardConfig: FlowCardPlusConfig, power: Power) =>
@@ -99,6 +99,36 @@ const summary = (cardConfig: FlowCardPlusConfig, power: Power) =>
   }));
 
 describe("house wires", () => {
+  test("a charging car draws from the home's outlet, in the home's colour", () => {
+    const car = wiresFor(allNodes, { solar: 9000, toGrid: 1000 }, { power: 7400 }).find(
+      (wire) => wire.node === "car"
+    );
+    expect(car).toMatchObject({
+      power: 7400,
+      intoInverter: false,
+      color: "var(--energy-solar-color)",
+      reading: { value: 7.4, unit: "kW" },
+    });
+  });
+
+  test("a car feeding the home runs back towards the outlet", () => {
+    const car = wiresFor(allNodes, { fromGrid: 100 }, { power: -3000 }).find(
+      (wire) => wire.node === "car"
+    );
+    expect(car).toMatchObject({ power: 3000, intoInverter: true });
+  });
+
+  test("an unavailable car reads as an idle wire", () => {
+    const car = wiresFor(allNodes, { fromGrid: 100 }, { power: null }).find(
+      (wire) => wire.node === "car"
+    );
+    expect(car).toMatchObject({ power: 0 });
+  });
+
+  test("without a car there is no car wire", () => {
+    expect(wiresFor(allNodes, { fromGrid: 100 }).some((wire) => wire.node === "car")).toBe(false);
+  });
+
   test("an evening on the battery: production and discharge run into the inverter, home out of it", () => {
     expect(summary(allNodes, { solar: 800, fromBattery: 1800 })).toEqual([
       { node: "solar", watts: 800, intoInverter: true, color: "var(--energy-solar-color)" },

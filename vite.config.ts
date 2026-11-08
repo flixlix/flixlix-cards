@@ -66,6 +66,7 @@ export default defineConfig({
       "flixlix/cognitive-complexity": ["error", { max: 15 }],
       "flixlix/no-index-fallback": "error",
       "flixlix/no-identity-arithmetic": "error",
+      "flixlix/no-entity-undefined-check": "error",
       "flixlix/no-reactive-mutation": "error",
       "flixlix/no-card-type-sniffing": "error",
       "flixlix/no-camelcase-event-binding": "error",

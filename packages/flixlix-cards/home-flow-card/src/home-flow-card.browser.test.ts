@@ -66,9 +66,9 @@ const wordOf = (element: Element) => {
   return text === "" ? undefined : text;
 };
 
-/** The battery label's status line: its state of charge and direction, numbers as they read. */
-const batteryLine = (root: ShadowRoot) => {
-  const line = labelOf(root, "battery").querySelector(".status");
+/** A battery's or a car's status line: its state of charge and direction, numbers as they read. */
+const batteryLine = (root: ShadowRoot, node = "battery") => {
+  const line = labelOf(root, node).querySelector(".status");
   const charge = line?.querySelector(".number");
   const percent =
     charge instanceof NumberFlow
@@ -105,6 +105,130 @@ const outageStates = (outage: string) => ({
   ...evening,
   "binary_sensor.outage": sensor(outage, { unit: undefined }),
   "sensor.generator": "1200",
+});
+
+/** Noon, with a car charging off the solar surplus. */
+const carCharging: StateFixtures = {
+  "sensor.solar": "9000",
+  "sensor.battery": "0",
+  "sensor.grid": "-200",
+  "sensor.battery_soc": sensor("80", { unit: "%" }),
+  "sensor.car_power": sensor("7.4", { unit: "kW" }),
+  "sensor.car_soc": sensor("64", { unit: "%" }),
+};
+
+const car = { car: { entity: "sensor.car_power", state_of_charge: "sensor.car_soc" } };
+
+/** Where the car's pulse starts, for a car drawing `power`. */
+const carPulseStart = async (power: string) => {
+  const { root } = await mountHouse(car, { ...carCharging, "sensor.car_power": power });
+  return startOf(root.querySelector(".power.car .pulse")?.getAttribute("d") ?? "");
+};
+
+describe("a car", () => {
+  test("charging: its power, and its state of charge without the battery's words", async () => {
+    const { root } = await mountHouse(car, carCharging);
+
+    expect(reading(root, "car")).toBe("7.4 kW");
+    expect(batteryLine(root, "car")).toBe("64 %");
+    expect(labelOf(root, "car").querySelector(".charging, .discharging")).toBeNull();
+    expect(labelOf(root, "car").querySelector(".name")?.textContent).toBe("Car");
+  });
+
+  test("is drawn in front of the house, wired to the home's outlet", async () => {
+    const { root } = await mountHouse(car, carCharging);
+
+    expect(root.querySelector("image.car")?.getAttribute("href")).toMatch(/^data:image\/png/);
+    expect(root.querySelector(".power.car .pulse")).not.toBeNull();
+  });
+
+  test("feeding the home, its power runs back to the outlet", async () => {
+    const charging = await carPulseStart("7400");
+    const feeding = await carPulseStart("-3000");
+
+    expect(feeding).not.toBe(charging);
+  });
+
+  test("is drawn again for a dark theme", async () => {
+    const { root, card, setHass } = await mountHouse(car, carCharging);
+    const light = root.querySelector("image.car")?.getAttribute("href");
+
+    const hass = fakeHass({ states: carCharging });
+    await setHass({ ...hass, themes: Object.assign({}, hass.themes, { darkMode: true }) });
+
+    expect(card.hasAttribute("dark")).toBe(true);
+    expect(root.querySelector("image.car")?.getAttribute("href")).not.toBe(light);
+  });
+
+  test("away, it is hidden but keeps its room, so the house does not move", async () => {
+    const away = {
+      car: {
+        ...car.car,
+        visibility: [{ condition: "state" as const, entity: "device_tracker.car", state: "home" }],
+      },
+    };
+    const atHome = await mountHouse(away, { ...carCharging, "device_tracker.car": "home" });
+    const viewBox = atHome.root.querySelector("svg")?.getAttribute("viewBox");
+    const { root } = await mountHouse(away, { ...carCharging, "device_tracker.car": "not_home" });
+
+    expect(root.querySelector("image.car")).toBeNull();
+    expect(root.querySelector(".label.car")).toBeNull();
+    expect(root.querySelector(".track.car")).toBeNull();
+    expect(root.querySelector("svg")?.getAttribute("viewBox")).toBe(viewBox);
+  });
+
+  test("idle, it is drawn faded without its cable, its charge as its value", async () => {
+    const unplugged = {
+      car: {
+        ...car.car,
+        idle: [{ condition: "state" as const, entity: "binary_sensor.cable", state: "off" }],
+      },
+    };
+    const active = await mountHouse(unplugged, { ...carCharging, "binary_sensor.cable": "on" });
+    const activeImage = active.root.querySelector("image.car")?.getAttribute("href");
+    const { root } = await mountHouse(unplugged, { ...carCharging, "binary_sensor.cable": "off" });
+
+    expect(root.querySelector("image.car")?.getAttribute("href")).not.toBe(activeImage);
+    expect(root.querySelector(".track.car")).toBeNull();
+    expect(reading(root, "car")).toBe("64 %");
+    expect(labelOf(root, "car").querySelector(".status")).toBeNull();
+  });
+
+  test("without idle conditions, it is idle while it draws no power", async () => {
+    const { root } = await mountHouse(car, { ...carCharging, "sensor.car_power": "0" });
+
+    expect(root.querySelector(".track.car")).toBeNull();
+    expect(reading(root, "car")).toBe("64 %");
+  });
+
+  test("leaves the house exactly where it is without a car", async () => {
+    const plain = await mountHouse({}, carCharging);
+    const { root } = await mountHouse(car, carCharging);
+
+    expect(root.querySelector("svg")?.getAttribute("viewBox")).toBe(
+      plain.root.querySelector("svg")?.getAttribute("viewBox")
+    );
+  });
+
+  test("without its entity it is ignored, as when cleared in the editor", async () => {
+    const plain = await mountHouse({}, carCharging);
+    const { root } = await mountHouse(
+      { car: { entity: "", state_of_charge: "sensor.car_soc" } },
+      carCharging
+    );
+
+    expect(root.querySelector(".label.car")).toBeNull();
+    expect(root.querySelector("svg")?.getAttribute("viewBox")).toBe(
+      plain.root.querySelector("svg")?.getAttribute("viewBox")
+    );
+  });
+
+  test("is not drawn without one", async () => {
+    const { root } = await mountHouse({}, carCharging);
+
+    expect(root.querySelector("image.car")).toBeNull();
+    expect(root.querySelector(".label.car")).toBeNull();
+  });
 });
 
 describe("home flow card", () => {

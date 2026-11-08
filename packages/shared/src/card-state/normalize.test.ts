@@ -302,3 +302,25 @@ describe("normalize properties", () => {
     );
   });
 });
+
+describe("presence", () => {
+  test("a node with an empty entity, as left by clearing it in the editor, is not drawn", () => {
+    const { presence } = normalize(
+      input({
+        grid: { entity: "" },
+        solar: { entity: "" },
+        battery: { entity: { consumption: "", production: "" } },
+      }),
+      readings({ grid: single(400), solar: { total: 800, secondary: 0 }, battery: single(200) })
+    );
+    expect(presence).toMatchObject({ grid: false, solar: false, battery: false });
+  });
+
+  test("split entities count with one side set", () => {
+    const { presence } = normalize(
+      input({ grid: { entity: { consumption: "sensor.import", production: "" } } }),
+      readings({ grid: { kind: "split", into: 0, outOf: 400 } })
+    );
+    expect(presence.grid).toBe(true);
+  });
+});

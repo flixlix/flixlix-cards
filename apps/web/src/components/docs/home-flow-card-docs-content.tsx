@@ -409,6 +409,43 @@ const CARD_OPTIONS: OptionRow[] = [
     ),
   },
   {
+    name: "car",
+    type: "object",
+    description: (
+      <>
+        An electric car parked in front of the house, wired to the home&apos;s outlet.{" "}
+        <code>entity</code> is its charging power, positive while it charges and negative while it
+        feeds the home; <code>state_of_charge</code> (optional) shows its battery level on its
+        label, under its power. <code>name</code> (optional) defaults to &quot;Car&quot;.
+      </>
+    ),
+  },
+  {
+    name: "car.visibility",
+    type: "list",
+    description: (
+      <>
+        Conditions, as in a card&apos;s visibility tab, and set up with the same editor on the Car
+        page: the car shows only while all of them hold, for example while its tracker reads{" "}
+        <code>home</code>. While hidden it keeps its room, so the house does not move as the car
+        comes and goes. Without conditions the car always shows. Entity state, numeric state,
+        screen, user, time, location, and, or and not are checked; template, sun, zone and device
+        conditions need Home Assistant itself and are ignored.
+      </>
+    ),
+  },
+  {
+    name: "car.idle",
+    type: "list",
+    description: (
+      <>
+        Conditions in the same format: while all of them hold, the car is parked and unplugged. It
+        is drawn faded, without its cable, and its label shows its state of charge. Without
+        conditions the car is idle while it draws no power.
+      </>
+    ),
+  },
+  {
     name: "disable_dots",
     type: "boolean",
     default: "false",
@@ -556,6 +593,35 @@ battery:
       "sensor.battery_discharge_power": "0",
       "sensor.battery_charge_power": "300",
       "sensor.battery_soc": sensor("41", { unit: "%" }),
+    },
+  },
+  {
+    id: "car",
+    title: "A car charging off the sun",
+    text: "An electric car in front of the house, charging from the home's outlet, with its battery level on its label. It shows only while it is home, and waits faded and unplugged while its cable is out.",
+    code: `type: ${CARD_TYPE}
+grid:
+  entity: sensor.grid_power
+solar:
+  entity: sensor.solar_power
+car:
+  entity: sensor.wallbox_power
+  state_of_charge: sensor.car_battery_level
+  visibility:
+    - condition: state
+      entity: device_tracker.car
+      state: home
+  idle:
+    - condition: state
+      entity: binary_sensor.car_plugged_in
+      state: "off"`,
+    states: {
+      "sensor.grid_power": "-400",
+      "sensor.solar_power": "8200",
+      "sensor.wallbox_power": sensor("7.4", { unit: "kW" }),
+      "sensor.car_battery_level": sensor("64", { unit: "%" }),
+      "device_tracker.car": sensor("home", { unit: undefined }),
+      "binary_sensor.car_plugged_in": sensor("on", { unit: undefined }),
     },
   },
   {

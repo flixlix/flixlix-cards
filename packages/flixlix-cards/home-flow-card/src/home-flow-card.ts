@@ -23,10 +23,12 @@ import { html, LitElement, nothing, type PropertyValues, type TemplateResult } f
 import { customElement, property, state } from "lit/decorators.js";
 import NumberFlow, { canAnimate } from "number-flow";
 import packageJson from "../package.json" with { type: "json" };
+import { carImage, type CarImage, carResolution, readCarPalette } from "./car-image";
+import { carEntities, type CarScene, carScene, type CarStatus, carStatus } from "./car-node";
 import { Extent } from "./extent";
 import { houseLabels } from "./labels";
 import { includeLabel, labelsHtml, leaderSvg } from "./render-labels";
-import { sceneSvg } from "./render-scene";
+import { includeCar, sceneSvg } from "./render-scene";
 import { gridFade, keepPulsePhase } from "./render-wires";
 import { HOUSE_SPAN, project } from "./scene";
 import { styles } from "./styles";
@@ -67,14 +69,20 @@ const isPageHidden = () => typeof document !== "undefined" && document.visibilit
 const HOUSE_MIDDLE = (project(HOUSE_SPAN[0])[0] + project(HOUSE_SPAN[1])[0]) / 2;
 
 /** The scene, its leaders and labels, and the viewBox that holds them all. */
-const drawHouse = (config: FlowConfig, cardState: ReadyCardState, language: string) => {
-  const wires = houseWires(config, cardState);
+const drawHouse = (
+  config: FlowConfig,
+  cardState: ReadyCardState,
+  language: string,
+  car: CarScene
+) => {
+  const wires = houseWires(config, cardState, car.reading);
   const labels = houseLabels(
     cardState,
     wires,
     config.generator,
     config.entities.grid?.power_outage?.label_alert,
-    language
+    language,
+    car.label
   );
   const extent = new Extent();
   const reserveGenerator = Boolean(config.entities.grid?.power_outage?.entity_generator);
@@ -84,6 +92,7 @@ const drawHouse = (config: FlowConfig, cardState: ReadyCardState, language: stri
     extent,
     severity: config.entities.battery?.state_of_charge_severity ?? DEFAULT_STATE_OF_CHARGE_SEVERITY,
     reserveGenerator,
+    car: car.image,
   });
   const leaders = labels.map((label) => leaderSvg(label, extent));
   // the grid's and the generator's labels take turns: keep room for both, so the card keeps its
@@ -93,6 +102,11 @@ const drawHouse = (config: FlowConfig, cardState: ReadyCardState, language: stri
   }
   if (reserveGenerator) {
     includeLabel(extent, "generator", 0);
+  }
+  // the car keeps its room while it is away, so the house does not jump as it comes and goes
+  if (car.reserve) {
+    includeCar(extent);
+    includeLabel(extent, "car", 1);
   }
   return { labels, scene, leaders, box: extent.viewBox(10, HOUSE_MIDDLE) };
 };
@@ -105,6 +119,9 @@ export class HomeFlowCard extends LitElement {
   private readonly _width = new WidthController(this, ".stage > svg");
   @state() private _pageHidden = isPageHidden();
   private _cardState?: CardState;
+  /** The car, drawn for the current theme and size. */
+  private _carImage: CarImage | null = null;
+  private _carStatus: CarStatus = "hidden";
   private _appliedCardState?: CardState;
   private readonly _pulseDurations = new WeakMap<Element, number>();
   private _unitSlide?: ReturnType<typeof unitSlide>;
@@ -167,7 +184,7 @@ export class HomeFlowCard extends LitElement {
     return cardShouldUpdate(
       changedProps,
       this.hass,
-      this._config ? watchedEntities(this._config) : []
+      this._config ? [...watchedEntities(this._config), ...carEntities(this._config.car)] : []
     );
   }
 
@@ -189,6 +206,21 @@ export class HomeFlowCard extends LitElement {
       width: this._width.width,
       pageHidden: this._pageHidden,
     });
+    this.toggleAttribute("dark", isDarkMode(this.hass));
+    this._drawCar();
+  }
+
+  /** Draws the car again only when its state, the theme's colours or the card's size change. */
+  private _drawCar() {
+    const car = this._config.car;
+    this._carStatus = car ? carStatus(this.hass, car) : "hidden";
+    const palette =
+      this._carStatus !== "hidden" && this.shadowRoot
+        ? readCarPalette(this.shadowRoot, this._carStatus === "idle")
+        : undefined;
+    this._carImage = palette
+      ? (carImage(palette, carResolution(this._width.width), this._carImage ?? undefined) ?? null)
+      : null;
   }
 
   protected render(): TemplateResult | typeof nothing {
@@ -199,7 +231,8 @@ export class HomeFlowCard extends LitElement {
     const { labels, scene, leaders, box } = drawHouse(
       this._config,
       cardState,
-      this.hass.locale?.language ?? "en"
+      this.hass.locale?.language ?? "en",
+      carScene(this.hass, this._config.car, this._carStatus, this._carImage)
     );
     const unit = this._width.width > 0 ? this._width.width / box.width : 1;
     const context = {
@@ -229,7 +262,6 @@ export class HomeFlowCard extends LitElement {
     if (!this._config || !this.hass || !this.shadowRoot) {
       return;
     }
-    this.toggleAttribute("dark", isDarkMode(this.hass));
     const cardState = this._cardState;
     if (cardState?.status === "ready" && cardState !== this._appliedCardState) {
       applyCardState(this, cardState);

@@ -46,3 +46,33 @@ test("grid and home only", async () => {
   );
   await expect.element(card).toMatchScreenshot("grid-only");
 });
+
+test("a car charging off the sun", async () => {
+  const card = await mountHouse(
+    {
+      "sensor.solar": "9000",
+      "sensor.battery": "0",
+      "sensor.grid": "-200",
+      "sensor.battery_soc": sensor("80", { unit: "%" }),
+      "sensor.car_power": sensor("7.4", { unit: "kW" }),
+      "sensor.car_soc": sensor("64", { unit: "%" }),
+    },
+    { car: { entity: "sensor.car_power", state_of_charge: "sensor.car_soc" } }
+  );
+  await expect.element(card).toMatchScreenshot("car");
+});
+
+test("an idle car, parked and unplugged", async () => {
+  const card = await mountHouse(
+    {
+      "sensor.solar": "3200",
+      "sensor.battery": "-1800",
+      "sensor.grid": "0",
+      "sensor.battery_soc": sensor("62", { unit: "%" }),
+      "sensor.car_power": "0",
+      "sensor.car_soc": sensor("80", { unit: "%" }),
+    },
+    { car: { entity: "sensor.car_power", state_of_charge: "sensor.car_soc" } }
+  );
+  await expect.element(card).toMatchScreenshot("car-idle");
+});

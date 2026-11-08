@@ -8,6 +8,9 @@ import {
   mdiBatteryOutline,
 } from "@mdi/js";
 import { nothing, svg } from "lit";
+import { type CarImage } from "./car-image";
+import { carScreenBox } from "./car-raster";
+import { CAR_SHADOW } from "./car-shape";
 import { type Extent } from "./extent";
 import { wiresSvg } from "./render-wires";
 import {
@@ -54,6 +57,7 @@ const DEFS = svg`<defs>
     <stop offset="1" style="stop-color: var(--house-ground); stop-opacity: 0"></stop>
   </radialGradient>
   <filter id="house-blur" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="8"></feGaussianBlur></filter>
+  <filter id="house-car-blur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5"></feGaussianBlur></filter>
 </defs>`;
 
 export type SceneInput = {
@@ -67,6 +71,8 @@ export type SceneInput = {
    * does not grow and shrink as the grid goes down and comes back.
    */
   reserveGenerator: boolean;
+  /** A configured car: its image, once drawn for the theme; `null` until then. */
+  car?: CarImage | null;
 };
 
 const batteryLook = ({ nodes }: ReadyCardState, severity: ChargeSeverity) => {
@@ -89,8 +95,28 @@ const includeFaces = (extent: Extent, group: SceneGroup) =>
     }
   });
 
+/** Room for the car in front of the house, kept while it is away or not yet drawn. */
+export const includeCar = (extent: Extent) => {
+  const box = carScreenBox();
+  extent.include([box.x, box.y]);
+  extent.include([box.x + box.width, box.y + box.height]);
+};
+
+/** The car in front of the house: its box is held in the extent before its image is drawn. */
+const carSvg = (car: CarImage | null) =>
+  car
+    ? svg`<image class="node car" href=${car.href} x=${car.box.x} y=${car.box.y} width=${car.box.width} height=${car.box.height}></image>`
+    : nothing;
+
 /** The house, its fixtures and the wires between them, layered back to front. */
-export const sceneSvg = ({ cardState, wires, extent, severity, reserveGenerator }: SceneInput) => {
+export const sceneSvg = ({
+  cardState,
+  wires,
+  extent,
+  severity,
+  reserveGenerator,
+  car,
+}: SceneInput) => {
   const screen = (point: Point) => {
     const projected = project(point);
     extent.include(projected);
@@ -123,6 +149,7 @@ export const sceneSvg = ({ cardState, wires, extent, severity, reserveGenerator 
     ${DEFS}
     <ellipse cx=${groundX} cy=${groundY + 30} rx="260" ry="150" fill="url(#house-ground)"></ellipse>
     <polygon points=${points(SHADOW)} fill="var(--house-shadow)" filter="url(#house-blur)" opacity="0.55"></polygon>
+    ${car === undefined ? nothing : svg`<polygon points=${points(CAR_SHADOW)} fill="var(--house-shadow)" filter="url(#house-car-blur)" opacity="0.9"></polygon>`}
     ${group(houseShell())}
     ${DRAW_ORDER.map((layer) =>
       "wire" in layer
@@ -132,5 +159,6 @@ export const sceneSvg = ({ cardState, wires, extent, severity, reserveGenerator 
           )
         : parts.filter((part) => part.node === layer.part).map(group)
     )}
+    ${car === undefined ? nothing : carSvg(car)}
   `;
 };

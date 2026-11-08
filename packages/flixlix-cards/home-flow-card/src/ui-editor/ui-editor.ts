@@ -19,11 +19,22 @@ import {
   type HomeFlowCardConfig,
   type HomeFlowNodes,
 } from "../types";
-import { advancedSchema, FIELD_DEFAULTS, generalSchema, NODE_SCHEMAS } from "./schema";
+import {
+  carConditionsHtml,
+  carConditionsStyles,
+  conditionsEditorAvailable,
+} from "./car-conditions";
+import {
+  advancedSchema,
+  CAR_CONDITIONS_AS_YAML,
+  FIELD_DEFAULTS,
+  generalSchema,
+  NODE_SCHEMAS,
+} from "./schema";
 
 defineEditorElements();
 
-type Node = keyof HomeFlowNodes | "generator";
+type Node = keyof HomeFlowNodes | "generator" | "car";
 type Page = Node | "advanced";
 
 const NODE_PAGES: { page: Node; icon: string }[] = [
@@ -32,6 +43,7 @@ const NODE_PAGES: { page: Node; icon: string }[] = [
   { page: "battery", icon: "mdi:battery-high" },
   { page: "generator", icon: "mdi:engine" },
   { page: "home", icon: "mdi:home" },
+  { page: "car", icon: "mdi:car-electric" },
 ];
 
 /** The entity ids a node reads: one, or one per direction. */
@@ -96,6 +108,9 @@ export class HomeFlowCardEditor extends LitElement implements LovelaceCardEditor
       `;
     }
     const node = this._page;
+    if (node === "car") {
+      return this._carPage();
+    }
     if (node) {
       const data =
         node === "battery"
@@ -103,7 +118,7 @@ export class HomeFlowCardEditor extends LitElement implements LovelaceCardEditor
           : this._config[node];
       return html`
         <subpage-header @go-back=${this._goBack} page=${node}></subpage-header>
-        ${this._form(data, NODE_SCHEMAS[node], (event) => this._nodeChanged(node, event))}
+        ${this._form(data, NODE_SCHEMAS[node], (event) => this._nodeChanged(node, event.detail.value))}
       `;
     }
     return html`
@@ -172,12 +187,24 @@ export class HomeFlowCardEditor extends LitElement implements LovelaceCardEditor
     fireEvent(this, "config-changed", { config: event.detail.value });
   };
 
-  private _nodeChanged(node: Node, event: ValueChangedEvent<Record<string, unknown>>) {
+  /** The car's fields, then its visibility and idle conditions in Home Assistant's own editor. */
+  private _carPage() {
+    const car = this._config?.car;
+    const visual = conditionsEditorAvailable();
+    const schema = visual ? NODE_SCHEMAS.car : [...NODE_SCHEMAS.car, ...CAR_CONDITIONS_AS_YAML];
+    const onChange = (value: Record<string, unknown>) => this._nodeChanged("car", value);
+    return html`
+      <subpage-header @go-back=${this._goBack} page="car"></subpage-header>
+      ${this._form(car, schema, (event) => onChange(event.detail.value))}
+      ${visual ? carConditionsHtml(this.hass, car, onChange) : nothing}
+    `;
+  }
+
+  private _nodeChanged(node: Node, nodeConfig: Record<string, unknown>) {
     if (!this._config) {
       return;
     }
-    const value =
-      node === "battery" ? withoutDefaultSeverity(event.detail.value) : event.detail.value;
+    const value = node === "battery" ? withoutDefaultSeverity(nodeConfig) : nodeConfig;
     fireEvent(this, "config-changed", { config: { ...this._config, [node]: value } });
   }
 
@@ -188,24 +215,27 @@ export class HomeFlowCardEditor extends LitElement implements LovelaceCardEditor
     return fallback ? `${localize("editor.default")}: ${fallback}` : undefined;
   };
 
-  static styles = css`
-    ha-form {
-      width: 100%;
-    }
+  static styles = [
+    carConditionsStyles,
+    css`
+      ha-form {
+        width: 100%;
+      }
 
-    .card-config {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      margin-bottom: 10px;
-    }
+      .card-config {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        margin-bottom: 10px;
+      }
 
-    .pages {
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-    }
-  `;
+      .pages {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+    `,
+  ];
 }
 
 declare global {

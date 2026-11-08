@@ -136,3 +136,68 @@ views:
             title: Battery without state of charge
             battery:
               entity: sensor.battery_power
+      - type: grid
+        cards:
+          - type: heading
+            heading: Car
+            icon: mdi:car-electric
+          - type: entities
+            title: Run a car scenario
+            show_header_toggle: false
+            entities:
+              - script.car_charging
+              - script.car_plugged_in_full
+              - script.car_unplugged
+              - script.car_away
+              - script.car_feeding_home
+              - script.car_sensor_unavailable
+          - type: entities
+            title: Car knobs
+            show_header_toggle: false
+            entities:
+              - input_number.car_power
+              - input_number.car_soc
+              - input_select.car_location
+              - input_boolean.car_plugged_in
+              - input_boolean.car_available
+          - type: custom:home-flow-card
+            title: "Car: shown while home, idle while unplugged"
+            grid:
+              entity: sensor.grid_power
+            solar:
+              entity: sensor.solar_power
+            battery:
+              entity: sensor.battery_power
+              state_of_charge: sensor.battery_soc
+            car:
+              entity: sensor.car_power
+              state_of_charge: sensor.car_battery
+              visibility:
+                - condition: state
+                  entity: input_select.car_location
+                  state: home
+              idle:
+                - condition: state
+                  entity: binary_sensor.car_plugged_in
+                  state: "off"
+          - type: custom:home-flow-card
+            title: "Car: no conditions (idle at 0 W)"
+            grid:
+              entity: sensor.grid_power
+            solar:
+              entity: sensor.solar_power
+            car:
+              entity: sensor.car_power
+              state_of_charge: sensor.car_battery
+              name: Model Y
+          - type: custom:home-flow-card
+            title: "Car: no battery level, idle below 500 W"
+            grid:
+              entity: sensor.grid_power
+            car:
+              entity: sensor.car_power
+              idle:
+                - condition: numeric_state
+                  entity: sensor.car_power
+                  above: -500
+                  below: 500
