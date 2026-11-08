@@ -7,6 +7,7 @@ import { parse } from "acorn";
 import typescript from "@rollup/plugin-typescript";
 import minifyHTML from "rollup-plugin-minify-html-literals";
 import serve from "rollup-plugin-serve";
+import { execSync } from "node:child_process";
 
 // Home Assistant's own legacy-build floors (home-assistant/frontend .browserslistrc):
 // Chrome 67 covers Chromecast 1st gen (Chrome 70), Nest Hub and old kiosk webviews.
@@ -41,6 +42,38 @@ function legacySyntaxGuard() {
   };
 }
 
+const BUILD_PLACEHOLDER = /\b__FLIXLIX_BUILD__\b/g;
+
+function git(command) {
+  try {
+    return execSync(`git ${command}`, { stdio: ["ignore", "pipe", "ignore"] })
+      .toString()
+      .trim();
+  } catch {
+    return "";
+  }
+}
+
+/** Identifies one build in the card's console banner: commit, uncommitted changes, build time. */
+export function buildId(now = new Date()) {
+  const commit = git("rev-parse --short HEAD") || "unknown";
+  const dirty = git("status --porcelain") ? "+dirty" : "";
+  const time = now.toISOString().slice(0, 16).replace("T", " ");
+  return `${commit}${dirty} · built ${time} UTC`;
+}
+
+function buildStamp() {
+  const id = JSON.stringify(buildId());
+  return {
+    name: "build-stamp",
+    transform(code) {
+      return BUILD_PLACEHOLDER.test(code)
+        ? { code: code.replace(BUILD_PLACEHOLDER, id), map: null }
+        : null;
+    },
+  };
+}
+
 export function createCardConfig(options) {
   const {
     input = "src/main.ts",
@@ -66,6 +99,7 @@ export function createCardConfig(options) {
       sourcemap: !!watch,
     },
     plugins: [
+      buildStamp(),
       ...(minifyHtmlPlugin ? [minifyHtmlPlugin()] : []),
       typescript({
         declaration: false,

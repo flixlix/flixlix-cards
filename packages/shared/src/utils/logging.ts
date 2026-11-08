@@ -6,6 +6,11 @@ type CardMeta = {
   readme: string;
 };
 
+/** Replaced at build time by the bundler (commit and build time); undefined in tests. */
+declare const __FLIXLIX_BUILD__: string | undefined;
+
+const buildId = typeof __FLIXLIX_BUILD__ === "string" ? __FLIXLIX_BUILD__ : "dev build";
+
 let cardInfo: CardMeta = {
   name: "Unknown Card",
   version: "0.0.0",
@@ -19,10 +24,10 @@ let cardInfo: CardMeta = {
 export const setupLogger = (options: CardMeta) => {
   cardInfo = options;
 
-  // Log Version
   console.groupCollapsed(
-    `%c⚡ ${cardInfo.name} v${cardInfo.version} is installed`,
-    "color: #488fc2; font-weight: bold"
+    `%c⚡ ${cardInfo.name} v${cardInfo.version} %c${buildId}`,
+    "color: #488fc2; font-weight: bold",
+    "color: inherit; font-weight: normal"
   );
   console.log("Readme:", cardInfo.readme);
   console.groupEnd();
