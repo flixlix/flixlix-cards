@@ -143,11 +143,13 @@ export const styles = css`
     line-height: 1.05;
     color: var(--primary-text-color);
     pointer-events: auto;
-    transform: translate(calc(var(--house-unit, 1px) * -10), -100%);
+    /* clear of the leader line's end */
+    --label-gap: calc(var(--house-unit, 1px) * 5);
+    transform: translate(calc(var(--house-unit, 1px) * -10), calc(-100% - var(--label-gap)));
   }
 
   .label.down {
-    transform: translate(calc(var(--house-unit, 1px) * -10), 0);
+    transform: translate(calc(var(--house-unit, 1px) * -10), var(--label-gap));
   }
 
   .label.clickable {
@@ -164,6 +166,7 @@ export const styles = css`
     font-size: calc(var(--house-unit, 1px) * 17);
     font-weight: 700;
     letter-spacing: -0.02em;
+    line-height: 1;
     font-variant-numeric: tabular-nums;
   }
 
@@ -182,7 +185,6 @@ export const styles = css`
     display: flex;
     align-items: center;
     gap: 0.35em;
-    margin-top: 0.25em;
     font-size: calc(var(--house-unit, 1px) * 9.5);
     font-weight: 500;
     color: var(--secondary-text-color);
