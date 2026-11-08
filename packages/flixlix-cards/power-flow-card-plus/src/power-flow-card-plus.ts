@@ -42,6 +42,7 @@ export class PowerFlowCardPlus extends LitElement {
   private _cardState?: CardState;
   private _appliedCardState?: CardState;
   private _resizeObserver?: ResizeObserver;
+  private _observedContent?: HTMLElement;
   private readonly _actions = new EntityActions(this, () => ({
     hass: this.hass,
     clickableEntities: this._config.clickable_entities,
@@ -79,6 +80,7 @@ export class PowerFlowCardPlus extends LitElement {
   public disconnectedCallback() {
     this._resizeObserver?.disconnect();
     this._resizeObserver = undefined;
+    this._observedContent = undefined;
     if (typeof document !== "undefined") {
       document.removeEventListener("visibilitychange", this._handleVisibilityChange);
     }
@@ -147,12 +149,14 @@ export class PowerFlowCardPlus extends LitElement {
 
   private _observeWidth() {
     const content = this.shadowRoot?.querySelector<HTMLElement>("#power-flow-card-plus");
-    if (!content) {
+    if (!content || content === this._observedContent) {
       return;
     }
+    this._observedContent = content;
+    this._resizeObserver?.disconnect();
     this._resizeObserver ??= new ResizeObserver(([entry]) => {
       if (entry) {
-        this._width = Math.round(entry.contentRect.width);
+        this._width = Math.round(entry.target.getBoundingClientRect().width);
       }
     });
     this._resizeObserver.observe(content);
