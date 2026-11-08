@@ -8,7 +8,7 @@ import { convertColorListToHex } from "@flixlix-cards/shared/utils/convert-color
 import { isNumberValue, nonEmpty, sortedCopy } from "@flixlix-cards/shared/utils/utils";
 import { type HomeAssistant } from "custom-card-helpers";
 import { type Formatter } from "./format";
-import { type NodeTotals, type Presence } from "./normalize";
+import { type Normalized } from "./normalize";
 import { type CardStateInput, type IndividualSlot, type ReadyCardState } from "./types";
 
 const unconfigured: IndividualObject = {
@@ -98,8 +98,7 @@ const fieldColor = (color: IndividualDeviceType["color"]): string | null => {
 /** Individual device nodes in config order. */
 export const individualNodes = (
   input: CardStateInput,
-  totals: NodeTotals,
-  presence: Presence,
+  { totals, presence, feedingIndividuals }: Normalized,
   format: Formatter
 ): IndividualObject[] =>
   (input.config.entities.individual ?? []).map((field, index) => {
@@ -107,6 +106,7 @@ export const individualNodes = (
       return unconfigured;
     }
     const state = totals.individuals[index] ?? 0;
+    const feeding = feedingIndividuals[index] ?? false;
     const displayZero = field.display_zero ?? false;
     const displayZeroTolerance = field.display_zero_tolerance ?? 0;
     return {
@@ -119,12 +119,13 @@ export const individualNodes = (
       icon: computeFieldIcon(input.hass, field, "mdi:flash"),
       name: computeFieldName(input.hass, field, "Individual"),
       color: fieldColor(field.color),
-      invertAnimation: field.inverted_animation ?? false,
+      invertAnimation: (field.inverted_animation ?? false) !== feeding,
       showDirection: field.show_direction ?? false,
-      displayState: format(state, {
+      displayState: format(feeding ? -state : state, {
         decimals: field.decimals,
         unit: field.unit_of_measurement,
         unitWhiteSpace: field.unit_white_space,
+        accept_negative: feeding,
       }),
       secondary: individualSecondary(input.hass, format, field, input.templates.individual[index]),
     };

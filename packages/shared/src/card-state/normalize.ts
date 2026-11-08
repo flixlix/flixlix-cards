@@ -30,7 +30,13 @@ export type Presence = Readonly<{
   individuals: ReadonlyArray<boolean>;
 }>;
 
-export type Normalized = Readonly<{ totals: NodeTotals; presence: Presence; outage: boolean }>;
+export type Normalized = Readonly<{
+  totals: NodeTotals;
+  presence: Presence;
+  outage: boolean;
+  /** Per individual device: it reads negative with `accept_negative`, so it feeds the home. */
+  feedingIndividuals: ReadonlyArray<boolean>;
+}>;
 
 type Directions = Readonly<{ into: number; outOf: number }>;
 type Direction = keyof Directions;
@@ -123,6 +129,11 @@ const individualTotals = (input: NormalizeInput, readings: ReadyReadings) =>
     adjustZeroTolerance(magnitude(readings.individuals[index]), field?.display_zero_tolerance)
   );
 
+const feedingIndividuals = (input: NormalizeInput, readings: ReadyReadings) =>
+  (input.config.entities.individual ?? []).map(
+    (field, index) => field?.accept_negative === true && (readings.individuals[index] ?? 0) < 0
+  );
+
 const presenceOf = (
   input: NormalizeInput,
   nodes: NodeReadings,
@@ -200,5 +211,6 @@ export const normalize = (input: NormalizeInput, readings: ReadyReadings): Norma
     },
     presence,
     outage,
+    feedingIndividuals: feedingIndividuals(input, readings),
   };
 };

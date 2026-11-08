@@ -229,6 +229,38 @@ describe("individual direction", () => {
       "mdi:arrow-down",
     ]);
   });
+
+  test("with accept_negative, a device feeding power shows its sign and flows into the home", async () => {
+    const { card, arrow, keyPoints } = await mountDirections(["-40", "30", "20", "-10"], {
+      accept_negative: true,
+    });
+    expect(slots.map((slot) => card.text(`span.individual-${slot}`))).toEqual([
+      "-40 W",
+      "30 W",
+      "20 W",
+      "-10 W",
+    ]);
+    expect(slots.map(arrow)).toEqual([
+      "mdi:arrow-down",
+      "mdi:arrow-down",
+      "mdi:arrow-up",
+      "mdi:arrow-up",
+    ]);
+    expect(slots.map(keyPoints)).toEqual(["0;1", "1;0", "1;0", "0;1"]);
+  });
+
+  test("without accept_negative, a negative reading keeps its magnitude and direction", async () => {
+    const { card, arrow, keyPoints } = await mountDirections(["-40", "30", "20", "-10"]);
+    expect(card.text("span.individual-left-top")).toBe("40 W");
+    expect(card.text("span.individual-right-bottom")).toBe("10 W");
+    expect(slots.map(arrow)).toEqual([
+      "mdi:arrow-up",
+      "mdi:arrow-down",
+      "mdi:arrow-up",
+      "mdi:arrow-down",
+    ]);
+    expect(slots.map(keyPoints)).toEqual(["1;0", "1;0", "1;0", "1;0"]);
+  });
 });
 
 const priceTemplate = "{{ states('sensor.cost') }}";

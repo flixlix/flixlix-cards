@@ -31,7 +31,7 @@ export function computeCardState(input: CardStateInput, previous?: CardState): C
     home: homeNode(context, translate("editor.home", input.hass.locale?.language ?? "en")),
     nonFossil: nonFossilNode(context),
   };
-  const individuals = individualNodes(input, balance.totals, balance.presence, format);
+  const individuals = individualNodes(input, balance, format);
   const flows = computeFlows({
     config,
     balance,
