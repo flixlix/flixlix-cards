@@ -1,5 +1,5 @@
 ---
-"home-flow-card": minor
+"home-flow-card": patch
 ---
 
 The Home Flow Card can now show an electric car. Add a `car` with the entity of its charging power, and optionally its `state_of_charge` and a `name`, or set it up on the editor's new Car page. The car parks in front of the house, its wire runs from the home's outlet, and its label shows its power and battery level. A car that feeds the home (negative power) sends its power back to the outlet.
