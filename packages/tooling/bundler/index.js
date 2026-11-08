@@ -62,8 +62,9 @@ export function buildId(now = new Date()) {
   return `${commit}${dirty} · built ${time} UTC`;
 }
 
-function buildStamp() {
-  const id = JSON.stringify(buildId());
+/** Release builds (RELEASE_BUILD=true in the release workflow) stamp an empty id: users see only the version. */
+function buildStamp(release = globalThis.process.env.RELEASE_BUILD === "true") {
+  const id = JSON.stringify(release ? "" : buildId());
   return {
     name: "build-stamp",
     transform(code) {
