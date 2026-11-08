@@ -6,6 +6,7 @@ import noIdentityArithmetic from "./rules/no-identity-arithmetic.js";
 import noIndexFallback from "./rules/no-index-fallback.js";
 import noMutation from "./rules/no-mutation.js";
 import noMwcElements from "./rules/no-mwc-elements.js";
+import noNativeDateInput from "./rules/no-native-date-input.js";
 import noReactiveMutation from "./rules/no-reactive-mutation.js";
 
 export default definePlugin({
@@ -18,6 +19,7 @@ export default definePlugin({
     "no-index-fallback": noIndexFallback,
     "no-mutation": noMutation,
     "no-mwc-elements": noMwcElements,
+    "no-native-date-input": noNativeDateInput,
     "no-reactive-mutation": noReactiveMutation,
   },
 });

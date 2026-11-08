@@ -14,6 +14,7 @@ around it.
 ## Features
 
 - Day / week / month / year / custom period buttons, in the order you list them
+- Custom ranges are picked in Home Assistant's own calendar, with its presets
 - Previous, next and today buttons
 - Compare with the previous period (icon or text button)
 - Optional card background and title
@@ -30,7 +31,7 @@ around it.
 | `today_button_type`    | `text` / `icon` / `false` | `text`                     | Style of the today button, `false` hides it                                           |
 | `compare_button_type`  | `text` / `icon`           | —                          | Show a button that compares with the previous period                                  |
 | `compare_button_label` | string                    | HA's "Compare data"        | Label of the text compare button                                                      |
-| `period_buttons`       | list                      | `[day, week, month, year]` | Period buttons and their order. Add `custom` for a start and end date                 |
+| `period_buttons`       | list                      | `[day, week, month, year]` | Period buttons and their order. Add `custom` to pick any range in HA's calendar       |
 | `custom_period_label`  | string                    | `Custom`                   | Label of the `custom` button                                                          |
 | `collection_key`       | string                    | the dashboard's            | Like in HA's energy cards: drive another energy collection. Must start with `energy_` |
 
