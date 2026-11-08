@@ -18,7 +18,7 @@ same sensors as [Power Flow Card Plus](https://github.com/flixlix/power-flow-car
 - Numbers roll to their new value when a reading changes (`animate_numbers`)
 - The battery's icon follows its state of charge, as in Power Flow Card Plus; its charge bar turns yellow and red at thresholds you set
 - Under the battery's value: its state of charge and whether it is charging or discharging
-- The grid has no label: its cable carries the flow. During an outage it goes dead, and an optional generator, wired to the inverter (never to the grid cable), takes over
+- During an outage the grid cable goes dead and its label shows the outage alert; an optional generator, wired to the inverter (never to the grid cable), takes over and its label takes the grid's place
 - Greys taken from your theme, in light and dark
 - Visual editor
 

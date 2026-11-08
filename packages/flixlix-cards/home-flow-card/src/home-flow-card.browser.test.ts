@@ -113,6 +113,7 @@ describe("home flow card", () => {
 
     expect(reading(root, "solar")).toBe("800 W");
     expect(reading(root, "home")).toBe("2.6 kW");
+    expect(reading(root, "grid")).toBe("0 W");
     expect(reading(root, "battery")).toBe("1.8 kW");
     expect(batteryLine(root)).toBe("22 % · discharging");
   });
@@ -129,7 +130,7 @@ describe("home flow card", () => {
     const labelled = [...root.querySelectorAll(".label")].map((label) =>
       nodes.find((node) => label.classList.contains(node))
     );
-    expect(labelled).toEqual(["home"]);
+    expect(labelled).toEqual(["home", "grid"]);
     expect(root.querySelector(".track.grid")).not.toBeNull();
     expect(root.querySelector(".power.grid .pulse")).not.toBeNull();
     expect(root.querySelector(".node.solar")).toBeNull();
@@ -254,6 +255,41 @@ describe("home flow card", () => {
 
     expect(root.querySelector(".track.grid")).not.toBeNull();
     expect(root.querySelector(".power.grid")).toBeNull();
+    expect(reading(root, "grid")).toBe("—");
+    expect(labelOf(root, "grid").querySelector(".outage")?.textContent).toBe("Power Outage");
+  });
+
+  test("the card keeps its size as the grid goes down and comes back", async () => {
+    // grid only: nothing but the house and the grid's own label sets the card's size
+    const { root, card, setHass } = await mountHouse(
+      {
+        grid: { entity: "sensor.grid", power_outage: { entity: "binary_sensor.outage" } },
+        solar: undefined,
+        battery: undefined,
+      },
+      outageStates("off")
+    );
+    const viewBox = () => root.querySelector(".stage > svg")?.getAttribute("viewBox");
+    const gridUp = viewBox();
+
+    await setHass(withStates(card.hass ?? fakeHass(), outageStates("on")));
+
+    expect(labelOf(root, "grid").querySelector(".outage")).not.toBeNull();
+    expect(viewBox()).toBe(gridUp);
+  });
+
+  test("the outage alert is the grid's label_alert when it has one", async () => {
+    const { root } = await mountHouse(
+      {
+        grid: {
+          entity: "sensor.grid",
+          power_outage: { entity: "binary_sensor.outage", label_alert: "Blackout" },
+        },
+      },
+      { ...evening, "binary_sensor.outage": sensor("on", { unit: undefined }) }
+    );
+
+    expect(labelOf(root, "grid").querySelector(".outage")?.textContent).toBe("Blackout");
   });
 
   test("in an outage a generator feeds the inverter, never the grid cable", async () => {
@@ -271,6 +307,8 @@ describe("home flow card", () => {
 
     expect(root.querySelector(".node.generator")).not.toBeNull();
     expect(reading(root, "generator")).toBe("1.2 kW");
+    // the generator's label takes the grid's place
+    expect(root.querySelector(".label.grid")).toBeNull();
     expect(root.querySelector(".power.generator .pulse")).not.toBeNull();
     expect(root.querySelector(".power.grid")).toBeNull();
   });
@@ -288,6 +326,7 @@ describe("home flow card", () => {
 
     expect(root.querySelector(".node.generator")).toBeNull();
     expect(root.querySelector(".label.generator")).toBeNull();
+    expect(root.querySelector(".label.grid")).not.toBeNull();
     expect(viewBox()).toBe(inOutage);
   });
 

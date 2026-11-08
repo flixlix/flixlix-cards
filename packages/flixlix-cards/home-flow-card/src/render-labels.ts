@@ -10,7 +10,7 @@ import { LABEL_ANCHORS, type LabelledNode, project } from "./scene";
 /** Rough size of a label in screen units, so the viewBox leaves room for it. */
 const LABEL_WIDTH = 92;
 const LABEL_HEIGHT = 34;
-const STATUS_HEIGHT = 13;
+const LINE_HEIGHT = 13;
 
 export type LabelContext = {
   actions: EntityActions;
@@ -20,12 +20,12 @@ export type LabelContext = {
   locale: HomeAssistant["locale"];
 };
 
-/** Makes room in the viewBox for a node's label, with or without a status line. */
-export const includeLabel = (extent: Extent, node: LabelledNode, hasStatus: boolean) => {
+/** Makes room in the viewBox for a node's label, with `lines` lines beyond its value and name. */
+export const includeLabel = (extent: Extent, node: LabelledNode, lines: number) => {
   const anchor = LABEL_ANCHORS[node];
   const [x, y] = project(anchor.at);
   const end = y + anchor.leader;
-  const height = LABEL_HEIGHT + (hasStatus ? STATUS_HEIGHT : 0);
+  const height = LABEL_HEIGHT + lines * LINE_HEIGHT;
   extent.include([x, end + Math.sign(anchor.leader) * height], 4);
   extent.include([x - 10 + LABEL_WIDTH, end], 4);
 };
@@ -34,7 +34,7 @@ export const includeLabel = (extent: Extent, node: LabelledNode, hasStatus: bool
 export const leaderSvg = (label: Label, extent: Extent) => {
   const anchor = LABEL_ANCHORS[label.node];
   const [x, y] = project(anchor.at);
-  includeLabel(extent, label.node, label.status !== undefined);
+  includeLabel(extent, label.node, [label.status, label.alert].filter(Boolean).length);
   return svg`<g class="leader">
     <path d="M${x} ${y}V${y + anchor.leader}" stroke="var(--house-leader)" stroke-width="0.8"></path>
     <circle cx=${x} cy=${y} r="1.6" fill="var(--house-leader)"></circle>
@@ -103,6 +103,7 @@ const labelHtml = (label: Label, position: string, context: LabelContext) => {
     <div class="value">${valueHtml(label.reading, context)}</div>
     ${label.status ? html`<div class="status">${statusHtml(label.status, context)}</div>` : nothing}
     <div class="name">${label.name}</div>
+    ${label.alert ? html`<div class="name outage">${label.alert}</div>` : nothing}
   </div>`;
 };
 

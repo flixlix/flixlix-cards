@@ -23,6 +23,8 @@ export type Label = {
   reading: ScaledReading | null;
   name: string;
   status?: BatteryStatus;
+  /** A line under the name, in the error colour: the grid's outage alert. */
+  alert?: string;
   actions: ActionConfigSet;
   entity: string | undefined;
 };
@@ -51,17 +53,45 @@ const batteryStatus = (
   return { charge, direction, word };
 };
 
-/** One label per drawn wire but the grid's, in reading order: solar, home, battery, generator. */
-export const houseLabels = (
+/**
+ * The grid's import or export, or a dash and its outage alert while the power is out. `alert` is
+ * the grid's `power_outage.label_alert`, if set.
+ */
+const gridLabel = (
   { nodes }: ReadyCardState,
+  wire: HouseWire,
+  alert: string | undefined,
+  language: string
+): Label => {
+  const { grid } = nodes;
+  const outage = grid.powerOutage.isOutage;
+  return {
+    node: "grid",
+    reading: outage ? null : wire.reading,
+    name: grid.name,
+    alert: outage ? (alert ?? translate("editor.power_outage", language)) : undefined,
+    actions: grid,
+    entity: grid.mainEntity,
+  };
+};
+
+/**
+ * One label per drawn wire, in reading order: solar, home, battery, then the grid or the
+ * generator. They share their place: the grid's label shows whenever the generator isn't drawn.
+ */
+export const houseLabels = (
+  state: ReadyCardState,
   wires: HouseWire[],
   generator: GeneratorConfig,
+  gridAlert: string | undefined,
   language: string
 ): Label[] => {
+  const { nodes } = state;
   const wireOf = (node: HouseNode) => wires.find((wire) => wire.node === node);
   const solar = wireOf("solar");
   const home = wireOf("home");
   const battery = wireOf("battery");
+  const grid = wireOf("grid");
   const generatorWire = wireOf("generator");
   const labels: (Label | undefined)[] = [
     solar && {
@@ -86,6 +116,7 @@ export const houseLabels = (
       actions: nodes.battery,
       entity: nodes.battery.mainEntity,
     },
+    grid && !generatorWire ? gridLabel(state, grid, gridAlert, language) : undefined,
     generatorWire && {
       node: "generator",
       reading: generatorWire.reading,
