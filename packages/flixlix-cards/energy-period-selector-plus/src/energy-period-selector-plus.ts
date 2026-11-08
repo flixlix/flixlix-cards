@@ -308,7 +308,7 @@ export class EnergyPeriodSelectorPlus extends LitElement implements LovelaceCard
       <div hidden>${this._collectionCreator}</div>`;
     return this._config.card_background
       ? html`<ha-card .header=${this._config.title}>
-          <div class="card-content ${this._config.title ? "has-header" : ""}">${content}</div>
+          <div class="card-content" ?data-header=${Boolean(this._config.title)}>${content}</div>
         </ha-card>`
       : content;
   }
@@ -445,7 +445,7 @@ export class EnergyPeriodSelectorPlus extends LitElement implements LovelaceCard
     .card-content {
       padding: 16px;
     }
-    .card-content.has-header {
+    .card-content[data-header] {
       padding-top: 0;
     }
     .selector {
