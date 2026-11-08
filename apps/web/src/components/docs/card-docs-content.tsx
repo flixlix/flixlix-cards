@@ -724,6 +724,38 @@ const BATTERY_OPTIONS: OptionRow[] = [
   },
 ];
 
+/** unit_of_measurement, unit_white_space and decimals, shared by grid, solar and battery. */
+const UNIT_OPTIONS = (v: Variant): OptionRow[] => [
+  {
+    name: "unit_of_measurement",
+    type: "string",
+    default: `${v.unit} / ${v.unitKilo} (dynamic)`,
+    description: (
+      <>
+        Unit shown after the value. When set, the value is shown as read from the entity, without
+        converting to {v.unitKilo}; useful for non-electrical flows such as <code>L/min</code>.
+      </>
+    ),
+  },
+  {
+    name: "unit_white_space",
+    type: "boolean",
+    default: "true",
+    description: "Whitespace before the unit.",
+  },
+  {
+    name: "decimals",
+    type: "number",
+    description: (
+      <>
+        Decimals shown in the value. Without <code>unit_of_measurement</code> it overrides the
+        card-wide decimals for the current scale, e.g. 1234 with <code>decimals: 2</code> shows 1.23{" "}
+        {v.unitKilo}.
+      </>
+    ),
+  },
+];
+
 const HOME_OPTIONS: OptionRow[] = [
   {
     name: "entity",
@@ -1230,7 +1262,7 @@ entities:
       entity: binary_sensor.grid_status`,
           }}
         >
-          <OptionList rows={GRID_OPTIONS} />
+          <OptionList rows={[...GRID_OPTIONS, ...UNIT_OPTIONS(v)]} />
         </CategorySection>
 
         <CategorySection
@@ -1250,7 +1282,7 @@ entities:
     display_zero: true`,
           }}
         >
-          <OptionList rows={SOLAR_OPTIONS} />
+          <OptionList rows={[...SOLAR_OPTIONS, ...UNIT_OPTIONS(v)]} />
         </CategorySection>
 
         <CategorySection
@@ -1271,7 +1303,7 @@ entities:
     color_circle: color_dynamically`,
           }}
         >
-          <OptionList rows={BATTERY_OPTIONS} />
+          <OptionList rows={[...BATTERY_OPTIONS, ...UNIT_OPTIONS(v)]} />
         </CategorySection>
 
         <CategorySection
