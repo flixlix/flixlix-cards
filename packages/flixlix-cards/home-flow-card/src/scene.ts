@@ -227,8 +227,8 @@ const inverter = (): Shape[] => [
   },
 ];
 
-/** A generator on the ground in front of the gable, beside the grid cable but not on it. */
-const GENERATOR = { x0: 12.6, x1: 14.4, y0: 6.3, y1: 7.5, height: 1.3 } as const;
+/** A generator on the ground well off the gable, behind the grid cable and clear of it. */
+const GENERATOR = { x0: 16, x1: 17.8, y0: 1.9, y1: 3.1, height: 1.3 } as const;
 const GENERATOR_X = (GENERATOR.x0 + GENERATOR.x1) / 2;
 const GENERATOR_Y = (GENERATOR.y0 + GENERATOR.y1) / 2;
 
@@ -268,12 +268,14 @@ export const fixtures = ({
   { node: "inverter", shapes: inverter() },
 ];
 
-/** The grid cable runs on past the card's edge, fading out after its label points at it. */
+/** The grid cable runs on past the card's edge, fading out from GRID_FADE_FROM onwards. */
 const GRID_CABLE_END = 40;
-const GRID_LABEL_X = 18;
+export const GRID_FADE_FROM: Point = [18, 5.05, 0];
 export const GRID_CABLE_START: Point = [LENGTH + 0.07, INVERTER_Y, 0.02];
 const ON_FRONT = FRONT + 0.07;
 const ON_GABLE = LENGTH + 0.07;
+/** The generator's wire runs parallel to the grid cable, just behind it. */
+const GENERATOR_WIRE_Y = INVERTER.y0 + 0.1;
 
 /**
  * Each wire's route from its node to the inverter, along walls and ground. They meet the inverter
@@ -299,13 +301,13 @@ export const WIRE_ROUTES: Record<HouseNode, Point[]> = {
     [ON_GABLE, INVERTER.y1, INVERTER_Z],
   ],
   grid: [[GRID_CABLE_END, INVERTER_Y, 0.02], GRID_CABLE_START, [ON_GABLE, INVERTER_Y, INVERTER_Z]],
-  // from inside the generator along the ground to the gable, then up into the inverter beside
-  // the grid cable: two separate wires, never joined outside the inverter
+  // from under the generator, along the ground beside the grid cable and up into the inverter:
+  // two separate wires, never joined outside the inverter
   generator: [
     [GENERATOR_X, GENERATOR_Y, 0.02],
-    [ON_GABLE, GENERATOR_Y, 0.02],
-    [ON_GABLE, INVERTER_Y + 0.35, 0.02],
-    [ON_GABLE, INVERTER_Y + 0.35, INVERTER_Z],
+    [GENERATOR_X, GENERATOR_WIRE_Y, 0.02],
+    [ON_GABLE, GENERATOR_WIRE_Y, 0.02],
+    [ON_GABLE, GENERATOR_WIRE_Y, INVERTER_Z],
   ],
 };
 
@@ -315,7 +317,7 @@ export const WIRE_ROUTES: Record<HouseNode, Point[]> = {
  */
 export const DRAW_ORDER: readonly ({ wire: HouseNode } | { part: SceneGroup["node"] })[] = [
   { wire: "grid" }, // up into the inverter from below
-  { wire: "generator" }, // beside the grid cable, from inside the generator
+  { wire: "generator" }, // beside the grid cable, out from under the generator
   { part: "generator" },
   { part: "battery" },
   { wire: "battery" }, // from the battery's visible side into the inverter's back
@@ -331,14 +333,15 @@ export const DRAW_ORDER: readonly ({ wire: HouseNode } | { part: SceneGroup["nod
  * (negative) or down, with the label's text running right from it. The anchors keep leaders and
  * labels clear of the wires, the panels and each other.
  */
-export const LABEL_ANCHORS: Record<HouseNode, { at: Point; leader: number }> = {
+/** The grid has no label: its cable runs on to the card's edge and the space above is the generator's. */
+export type LabelledNode = Exclude<HouseNode, "grid">;
+
+export const LABEL_ANCHORS: Record<LabelledNode, { at: Point; leader: number }> = {
   solar: { at: onRoof(4.2, PANELS.y0), leader: -40 },
   home: { at: [8.1, FRONT + 0.13, 2.35], leader: 44 },
   battery: { at: onBattery(1.8, 3.3), leader: -50 },
-  // above the cable, out past the battery: the cable falls away under the label
-  grid: { at: [GRID_LABEL_X, INVERTER_Y, 0], leader: -20 },
-  // below the generator: clear of the home label to its left and the grid cable above
-  generator: { at: [GENERATOR_X, GENERATOR.y1, 0], leader: 46 },
+  // above the generator, right of the battery and below its label
+  generator: { at: [GENERATOR_X, GENERATOR_Y, GENERATOR.height], leader: -22 },
 };
 
 /** The house's leftmost and rightmost points: its front eave and its gable's back corner. */

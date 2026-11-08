@@ -1,64 +1,33 @@
 import {
   computeCardState,
   type CardState,
-  type HouseNode,
-  type HouseWire,
   houseWires,
-  powerReadings,
   type ReadyCardState,
-  type ScaledReading,
+  powerReadings,
   watchedEntities,
 } from "@flixlix-cards/shared/card-state";
-import { translate } from "@flixlix-cards/shared/i18n";
-import { type ActionConfigSet, type BatteryObject } from "@flixlix-cards/shared/types";
-import { applyCardState } from "@flixlix-cards/shared/utils/apply-card-state";
 import { EntityActions } from "@flixlix-cards/shared/utils/entity-actions";
+import { applyCardState } from "@flixlix-cards/shared/utils/apply-card-state";
 import {
   assertRenderableFlowCardConfig,
   displayZeroLinesWithDefaults,
 } from "@flixlix-cards/shared/utils/flow-card-config";
-import { formatNumber } from "@flixlix-cards/shared/utils/format-number";
 import { defaultValues, getDefaultConfig } from "@flixlix-cards/shared/utils/get-default-config";
 import { registerCustomCard } from "@flixlix-cards/shared/utils/register-custom-card";
 import { cardShouldUpdate } from "@flixlix-cards/shared/utils/relevant-change";
 import { SecondaryTemplates } from "@flixlix-cards/shared/utils/secondary-templates";
 import { coerceNumber } from "@flixlix-cards/shared/utils/utils";
-import { chargeLevel } from "@flixlix-cards/shared/utils/severity";
-import {
-  mdiBattery,
-  mdiBatteryHigh,
-  mdiBatteryLow,
-  mdiBatteryMedium,
-  mdiBatteryOutline,
-} from "@mdi/js";
-import {
-  type HomeAssistant,
-  type LovelaceCardEditor,
-  numberFormatToLocale,
-} from "custom-card-helpers";
-import { html, LitElement, nothing, type PropertyValues, svg, type TemplateResult } from "lit";
+import { type HomeAssistant, type LovelaceCardEditor } from "custom-card-helpers";
+import { html, LitElement, nothing, type PropertyValues, type TemplateResult } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import NumberFlow, { canAnimate } from "number-flow";
-import { TextMorph } from "torph";
 import packageJson from "../package.json" with { type: "json" };
-import {
-  faceTransform,
-  LABEL_ANCHORS,
-  panelSeams,
-  type Point,
-  type SceneGroup,
-  project,
-  roundedPath,
-  fixtures,
-  GRID_CABLE_START,
-  HOUSE_SPAN,
-  houseShell,
-  type ScreenPoint,
-  SHADOW,
-  type Shape,
-  WIRE_ROUTES,
-  DRAW_ORDER,
-} from "./scene";
+import { Extent } from "./extent";
+import { houseLabels } from "./labels";
+import { includeLabel, labelsHtml, leaderSvg } from "./render-labels";
+import { sceneSvg } from "./render-scene";
+import { gridFade, keepPulsePhase } from "./render-wires";
+import { HOUSE_SPAN, project } from "./scene";
 import { styles } from "./styles";
 import {
   DEFAULT_STATE_OF_CHARGE_SEVERITY,
@@ -67,6 +36,8 @@ import {
   type HomeFlowCardConfig,
   toFlowConfig,
 } from "./types";
+import { unitSlide } from "./unit-slide";
+import { morphWord } from "./word-morph";
 
 registerCustomCard({
   type: "home-flow-card",
@@ -87,137 +58,31 @@ const isDarkMode = (hass: HomeAssistant): boolean => {
   );
 };
 
+const prefersReducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+
 const isPageHidden = () => typeof document !== "undefined" && document.visibilityState === "hidden";
 
-type Box = { x: number; y: number; width: number; height: number };
+/** The house's middle, which the viewBox leans towards so the scene reads as centred. */
+const HOUSE_MIDDLE = (project(HOUSE_SPAN[0])[0] + project(HOUSE_SPAN[1])[0]) / 2;
 
-/** Screen-space box the scene and its labels take, for the viewBox. */
-class Extent {
-  private _box: [left: number, top: number, right: number, bottom: number] = [
-    Infinity,
-    Infinity,
-    -Infinity,
-    -Infinity,
-  ];
-
-  include([x, y]: ScreenPoint, margin = 0): void {
-    const [left, top, right, bottom] = this._box;
-    this._box = [
-      Math.min(left, x - margin),
-      Math.min(top, y - margin),
-      Math.max(right, x + margin),
-      Math.max(bottom, y + margin),
-    ];
+/** The scene, its leaders and labels, and the viewBox that holds them all. */
+const drawHouse = (config: FlowConfig, cardState: ReadyCardState, language: string) => {
+  const wires = houseWires(config, cardState);
+  const labels = houseLabels(cardState, wires, config.generator, language);
+  const extent = new Extent();
+  const reserveGenerator = Boolean(config.entities.grid?.power_outage?.entity_generator);
+  const scene = sceneSvg({
+    cardState,
+    wires,
+    extent,
+    severity: config.entities.battery?.state_of_charge_severity ?? DEFAULT_STATE_OF_CHARGE_SEVERITY,
+    reserveGenerator,
+  });
+  const leaders = labels.map((label) => leaderSvg(label, extent));
+  if (reserveGenerator) {
+    includeLabel(extent, "generator", false);
   }
-
-  /**
-   * The box around everything, widened on the short side so `centerX` sits in its middle: the
-   * labels and the grid cable reach further right than the house does left.
-   */
-  viewBox(padding: number, centerX: number): Box {
-    const [left, top, right, bottom] = this._box;
-    const half = Math.max(centerX - left, right - centerX) + padding;
-    return {
-      x: centerX - half,
-      y: top - padding,
-      width: half * 2,
-      height: bottom - top + padding * 2,
-    };
-  }
-}
-
-// reduceRight: toReversed needs Chrome 110 and reverse mutates.
-const reversed = (points: readonly Point[]): Point[] =>
-  points.reduceRight<Point[]>((list, point) => list.concat([point]), []);
-
-/** A wire's path in the direction its power flows. */
-const route = (wire: HouseWire) => {
-  const fromNode = WIRE_ROUTES[wire.node];
-  const points = wire.intoInverter ? fromNode : reversed(fromNode);
-  return roundedPath(points.map(project), BEND_RADIUS);
-};
-
-/**
- * The mask that fades the grid cable out: opaque up to where its label points at it, transparent
- * where it leaves the card.
- */
-const gridFade = (box: Box) => {
-  const [startX, startY] = project(GRID_CABLE_START);
-  const [stepX, stepY] = project([
-    GRID_CABLE_START[0] + 1,
-    GRID_CABLE_START[1],
-    GRID_CABLE_START[2],
-  ]);
-  const [fromX, fromY] = project(LABEL_ANCHORS.grid.at);
-  const [dx, dy] = [stepX - startX, stepY - startY];
-  const toEdge = Math.min((box.x + box.width - startX) / dx, (box.y + box.height - startY) / dy);
-  const [toX, toY] = [startX + dx * toEdge, startY + dy * toEdge];
-  return svg`<defs>
-    <linearGradient id="house-grid-fade" gradientUnits="userSpaceOnUse" x1=${fromX} y1=${fromY} x2=${toX} y2=${toY}>
-      <stop offset="0" stop-color="#fff"></stop>
-      <stop offset="1" stop-color="#fff" stop-opacity="0"></stop>
-    </linearGradient>
-    <mask id="house-grid-cable" maskUnits="userSpaceOnUse" x=${box.x} y=${box.y} width=${box.width} height=${box.height}>
-      <rect x=${box.x} y=${box.y} width=${box.width} height=${box.height} fill="url(#house-grid-fade)"></rect>
-    </mask>
-  </defs>`;
-};
-
-/** The grid cable fades out towards the card's edge. */
-const fadeOf = (wire: HouseWire) => (wire.node === "grid" ? "url(#house-grid-cable)" : nothing);
-
-/**
- * The battery's icons, by the name the card state picks: dynamic by state of charge, as in Power
- * Flow Card Plus, or the user's own. Icons outside this set are drawn as a plain battery.
- */
-const BATTERY_ICONS: Record<string, string> = {
-  "mdi:battery": mdiBattery,
-  "mdi:battery-high": mdiBatteryHigh,
-  "mdi:battery-medium": mdiBatteryMedium,
-  "mdi:battery-low": mdiBatteryLow,
-  "mdi:battery-outline": mdiBatteryOutline,
-};
-
-/** How round a wire's bends are, in screen units. */
-const BEND_RADIUS = 4;
-
-/**
- * A pulse's length grows with its wire's power; the pattern's period matches the animation's
- * offset in the stylesheet, so the loop stays seamless whatever the length.
- */
-const PULSE = { shortest: 6, longest: 36, period: 70 } as const;
-
-/** Pulses travel this many times slower than the flow rate's seconds per dot. */
-const PULSE_SLOWDOWN = 2.5;
-
-/** Fills that are gradients defined in the scene's <defs>; every other fill is a colour token. */
-const GRADIENT_FILLS = new Set(["wall", "gable", "panel", "box-front"]);
-const fillOf = (name: string) =>
-  GRADIENT_FILLS.has(name) ? `url(#house-${name})` : `var(--house-${name})`;
-
-const gradient = (name: string) =>
-  svg`<linearGradient id="house-${name}" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0" style=${`stop-color: var(--house-${name}-top)`}></stop>
-    <stop offset="1" style=${`stop-color: var(--house-${name})`}></stop>
-  </linearGradient>`;
-
-/** Rough size of a label in screen units, so the viewBox leaves room for it. */
-const LABEL_WIDTH = 92;
-const LABEL_HEIGHT = 34;
-const EXTRA_LINE_HEIGHT = 13;
-
-/** What a label shows: `reading` null shows a dash, as during a power outage. */
-type Label = {
-  node: HouseNode;
-  reading: ScaledReading | null;
-  name: string;
-  /** A line between the value and the name, e.g. the battery's state of charge and status. */
-  status?: TemplateResult;
-  /** A line under the name, e.g. the power outage alert. */
-  extra?: TemplateResult;
-  nameClass?: string;
-  actions: ActionConfigSet;
-  entity: string | undefined;
+  return { labels, scene, leaders, box: extent.viewBox(10, HOUSE_MIDDLE) };
 };
 
 @customElement("home-flow-card")
@@ -231,7 +96,8 @@ export class HomeFlowCard extends LitElement {
   private _appliedCardState?: CardState;
   private _resizeObserver?: ResizeObserver;
   private _observedScene?: Element;
-  private readonly _morphs = new Map<HTMLElement, TextMorph>();
+  private readonly _pulseDurations = new WeakMap<Element, number>();
+  private _unitSlide?: ReturnType<typeof unitSlide>;
   private readonly _actions = new EntityActions(this, () => ({
     hass: this.hass,
     clickableEntities: this._config.clickable_entities,
@@ -245,8 +111,6 @@ export class HomeFlowCard extends LitElement {
   };
 
   setConfig(cardConfig: HomeFlowCardConfig): void {
-    // `animate_numbers` may have changed: morphs are created with it.
-    this._destroyMorphs();
     const config = toFlowConfig(cardConfig);
     assertRenderableFlowCardConfig(config);
     this._config = {
@@ -273,7 +137,6 @@ export class HomeFlowCard extends LitElement {
     this._resizeObserver?.disconnect();
     this._resizeObserver = undefined;
     this._observedScene = undefined;
-    this._destroyMorphs();
     if (typeof document !== "undefined") {
       document.removeEventListener("visibilitychange", this._handleVisibilityChange);
     }
@@ -306,6 +169,11 @@ export class HomeFlowCard extends LitElement {
     if (!this._config || !this.hass) {
       return;
     }
+    // where each unit sits before this render, so it can slide to where it sits after
+    this._unitSlide =
+      this.shadowRoot && this._animatesNumbers() && !prefersReducedMotion()
+        ? unitSlide(this.shadowRoot)
+        : undefined;
     this._cardState = computeCardState(
       {
         config: this._config,
@@ -324,17 +192,18 @@ export class HomeFlowCard extends LitElement {
     if (!this._config || !this.hass || cardState?.status !== "ready") {
       return nothing;
     }
-    const wires = houseWires(this._config, cardState);
-    const extent = new Extent();
-    const scene = this._scene(cardState, wires, extent);
-    const labels = this._labels(cardState, wires);
-    const leaders = labels.map((label) => this._leader(label, extent));
-    const [houseLeft] = project(HOUSE_SPAN[0]);
-    const [houseRight] = project(HOUSE_SPAN[1]);
-    const box = extent.viewBox(10, (houseLeft + houseRight) / 2);
+    const { labels, scene, leaders, box } = drawHouse(
+      this._config,
+      cardState,
+      this.hass.locale?.language ?? "en"
+    );
     const unit = this._width > 0 ? this._width / box.width : 1;
-    const at = ([x, y]: ScreenPoint) =>
-      `left: ${((x - box.x) / box.width) * 100}%; top: ${((y - box.y) / box.height) * 100}%`;
+    const context = {
+      actions: this._actions,
+      clickable: this._config.clickable_entities ?? false,
+      animateNumbers: this._animatesNumbers(),
+      locale: this.hass.locale,
+    };
     return html`
       <ha-card .header=${this._config.title}>
         <div class="stage ${this._config.title ? "titled" : ""}" style=${`--house-unit: ${unit}px`}>
@@ -345,13 +214,7 @@ export class HomeFlowCard extends LitElement {
           >
             ${gridFade(box)} ${scene} ${leaders}
           </svg>
-          <div class="labels">
-            ${labels.map((label) => {
-              const anchor = LABEL_ANCHORS[label.node];
-              const [x, y] = project(anchor.at);
-              return this._label(label, at([x, y + anchor.leader]), anchor);
-            })}
-          </div>
+          ${labelsHtml(labels, box, context)}
         </div>
       </ha-card>
     `;
@@ -359,7 +222,7 @@ export class HomeFlowCard extends LitElement {
 
   protected updated(changedProps: PropertyValues): void {
     super.updated(changedProps);
-    if (!this._config || !this.hass) {
+    if (!this._config || !this.hass || !this.shadowRoot) {
       return;
     }
     this._observeWidth();
@@ -369,307 +232,21 @@ export class HomeFlowCard extends LitElement {
       applyCardState(this, cardState);
       this._appliedCardState = cardState;
     }
-    this._morphWords();
-    this.shadowRoot?.querySelectorAll("number-flow").forEach((flow) => {
+    const morph = this._config.animate_numbers !== false && !prefersReducedMotion();
+    this.shadowRoot
+      .querySelectorAll<HTMLElement>(".direction, .unit")
+      .forEach((word) => morphWord(word, word.dataset.word ?? "", morph));
+    keepPulsePhase(this.shadowRoot, this._pulseDurations);
+    this.shadowRoot.querySelectorAll("number-flow").forEach((flow) => {
       if (flow instanceof NumberFlow) {
         flow.update(Number(flow.dataset.value));
       }
     });
+    this._unitSlide?.slide();
   }
 
-  private _scene(cardState: ReadyCardState, wires: HouseWire[], extent: Extent) {
-    const screen = (point: Point) => {
-      const projected = project(point);
-      extent.include(projected);
-      return projected;
-    };
-    const points = (list: readonly Point[]) =>
-      list.map((point) => screen(point).join(",")).join(" ");
-    const path = (list: readonly Point[]) =>
-      list.map((point, index) => `${index === 0 ? "M" : "L"}${screen(point).join(" ")}`).join("");
-    const { nodes } = cardState;
-    const soc = nodes.battery.state_of_charge.state;
-    const parts = fixtures({
-      solar: nodes.solar.has,
-      generator: wires.some((wire) => wire.node === "generator"),
-      battery: nodes.battery.has
-        ? {
-            icon: BATTERY_ICONS[nodes.battery.icon] ?? mdiBattery,
-            soc: typeof soc === "number" ? soc / 100 : null,
-            level:
-              typeof soc === "number"
-                ? chargeLevel(
-                    soc,
-                    this._config.entities.battery?.state_of_charge_severity ??
-                      DEFAULT_STATE_OF_CHARGE_SEVERITY
-                  )
-                : undefined,
-          }
-        : undefined,
-    });
-    const shape = (item: Shape) =>
-      item.kind === "face"
-        ? svg`<polygon points=${points(item.points)} fill=${fillOf(item.fill)} stroke=${fillOf(item.fill)} stroke-width="0.4" stroke-linejoin="round"></polygon>`
-        : svg`<g transform=${faceTransform(item.face, item.at)}><path d=${item.path} transform="scale(${item.size / 24}) translate(-12 -12)" fill="var(--house-icon)"></path></g>`;
-    const seams = nodes.solar.has
-      ? svg`<path d=${panelSeams()
-          .map(([from, to]) => path([from, to]))
-          .join("")} stroke="var(--house-panel-seam)" stroke-width="1"></path>`
-      : nothing;
-    const group = (part: SceneGroup) =>
-      svg`<g class="node ${part.node}">${part.shapes.map(shape)}${part.node === "solar" ? seams : nothing}</g>`;
-    const [groundX, groundY] = project([4, 6, 0]);
-    return svg`
-      <defs>
-        ${["wall", "gable", "panel", "box-front"].map(gradient)}
-        <radialGradient id="house-ground">
-          <stop offset="0" style="stop-color: var(--house-ground)"></stop>
-          <stop offset="0.7" style="stop-color: var(--house-ground); stop-opacity: 0.6"></stop>
-          <stop offset="1" style="stop-color: var(--house-ground); stop-opacity: 0"></stop>
-        </radialGradient>
-        <filter id="house-blur" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="8"></feGaussianBlur></filter>
-      </defs>
-      <ellipse cx=${groundX} cy=${groundY + 30} rx="260" ry="150" fill="url(#house-ground)"></ellipse>
-      <polygon points=${points(SHADOW)} fill="var(--house-shadow)" filter="url(#house-blur)" opacity="0.55"></polygon>
-      ${[houseShell()].map(group)}
-      ${DRAW_ORDER.map((layer) =>
-        "wire" in layer
-          ? this._wires(
-              wires.filter((wire) => wire.node === layer.wire),
-              cardState.animate
-            )
-          : parts.filter((part) => part.node === layer.part).map(group)
-      )}
-    `;
-  }
-
-  /**
-   * Every wire as a neutral track; one carrying power also gets its colour and moving pulses.
-   * Wires are not part of the extent: the grid cable runs on past the card's edge.
-   */
-  private _wires(wires: HouseWire[], animate: boolean) {
-    const power = (wire: HouseWire) => {
-      const d = route(wire);
-      const dash = PULSE.shortest + (PULSE.longest - PULSE.shortest) * wire.intensity;
-      const duration = `animation-duration: ${wire.durationSeconds * PULSE_SLOWDOWN}s; stroke-dasharray: ${dash} ${PULSE.period - dash}`;
-      return svg`<g class="power ${wire.node}" style=${`--wire-color: ${wire.color}`} mask=${fadeOf(wire)}>
-        <path class="flow" d=${d}></path>
-        ${animate ? svg`<path class="pulse" d=${d} style=${duration}></path>` : nothing}
-      </g>`;
-    };
-    return svg`
-      ${wires.map((wire) => svg`<path class="track ${wire.node}" d=${route(wire)} mask=${fadeOf(wire)}></path>`)}
-      ${wires.filter((wire) => wire.power > 0).map(power)}
-    `;
-  }
-
-  /** One label per wire, in the order the labels are read: solar, home, battery, grid. */
-  private _labels({ nodes }: ReadyCardState, wires: HouseWire[]): Label[] {
-    const wireOf = (node: HouseNode) => wires.find((wire) => wire.node === node);
-    const solar = wireOf("solar");
-    const home = wireOf("home");
-    const battery = wireOf("battery");
-    const grid = wireOf("grid");
-    const generator = wireOf("generator");
-    return [
-      solar && {
-        node: "solar" as const,
-        reading: solar.reading,
-        name: nodes.solar.name,
-        actions: nodes.solar,
-        entity: nodes.solar.entity,
-      },
-      home && {
-        node: "home" as const,
-        reading: home.reading,
-        name: nodes.home.name,
-        actions: nodes.home,
-        entity: nodes.home.entity,
-      },
-      battery && this._batteryLabel(nodes, battery),
-      grid && this._gridLabel(nodes, grid),
-      generator && {
-        node: "generator" as const,
-        reading: generator.reading,
-        name:
-          this._config.generator?.name ??
-          translate("editor.entity_generator", this.hass.locale?.language ?? "en"),
-        // no actions of its own: opens more-info only with clickable_entities, like the others
-        actions: { tap_action: undefined },
-        entity: this._config.generator?.entity,
-      },
-    ].filter((label): label is Label => label !== undefined);
-  }
-
-  private _batteryLabel(nodes: ReadyCardState["nodes"], wire: HouseWire): Label {
-    return {
-      node: "battery",
-      reading: wire.reading,
-      name: nodes.battery.name,
-      status: this._batteryState(wire, nodes.battery.state_of_charge),
-      actions: nodes.battery,
-      entity: nodes.battery.mainEntity,
-    };
-  }
-
-  /** The grid's import or export, or a dash and the outage alert while the power is out. */
-  private _gridLabel(nodes: ReadyCardState["nodes"], wire: HouseWire): Label {
-    const base = { node: "grid" as const, name: nodes.grid.name, actions: nodes.grid };
-    if (nodes.grid.powerOutage.isOutage) {
-      const alert =
-        this._config.entities.grid?.power_outage?.label_alert ??
-        translate("editor.power_outage", this.hass.locale?.language ?? "en");
-      return {
-        ...base,
-        reading: null,
-        extra: html`<span class="outage">${alert}</span>`,
-        nameClass: "outage",
-        entity: nodes.grid.mainEntity,
-      };
-    }
-    return {
-      ...base,
-      reading: wire.reading,
-      entity: nodes.grid.mainEntity,
-    };
-  }
-
-  /**
-   * The battery's state of charge and whether it charges or discharges. The word's span is left
-   * empty for `_morphWords` to fill, so its shared letters slide while the rest morphs.
-   */
-  private _batteryState(wire: HouseWire, soc: BatteryObject["state_of_charge"]) {
-    const direction = wire.power > 0 ? (wire.intoInverter ? "discharging" : "charging") : undefined;
-    const charge =
-      typeof soc.state === "number"
-        ? html`<span class="state-of-charge"
-            >${this._number(soc.state, soc.decimals, `${soc.unit_white_space ? " " : ""}${soc.unit}`)}</span
-          >`
-        : undefined;
-    if (!charge && !direction) {
-      return undefined;
-    }
-    const word = direction
-      ? translate(`card.battery.${direction}`, this.hass.locale?.language ?? "en")
-      : "";
-    return html`${charge ?? nothing}${charge && direction ? html`<span>·</span>` : nothing}<span
-        class="direction ${direction ?? ""}"
-        data-word=${word}
-      ></span>`;
-  }
-
-  /** Morphs each label word to its new text with Torph, created once per word element. */
-  private _morphWords() {
-    for (const [element, morph] of this._morphs) {
-      if (!element.isConnected) {
-        morph.destroy();
-        this._morphs.delete(element);
-      }
-    }
-    this.shadowRoot?.querySelectorAll<HTMLElement>(".direction").forEach((element) => {
-      const morph =
-        this._morphs.get(element) ??
-        new TextMorph({
-          element,
-          duration: 450,
-          disabled: this._config.animate_numbers === false,
-        });
-      this._morphs.set(element, morph);
-      morph.update(element.dataset.word ?? "");
-    });
-    this._adoptMorphStyles();
-  }
-
-  /**
-   * Torph styles its letters (and hides the copy it keeps for screen readers) with a stylesheet
-   * it adds to the page's head, which does not reach into this card's shadow root: copy it in.
-   */
-  private _adoptMorphStyles() {
-    const root = this.shadowRoot;
-    const source = document.head.querySelector("style[data-torph]");
-    if (!root || !source || root.querySelector("style[data-torph]")) {
-      return;
-    }
-    root.append(source.cloneNode(true));
-  }
-
-  private _destroyMorphs() {
-    this._morphs.forEach((morph) => morph.destroy());
-    this._morphs.clear();
-  }
-
-  private _leader(label: Label, extent: Extent) {
-    const anchor = LABEL_ANCHORS[label.node];
-    const [x, y] = project(anchor.at);
-    const end = y + anchor.leader;
-    const lines = [label.status, label.extra].filter(Boolean).length;
-    const height = LABEL_HEIGHT + lines * EXTRA_LINE_HEIGHT;
-    extent.include([x, end + Math.sign(anchor.leader) * height], 4);
-    extent.include([x - 10 + LABEL_WIDTH, end], 4);
-    return svg`<g class="leader">
-      <path d="M${x} ${y}V${end}" stroke="var(--house-leader)" stroke-width="0.8"></path>
-      <circle cx=${x} cy=${y} r="1.6" fill="var(--house-leader)"></circle>
-    </g>`;
-  }
-
-  /** A label at the end of its leader, above or below its anchor, running right or left. */
-  private _label(label: Label, position: string, anchor: (typeof LABEL_ANCHORS)[HouseNode]) {
-    const placement = anchor.leader > 0 ? "down" : "up";
-    const clickable = this._config.clickable_entities;
-    const { actions, entity } = label;
-    return html`<div
-      class="label ${placement} ${clickable ? "clickable" : ""} ${label.node}"
-      style=${position}
-      role=${clickable ? "button" : nothing}
-      tabindex=${clickable ? 0 : nothing}
-      @click=${(event: MouseEvent) => this._actions.onEntityClick(event, actions, entity)}
-      @dblclick=${(event: MouseEvent) => this._actions.onEntityDoubleClick(event, actions, entity)}
-      @pointerdown=${(event: PointerEvent) =>
-        this._actions.onEntityPointerDown(event, actions, entity)}
-      @pointerup=${(event: PointerEvent) => this._actions.onEntityPointerUp(event)}
-      @pointercancel=${(event: PointerEvent) => this._actions.onEntityPointerUp(event)}
-      @keydown=${(event: KeyboardEvent) => {
-        if (event.key === "Enter" && event.target instanceof HTMLElement) {
-          this._actions.openDetails(
-            {
-              key: event.key,
-              stopPropagation: () => event.stopPropagation(),
-              target: event.target,
-            },
-            actions,
-            entity
-          );
-        }
-      }}
-    >
-      <div class="value">${this._value(label.reading)}</div>
-      ${label.status ? html`<div class="status">${label.status}</div>` : nothing}
-      <div class="name ${label.nameClass ?? ""}">${label.name}</div>
-      ${label.extra ? html`<div class="name extra">${label.extra}</div>` : nothing}
-    </div>`;
-  }
-
-  private _value(reading: ScaledReading | null) {
-    if (reading === null) {
-      return "—";
-    }
-    return html`${this._number(reading.value, reading.decimals)}<span class="unit"
-        >${reading.unit}</span
-      >`;
-  }
-
-  /** A number that rolls to its new value with number-flow, or plain text when it should not. */
-  private _number(value: number, decimals: number, suffix = "") {
-    if (this._config.animate_numbers === false || !canAnimate) {
-      return html`<span class="number">${formatNumber(value, this.hass.locale)}${suffix}</span>`;
-    }
-    return html`<number-flow
-      class="number"
-      data-value=${value}
-      .format=${{ maximumFractionDigits: decimals }}
-      .numberSuffix=${suffix}
-      .locales=${this.hass.locale ? numberFormatToLocale(this.hass.locale) : undefined}
-    ></number-flow>`;
+  private _animatesNumbers() {
+    return this._config.animate_numbers !== false && canAnimate;
   }
 
   /** The scene's rendered width sets the label size, so labels scale with the drawing. */

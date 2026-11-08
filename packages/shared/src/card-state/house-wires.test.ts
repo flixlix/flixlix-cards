@@ -181,10 +181,10 @@ describe("house wires", () => {
       expect(wire(outage, "grid")).toMatchObject({ power: 0 });
     });
 
-    test("with the grid up the generator is idle", () => {
+    test("with the grid up there is no generator wire", () => {
       const normal = { generator: 1200, fromGrid: 300 };
 
-      expect(wire(normal, "generator")).toMatchObject({ power: 0 });
+      expect(wire(normal, "generator")).toBeUndefined();
       expect(wire(normal, "grid")).toMatchObject({ power: 300, intoInverter: true });
     });
 

@@ -110,6 +110,17 @@ export const styles = css`
     stroke-width: 1;
   }
 
+  /* a wire taking up power fades its colour in rather than popping */
+  .power {
+    animation: appear 0.4s ease-out;
+  }
+
+  @keyframes appear {
+    from {
+      opacity: 0;
+    }
+  }
+
   .flow {
     stroke: var(--wire-color);
     stroke-width: 1.2;
@@ -122,6 +133,8 @@ export const styles = css`
     /* period 70, as PULSE in the card; each wire sets its own dash length */
     stroke-dasharray: 18 52;
     animation: pulse linear infinite;
+    /* a pulse's length follows its power: grow and shrink it rather than snap */
+    transition: stroke-dasharray 0.6s ease;
   }
 
   @keyframes pulse {
@@ -176,6 +189,8 @@ export const styles = css`
   }
 
   .unit {
+    /* inline-block, so it can slide along as its number changes width */
+    display: inline-block;
     font-size: 0.58em;
     margin-left: 0.15em;
     letter-spacing: 0;
@@ -199,7 +214,7 @@ export const styles = css`
   /* even space above and below, so the status sits between value and name */
   .status {
     gap: 0.3em;
-    margin: calc(var(--house-unit, 1px) * 2) 0 calc(var(--house-unit, 1px) * 1.5);
+    margin: calc(var(--house-unit, 1px) * 0.5) 0 calc(var(--house-unit, 1px) * 3);
   }
 
   .state-of-charge {
@@ -208,6 +223,16 @@ export const styles = css`
 
   .status > span:not(.state-of-charge):not(.direction) {
     opacity: 0.6;
+  }
+
+  .direction {
+    white-space: pre;
+    transition: color 0.35s ease;
+  }
+
+  /* an empty slot keeps a line's height, so the letters fading out of it stay on the baseline */
+  .enter:empty::before {
+    content: "\\200b";
   }
 
   .charging {

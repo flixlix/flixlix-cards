@@ -6,7 +6,7 @@ import {
   type StateFixtures,
   withStates,
 } from "@flixlix-cards/shared/testing/fake-hass";
-import { mountCard } from "@flixlix-cards/shared/testing/mount-card";
+import { mountCard, thawMotion } from "@flixlix-cards/shared/testing/mount-card";
 import { mdiBatteryHigh, mdiBatteryLow } from "@mdi/js";
 import NumberFlow from "number-flow";
 import { HomeFlowCard } from "./home-flow-card";
@@ -56,9 +56,15 @@ const reading = (root: ShadowRoot, node: string) => {
 const startOf = (d: string) => d.match(/^M([\d.-]+ [\d.-]+)/)?.[1];
 const endOf = (d: string) => d.match(/L([\d.-]+ [\d.-]+)$/)?.[1];
 
-/** A morphing word as it reads: Torph keeps it for screen readers while its letters animate. */
-const wordOf = (element: Element) =>
-  (element.querySelector("[torph-sr]") ?? element).textContent?.trim() || undefined;
+/** A morphing word as it reads, without the letters fading out of it. */
+const wordOf = (element: Element) => {
+  const copy = element.cloneNode(true);
+  if (copy instanceof Element) {
+    copy.querySelectorAll(".ghost").forEach((ghost) => ghost.remove());
+  }
+  const text = copy.textContent?.trim();
+  return text === "" ? undefined : text;
+};
 
 /** The battery label's status line: its state of charge and direction, numbers as they read. */
 const batteryLine = (root: ShadowRoot) => {
@@ -94,6 +100,13 @@ const barOf = async (soc: string, options: Partial<HomeFlowCardConfig> = {}) => 
     ?.getAttribute("fill");
 };
 
+/** The evening, with the grid's outage sensor on or off and a generator running. */
+const outageStates = (outage: string) => ({
+  ...evening,
+  "binary_sensor.outage": sensor(outage, { unit: undefined }),
+  "sensor.generator": "1200",
+});
+
 describe("home flow card", () => {
   test("labels every configured node with its value", async () => {
     const { root } = await mountHouse();
@@ -101,7 +114,6 @@ describe("home flow card", () => {
     expect(reading(root, "solar")).toBe("800 W");
     expect(reading(root, "home")).toBe("2.6 kW");
     expect(reading(root, "battery")).toBe("1.8 kW");
-    expect(reading(root, "grid")).toBe("0 W");
     expect(batteryLine(root)).toBe("22 % · discharging");
   });
 
@@ -117,7 +129,9 @@ describe("home flow card", () => {
     const labelled = [...root.querySelectorAll(".label")].map((label) =>
       nodes.find((node) => label.classList.contains(node))
     );
-    expect(labelled).toEqual(["home", "grid"]);
+    expect(labelled).toEqual(["home"]);
+    expect(root.querySelector(".track.grid")).not.toBeNull();
+    expect(root.querySelector(".power.grid .pulse")).not.toBeNull();
     expect(root.querySelector(".node.solar")).toBeNull();
     expect(root.querySelector(".node.battery")).toBeNull();
   });
@@ -144,6 +158,29 @@ describe("home flow card", () => {
     ).toBe("22 % · charging");
   });
 
+  test("a pulse keeps its place in its cycle when its speed changes", async () => {
+    const { root, card, setHass } = await mountHouse();
+    // The test browser asks for reduced motion, which hides pulses; this test is about their motion.
+    thawMotion(root);
+    const moving = new CSSStyleSheet();
+    moving.replaceSync(".pulse { display: inline !important; }");
+    root.adoptedStyleSheets = [...root.adoptedStyleSheets, moving];
+    const pulse = root.querySelector(".power.battery .pulse");
+    const animation = pulse?.getAnimations().find((running) => running instanceof CSSAnimation);
+    const progress = () => animation?.effect?.getComputedTiming().progress;
+    animation?.pause();
+    const duration = Number(animation?.effect?.getComputedTiming().duration);
+    if (animation) {
+      animation.currentTime = duration * 0.25;
+    }
+
+    await setHass(withStates(card.hass ?? fakeHass(), { "sensor.battery": "300" }));
+
+    expect(root.querySelector(".power.battery .pulse")).toBe(pulse);
+    expect(Number(animation?.effect?.getComputedTiming().duration)).not.toBe(duration);
+    expect(progress()).toBeCloseTo(0.25);
+  });
+
   test("the battery icon follows its state of charge, as in Power Flow Card Plus", async () => {
     expect(await iconOf("90")).toBe(mdiBatteryHigh);
     expect(await iconOf("20")).toBe(mdiBatteryLow);
@@ -159,13 +196,6 @@ describe("home flow card", () => {
       state_of_charge_severity: { red: 20, yellow: 60 },
     };
     expect(await barOf("40", { battery: custom })).toBe("var(--house-soc-yellow)");
-  });
-
-  test("the direction word shows once: its screen-reader copy takes no space", async () => {
-    const { root } = await mountHouse();
-    const copy = labelOf(root, "battery").querySelector(".direction [torph-sr]");
-
-    expect(copy?.getBoundingClientRect().width ?? 0).toBeLessThanOrEqual(1);
   });
 
   test("the direction word morphs in place when the battery switches", async () => {
@@ -210,14 +240,18 @@ describe("home flow card", () => {
     expect(reading(root, "home")).toBe("2.6 kW");
   });
 
-  test("a power outage shows the grid offline", async () => {
+  test("a power outage leaves the grid cable dead", async () => {
     const { root } = await mountHouse(
       { grid: { entity: "sensor.grid", power_outage: { entity: "binary_sensor.outage" } } },
-      { ...evening, "binary_sensor.outage": sensor("on", { unit: undefined }) }
+      {
+        ...evening,
+        "sensor.grid": "800",
+        "binary_sensor.outage": sensor("on", { unit: undefined }),
+      }
     );
 
-    expect(reading(root, "grid")).toBe("—");
-    expect(labelOf(root, "grid").textContent).toContain("Power Outage");
+    expect(root.querySelector(".track.grid")).not.toBeNull();
+    expect(root.querySelector(".power.grid")).toBeNull();
   });
 
   test("in an outage a generator feeds the inverter, never the grid cable", async () => {
@@ -239,21 +273,20 @@ describe("home flow card", () => {
     expect(root.querySelector(".power.grid")).toBeNull();
   });
 
-  test("with the grid up a generator stands idle", async () => {
-    const { root } = await mountHouse(
-      {
-        grid: { entity: "sensor.grid", power_outage: { entity: "binary_sensor.outage" } },
-        generator: { entity: "sensor.generator" },
-      },
-      {
-        ...evening,
-        "binary_sensor.outage": sensor("off", { unit: undefined }),
-        "sensor.generator": "0",
-      }
-    );
+  test("with the grid up the generator is hidden, keeping its place", async () => {
+    const config = {
+      grid: { entity: "sensor.grid", power_outage: { entity: "binary_sensor.outage" } },
+      generator: { entity: "sensor.generator" },
+    };
+    const { root, card, setHass } = await mountHouse(config, outageStates("on"));
+    const viewBox = () => root.querySelector(".stage > svg")?.getAttribute("viewBox");
+    const inOutage = viewBox();
 
-    expect(reading(root, "generator")).toBe("0 W");
-    expect(root.querySelector(".power.generator")).toBeNull();
+    await setHass(withStates(card.hass ?? fakeHass(), outageStates("off")));
+
+    expect(root.querySelector(".node.generator")).toBeNull();
+    expect(root.querySelector(".label.generator")).toBeNull();
+    expect(viewBox()).toBe(inOutage);
   });
 
   test("a generator needs the grid's outage sensor to know when to run", async () => {
@@ -269,9 +302,9 @@ describe("home flow card", () => {
       opened.push(event instanceof CustomEvent ? event.detail : undefined);
     });
 
-    await userEvent.click(labelOf(root, "grid"));
+    await userEvent.click(labelOf(root, "solar"));
 
-    expect(opened).toEqual([{ entityId: "sensor.grid" }]);
+    expect(opened).toEqual([{ entityId: "sensor.solar" }]);
   });
 
   test("labels are not buttons unless entities are clickable", async () => {

@@ -72,15 +72,24 @@ const gridWire = ({ nodes }: ReadyCardState): Wire | undefined => {
 };
 
 /**
- * A generator wired to the inverter, never to the grid: it carries the generator's power during
- * an outage and sits idle otherwise.
+ * A generator wired to the inverter, never to the grid: drawn only during an outage, when it
+ * carries the generator's power.
  */
 const generatorWire = (config: FlowCardPlusConfig, { nodes }: ReadyCardState): Wire | undefined => {
-  if (!nodes.grid.has || !config.entities.grid?.power_outage?.entity_generator) {
+  const { grid } = nodes;
+  if (
+    !grid.has ||
+    !grid.powerOutage.isOutage ||
+    !config.entities.grid?.power_outage?.entity_generator
+  ) {
     return undefined;
   }
-  const power = nodes.grid.powerOutage.isOutage ? (nodes.grid.state.fromGrid ?? 0) : 0;
-  return { node: "generator", power, intoInverter: true, color: GENERATOR };
+  return {
+    node: "generator",
+    power: grid.state.fromGrid ?? 0,
+    intoInverter: true,
+    color: GENERATOR,
+  };
 };
 
 const homeWire = (state: ReadyCardState): Wire => ({

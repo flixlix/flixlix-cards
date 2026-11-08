@@ -47,8 +47,7 @@
     "custom-card-helpers": "catalog:packages",
     "home-assistant-js-websocket": "catalog:packages",
     "lit": "catalog:packages",
-    "number-flow": "catalog:packages",
-    "torph": "catalog:packages"
+    "number-flow": "catalog:packages"
   },
   "devDependencies": {
     "@babel/core": "catalog:packages",

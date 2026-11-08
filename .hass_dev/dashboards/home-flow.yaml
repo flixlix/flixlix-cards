@@ -21,6 +21,8 @@ views:
               - script.scenario_solar_exporting
               - script.scenario_battery_charging_from_grid
               - script.scenario_battery_discharging_to_grid
+              - script.scenario_battery_charging_steady
+              - script.scenario_battery_discharging_steady
               - script.scenario_grid_outage_generator
           - type: entities
             title: Knobs
@@ -73,8 +75,64 @@ views:
       - type: grid
         cards:
           - type: heading
-            heading: Grid only
+            heading: With the grid
             icon: mdi:transmission-tower
           - type: custom:home-flow-card
+            title: Solar and grid
             grid:
               entity: sensor.grid_power
+            solar:
+              entity: sensor.solar_power
+            home:
+              entity: sensor.home_power
+          - type: custom:home-flow-card
+            title: Battery and grid
+            grid:
+              entity: sensor.grid_power
+            battery:
+              entity: sensor.battery_power
+              state_of_charge: sensor.battery_soc
+            home:
+              entity: sensor.home_power
+          - type: custom:home-flow-card
+            title: Grid only
+            grid:
+              entity: sensor.grid_power
+          - type: custom:home-flow-card
+            title: Outage without a generator
+            grid:
+              entity: sensor.grid_power
+              power_outage:
+                entity: input_boolean.power_outage
+            solar:
+              entity: sensor.solar_power
+            battery:
+              entity: sensor.battery_power
+              state_of_charge: sensor.battery_soc
+      - type: grid
+        cards:
+          - type: heading
+            heading: Off the grid
+            icon: mdi:home-battery
+          - type: custom:home-flow-card
+            title: Solar and battery
+            solar:
+              entity: sensor.solar_power
+            battery:
+              entity: sensor.battery_power
+              state_of_charge: sensor.battery_soc
+            home:
+              entity: sensor.home_power
+          - type: custom:home-flow-card
+            title: Solar only
+            solar:
+              entity: sensor.solar_power
+          - type: custom:home-flow-card
+            title: Battery only
+            battery:
+              entity: sensor.battery_power
+              state_of_charge: sensor.battery_soc
+          - type: custom:home-flow-card
+            title: Battery without state of charge
+            battery:
+              entity: sensor.battery_power

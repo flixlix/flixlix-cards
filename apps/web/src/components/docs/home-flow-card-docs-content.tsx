@@ -121,7 +121,9 @@ export function OverviewPage() {
           <HighlightItem>Only what you configure is drawn</HighlightItem>
           <HighlightItem>Numbers that roll to their new value</HighlightItem>
           <HighlightItem>Battery icon and charge colours from its state of charge</HighlightItem>
-          <HighlightItem>Power outages, with an optional generator on the inverter</HighlightItem>
+          <HighlightItem>
+            A dead grid cable in an outage, with an optional generator on the inverter
+          </HighlightItem>
           <HighlightItem>Greys taken from your theme, light and dark</HighlightItem>
         </ul>
       </Section>
@@ -322,7 +324,9 @@ const CARD_OPTIONS: OptionRow[] = [
       <>
         <code>entity</code> (and optional <code>name</code>) of a generator the inverter switches to
         during a grid outage. It gets its own wire into the inverter and is never drawn on the grid
-        cable. Needs <code>grid.power_outage</code> to know when the grid is down.
+        cable. Needs <code>grid.power_outage</code> to know when the grid is down. The grid itself
+        has no label, so its <code>name</code> and <code>power_outage.label_alert</code> are not
+        shown.
       </>
     ),
   },

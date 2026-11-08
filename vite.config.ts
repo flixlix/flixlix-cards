@@ -133,6 +133,20 @@ export default defineConfig({
         },
       },
       {
+        // A tighter budget for the newest card: state, scene and rendering each in their own file.
+        files: ["packages/flixlix-cards/home-flow-card/src/**"],
+        excludeFiles: ["**/*.test.ts"],
+        rules: {
+          "max-lines": ["error", { max: 300, skipBlankLines: true, skipComments: true }],
+          "max-lines-per-function": [
+            "error",
+            { max: 60, skipBlankLines: true, skipComments: true },
+          ],
+          complexity: ["error", { max: 10 }],
+          "flixlix/cognitive-complexity": ["error", { max: 10 }],
+        },
+      },
+      {
         files: ["packages/shared/src/card-state/**"],
         excludeFiles: ["**/*.test.ts"],
         rules: {
