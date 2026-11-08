@@ -808,7 +808,16 @@ function houseEntries(): SearchEntry[] {
       "solar",
       "battery",
       "inverter",
+      "home",
     ]),
+    houseEntry(
+      `${HOUSE_BASE}#a-day`,
+      HOUSE,
+      "section",
+      "A day on your house",
+      "The card live through a day: afternoon, evening, night and a grid outage.",
+      ["demo", "live", "scenario", "outage", "generator", "night", "evening"]
+    ),
     houseEntry(
       `${HOUSE_BASE}/installation`,
       HOUSE,
@@ -862,7 +871,16 @@ function houseEntries(): SearchEntry[] {
     option("kilo_threshold", "From how many watts values are in kW.", "numbers"),
     option("kilo_decimals", "Decimals of values in kW.", "numbers"),
     example("solar-battery", "Solar and a battery", "The full house."),
-    example("split", "Separate import and export sensors", "Split entities and power outage."),
+    example(
+      "split",
+      "Separate sensors, an outage and a generator",
+      "Split entities, the grid's outage sensor and a generator."
+    ),
+    example(
+      "thresholds",
+      "Your own battery thresholds",
+      "state_of_charge_severity red and yellow."
+    ),
     example("grid-only", "Grid only", "No solar or battery."),
     example("still", "Still numbers and wires", "animate_numbers and disable_dots off."),
   ];
@@ -962,6 +980,15 @@ export const SEARCH_ENTRIES: SearchEntry[] = [
     card: "power",
     type: "page",
     keywords: ["demo", "live", "preview", "try", "scenario"],
+  },
+  {
+    title: "Playground",
+    description: "Try the house live: pick a moment of the day, move the sensors.",
+    to: "/home-flow-card/playground",
+    breadcrumb: "Home Flow Card",
+    card: "house",
+    type: "page",
+    keywords: ["demo", "live", "preview", "try", "scenario", "outage", "generator"],
   },
   ...cardPages("energy", "/energy-flow-card-plus", ENERGY),
   {

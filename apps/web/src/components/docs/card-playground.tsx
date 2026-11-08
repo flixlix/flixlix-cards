@@ -8,6 +8,7 @@ import {
   energyDemo,
   energyFlowCard,
   energyStates,
+  houseMoments,
   periodSelector,
   powerDemo,
 } from "@/components/demos";
@@ -33,12 +34,13 @@ export type PlaygroundState = {
 };
 
 /**
- * Power: live readings in W. Energy: daily usage, over a period picked above the card. Period:
- * the period selector itself, driving an Energy Flow Card Plus below it.
+ * Power: live readings in W. Home: the same readings on Home Flow Card's house. Energy: daily
+ * usage, over a period picked above the card. Period: the period selector itself, driving an
+ * Energy Flow Card Plus below it.
  */
-export type PlaygroundKind = "power" | "energy" | "period";
+export type PlaygroundKind = "power" | "home" | "energy" | "period";
 
-type FlowKind = Exclude<PlaygroundKind, "period">;
+type FlowKind = Exclude<PlaygroundKind, "period" | "home">;
 
 const CARD_TYPES: Record<FlowKind, string> = {
   power: "custom:power-flow-card-plus",
@@ -95,9 +97,35 @@ const asDailyEnergy = (states: StateFixtures): StateFixtures =>
 
 type Preset = { name: string; state: PlaygroundState };
 
+/** A day on the house, then setups worth trying: solar alone, and the card standing still. */
+const homePresets = (): Preset[] => {
+  const [afternoon] = houseMoments;
+  const extra = afternoon
+    ? [
+        {
+          name: "Solar only",
+          config: { type: "custom:home-flow-card", solar: { entity: "sensor.solar_power" } },
+          states: { "sensor.solar_power": "2400" },
+        },
+        {
+          name: "Still: plain numbers, no pulses",
+          config: { ...afternoon.config, animate_numbers: false, disable_dots: true },
+          states: afternoon.states,
+        },
+      ]
+    : [];
+  return [...houseMoments, ...extra].map(({ name, config, states }) => ({
+    name,
+    state: { yaml: stringify(config), states, width: 440 },
+  }));
+};
+
 const presets = (kind: PlaygroundKind): Preset[] => {
   if (kind === "period") {
     return periodPresets();
+  }
+  if (kind === "home") {
+    return homePresets();
   }
   const demo = DEMOS[kind];
   const realistic: Preset = {
@@ -165,6 +193,10 @@ const parseConfig = (yaml: string): { config?: CardConfig; error?: string } => {
 
 const stateOf = (fixture: StateFixtures[string]) =>
   typeof fixture === "string" ? fixture : fixture.state;
+
+/** A sensor's unit; a bare state is a power reading in W, as `sensor` makes it. */
+const unitOf = (fixture: StateFixtures[string]) =>
+  typeof fixture === "string" ? "W" : fixture.attributes.unit_of_measurement;
 
 const withState = (fixture: StateFixtures[string], state: string): StateFixtures[string] =>
   typeof fixture === "string" ? state : { ...fixture, state };
@@ -266,9 +298,12 @@ export function CardPlayground({
     if (!config) {
       return [];
     }
-    return { power: [config], energy: [periodSelector, config], period: [config, energyFlowCard] }[
-      kind
-    ];
+    return {
+      power: [config],
+      home: [config],
+      energy: [periodSelector, config],
+      period: [config, energyFlowCard],
+    }[kind];
   }, [config, kind]);
   const scenarios = React.useMemo(() => presets(kind), [kind]);
 
@@ -318,7 +353,7 @@ export function CardPlayground({
           title="Sensor states"
           aside={
             <span className="text-muted-foreground font-mono text-xs">
-              {kind === "power" ? "W" : "on an average day"}
+              {kind === "power" || kind === "home" ? "W" : "on an average day"}
             </span>
           }
         >
@@ -328,7 +363,7 @@ export function CardPlayground({
                 key={entityId}
                 entityId={entityId}
                 value={stateOf(fixture)}
-                signed={kind === "power"}
+                signed={(kind === "power" || kind === "home") && unitOf(fixture) === "W"}
                 onChange={(value) =>
                   setState((previous) => ({
                     ...previous,
@@ -364,7 +399,7 @@ export function CardPlayground({
             configs={configs}
             states={state.states}
             templates={state.templates}
-            energy={kind !== "power"}
+            energy={kind === "energy" || kind === "period"}
             width={state.width}
             className="rounded-xl border"
           />

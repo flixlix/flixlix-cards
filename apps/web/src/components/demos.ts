@@ -44,22 +44,85 @@ export const powerDemo: Demo = {
   },
 };
 
-/** The same afternoon on the house: solar on the roof charging the battery, the surplus exported. */
-export const houseDemo: Demo = {
-  configs: [
-    {
-      type: "custom:home-flow-card",
-      grid: { entity: "sensor.grid_power" },
-      solar: { entity: "sensor.solar_power" },
-      battery: { entity: "sensor.battery_power", state_of_charge: "sensor.battery_soc" },
+const HOUSE = "custom:home-flow-card";
+const houseNodes = {
+  grid: { entity: "sensor.grid_power" },
+  solar: { entity: "sensor.solar_power" },
+  battery: { entity: "sensor.battery_power", state_of_charge: "sensor.battery_soc" },
+};
+
+/** A moment in a day on the house: what Home Flow Card shows, for the docs and the playground. */
+export type HouseMoment = {
+  name: string;
+  caption: string;
+  config: CardConfig;
+  states: StateFixtures;
+};
+
+/**
+ * A day on the house, from a sunny afternoon to a grid outage. Readings are signed as Home
+ * Assistant reports them: grid positive when importing, battery positive when discharging.
+ */
+export const houseMoments: HouseMoment[] = [
+  {
+    name: "A sunny afternoon",
+    caption: "The roof charges the battery and sends the surplus to the grid.",
+    config: { type: HOUSE, ...houseNodes },
+    states: {
+      "sensor.grid_power": "-1150",
+      "sensor.solar_power": "4200",
+      "sensor.battery_power": "-1600",
+      "sensor.battery_soc": percent("68"),
     },
-  ],
-  states: {
-    "sensor.grid_power": "-1150",
-    "sensor.solar_power": "4200",
-    "sensor.battery_power": "-1600",
-    "sensor.battery_soc": percent("68"),
   },
+  {
+    name: "An evening on the battery",
+    caption: "The sun is low; the battery carries the home, the grid rests.",
+    config: { type: HOUSE, ...houseNodes },
+    states: {
+      "sensor.grid_power": "0",
+      "sensor.solar_power": "350",
+      "sensor.battery_power": "1900",
+      "sensor.battery_soc": percent("54"),
+    },
+  },
+  {
+    name: "A night on the grid",
+    caption: "The battery is nearly empty: its bar turns red and the grid takes over.",
+    config: { type: HOUSE, ...houseNodes },
+    states: {
+      "sensor.grid_power": "720",
+      "sensor.solar_power": "0",
+      "sensor.battery_power": "0",
+      "sensor.battery_soc": percent("12"),
+    },
+  },
+  {
+    name: "A grid outage",
+    caption: "The grid cable goes dead and the generator steps in, wired to the inverter.",
+    config: {
+      type: HOUSE,
+      ...houseNodes,
+      grid: { entity: "sensor.grid_power", power_outage: { entity: "binary_sensor.grid_outage" } },
+      generator: { entity: "sensor.generator_power" },
+    },
+    states: {
+      "sensor.grid_power": "1600",
+      "sensor.solar_power": "0",
+      "sensor.battery_power": "400",
+      "sensor.battery_soc": percent("38"),
+      "binary_sensor.grid_outage": sensor("on", { unit: undefined }),
+      "sensor.generator_power": "1600",
+    },
+  },
+];
+
+const [sunnyAfternoon] = houseMoments;
+
+/** The sunny afternoon on the house, the card's first impression. */
+export const houseDemo: Demo = {
+  configs: sunnyAfternoon ? [sunnyAfternoon.config] : [],
+  states: sunnyAfternoon?.states ?? {},
   width: 440,
 };
 
