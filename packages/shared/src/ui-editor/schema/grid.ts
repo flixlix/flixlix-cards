@@ -6,6 +6,7 @@ import {
   getEntityCombinedSelectionSchema,
   getEntitySeparatedSelectionSchema,
   secondaryInfoSchema,
+  unitSchema,
 } from "./_schema-base";
 
 const mainSchema = {
@@ -34,6 +35,7 @@ const mainSchema = {
       selector: { boolean: {} },
       default: true,
     },
+    ...unitSchema,
   ],
 };
 

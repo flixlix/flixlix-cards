@@ -60,6 +60,7 @@ export interface BaseConfigEntity extends ActionConfigSet {
   display_zero_tolerance?: number;
   unit_of_measurement?: string;
   unit_white_space?: boolean;
+  decimals?: number;
   use_metadata?: boolean;
   secondary_info?: SecondaryInfoType;
   invert_state?: boolean;
@@ -84,7 +85,6 @@ export type IndividualDeviceType = BaseConfigEntity & {
   color_label?: boolean;
   calculate_flow_rate?: boolean | number;
   use_metadata?: boolean;
-  decimals?: number;
   show_direction?: boolean;
 };
 

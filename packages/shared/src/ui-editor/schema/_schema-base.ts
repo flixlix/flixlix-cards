@@ -181,6 +181,22 @@ const batteryOrGridMainConfigSchema = [
   },
 ] as const;
 
+/** A main node's own unit, unit white space and decimals; a unit keeps the value unscaled. */
+export const unitSchema = [
+  { name: "unit_of_measurement", label: "Unit of Measurement", selector: { text: {} } },
+  {
+    name: "unit_white_space",
+    label: "Unit White Space",
+    default: true,
+    selector: { boolean: {} },
+  },
+  {
+    name: "decimals",
+    label: "Decimals",
+    selector: { number: { mode: "box", min: 0, max: 10, step: 1 } },
+  },
+] as const;
+
 const nameAndIconSchema = [
   { name: "name", selector: { text: {} } },
   { name: "icon", selector: { icon: {} } },

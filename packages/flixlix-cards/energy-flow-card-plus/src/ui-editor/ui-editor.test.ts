@@ -41,6 +41,23 @@ function query(root: Element, selector: string): HTMLElement {
   return element;
 }
 
+/** Field names a form edits directly on its value, skipping nested objects like secondary_info. */
+function ownFieldNames(schema: unknown): string[] {
+  if (!Array.isArray(schema)) {
+    return [];
+  }
+  return schema.flatMap((item: unknown) => {
+    if (typeof item !== "object" || item === null) {
+      return [];
+    }
+    const name = "name" in item && typeof item.name === "string" ? item.name : "";
+    if ("schema" in item) {
+      return name ? [] : ownFieldNames(item.schema);
+    }
+    return name ? [name] : [];
+  });
+}
+
 describe("energy flow ui editor", () => {
   beforeEach(() => {
     loadHaFormMock.mockReset();
@@ -194,6 +211,34 @@ describe("energy flow ui editor", () => {
       solar: { entity: "sensor.solar" },
     });
   });
+
+  test.each(["grid", "solar", "battery"])(
+    "the %s page edits its own unit, unit white space and decimals",
+    async (page) => {
+      const { editor, lastConfig } = await mountEditor({
+        entities: { [page]: { entity: "sensor.x" } },
+      });
+      query(editor, `link-subpage[path="${page}"]`).dispatchEvent(
+        new CustomEvent("open-sub-element-editor", { detail: { open: true } })
+      );
+      await editor.updateComplete;
+      const form = query(editor, "ha-form");
+
+      expect(ownFieldNames("schema" in form ? form.schema : undefined)).toEqual(
+        expect.arrayContaining(["unit_of_measurement", "unit_white_space", "decimals"])
+      );
+
+      const value = {
+        entity: "sensor.x",
+        unit_of_measurement: "L/min",
+        unit_white_space: false,
+        decimals: 2,
+      };
+      form.dispatchEvent(new CustomEvent("value-changed", { detail: { value } }));
+
+      expect(lastConfig()?.entities).toEqual({ [page]: value });
+    }
+  );
 
   test("the general form passes its value through as the whole config", async () => {
     const { editor, lastConfig } = await mountEditor({ entities: {} });

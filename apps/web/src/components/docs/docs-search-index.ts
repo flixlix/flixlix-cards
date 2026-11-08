@@ -218,7 +218,13 @@ function configOptions(
     make("state_type", "fossil_fuel_percentage state type, power or percentage.", "fossil-fuel"),
     make("calculate_flow_rate", "Use formula or fixed dot interval (seconds).", "fossil-fuel"),
     make("inverted_animation", "Reverse dot direction for an individual device.", "individual"),
-    make("decimals", "Decimals for an individual device value.", "individual"),
+    make("decimals", "Decimals for a grid, solar, battery or individual device value.", "grid"),
+    make(
+      "unit_of_measurement",
+      "Custom unit for grid, solar, battery or an individual device; shown without k/M scaling.",
+      "grid"
+    ),
+    make("unit_white_space", "Whitespace between value and unit.", "grid"),
     make("display_zero", "Show device when state is 0 / unavailable.", "individual"),
     make("template", "HA template evaluated reactively (secondary info).", "secondary-info"),
     make("accept_negative", "Show negative values as-is.", "secondary-info"),
