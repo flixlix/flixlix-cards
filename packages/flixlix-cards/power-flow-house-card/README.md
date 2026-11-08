@@ -45,7 +45,7 @@ resource (`/local/power-flow-house-card.js`, type `module`).
 | `kilo_threshold`     | number  | `1000`  | From how many watts a value is shown in kW                                                                                                                  |
 | `min_flow_rate`      | number  | `0.75`  | Seconds per pulse at the most power                                                                                                                         |
 | `max_flow_rate`      | number  | `6`     | Seconds per pulse at the least power                                                                                                                        |
-| `max_expected_power` | number  | `2000`  | Power at which pulses run their fastest and the sun glows fully                                                                                             |
+| `max_expected_power` | number  | `2000`  | Power at which pulses run their fastest                                                                                                                     |
 
 Options that only change Power Flow Card Plus' circles and lines (for example `display_zero_lines`)
 have no effect here.

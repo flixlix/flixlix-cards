@@ -30,7 +30,6 @@ export const styles = css`
     --house-ground: #eceef1;
     --house-shadow: rgba(60, 65, 80, 0.22);
     --house-leader: #9a9ea6;
-    --house-sun: #ffcf8f;
     display: block;
   }
 
@@ -93,7 +92,7 @@ export const styles = css`
   .pulse {
     fill: none;
     stroke-linecap: round;
-    stroke-dasharray: 16 54;
+    stroke-dasharray: 12 58;
     animation: pulse linear infinite;
   }
 

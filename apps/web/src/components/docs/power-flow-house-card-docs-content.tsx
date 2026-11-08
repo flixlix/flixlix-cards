@@ -332,8 +332,7 @@ const NUMBER_OPTIONS: OptionRow[] = [
     name: "min_expected_power / max_expected_power",
     type: "number",
     default: "0.01 / 2000",
-    description:
-      "The power range the pulse speed follows. The sun glows fully at max_expected_power of solar.",
+    description: "The power range the pulse speed follows.",
   },
 ];
 

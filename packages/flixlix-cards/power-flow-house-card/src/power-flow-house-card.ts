@@ -38,7 +38,7 @@ import {
   GRID_CABLE_END,
   GRID_FADE_START,
   LABEL_ANCHORS,
-  ON_WALL,
+  GRID_CABLE_Y,
   panelSeams,
   type Point,
   project,
@@ -46,7 +46,6 @@ import {
   type ScreenPoint,
   SHADOW,
   type Shape,
-  SUN,
   WIRE_ROUTES,
 } from "./scene";
 import { styles } from "./styles";
@@ -120,8 +119,6 @@ const gradient = (name: string) =>
     <stop offset="0" style=${`stop-color: var(--house-${name}-top)`}></stop>
     <stop offset="1" style=${`stop-color: var(--house-${name})`}></stop>
   </linearGradient>`;
-
-const SUN_RADIUS = 11;
 
 /** Rough size of a label in screen units, so the viewBox leaves room for it. */
 const LABEL_WIDTH = 92;
@@ -317,15 +314,9 @@ export class PowerFlowHouseCard extends LitElement {
           .map(([from, to]) => path([from, to]))
           .join("")} stroke="var(--house-panel-seam)" stroke-width="1"></path>`
       : nothing;
-    const solarPower = wires.find((wire) => wire.node === "solar")?.power ?? 0;
-    const sunStrength = Math.min(solarPower / this._config.max_expected_power, 1);
-    const [sunX, sunY] = project(SUN);
-    if (nodes.solar.has) {
-      extent.include([sunX, sunY], SUN_RADIUS + 4);
-    }
     const [groundX, groundY] = project([4, 6, 0]);
-    const [fadeFromX, fadeFromY] = project([GRID_FADE_START, ON_WALL, 0]);
-    const [fadeToX, fadeToY] = project([GRID_CABLE_END, ON_WALL, 0]);
+    const [fadeFromX, fadeFromY] = project([GRID_FADE_START, GRID_CABLE_Y, 0]);
+    const [fadeToX, fadeToY] = project([GRID_CABLE_END, GRID_CABLE_Y, 0]);
     return svg`
       <defs>
         ${["wall", "gable", "panel", "box-front"].map(gradient)}
@@ -333,11 +324,6 @@ export class PowerFlowHouseCard extends LitElement {
           <stop offset="0" style="stop-color: var(--house-ground)"></stop>
           <stop offset="0.7" style="stop-color: var(--house-ground); stop-opacity: 0.6"></stop>
           <stop offset="1" style="stop-color: var(--house-ground); stop-opacity: 0"></stop>
-        </radialGradient>
-        <radialGradient id="house-sun">
-          <stop offset="0" style="stop-color: var(--house-sun); stop-opacity: 0.9"></stop>
-          <stop offset="0.35" style="stop-color: var(--house-sun); stop-opacity: 0.45"></stop>
-          <stop offset="1" style="stop-color: var(--house-sun); stop-opacity: 0"></stop>
         </radialGradient>
         <linearGradient id="house-grid-fade" gradientUnits="userSpaceOnUse" x1=${fadeFromX} y1=${fadeFromY} x2=${fadeToX} y2=${fadeToY}>
           <stop offset="0" stop-color="#fff"></stop>
@@ -347,15 +333,8 @@ export class PowerFlowHouseCard extends LitElement {
           <rect x="-2000" y="-2000" width="4000" height="4000" fill="url(#house-grid-fade)"></rect>
         </mask>
         <filter id="house-blur" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="8"></feGaussianBlur></filter>
-        <filter id="house-glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3"></feGaussianBlur></filter>
       </defs>
       <ellipse cx=${groundX} cy=${groundY + 30} rx="260" ry="150" fill="url(#house-ground)"></ellipse>
-      ${
-        sunStrength > 0
-          ? svg`<circle class="sun" cx=${sunX} cy=${sunY} r=${40 + 30 * sunStrength} fill="url(#house-sun)" opacity=${0.35 + 0.65 * sunStrength}></circle>
-              <circle cx=${sunX} cy=${sunY} r=${SUN_RADIUS} fill="var(--house-sun)" opacity=${0.5 + 0.5 * sunStrength}></circle>`
-          : nothing
-      }
       <polygon points=${points(SHADOW)} fill="var(--house-shadow)" filter="url(#house-blur)" opacity="0.55"></polygon>
       ${groups.map(
         (group) =>
@@ -377,11 +356,10 @@ export class PowerFlowHouseCard extends LitElement {
       const d = route(wire);
       const duration = `animation-duration: ${wire.durationSeconds}s`;
       return svg`<g class="power ${wire.node}" mask=${mask(wire)}>
-        <path d=${d} stroke=${wire.color} stroke-width="1.4" opacity="0.55" fill="none" stroke-linejoin="round" stroke-linecap="round"></path>
+        <path d=${d} stroke=${wire.color} stroke-width="1.6" opacity="0.6" fill="none" stroke-linejoin="round" stroke-linecap="round"></path>
         ${
           animate
-            ? svg`<path class="pulse" d=${d} stroke=${wire.color} stroke-width="8" opacity="0.4" filter="url(#house-glow)" style=${duration}></path>
-                <path class="pulse" d=${d} stroke=${wire.color} stroke-width="3" style=${duration}></path>`
+            ? svg`<path class="pulse" d=${d} stroke=${wire.color} stroke-width="2.6" style=${duration}></path>`
             : nothing
         }
       </g>`;

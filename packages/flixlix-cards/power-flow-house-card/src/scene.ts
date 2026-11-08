@@ -94,9 +94,9 @@ const house = (): Shape[] => [
     [OVERHANG_X, 4, 8.6 - FASCIA],
     [OVERHANG_X, BACK_EAVE_Y, roofHeight(BACK_EAVE_Y) - FASCIA]
   ),
-  // the plate on the gable wall where the home wire ends
-  ...box([LENGTH, 5.4, 2.05], [0.12, 1, 1]),
-  { kind: "icon", face: "gable", at: [LENGTH + 0.13, 5.9, 2.55], size: 0.55, path: mdiHome },
+  // the plate on the front wall where the home wire ends
+  ...box([7.6, FRONT, 2.35], [1, 0.12, 1]),
+  { kind: "icon", face: "front", at: [8.1, FRONT + 0.13, 2.85], size: 0.55, path: mdiHome },
 ];
 
 /** The panel array: 6 columns along the ridge, 2 rows down the front roof. */
@@ -122,19 +122,22 @@ export const panelSeams = (): [Point, Point][] => {
   return [...columnSeams, ...rowSeams];
 };
 
-const BATTERY_FACE_Y = FRONT + 0.46;
-const SOC_STRIP = { x0: 2.4, x1: 2.62, z0: 0.8, z1: 3 } as const;
+/** The battery and the inverter hang on the gable wall; their faces look along x. */
+const BATTERY_FACE_X = LENGTH + 0.46;
+const SOC_STRIP = { y0: 2.25, y1: 2.47, z0: 0.8, z1: 3 } as const;
+
+const onBattery = (y: number, z: number, offset = 0): Point => [BATTERY_FACE_X + offset, y, z];
 
 /** `soc` in [0, 1], or null without a state of charge entity. */
 const battery = (soc: number | null): Shape[] => [
-  ...box([2.2, FRONT, 0.5], [1.6, 0.45, 2.8]),
-  { kind: "icon", face: "front", at: [3.15, BATTERY_FACE_Y, 2], size: 0.9, path: mdiBatteryHigh },
+  ...box([LENGTH, 1, 0.5], [0.45, 1.6, 2.8]),
+  { kind: "icon", face: "gable", at: onBattery(1.65, 2), size: 0.9, path: mdiBatteryHigh },
   face(
     "soc-track",
-    [SOC_STRIP.x0, BATTERY_FACE_Y, SOC_STRIP.z0],
-    [SOC_STRIP.x1, BATTERY_FACE_Y, SOC_STRIP.z0],
-    [SOC_STRIP.x1, BATTERY_FACE_Y, SOC_STRIP.z1],
-    [SOC_STRIP.x0, BATTERY_FACE_Y, SOC_STRIP.z1]
+    onBattery(SOC_STRIP.y0, SOC_STRIP.z0),
+    onBattery(SOC_STRIP.y1, SOC_STRIP.z0),
+    onBattery(SOC_STRIP.y1, SOC_STRIP.z1),
+    onBattery(SOC_STRIP.y0, SOC_STRIP.z1)
   ),
   ...(soc === null
     ? []
@@ -145,26 +148,26 @@ const LOW_STATE_OF_CHARGE = 0.15;
 const socFill = (top: number, soc: number): Face =>
   face(
     soc > LOW_STATE_OF_CHARGE ? "soc" : "soc-low",
-    [SOC_STRIP.x0, BATTERY_FACE_Y + 0.01, SOC_STRIP.z0],
-    [SOC_STRIP.x1, BATTERY_FACE_Y + 0.01, SOC_STRIP.z0],
-    [SOC_STRIP.x1, BATTERY_FACE_Y + 0.01, top],
-    [SOC_STRIP.x0, BATTERY_FACE_Y + 0.01, top]
+    onBattery(SOC_STRIP.y0, SOC_STRIP.z0, 0.01),
+    onBattery(SOC_STRIP.y1, SOC_STRIP.z0, 0.01),
+    onBattery(SOC_STRIP.y1, top, 0.01),
+    onBattery(SOC_STRIP.y0, top, 0.01)
   );
 
-/** Where every wire meets, on the front wall. */
-const INVERTER = { x0: 6, x1: 7.1, z0: 2.3, z1: 3.4 } as const;
-const INVERTER_X = (INVERTER.x0 + INVERTER.x1) / 2;
+/** Where every wire meets, on the gable wall. */
+const INVERTER = { y0: 4.5, y1: 5.6, z0: 2.3, z1: 3.4 } as const;
+const INVERTER_Y = (INVERTER.y0 + INVERTER.y1) / 2;
 const INVERTER_Z = (INVERTER.z0 + INVERTER.z1) / 2;
 
 const inverter = (): Shape[] => [
   ...box(
-    [INVERTER.x0, FRONT, INVERTER.z0],
-    [INVERTER.x1 - INVERTER.x0, 0.3, INVERTER.z1 - INVERTER.z0]
+    [LENGTH, INVERTER.y0, INVERTER.z0],
+    [0.3, INVERTER.y1 - INVERTER.y0, INVERTER.z1 - INVERTER.z0]
   ),
   {
     kind: "icon",
-    face: "front",
-    at: [INVERTER_X, FRONT + 0.31, INVERTER_Z],
+    face: "gable",
+    at: [LENGTH + 0.31, INVERTER_Y, INVERTER_Z],
     size: 0.6,
     path: mdiFlash,
   },
@@ -181,30 +184,36 @@ export const sceneGroups = ({ solar, battery: hasBattery, soc }: ScenePresence):
 
 /** Where the grid cable fades out on the ground. */
 export const GRID_CABLE_END = 19;
-/** The cable starts fading past the house corner. */
-export const GRID_FADE_START = LENGTH;
-export const ON_WALL = FRONT + 0.07;
+/** Where the cable starts fading: just clear of the gable wall. */
+export const GRID_FADE_START = LENGTH + 0.5;
+export const GRID_CABLE_Y = INVERTER_Y;
+const ON_FRONT = FRONT + 0.07;
+const ON_GABLE = LENGTH + 0.07;
 
-/** Each wire's route from its node to the inverter, along walls, roof and ground. */
+/**
+ * Each wire's route from its node to the inverter, along walls and ground. They meet the inverter
+ * from four sides: solar from above, the battery from the back, home round the front corner and
+ * the grid from below.
+ */
 export const WIRE_ROUTES: Record<HouseNode, Point[]> = {
   solar: [
-    [INVERTER_X, ON_WALL, 4.95],
-    [INVERTER_X, ON_WALL, INVERTER.z1],
+    [ON_GABLE, INVERTER_Y, 7.1],
+    [ON_GABLE, INVERTER_Y, INVERTER.z1],
   ],
   battery: [
-    [3.8, ON_WALL, INVERTER_Z],
-    [INVERTER.x0, ON_WALL, INVERTER_Z],
+    [ON_GABLE, 2.6, INVERTER_Z],
+    [ON_GABLE, INVERTER.y0, INVERTER_Z],
   ],
   home: [
-    [LENGTH + 0.03, 6.4, INVERTER_Z],
-    [LENGTH + 0.03, 7.2, INVERTER_Z],
-    [LENGTH, ON_WALL, INVERTER_Z],
-    [INVERTER.x1, ON_WALL, INVERTER_Z],
+    [8.6, ON_FRONT, INVERTER_Z],
+    [LENGTH - 0.03, ON_FRONT, INVERTER_Z],
+    [ON_GABLE, FRONT - 0.03, INVERTER_Z],
+    [ON_GABLE, INVERTER.y1, INVERTER_Z],
   ],
   grid: [
-    [GRID_CABLE_END, ON_WALL, 0.02],
-    [INVERTER_X, ON_WALL, 0.02],
-    [INVERTER_X, ON_WALL, INVERTER.z0],
+    [GRID_CABLE_END, INVERTER_Y, 0.02],
+    [ON_GABLE, INVERTER_Y, 0.02],
+    [ON_GABLE, INVERTER_Y, INVERTER.z0],
   ],
 };
 
@@ -214,13 +223,10 @@ export const WIRE_ROUTES: Record<HouseNode, Point[]> = {
  */
 export const LABEL_ANCHORS: Record<HouseNode, { at: Point; leader: number }> = {
   solar: { at: onRoof(4.2, PANELS.y0), leader: -40 },
-  home: { at: [LENGTH + 0.13, 5.9, 3.05], leader: -62 },
-  battery: { at: [3, BATTERY_FACE_Y, 0.5], leader: 40 },
-  grid: { at: [GRID_CABLE_END, ON_WALL, 0], leader: 12 },
+  home: { at: [8.1, FRONT + 0.13, 2.35], leader: 44 },
+  battery: { at: onBattery(1.8, 3.3), leader: -50 },
+  grid: { at: [GRID_CABLE_END, INVERTER_Y, 0], leader: 12 },
 };
-
-/** Where the sun sits, glowing with solar production. */
-export const SUN: Point = [-9, 1, 7];
 
 /** The house's footprint and the shadow it casts towards the back right. */
 export const SHADOW: Point[] = [
