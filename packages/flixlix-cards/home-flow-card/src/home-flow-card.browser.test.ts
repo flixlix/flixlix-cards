@@ -159,6 +159,24 @@ describe("home flow card", () => {
     ).toBe("22 % · charging");
   });
 
+  test("labels follow the card's width after it is taken out and put back", async () => {
+    // Home Assistant moves cards around while a dashboard loads
+    const { root, card, resize } = await mountHouse();
+    const unit = () =>
+      Number.parseFloat(
+        getComputedStyle(root.querySelector(".stage") ?? card).getPropertyValue("--house-unit")
+      );
+    const atFull = unit();
+    const container = card.parentElement;
+    card.remove();
+    container?.append(card);
+    await card.updateComplete;
+
+    await resize(250);
+
+    expect(unit()).toBeLessThan(atFull * 0.6);
+  });
+
   test("a pulse keeps its place in its cycle when its speed changes", async () => {
     const { root, card } = await mountHouse();
     // The test browser asks for reduced motion, which hides pulses; this test is about their motion.

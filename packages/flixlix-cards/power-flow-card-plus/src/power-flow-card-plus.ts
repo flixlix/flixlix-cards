@@ -19,6 +19,7 @@ import { registerCustomCard } from "@flixlix-cards/shared/utils/register-custom-
 import { cardShouldUpdate } from "@flixlix-cards/shared/utils/relevant-change";
 import { SecondaryTemplates } from "@flixlix-cards/shared/utils/secondary-templates";
 import { coerceNumber } from "@flixlix-cards/shared/utils/utils";
+import { WidthController } from "@flixlix-cards/shared/utils/width-controller";
 import { type HomeAssistant, type LovelaceCardEditor } from "custom-card-helpers";
 import { LitElement, nothing, type PropertyValues, type TemplateResult } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
@@ -38,12 +39,10 @@ const isPageHidden = () => typeof document !== "undefined" && document.visibilit
 export class PowerFlowCardPlus extends LitElement {
   @property({ attribute: false }) public hass!: HomeAssistant;
   @state() private _config!: PowerFlowCardPlusConfig;
-  @state() private _width = 0;
+  private readonly _width = new WidthController(this, "#power-flow-card-plus");
   @state() private _pageHidden = isPageHidden();
   private _cardState?: CardState;
   private _appliedCardState?: CardState;
-  private _resizeObserver?: ResizeObserver;
-  private _observedContent?: HTMLElement;
   private readonly _actions = new EntityActions(this, () => ({
     hass: this.hass,
     clickableEntities: this._config.clickable_entities,
@@ -80,9 +79,6 @@ export class PowerFlowCardPlus extends LitElement {
   }
 
   public disconnectedCallback() {
-    this._resizeObserver?.disconnect();
-    this._resizeObserver = undefined;
-    this._observedContent = undefined;
     if (typeof document !== "undefined") {
       document.removeEventListener("visibilitychange", this._handleVisibilityChange);
     }
@@ -120,7 +116,7 @@ export class PowerFlowCardPlus extends LitElement {
       hass: this.hass,
       readings: powerReadings(this.hass, this._config),
       templates: this._templates.templates(this._config),
-      width: this._width,
+      width: this._width.width,
       pageHidden: this._pageHidden,
     });
   }
@@ -145,28 +141,11 @@ export class PowerFlowCardPlus extends LitElement {
     if (!this._config || !this.hass) {
       return;
     }
-    this._observeWidth();
     const cardState = this._cardState;
     if (cardState?.status === "ready" && cardState !== this._appliedCardState) {
       applyCardState(this, cardState);
       this._appliedCardState = cardState;
     }
-  }
-
-  private _observeWidth() {
-    const content = this.shadowRoot?.querySelector<HTMLElement>("#power-flow-card-plus");
-    if (!content || content === this._observedContent) {
-      return;
-    }
-    this._observedContent = content;
-    this._resizeObserver?.disconnect();
-    this._resizeObserver ??= new ResizeObserver(([entry]) => {
-      if (entry) {
-        this._width = Math.round(entry.target.getBoundingClientRect().width);
-      }
-    });
-    this._resizeObserver.observe(content);
-    this._width = Math.round(content.getBoundingClientRect().width);
   }
 
   static styles = styles;

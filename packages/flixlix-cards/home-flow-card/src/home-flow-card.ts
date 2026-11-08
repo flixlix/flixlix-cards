@@ -17,6 +17,7 @@ import { registerCustomCard } from "@flixlix-cards/shared/utils/register-custom-
 import { cardShouldUpdate } from "@flixlix-cards/shared/utils/relevant-change";
 import { SecondaryTemplates } from "@flixlix-cards/shared/utils/secondary-templates";
 import { coerceNumber } from "@flixlix-cards/shared/utils/utils";
+import { WidthController } from "@flixlix-cards/shared/utils/width-controller";
 import { type HomeAssistant, type LovelaceCardEditor } from "custom-card-helpers";
 import { html, LitElement, nothing, type PropertyValues, type TemplateResult } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
@@ -101,12 +102,10 @@ export class HomeFlowCard extends LitElement {
   @property({ attribute: false }) public hass!: HomeAssistant;
   /** The config in the `entities` shape the shared pipeline reads, with defaults filled in. */
   @state() private _config!: FlowConfig;
-  @state() private _width = 0;
+  private readonly _width = new WidthController(this, ".stage > svg");
   @state() private _pageHidden = isPageHidden();
   private _cardState?: CardState;
   private _appliedCardState?: CardState;
-  private _resizeObserver?: ResizeObserver;
-  private _observedScene?: Element;
   private readonly _pulseDurations = new WeakMap<Element, number>();
   private _unitSlide?: ReturnType<typeof unitSlide>;
   private readonly _actions = new EntityActions(this, () => ({
@@ -145,9 +144,6 @@ export class HomeFlowCard extends LitElement {
   }
 
   public disconnectedCallback() {
-    this._resizeObserver?.disconnect();
-    this._resizeObserver = undefined;
-    this._observedScene = undefined;
     if (typeof document !== "undefined") {
       document.removeEventListener("visibilitychange", this._handleVisibilityChange);
     }
@@ -190,7 +186,7 @@ export class HomeFlowCard extends LitElement {
       hass: this.hass,
       readings: powerReadings(this.hass, this._config),
       templates: this._templates.templates(this._config),
-      width: this._width,
+      width: this._width.width,
       pageHidden: this._pageHidden,
     });
   }
@@ -205,7 +201,7 @@ export class HomeFlowCard extends LitElement {
       cardState,
       this.hass.locale?.language ?? "en"
     );
-    const unit = this._width > 0 ? this._width / box.width : 1;
+    const unit = this._width.width > 0 ? this._width.width / box.width : 1;
     const context = {
       actions: this._actions,
       clickable: this._config.clickable_entities ?? false,
@@ -233,7 +229,6 @@ export class HomeFlowCard extends LitElement {
     if (!this._config || !this.hass || !this.shadowRoot) {
       return;
     }
-    this._observeWidth();
     this.toggleAttribute("dark", isDarkMode(this.hass));
     const cardState = this._cardState;
     if (cardState?.status === "ready" && cardState !== this._appliedCardState) {
@@ -255,23 +250,6 @@ export class HomeFlowCard extends LitElement {
 
   private _animatesNumbers() {
     return this._config.animate_numbers !== false && canAnimate;
-  }
-
-  /** The scene's rendered width sets the label size, so labels scale with the drawing. */
-  private _observeWidth() {
-    const scene = this.shadowRoot?.querySelector(".stage > svg");
-    if (!scene || scene === this._observedScene) {
-      return;
-    }
-    this._observedScene = scene;
-    this._resizeObserver?.disconnect();
-    this._resizeObserver ??= new ResizeObserver(([entry]) => {
-      if (entry) {
-        this._width = Math.round(entry.target.getBoundingClientRect().width);
-      }
-    });
-    this._resizeObserver.observe(scene);
-    this._width = Math.round(scene.getBoundingClientRect().width);
   }
 
   static styles = styles;
