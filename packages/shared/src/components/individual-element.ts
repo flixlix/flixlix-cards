@@ -14,12 +14,12 @@ const stateShown = (node: IndividualObject): boolean =>
 const isFlowing = (node: IndividualObject): boolean =>
   !!node.state && node.state >= (node.displayZeroTolerance ?? 0);
 
-/** The left-bottom slot points the other way: its line runs up into the home. */
+/** Bottom slots point the other way: their lines run up into the home. */
 const directionArrow = (node: IndividualObject, key: IndividualKey) => {
   if (!node.showDirection) {
     return nothing;
   }
-  const pointsUp = key === "left-bottom" ? node.invertAnimation : !node.invertAnimation;
+  const pointsUp = key.endsWith("bottom") ? node.invertAnimation : !node.invertAnimation;
   return html`<ha-icon
     class="small"
     .icon=${pointsUp ? "mdi:arrow-up" : "mdi:arrow-down"}

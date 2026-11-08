@@ -239,7 +239,11 @@ function configOptions(
     make("unit_white_space", "Whitespace between value and unit.", "grid"),
     make("display_zero", "Show device when state is 0 / unavailable.", "individual"),
     make("template", "HA template evaluated reactively (secondary info).", "secondary-info"),
-    make("accept_negative", "Show negative values as-is.", "secondary-info"),
+    make(
+      "accept_negative",
+      "Show negative values as-is; on an individual device, flip its dots when it feeds the home.",
+      "secondary-info"
+    ),
     make("sum_total", "Sum solar's secondary info into the main entity.", "secondary-info"),
   ];
   if (card === "energy") {

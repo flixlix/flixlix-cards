@@ -176,6 +176,93 @@ describe("layout", () => {
   });
 });
 
+const slots = ["left-top", "left-bottom", "right-top", "right-bottom"] as const;
+
+const linePaths = {
+  "left-top": "individual-top",
+  "left-bottom": "individual-bottom",
+  "right-top": "individual-top-right-home",
+  "right-bottom": "individual-bottom-right-home",
+};
+
+const mountDirections = async (states: string[], individual: object = {}) => {
+  const card = await mountCard(
+    PowerFlowCardPlus,
+    {
+      type: "custom:power-flow-card-plus",
+      sort_individual_devices: false,
+      entities: {
+        grid: { entity: "sensor.grid" },
+        individual: slots.map((_, index) => ({
+          entity: `sensor.device_${index}`,
+          show_direction: true,
+          ...individual,
+        })),
+      },
+    },
+    fakeHass({
+      states: {
+        "sensor.grid": "1000",
+        ...Object.fromEntries(states.map((state, index) => [`sensor.device_${index}`, state])),
+      },
+    }),
+    { width: 500 }
+  );
+  const arrow = (slot: string) => {
+    const icon = card.root.querySelector(`span.individual-${slot} ha-icon`);
+    return icon && "icon" in icon ? icon.icon : undefined;
+  };
+  const keyPoints = (slot: (typeof slots)[number]) =>
+    card.root
+      .querySelector(`#${linePaths[slot]} ~ circle animateMotion`)
+      ?.getAttribute("keyPoints");
+  return { card, arrow, keyPoints };
+};
+
+describe("individual direction", () => {
+  test("each slot's arrow points from the home to the device", async () => {
+    const { arrow } = await mountDirections(["40", "30", "20", "10"]);
+    expect(slots.map(arrow)).toEqual([
+      "mdi:arrow-up",
+      "mdi:arrow-down",
+      "mdi:arrow-up",
+      "mdi:arrow-down",
+    ]);
+  });
+
+  test("with accept_negative, a device feeding power shows its sign and flows into the home", async () => {
+    const { card, arrow, keyPoints } = await mountDirections(["-40", "30", "20", "-10"], {
+      accept_negative: true,
+    });
+    expect(slots.map((slot) => card.text(`span.individual-${slot}`))).toEqual([
+      "-40 W",
+      "30 W",
+      "20 W",
+      "-10 W",
+    ]);
+    expect(slots.map(arrow)).toEqual([
+      "mdi:arrow-down",
+      "mdi:arrow-down",
+      "mdi:arrow-up",
+      "mdi:arrow-up",
+    ]);
+    expect(slots.map(keyPoints)).toEqual(["0;1", "1;0", "1;0", "0;1"]);
+  });
+
+  test("without accept_negative, a negative reading keeps its magnitude and direction", async () => {
+    const { card, arrow, keyPoints } = await mountDirections(["-40", "30", "20", "-10"]);
+    expect(card.text("span.individual-left-top")).toBe("40 W");
+    expect(card.text("span.individual-right-bottom")).toBe("10 W");
+    expect(slots.map(arrow)).toEqual([
+      "mdi:arrow-up",
+      "mdi:arrow-down",
+      "mdi:arrow-up",
+      "mdi:arrow-down",
+    ]);
+    expect(slots.map(keyPoints)).toEqual(["1;0", "1;0", "1;0", "1;0"]);
+  });
+});
+
 const priceTemplate = "{{ states('sensor.cost') }}";
 
 const watchedConfig = {

@@ -830,6 +830,13 @@ const INDIVIDUAL_OPTIONS: OptionRow[] = [
     default: "false",
     description: "Reverse the dot direction.",
   },
+  {
+    name: "accept_negative",
+    type: "boolean",
+    default: "false",
+    description:
+      "Treat a negative reading as the device feeding the home: keep the sign, flip the dots.",
+  },
   { name: "secondary_info", type: "object", description: "Secondary info object." },
   {
     name: "display_zero",

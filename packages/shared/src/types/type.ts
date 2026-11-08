@@ -86,6 +86,7 @@ export type IndividualDeviceType = BaseConfigEntity & {
   calculate_flow_rate?: boolean | number;
   use_metadata?: boolean;
   show_direction?: boolean;
+  accept_negative?: boolean;
 };
 
 export type EntityType =
