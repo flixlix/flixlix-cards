@@ -137,6 +137,11 @@ export const advancedOptionsSchema = memoizeOne((displayZeroLinesMode: string) =
         selector: { number: { mode: "box", min: 0, max: 10000000, step: 1 } },
       },
       {
+        name: "collection_key",
+        label: "Energy Collection Key",
+        selector: { text: {} },
+      },
+      {
         name: "clickable_entities",
         label: "Clickable Entities",
         selector: { boolean: {} },
@@ -154,11 +159,6 @@ export const advancedOptionsSchema = memoizeOne((displayZeroLinesMode: string) =
         default: true,
       },
       {
-        name: "collection_key",
-        label: "Energy Collection Key",
-        selector: { text: {} },
-      },
-      {
         name: "no_labels",
         label: localize("editor.no_labels"),
         selector: { boolean: {} },
@@ -174,20 +174,20 @@ export const advancedOptionsSchema = memoizeOne((displayZeroLinesMode: string) =
         label: "Allow Layout Break",
         selector: { boolean: {} },
       },
-      {
-        name: "topology",
-        label: localize("editor.topology"),
-        selector: {
-          select: {
-            mode: "dropdown",
-            options: TOPOLOGIES.map((topology) => ({
-              value: topology,
-              label: localize(`editor.topology_${topology}`),
-            })),
-          },
-        },
-      },
     ],
+  },
+  {
+    name: "topology",
+    label: localize("editor.topology"),
+    selector: {
+      select: {
+        mode: "dropdown",
+        options: TOPOLOGIES.map((topology) => ({
+          value: topology,
+          label: localize(`editor.topology_${topology}`),
+        })),
+      },
+    },
   },
   {
     type: "expandable",

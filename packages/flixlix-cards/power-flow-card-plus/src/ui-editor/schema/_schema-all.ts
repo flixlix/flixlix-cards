@@ -143,6 +143,18 @@ export const advancedOptionsSchema = memoizeOne((displayZeroLinesMode: string) =
         selector: { number: { mode: "box", min: 0, max: 10000000, step: 1 } },
       },
       {
+        name: "flow_rate_model",
+        selector: {
+          select: {
+            mode: "dropdown",
+            options: FLOW_RATE_MODELS.map((model) => ({
+              value: model,
+              label: localize(`editor.flow_rate_model_${model}`),
+            })),
+          },
+        },
+      },
+      {
         name: "clickable_entities",
         label: "Clickable Entities",
         selector: { boolean: {} },
@@ -159,18 +171,6 @@ export const advancedOptionsSchema = memoizeOne((displayZeroLinesMode: string) =
         selector: { boolean: {} },
       },
       {
-        name: "flow_rate_model",
-        selector: {
-          select: {
-            mode: "dropdown",
-            options: FLOW_RATE_MODELS.map((model) => ({
-              value: model,
-              label: localize(`editor.flow_rate_model_${model}`),
-            })),
-          },
-        },
-      },
-      {
         name: "sort_individual_devices",
         label: "Sort individual devices by usage",
         selector: { boolean: {} },
@@ -181,20 +181,20 @@ export const advancedOptionsSchema = memoizeOne((displayZeroLinesMode: string) =
         label: "Allow Layout Break",
         selector: { boolean: {} },
       },
-      {
-        name: "topology",
-        label: localize("editor.topology"),
-        selector: {
-          select: {
-            mode: "dropdown",
-            options: TOPOLOGIES.map((topology) => ({
-              value: topology,
-              label: localize(`editor.topology_${topology}`),
-            })),
-          },
-        },
-      },
     ],
+  },
+  {
+    name: "topology",
+    label: localize("editor.topology"),
+    selector: {
+      select: {
+        mode: "dropdown",
+        options: TOPOLOGIES.map((topology) => ({
+          value: topology,
+          label: localize(`editor.topology_${topology}`),
+        })),
+      },
+    },
   },
   {
     type: "expandable",

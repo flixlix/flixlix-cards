@@ -1,6 +1,7 @@
 import { type PowerFlowCardPlusConfig, TOPOLOGIES } from "@flixlix-cards/shared/types";
 import { type HomeAssistant } from "custom-card-helpers";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vite-plus/test";
+import { advancedOptionsSchema } from "./schema/_schema-all";
 import { EnergyFlowCardPlusEditor } from "./ui-editor";
 
 const { loadHaFormMock } = vi.hoisted(() => ({
@@ -10,6 +11,14 @@ const { loadHaFormMock } = vi.hoisted(() => ({
 vi.mock("@flixlix-cards/shared/ui-editor/utils/load-ha-form", () => ({
   loadHaForm: loadHaFormMock,
 }));
+
+const isToggle = (field: unknown) =>
+  typeof field === "object" &&
+  field !== null &&
+  "selector" in field &&
+  typeof field.selector === "object" &&
+  field.selector !== null &&
+  "boolean" in field.selector;
 
 const hass: Partial<HomeAssistant> = { localize: () => "" };
 
@@ -288,5 +297,17 @@ describe("energy flow ui editor", () => {
     expect(() => editor.setConfig(editorConfig({ entities: {}, topology: "mesh" }))).toThrow(
       /topology/
     );
+  });
+  // HA's ha-form grid tops-aligns its cells, so a toggle next to a taller field sits off-centre.
+  test("every row of the advanced grid pairs toggles with toggles and fields with fields", () => {
+    const grid = advancedOptionsSchema("show").find((item) => "column_min_width" in item);
+    const fields: unknown[] =
+      grid && "schema" in grid && Array.isArray(grid.schema) ? grid.schema : [];
+    const kinds = fields.map((field) => (isToggle(field) ? "toggle" : "field"));
+    const rows = Array.from({ length: Math.ceil(kinds.length / 2) }, (_, row) =>
+      kinds.slice(row * 2, row * 2 + 2)
+    );
+
+    expect(rows.filter((row) => new Set(row).size > 1)).toEqual([]);
   });
 });
