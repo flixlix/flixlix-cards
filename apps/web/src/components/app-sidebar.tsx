@@ -176,7 +176,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton asChild size="lg">
               <Link to="/">
-                <div className="bg-foreground text-solar dark:bg-solar dark:text-background flex aspect-square size-8 items-center justify-center rounded-lg">
+                <div className="bg-foreground text-solar dark:bg-secondary flex aspect-square size-8 items-center justify-center rounded-lg">
                   <Zap className="size-4 fill-current" />
                 </div>
                 <div className="grid min-w-0 flex-1 text-left leading-tight">
