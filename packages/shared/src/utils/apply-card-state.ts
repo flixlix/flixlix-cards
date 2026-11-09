@@ -57,8 +57,7 @@ const dotMotion = (root: ShadowRoot, dot: SVGSVGElement) => {
 
 /**
  * Moves every flow dot along its line at an even pace. `data-duration` is seconds per reference
- * line, stretched to the line's length so equal flow rates look equally fast on every line. A dot
- * keeps its place on the line when its speed changes, instead of jumping. All dots are stopped and
+ * line, stretched to the line's length (`lineDuration`). A dot keeps its place on the line when its speed changes, instead of jumping. All dots are stopped and
  * measured before any moves again.
  */
 const animateFlowDots = (root: ShadowRoot): void => {

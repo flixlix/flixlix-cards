@@ -10,15 +10,16 @@ describe("line duration", () => {
     expect(lineDuration(2, REFERENCE_LINE_LENGTH)).toBe(2);
   });
 
-  test("a line a third of the reference length takes a third of the time", () => {
-    expect(lineDuration(3, REFERENCE_LINE_LENGTH / 3)).toBeCloseTo(1);
+  test("a line a quarter of the reference length takes half the time", () => {
+    expect(lineDuration(3, REFERENCE_LINE_LENGTH / 4)).toBeCloseTo(1.5);
   });
 
-  test("the same flow rate gives the same pixels per second on any line", () => {
+  test("on a shorter line a dot moves fewer pixels per second but loops more often", () => {
     fc.assert(
-      fc.property(seconds, pixels, pixels, (rate, short, long) => {
-        const speed = (length: number) => length / lineDuration(rate, length);
-        expect(speed(short)).toBeCloseTo(speed(long), 6);
+      fc.property(seconds, pixels, pixels, (rate, a, b) => {
+        fc.pre(a < b);
+        expect(a / lineDuration(rate, a)).toBeLessThan(b / lineDuration(rate, b));
+        expect(lineDuration(rate, a)).toBeLessThan(lineDuration(rate, b));
       })
     );
   });

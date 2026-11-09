@@ -7,10 +7,14 @@ const centerOf = (element: Element | null) => {
 };
 
 /**
- * Screen pixels per second the flow dot matching `selector` covers, walking its loop in small
- * steps. Pauses the dot.
+ * How far on screen the flow dot matching `selector` travels in one loop, walking it in small
+ * steps, and how many seconds the loop takes. Pauses the dot.
  */
-export const dotSpeed = (root: ShadowRoot, selector: string, steps = 200): number => {
+export const dotLoop = (
+  root: ShadowRoot,
+  selector: string,
+  steps = 200
+): { pixels: number; seconds: number } => {
   const dot = root.querySelector(selector);
   const [animation] = dot?.getAnimations() ?? [];
   if (!dot || !animation) {
@@ -22,7 +26,7 @@ export const dotSpeed = (root: ShadowRoot, selector: string, steps = 200): numbe
     animation.currentTime = (duration * step) / steps;
     return centerOf(dot.querySelector("circle"));
   });
-  const travelled = points
+  const pixels = points
     .slice(1)
     .reduce(
       (sum, point, index) =>
@@ -33,5 +37,5 @@ export const dotSpeed = (root: ShadowRoot, selector: string, steps = 200): numbe
         ),
       0
     );
-  return travelled / (duration / 1000);
+  return { pixels, seconds: duration / 1000 };
 };

@@ -68,7 +68,7 @@ export type FlowName =
 
 export type Flow = {
   value: number;
-  /** Seconds a dot takes along a line of `REFERENCE_LINE_LENGTH`; longer lines take longer. */
+  /** Seconds a dot takes along a line of `REFERENCE_LINE_LENGTH`; see `lineDuration`. */
   durationSeconds: number;
   /** Whether the line is drawn at all. */
   visible: boolean;
