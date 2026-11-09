@@ -119,13 +119,21 @@ describe("flow paths", () => {
           if (!d) {
             continue;
           }
+          // one expect per flow, not per point: an expect per sample made this the suite's
+          // slowest test, past its timeout under CI's coverage
+          let deepest = { by: -Infinity, point: { x: 0, y: 0 }, circle: rings[0] };
           for (const point of sample(d)) {
             for (const circle of rings) {
-              expect(distance(point, circle), flow).toBeGreaterThan(
-                circle.r - ringInset(circle) - ROUNDING
-              );
+              const by = circle.r - ringInset(circle) - ROUNDING - distance(point, circle);
+              if (by > deepest.by) {
+                deepest = { by, point, circle };
+              }
             }
           }
+          expect({ flow, intrudes: deepest.by >= 0, ...deepest }).toMatchObject({
+            flow,
+            intrudes: false,
+          });
         }
       })
     );
