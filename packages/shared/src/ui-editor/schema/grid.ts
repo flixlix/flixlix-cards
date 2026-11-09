@@ -1,7 +1,7 @@
 import localize from "@flixlix-cards/shared/i18n";
 import {
   actionSchema,
-  customColorsSchema,
+  directionalColorsSchema,
   getBaseMainConfigSchema,
   getEntityCombinedSelectionSchema,
   getEntitySeparatedSelectionSchema,
@@ -57,7 +57,7 @@ export const gridSchema = [
   getEntityCombinedSelectionSchema(),
   getEntitySeparatedSelectionSchema(),
   mainSchema,
-  customColorsSchema,
+  directionalColorsSchema,
   {
     title: localize("editor.secondary_info"),
     name: "secondary_info",

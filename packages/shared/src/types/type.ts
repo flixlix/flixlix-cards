@@ -37,6 +37,9 @@ export type ComboEntity = {
   production: string;
 };
 
+/** Grid and battery colours: one per direction, and `idle` for the circle while nothing flows. */
+export type DirectionalColors = Partial<ComboEntity> & { idle?: ColorValue };
+
 export type SecondaryInfoType = {
   entity?: string;
   unit_of_measurement?: string;
@@ -66,7 +69,7 @@ export interface BaseConfigEntity extends ActionConfigSet {
   entity: string | ComboEntity;
   name?: EntityName;
   icon?: string;
-  color?: ComboEntity | ColorValue;
+  color?: DirectionalColors | ColorValue;
   color_icon?: boolean | string;
   display_state?: "two_way" | "one_way" | "one_way_no_zero";
   display_zero_tolerance?: number;
@@ -89,6 +92,8 @@ export type GridPowerOutage = {
 export type IndividualDeviceType = BaseConfigEntity & {
   entity: string;
   color?: ColorValue;
+  /** Circle colour while the device draws nothing. */
+  color_idle?: ColorValue;
   color_icon?: boolean;
   inverted_animation?: boolean;
   display_zero?: boolean;
@@ -166,6 +171,7 @@ export type GridObject = ActionConfigSet & {
   color: {
     fromGrid?: ColorValue;
     toGrid?: ColorValue;
+    idle?: ColorValue;
     icon_type?: "color_dynamically" | "no_color" | "production" | "consumption";
     circle_type?: CircleColorType;
   };
@@ -214,6 +220,7 @@ export type BatteryObject = ActionConfigSet & {
   color: {
     fromBattery?: ColorValue;
     toBattery?: ColorValue;
+    idle?: ColorValue;
     icon_type?: string | boolean;
     circle_type?: CircleColorType;
   };

@@ -31,6 +31,9 @@ describe("flow card config", () => {
       mode: "hide",
       transparency: 40,
     });
+    expect(
+      displayZeroLinesWithDefaults({ mode: "grey_out", grey_out_circles: true }).grey_out_circles
+    ).toBe(true);
   });
 
   test("entities are clickable unless clickable_entities is false", () => {

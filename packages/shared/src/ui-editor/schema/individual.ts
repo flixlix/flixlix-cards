@@ -84,9 +84,21 @@ export const individualSchema = [
   },
   mainSchema,
   {
-    name: "color",
-    label: "Color",
-    selector: { color_rgb: {} },
+    name: "",
+    type: "grid",
+    column_min_width: "200px",
+    schema: [
+      {
+        name: "color",
+        label: "Color",
+        selector: { color_rgb: {} },
+      },
+      {
+        name: "color_idle",
+        label: "Idle Color",
+        selector: { color_rgb: {} },
+      },
+    ],
   },
   {
     title: localize("editor.secondary_info"),

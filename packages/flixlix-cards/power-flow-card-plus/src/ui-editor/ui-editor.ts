@@ -175,6 +175,7 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
           defaultValues.displayZeroLines.transparency,
         grey_color:
           this._config.display_zero_lines?.grey_color ?? defaultValues.displayZeroLines.grey_color,
+        grey_out_circles: this._config.display_zero_lines?.grey_out_circles ?? false,
       },
     };
     const alerts = html`${this._renderLegacyFieldsAlert()}${this._renderLegacyIndividualFieldsAlert()}`;

@@ -814,6 +814,11 @@ const INDIVIDUAL_OPTIONS: OptionRow[] = [
   { name: "icon", type: "string", description: "Icon path (e.g. mdi:car-electric)." },
   { name: "color", type: "string", description: "HEX color for circle, label and line." },
   {
+    name: "color_idle",
+    type: "string",
+    description: "HEX color for the circle while the device draws nothing. Unset keeps color.",
+  },
+  {
     name: "color_icon",
     type: "boolean",
     default: "false",
@@ -1041,6 +1046,13 @@ const DISPLAY_ZERO_LINES_OPTIONS: OptionRow[] = [
     name: "grey_color",
     type: "string | number[]",
     description: "HEX or RGB array, used by grey_out / custom modes.",
+  },
+  {
+    name: "grey_out_circles",
+    type: "boolean",
+    default: "false",
+    description:
+      "Grey out grid, battery and individual circles while nothing flows, in grey_out / custom modes. A node's own idle color wins.",
   },
 ];
 
@@ -1450,13 +1462,19 @@ entities:
     entity: sensor.grid_${sensorSuffix}
     color:
       consumption: "#488fc2"
-      production: "#8353d1"`,
+      production: "#8353d1"
+      idle: "#9e9e9e"`,
           }}
         >
           <OptionList
             rows={[
               { name: "production", type: "string", description: "HEX color for production." },
               { name: "consumption", type: "string", description: "HEX color for consumption." },
+              {
+                name: "idle",
+                type: "string",
+                description: "HEX color for the circle while nothing flows. Unset keeps the usual.",
+              },
             ]}
           />
         </CategorySection>

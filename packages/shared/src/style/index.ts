@@ -251,18 +251,18 @@ export const styles = css`
     fill: var(--individual-left-bottom-color);
   }
   .individual-top .circle {
-    border-color: var(--individual-left-top-color);
+    border-color: var(--circle-individual-left-top-color, var(--individual-left-top-color));
   }
   .individual-bottom path,
   .individual-bottom circle {
     stroke: var(--individual-left-bottom-color);
   }
   .individual-bottom .circle {
-    border-color: var(--individual-left-bottom-color);
+    border-color: var(--circle-individual-left-bottom-color, var(--individual-left-bottom-color));
   }
 
   .individual-right-top .circle {
-    border-color: var(--individual-right-top-color);
+    border-color: var(--circle-individual-right-top-color, var(--individual-right-top-color));
   }
 
   circle.individual-right-top .circle {
@@ -274,7 +274,7 @@ export const styles = css`
     stroke: var(--individual-right-top-color);
   }
   .individual-right-bottom .circle {
-    border-color: var(--individual-right-bottom-color);
+    border-color: var(--circle-individual-right-bottom-color, var(--individual-right-bottom-color));
   }
 
   circle.individual-right-bottom .circle {
