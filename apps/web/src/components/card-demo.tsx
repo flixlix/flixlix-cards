@@ -6,13 +6,15 @@ import {
   houseDemo,
   periodDemo,
   powerDemo,
+  selectorDemo,
 } from "@/components/demos";
 
-const demos: Record<"power" | "house" | "energy" | "period" | "breakdown", Demo> = {
+const demos: Record<"power" | "house" | "energy" | "period" | "selector" | "breakdown", Demo> = {
   power: powerDemo,
   house: houseDemo,
   energy: energyDemo,
   period: periodDemo,
+  selector: selectorDemo,
   breakdown: breakdownDemo,
 };
 

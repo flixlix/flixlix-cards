@@ -1,25 +1,9 @@
 import { Link } from "@tanstack/react-router";
-import {
-  ArrowRight,
-  BookOpen,
-  GitCompareArrows,
-  Github,
-  MousePointerClick,
-  Package,
-  Settings,
-  Wrench,
-} from "lucide-react";
+import { GitCompareArrows, Github, MousePointerClick, Settings } from "lucide-react";
 import type * as React from "react";
 
 import { CardDemo } from "@/components/card-demo";
 import { Button } from "@flixlix-cards/ui/components/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@flixlix-cards/ui/components/card";
 import { Checkbox } from "@flixlix-cards/ui/components/checkbox";
 
 import { CategorySection } from "./category-section";
@@ -27,10 +11,11 @@ import {
   Callout,
   CodeBlock,
   NextPageNav,
+  type OptionRow,
   PageHeader,
+  PageLinks,
   Prose,
   Section,
-  type OptionRow,
 } from "./doc-primitives";
 import { InstallFromLink } from "./install-from-link";
 import { OptionList } from "./option-list";
@@ -54,36 +39,6 @@ function HighlightItem({ children }: { children: React.ReactNode }) {
   );
 }
 
-function SectionCard({
-  to,
-  icon: Icon,
-  title,
-  description,
-}: {
-  to: string;
-  icon: React.ComponentType<{ className?: string }>;
-  title: string;
-  description: string;
-}) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
-          <Icon className="size-4" /> {title}
-        </CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Button asChild size="sm" variant="outline">
-          <Link to={to}>
-            Open <ArrowRight className="size-3.5" />
-          </Link>
-        </Button>
-      </CardContent>
-    </Card>
-  );
-}
-
 // ---------- Overview ----------
 
 export function OverviewPage() {
@@ -96,12 +51,12 @@ export function OverviewPage() {
         badges={[{ label: "HACS custom" }, { label: "YAML & UI editor" }, { label: "Energy" }]}
       />
 
-      <CardDemo demo="period" className="mx-auto w-fit max-w-full rounded-xl border" />
+      <CardDemo demo="period" className="mx-auto w-fit max-w-full rounded-2xl" />
       <p className="text-muted-foreground mt-2 mb-8 text-center text-sm">
         The real card, live, driving an Energy Flow Card Plus below it.{" "}
         <Link
           to="/energy-period-selector-plus/playground"
-          className="text-primary underline-offset-4 hover:underline"
+          className="decoration-solar font-medium underline underline-offset-4"
         >
           Try it in the playground
         </Link>
@@ -142,26 +97,26 @@ export function OverviewPage() {
       </Section>
 
       <Section title="What's in this section">
-        <div className="grid gap-3 md:grid-cols-2">
-          <SectionCard
-            to={`${BASE_PATH}/installation`}
-            icon={Package}
-            title="Installation"
-            description="Marketplace, HACS custom repository or manual install."
-          />
-          <SectionCard
-            to={`${BASE_PATH}/configuration`}
-            icon={BookOpen}
-            title="Configuration"
-            description="Every option, with defaults and types."
-          />
-          <SectionCard
-            to={`${BASE_PATH}/examples`}
-            icon={Wrench}
-            title="Examples"
-            description="Copy-pastable configs, including one paired with Energy Flow Card Plus."
-          />
-        </div>
+        <PageLinks
+          links={[
+            {
+              to: `${BASE_PATH}/installation`,
+              title: "Installation",
+              description: "Marketplace, HACS custom repository or manual install.",
+            },
+            {
+              to: `${BASE_PATH}/configuration`,
+              title: "Configuration",
+              description: "Every option, with defaults and types.",
+            },
+            {
+              to: `${BASE_PATH}/examples`,
+              title: "Examples",
+              description:
+                "Copy-pastable configs, including one paired with Energy Flow Card Plus.",
+            },
+          ]}
+        />
       </Section>
 
       <Section title="Source & releases">

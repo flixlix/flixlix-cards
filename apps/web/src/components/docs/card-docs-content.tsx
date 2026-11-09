@@ -1,10 +1,10 @@
 import { Link } from "@tanstack/react-router";
 import {
   AlertTriangle,
-  ArrowRight,
   Battery,
   BookOpen,
   Calculator,
+  Check,
   Cpu,
   EyeOff,
   Github,
@@ -13,25 +13,15 @@ import {
   Layers,
   Leaf,
   MousePointerClick,
-  Package,
   Palette,
   Settings,
   Split,
   Sun,
-  Wrench,
   Zap,
 } from "lucide-react";
 import * as React from "react";
 
 import { Button } from "@flixlix-cards/ui/components/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@flixlix-cards/ui/components/card";
-import { Checkbox } from "@flixlix-cards/ui/components/checkbox";
 
 import { CardDemo } from "@/components/card-demo";
 
@@ -40,10 +30,11 @@ import {
   Callout,
   CodeBlock,
   NextPageNav,
+  type OptionRow,
   PageHeader,
+  PageLinks,
   Prose,
   Section,
-  type OptionRow,
 } from "./doc-primitives";
 import { OptionList } from "./option-list";
 import { PageTOC, type TocItem } from "./page-toc";
@@ -126,8 +117,8 @@ const VARIANTS: Record<CardKey, Variant> = {
 
 function HighlightsListCheckedItem({ children }: { children: React.ReactNode }) {
   return (
-    <li className="bg-muted/40 flex items-center gap-2 rounded-md border p-3">
-      <Checkbox className="pointer-events-none" checked />
+    <li className="flex items-start gap-2.5 py-1">
+      <Check aria-hidden className="text-solar-ink mt-0.5 size-4 shrink-0" />
       {children}
     </li>
   );
@@ -150,12 +141,12 @@ export function OverviewPage({ cardKey }: { cardKey: CardKey }) {
         badges={[{ label: "HACS Default" }, { label: "YAML & UI editor" }, { label: v.unitKilo }]}
       />
 
-      <CardDemo demo={v.demo} className="mx-auto w-fit max-w-full rounded-xl border" />
+      <CardDemo demo={v.demo} className="mx-auto w-fit max-w-full rounded-2xl" />
       <p className="text-muted-foreground mt-2 text-center text-sm">
         The real card, live.{" "}
         <Link
           to={`${v.basePath}/playground`}
-          className="text-primary underline-offset-4 hover:underline"
+          className="decoration-solar font-medium underline underline-offset-4"
         >
           Try it in the playground
         </Link>
@@ -175,7 +166,7 @@ export function OverviewPage({ cardKey }: { cardKey: CardKey }) {
       </Prose>
 
       <Section title="Highlights">
-        <ul className="text-foreground/90 grid grid-cols-1 gap-2 text-sm md:grid-cols-2">
+        <ul className="text-foreground/85 grid max-w-3xl grid-cols-1 gap-x-8 gap-y-1 text-[15px] md:grid-cols-2">
           <HighlightsListCheckedItem>
             Full UI editor with subpages for each entity
           </HighlightsListCheckedItem>
@@ -198,53 +189,30 @@ export function OverviewPage({ cardKey }: { cardKey: CardKey }) {
       </Section>
 
       <Section title="What's in this section">
-        <div className="grid gap-3 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Package className="size-4" /> Installation
-              </CardTitle>
-              <CardDescription>HACS or manual install in two minutes.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button asChild size="sm" variant="outline">
-                <Link to={`${v.basePath}/installation`}>
-                  Open <ArrowRight className="size-3.5" />
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <BookOpen className="size-4" /> Configuration
-              </CardTitle>
-              <CardDescription>Every option, with defaults and types.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button asChild size="sm" variant="outline">
-                <Link to={`${v.basePath}/configuration`}>
-                  Open <ArrowRight className="size-3.5" />
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Wrench className="size-4" /> Examples
-              </CardTitle>
-              <CardDescription>Copy-pastable configs for common setups.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button asChild size="sm" variant="outline">
-                <Link to={`${v.basePath}/examples`}>
-                  Open <ArrowRight className="size-3.5" />
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+        <PageLinks
+          links={[
+            {
+              to: `${v.basePath}/installation`,
+              title: "Installation",
+              description: "HACS or manual install in two minutes.",
+            },
+            {
+              to: `${v.basePath}/configuration`,
+              title: "Configuration",
+              description: "Every option, with defaults and types.",
+            },
+            {
+              to: `${v.basePath}/examples`,
+              title: "Examples",
+              description: "Copy-pastable configs for common setups.",
+            },
+            {
+              to: `${v.basePath}/playground`,
+              title: "Playground",
+              description: "Edit a config and watch the card change; share the link.",
+            },
+          ]}
+        />
       </Section>
 
       <Section title="Source & releases">
@@ -1449,7 +1417,7 @@ entities:
 
         <h2
           id="shared-objects"
-          className="text-foreground/80 mb-4 mt-12 scroll-mt-24 text-xs font-semibold uppercase tracking-widest"
+          className="mt-16 mb-6 scroll-mt-24 border-t pt-8 text-[1.75rem] font-semibold tracking-[-0.025em]"
         >
           Shared objects
         </h2>
@@ -1621,7 +1589,7 @@ entities:
           <div className={cardKey === "energy" ? "grid gap-4" : "grid gap-4 md:grid-cols-3"}>
             <div className="bg-card rounded-lg border p-4">
               <div className="mb-2 flex items-center gap-2">
-                <span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide">
+                <span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-[11px] font-medium">
                   {cardKey === "energy" ? "Always used" : "Optional"}
                 </span>
                 <h3 className="text-foreground text-sm font-semibold">Relative</h3>
@@ -1649,7 +1617,7 @@ entities:
               <>
                 <div className="bg-card rounded-lg border p-4">
                   <div className="mb-2 flex items-center gap-2">
-                    <span className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide">
+                    <span className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 rounded-full px-2 py-0.5 text-[11px] font-medium">
                       Default
                     </span>
                     <h3 className="text-foreground text-sm font-semibold">Duration</h3>
@@ -1670,7 +1638,7 @@ return ((value - minIn) * (minOut - maxOut)) / (maxIn - minIn) + maxOut;
                 </div>
                 <div className="bg-card rounded-lg border p-4">
                   <div className="mb-2 flex items-center gap-2">
-                    <span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide">
+                    <span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-[11px] font-medium">
                       Optional
                     </span>
                     <h3 className="text-foreground text-sm font-semibold">Speed</h3>

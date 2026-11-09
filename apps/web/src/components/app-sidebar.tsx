@@ -1,12 +1,13 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
-  BookOpen,
+  ArrowUpRight,
   CalendarRange,
   ChartPie,
   ChevronRight,
-  GitPullRequest,
+  Github,
   HeartHandshake,
   House,
+  LayoutGrid,
   ListOrdered,
   Sparkles,
   Zap,
@@ -38,6 +39,7 @@ import {
 } from "@flixlix-cards/ui/components/sidebar";
 
 type DocSection = {
+  group: "Live power" | "Energy over time" | "Beyond energy";
   label: string;
   to: string;
   icon: React.ComponentType<{ className?: string }>;
@@ -46,6 +48,7 @@ type DocSection = {
 
 const SECTIONS: DocSection[] = [
   {
+    group: "Live power",
     label: "Power Flow Card Plus",
     to: "/power-flow-card-plus",
     icon: Sparkles,
@@ -58,6 +61,7 @@ const SECTIONS: DocSection[] = [
     ],
   },
   {
+    group: "Live power",
     label: "Home Flow Card",
     to: "/home-flow-card",
     icon: House,
@@ -70,6 +74,7 @@ const SECTIONS: DocSection[] = [
     ],
   },
   {
+    group: "Energy over time",
     label: "Energy Flow Card Plus",
     to: "/energy-flow-card-plus",
     icon: Zap,
@@ -82,6 +87,7 @@ const SECTIONS: DocSection[] = [
     ],
   },
   {
+    group: "Energy over time",
     label: "Energy Breakdown Card",
     to: "/energy-breakdown-card",
     icon: ChartPie,
@@ -93,6 +99,7 @@ const SECTIONS: DocSection[] = [
     ],
   },
   {
+    group: "Energy over time",
     label: "Energy Period Selector Plus",
     to: "/energy-period-selector-plus",
     icon: CalendarRange,
@@ -105,6 +112,7 @@ const SECTIONS: DocSection[] = [
     ],
   },
   {
+    group: "Beyond energy",
     label: "Sortable List Card",
     to: "/sortable-list-card",
     icon: ListOrdered,
@@ -116,6 +124,8 @@ const SECTIONS: DocSection[] = [
     ],
   },
 ];
+
+const GROUPS: DocSection["group"][] = ["Live power", "Energy over time", "Beyond energy"];
 
 function isSectionActive(pathname: string, sectionTo: string): boolean {
   return pathname === sectionTo || pathname.startsWith(`${sectionTo}/`);
@@ -166,14 +176,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton asChild size="lg">
               <Link to="/">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400 to-orange-600 text-white shadow-sm">
+                <div className="bg-foreground text-solar flex aspect-square size-8 items-center justify-center rounded-lg">
                   <Zap className="size-4 fill-current" />
                 </div>
-                <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
-                  <span className="font-display truncate font-bold tracking-tight">
-                    flixlix-cards
+                <div className="grid min-w-0 flex-1 text-left leading-tight">
+                  <span className="truncate font-semibold tracking-[-0.01em]">flixlix-cards</span>
+                  <span className="text-muted-foreground truncate text-xs">
+                    Cards for Home Assistant
                   </span>
-                  <span className="text-muted-foreground truncate text-xs">Documentation</span>
                 </div>
               </Link>
             </SidebarMenuButton>
@@ -183,14 +193,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
       <SidebarContent className="overflow-x-hidden">
         <SidebarGroup>
-          <SidebarGroupLabel>Getting Started</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname === "/"} tooltip="Introduction">
+                <SidebarMenuButton asChild isActive={pathname === "/"} tooltip="All cards">
                   <Link to="/">
-                    <BookOpen />
-                    <span className="truncate">Introduction</span>
+                    <LayoutGrid />
+                    <span>All cards</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -198,46 +207,49 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup>
-          <SidebarGroupLabel>The Cards</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {SECTIONS.map((section) => {
-                const isOpen = openSections.has(section.to);
-                return (
+        {GROUPS.map((group) => (
+          <SidebarGroup key={group}>
+            <SidebarGroupLabel>{group}</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {SECTIONS.filter((section) => section.group === group).map((section) => (
                   <Collapsible
                     key={section.to}
                     asChild
-                    open={isOpen}
+                    open={openSections.has(section.to)}
                     onOpenChange={(next) => setSectionOpen(section.to, next)}
-                    className="group/collapsible"
                   >
                     <SidebarMenuItem>
                       <SidebarMenuButton
                         asChild
                         tooltip={section.label}
                         isActive={isSectionActive(pathname, section.to)}
+                        className="[&>svg]:text-muted-foreground data-[active=true]:[&>svg]:text-foreground"
                       >
                         <Link to={section.to}>
                           <section.icon />
-                          <span className="truncate">{section.label}</span>
+                          <span>{section.label}</span>
                         </Link>
                       </SidebarMenuButton>
                       <CollapsibleTrigger asChild>
                         <SidebarMenuAction
-                          aria-label={`Toggle ${section.label}`}
-                          className="transition-transform duration-200 data-[state=open]:rotate-90"
+                          aria-label={`Show ${section.label} pages`}
+                          className="text-muted-foreground hover:text-foreground transition-transform duration-200 ease-(--ease-out-strong) data-[state=open]:rotate-90"
                         >
                           <ChevronRight />
                         </SidebarMenuAction>
                       </CollapsibleTrigger>
-                      <CollapsibleContent>
-                        <SidebarMenuSub className="border-none">
+                      <CollapsibleContent className="data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down overflow-hidden duration-200 ease-(--ease-out-strong) motion-reduce:animate-none">
+                        <SidebarMenuSub className="mr-0 ml-[1.0625rem] py-1 pr-0">
                           {section.items.map((item) => (
                             <SidebarMenuSubItem key={item.to}>
-                              <SidebarMenuSubButton asChild isActive={pathname === item.to}>
+                              <SidebarMenuSubButton
+                                asChild
+                                isActive={pathname === item.to}
+                                className="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground relative overflow-visible hover:bg-transparent data-[active=true]:bg-transparent data-[active=true]:font-medium before:absolute before:inset-y-1 before:-left-[11.5px] before:w-0.5 before:rounded-full data-[active=true]:before:bg-solar"
+                              >
                                 <Link to={item.to}>
-                                  <span className="truncate">{item.label}</span>
+                                  <span>{item.label}</span>
                                 </Link>
                               </SidebarMenuSubButton>
                             </SidebarMenuSubItem>
@@ -246,11 +258,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                       </CollapsibleContent>
                     </SidebarMenuItem>
                   </Collapsible>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
 
         <SidebarGroup>
           <SidebarGroupLabel>Project</SidebarGroupLabel>
@@ -261,22 +273,28 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   asChild
                   isActive={pathname === "/contributing"}
                   tooltip="How to contribute"
+                  className="[&>svg]:text-muted-foreground"
                 >
                   <Link to="/contributing">
                     <HeartHandshake />
-                    <span className="truncate">How to contribute</span>
+                    <span>How to contribute</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="GitHub">
+                <SidebarMenuButton
+                  asChild
+                  tooltip="Source on GitHub"
+                  className="[&>svg]:text-muted-foreground"
+                >
                   <a
                     href="https://github.com/flixlix/flixlix-cards"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <GitPullRequest />
-                    <span className="truncate">GitHub</span>
+                    <Github />
+                    <span className="flex-1">Source on GitHub</span>
+                    <ArrowUpRight aria-label="opens in a new tab" className="size-3.5!" />
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -285,9 +303,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter>
-        <div className="flex items-center justify-between gap-2 px-1 pb-1 group-data-[collapsible=icon]:hidden">
-          <span className="text-muted-foreground truncate text-[11px] leading-tight">Theme</span>
+      <SidebarFooter className="border-t group-data-[collapsible=icon]:border-t-0">
+        <div className="flex items-center justify-between gap-2 px-1 group-data-[collapsible=icon]:hidden">
+          <span className="text-muted-foreground truncate text-xs">Theme</span>
           <ThemeToggle />
         </div>
       </SidebarFooter>

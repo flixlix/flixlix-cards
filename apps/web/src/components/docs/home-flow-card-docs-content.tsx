@@ -3,21 +3,18 @@ import {
   Activity,
   ArrowRight,
   BatteryCharging,
-  BookOpen,
   Car,
   Download,
   Eye,
   Fuel,
   Github,
   House,
-  Package,
   Palette,
   Play,
   Settings,
   ShieldAlert,
   Sun,
   UtilityPole,
-  Wrench,
 } from "lucide-react";
 import type * as React from "react";
 import { parse, stringify } from "yaml";
@@ -27,23 +24,17 @@ import { type CardConfig, CardPreview } from "@/components/card-preview";
 import { type HouseMoment, houseMoments } from "@/components/demos";
 import { sensor, type StateFixtures } from "@flixlix-cards/shared/preview/fake-hass";
 import { Button } from "@flixlix-cards/ui/components/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@flixlix-cards/ui/components/card";
 
 import { CategorySection } from "./category-section";
 import {
   Callout,
   CodeBlock,
   NextPageNav,
+  type OptionRow,
   PageHeader,
+  PageLinks,
   Prose,
   Section,
-  type OptionRow,
 } from "./doc-primitives";
 import { InstallFromLink } from "./install-from-link";
 import { OptionList } from "./option-list";
@@ -66,36 +57,6 @@ solar:
 battery:
   entity: sensor.battery_power
   state_of_charge: sensor.battery_soc`;
-
-function SectionCard({
-  to,
-  icon: Icon,
-  title,
-  description,
-}: {
-  to: string;
-  icon: React.ComponentType<{ className?: string }>;
-  title: string;
-  description: string;
-}) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
-          <Icon className="size-4" /> {title}
-        </CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Button asChild size="sm" variant="outline">
-          <Link to={to}>
-            Open <ArrowRight className="size-3.5" />
-          </Link>
-        </Button>
-      </CardContent>
-    </Card>
-  );
-}
 
 // ---------- Overview ----------
 
@@ -150,7 +111,7 @@ function Moment({ moment }: { moment: HouseMoment }) {
         configs={[moment.config]}
         states={moment.states}
         width={400}
-        className="mx-auto w-fit max-w-full rounded-xl border"
+        className="mx-auto w-fit max-w-full rounded-2xl"
       />
       <figcaption className="flex items-start justify-between gap-3 px-1">
         <div>
@@ -177,7 +138,7 @@ export function OverviewPage() {
         badges={[{ label: "HACS custom" }, { label: "YAML & UI editor" }, { label: "Power" }]}
       />
 
-      <CardDemo demo="house" className="mx-auto w-fit max-w-full rounded-xl border" />
+      <CardDemo demo="house" className="mx-auto w-fit max-w-full rounded-2xl" />
       <p className="text-muted-foreground mt-2 text-center text-sm">
         Not a screenshot: the real card, running right here.
       </p>
@@ -231,32 +192,30 @@ export function OverviewPage() {
       </Section>
 
       <Section title="What's in this section">
-        <div className="grid gap-3 md:grid-cols-2">
-          <SectionCard
-            to={`${BASE_PATH}/installation`}
-            icon={Package}
-            title="Installation"
-            description="Marketplace, HACS custom repository or manual install."
-          />
-          <SectionCard
-            to={`${BASE_PATH}/configuration`}
-            icon={BookOpen}
-            title="Configuration"
-            description="The nodes and the card's own options."
-          />
-          <SectionCard
-            to={`${BASE_PATH}/examples`}
-            icon={Wrench}
-            title="Examples"
-            description="Copy-pastable configs, each shown live."
-          />
-          <SectionCard
-            to={`${BASE_PATH}/playground`}
-            icon={Play}
-            title="Playground"
-            description="Edit the config and drag the sensors; share the link."
-          />
-        </div>
+        <PageLinks
+          links={[
+            {
+              to: `${BASE_PATH}/installation`,
+              title: "Installation",
+              description: "Marketplace, HACS custom repository or manual install.",
+            },
+            {
+              to: `${BASE_PATH}/configuration`,
+              title: "Configuration",
+              description: "The nodes and the card's own options.",
+            },
+            {
+              to: `${BASE_PATH}/examples`,
+              title: "Examples",
+              description: "Copy-pastable configs, each shown live.",
+            },
+            {
+              to: `${BASE_PATH}/playground`,
+              title: "Playground",
+              description: "Edit the config and drag the sensors; share the link.",
+            },
+          ]}
+        />
       </Section>
 
       <Section title="Source & releases">
@@ -1211,7 +1170,7 @@ function LiveExample({ code, states }: { code: string; states: StateFixtures }) 
           configs={[config]}
           states={states}
           width={400}
-          className="mx-auto w-fit max-w-full rounded-xl border"
+          className="mx-auto w-fit max-w-full rounded-2xl"
         />
       ) : null}
     </div>

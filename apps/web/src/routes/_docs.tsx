@@ -1,5 +1,5 @@
 import { Link, Outlet, createFileRoute, useRouterState } from "@tanstack/react-router";
-import { Github, Heart } from "lucide-react";
+import { Github } from "lucide-react";
 
 import { AppSidebar } from "@/components/app-sidebar";
 import { DocsSearch } from "@/components/docs/docs-search";
@@ -34,6 +34,18 @@ const SECTION_LABELS: Record<string, string> = {
   configuration: "Configuration",
   examples: "Examples",
 };
+
+const CARD_ROOTS = {
+  "power-flow-card-plus": "/power-flow-card-plus",
+  "home-flow-card": "/home-flow-card",
+  "energy-flow-card-plus": "/energy-flow-card-plus",
+  "energy-breakdown-card": "/energy-breakdown-card",
+  "energy-period-selector-plus": "/energy-period-selector-plus",
+  "sortable-list-card": "/sortable-list-card",
+} as const;
+
+const cardRoot = (segment: string) =>
+  Object.entries(CARD_ROOTS).find(([slug]) => slug === segment)?.[1];
 
 function humanize(part: string): string {
   if (SECTION_LABELS[part]) {
@@ -72,7 +84,7 @@ function DocsLayout() {
                       {isLast ? (
                         <BreadcrumbPage>{humanize(segment)}</BreadcrumbPage>
                       ) : (
-                        <span className="text-muted-foreground">{humanize(segment)}</span>
+                        <ParentCrumb segment={segment} />
                       )}
                     </BreadcrumbItem>
                     {!isLast ? <BreadcrumbSeparator /> : null}
@@ -103,16 +115,13 @@ function DocsLayout() {
         </main>
         <footer className="mt-auto border-t px-4 py-6 md:px-8 lg:px-12">
           <div className="text-muted-foreground mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-3 text-xs xl:max-w-7xl">
-            <p className="inline-flex items-center gap-1">
-              Built with <Heart aria-label="love" className="size-3 fill-current text-rose-500" />{" "}
-              for the Home Assistant community
-            </p>
+            <p>Made by Luca, in the hope that these cards make your dashboard a little nicer.</p>
             <p className="inline-flex flex-wrap items-center gap-x-3 gap-y-1">
               <a
                 href="https://github.com/flixlix/flixlix-cards/blob/main/LICENSE"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-foreground hover:text-primary font-medium transition-colors"
+                className="text-foreground decoration-solar font-medium underline-offset-4 hover:underline"
               >
                 MIT License
               </a>
@@ -120,7 +129,7 @@ function DocsLayout() {
                 href="https://github.com/flixlix"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-foreground hover:text-primary font-medium transition-colors"
+                className="text-foreground decoration-solar font-medium underline-offset-4 hover:underline"
               >
                 @flixlix
               </a>
@@ -129,5 +138,17 @@ function DocsLayout() {
         </footer>
       </SidebarInset>
     </SidebarProvider>
+  );
+}
+
+function ParentCrumb({ segment }: { segment: string }) {
+  const to = cardRoot(segment);
+  if (!to) {
+    return <span className="text-muted-foreground">{humanize(segment)}</span>;
+  }
+  return (
+    <BreadcrumbLink asChild>
+      <Link to={to}>{humanize(segment)}</Link>
+    </BreadcrumbLink>
   );
 }

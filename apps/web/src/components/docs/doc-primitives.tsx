@@ -1,4 +1,13 @@
-import { Check, Copy, Info, Lightbulb, TriangleAlert } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Copy,
+  Info,
+  Lightbulb,
+  TriangleAlert,
+} from "lucide-react";
 import * as React from "react";
 
 import { cn } from "cn";
@@ -18,14 +27,12 @@ export function PageHeader({
 }) {
   return (
     <header className="mb-10">
-      {eyebrow ? (
-        <div className="text-primary mb-3 font-mono text-[11px] font-medium tracking-widest uppercase">
-          {eyebrow}
-        </div>
-      ) : null}
-      <h1 className="text-3xl font-bold tracking-tight text-balance md:text-4xl">{title}</h1>
+      {eyebrow ? <p className="text-muted-foreground mb-2 text-sm font-medium">{eyebrow}</p> : null}
+      <h1 className="text-[2.25rem] leading-[1.08] font-semibold tracking-[-0.03em] md:text-[2.75rem]">
+        {title}
+      </h1>
       {description ? (
-        <p className="text-muted-foreground mt-3 max-w-3xl text-base leading-relaxed">
+        <p className="text-foreground/75 mt-4 max-w-[62ch] text-[17px] leading-relaxed text-pretty">
           {description}
         </p>
       ) : null}
@@ -38,7 +45,6 @@ export function PageHeader({
           ))}
         </div>
       ) : null}
-      <div className="from-primary/70 via-primary/25 mt-6 h-px bg-linear-to-r via-40% to-transparent" />
     </header>
   );
 }
@@ -56,13 +62,13 @@ export function Section({
 }) {
   return (
     <section id={id} className="mb-12 scroll-mt-24">
-      <h2 className="mb-2 text-xl font-semibold tracking-tight">
+      <h2 className="mb-2 text-[1.375rem] font-semibold tracking-[-0.02em]">
         {id ? (
           <a href={`#${id}`} className="group/anchor">
             {title}
             <span
               aria-hidden
-              className="text-primary/70 ml-1.5 text-base opacity-0 transition-opacity group-hover/anchor:opacity-100"
+              className="text-muted-foreground ml-1.5 text-base opacity-0 transition-opacity group-hover/anchor:opacity-100 group-focus-visible/anchor:opacity-100"
             >
               #
             </span>
@@ -83,10 +89,10 @@ export function Prose({ children, className }: { children: React.ReactNode; clas
   return (
     <div
       className={cn(
-        "text-foreground/90 max-w-prose [&>p]:my-3 [&>p]:text-sm [&>p]:leading-relaxed",
-        "[&>ul]:my-3 [&>ul]:list-disc [&>ul]:space-y-1 [&>ul]:pl-5 [&>ul]:text-sm",
-        "[&>ol]:my-3 [&>ol]:list-decimal [&>ol]:space-y-1 [&>ol]:pl-5 [&>ol]:text-sm",
-        "[&_a]:text-primary [&_a]:underline [&_a]:underline-offset-2",
+        "text-foreground/85 max-w-[68ch] [&>p]:my-3 [&>p]:text-[15px] [&>p]:leading-relaxed",
+        "[&>ul]:my-3 [&>ul]:list-disc [&>ul]:space-y-1 [&>ul]:pl-5 [&>ul]:text-[15px]",
+        "[&>ol]:my-3 [&>ol]:list-decimal [&>ol]:space-y-1 [&>ol]:pl-5 [&>ol]:text-[15px]",
+        "[&_a]:text-foreground [&_a]:decoration-solar [&_a]:font-medium [&_a]:underline [&_a]:underline-offset-4",
         "[&_code]:bg-muted [&_code]:rounded [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:text-[12.5px]",
         className
       )}
@@ -157,7 +163,7 @@ export function OptionsTable({ rows }: { rows: OptionRow[] }) {
   return (
     <div className="overflow-x-auto rounded-xl border">
       <table className="w-full text-sm">
-        <thead className="bg-muted/60 text-muted-foreground font-mono text-[11px] tracking-wide uppercase">
+        <thead className="bg-muted/60 text-muted-foreground text-xs">
           <tr>
             <th className="border-b px-3 py-2 text-left font-medium">Name</th>
             <th className="border-b px-3 py-2 text-left font-medium">Type</th>
@@ -241,38 +247,61 @@ export function NextPageNav({
   prev?: { label: string; to: string };
   next?: { label: string; to: string };
 }) {
+  const linkClass =
+    "press group hover:bg-accent/60 flex items-center gap-3 rounded-xl border px-4 py-3.5";
   return (
-    <nav className="mt-12 grid grid-cols-2 gap-3 text-sm">
+    <nav aria-label="Pages" className="mt-16 grid grid-cols-2 gap-3 border-t pt-8 text-sm">
       {prev ? (
-        <a
-          href={prev.to}
-          className="group hover:border-primary/50 hover:bg-accent/40 rounded-xl border p-4 transition-colors"
-        >
-          <span className="text-muted-foreground font-mono text-[11px] tracking-wide uppercase">
-            ← Previous
+        <Link to={prev.to} className={linkClass}>
+          <ChevronLeft aria-hidden className="text-muted-foreground size-4 shrink-0" />
+          <span>
+            <span className="text-muted-foreground block text-xs">Previous</span>
+            <span className="mt-0.5 block font-medium">{prev.label}</span>
           </span>
-          <span className="group-hover:text-primary mt-1 block font-medium transition-colors">
-            {prev.label}
-          </span>
-        </a>
+        </Link>
       ) : (
         <span />
       )}
       {next ? (
-        <a
-          href={next.to}
-          className="group hover:border-primary/50 hover:bg-accent/40 rounded-xl border p-4 text-right transition-colors"
-        >
-          <span className="text-muted-foreground font-mono text-[11px] tracking-wide uppercase">
-            Next →
+        <Link to={next.to} className={cn(linkClass, "justify-end text-right")}>
+          <span>
+            <span className="text-muted-foreground block text-xs">Next</span>
+            <span className="mt-0.5 block font-medium">{next.label}</span>
           </span>
-          <span className="group-hover:text-primary mt-1 block font-medium transition-colors">
-            {next.label}
-          </span>
-        </a>
+          <ChevronRight aria-hidden className="text-muted-foreground size-4 shrink-0" />
+        </Link>
       ) : (
         <span />
       )}
     </nav>
+  );
+}
+
+/** The other pages of a card's docs, each row a link. */
+export function PageLinks({
+  links,
+}: {
+  links: { to: string; title: string; description: string }[];
+}) {
+  return (
+    <ul className="bg-card max-w-3xl divide-y overflow-hidden rounded-xl border">
+      {links.map((link) => (
+        <li key={link.to}>
+          <Link
+            to={link.to}
+            className="hover:bg-accent/60 group flex items-center gap-4 px-4 py-3.5 transition-colors"
+          >
+            <span className="min-w-0 flex-1">
+              <span className="block font-medium">{link.title}</span>
+              <span className="text-muted-foreground block text-sm">{link.description}</span>
+            </span>
+            <ChevronRight
+              aria-hidden
+              className="text-muted-foreground size-4 shrink-0 transition-transform duration-200 ease-(--ease-out-strong) group-hover:translate-x-0.5"
+            />
+          </Link>
+        </li>
+      ))}
+    </ul>
   );
 }
