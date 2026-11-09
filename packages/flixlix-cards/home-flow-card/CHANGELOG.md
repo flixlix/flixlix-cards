@@ -1,5 +1,17 @@
 # home-flow-card
 
+## 0.2.0
+
+### Minor Changes
+
+- **New:** New `wire_width` option draws the wires thicker (`wire_width: 2` doubles them), also in the editor under Appearance. Wires now keep a similar size on narrow and wide cards. ([#455](https://github.com/flixlix/flixlix-cards/pull/455))
+
+### Patch Changes
+
+- **Fix:** Entities are clickable again when the config has no `clickable_entities` line, as before 0.4.0, and now also on Home Flow Card. Only `clickable_entities: false` turns it off. ([#459](https://github.com/flixlix/flixlix-cards/pull/459))
+
+- **Docs:** The README and docs list every option of every node, with the battery's state of charge options under Battery, and each example comes with a recording of the card it draws. ([#456](https://github.com/flixlix/flixlix-cards/pull/456))
+
 ## 0.1.4
 
 ### Patch Changes
