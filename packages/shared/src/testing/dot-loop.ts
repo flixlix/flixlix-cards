@@ -37,5 +37,5 @@ export const dotLoop = (
         ),
       0
     );
-  return { pixels, seconds: duration / 1000 };
+  return { pixels, seconds: duration / animation.playbackRate / 1000 };
 };
