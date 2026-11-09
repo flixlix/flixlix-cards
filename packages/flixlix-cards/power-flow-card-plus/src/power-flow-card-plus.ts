@@ -11,6 +11,7 @@ import { type PowerFlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { applyCardState } from "@flixlix-cards/shared/utils/apply-card-state";
 import {
   assertRenderableFlowCardConfig,
+  clickableEntitiesWithDefault,
   displayZeroLinesWithDefaults,
 } from "@flixlix-cards/shared/utils/flow-card-config";
 import { EntityActions } from "@flixlix-cards/shared/utils/entity-actions";
@@ -68,6 +69,7 @@ export class PowerFlowCardPlus extends LitElement {
       max_expected_power: coerceNumber(config.max_expected_power, defaultValues.maxExpectedPower),
       min_expected_power: coerceNumber(config.min_expected_power, defaultValues.minExpectedPower),
       display_zero_lines: displayZeroLinesWithDefaults(config.display_zero_lines),
+      clickable_entities: clickableEntitiesWithDefault(config.clickable_entities),
     };
   }
 

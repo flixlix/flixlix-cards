@@ -414,11 +414,11 @@ const CARD_OPTIONS: OptionRow[] = [
   {
     name: "clickable_entities",
     type: "boolean",
-    default: "false",
+    default: "true",
     description: (
       <>
-        Tapping a value opens its entity&apos;s details. A node&apos;s own{" "}
-        <a href="#actions">actions</a> run either way.
+        Tapping a value opens its entity&apos;s details; <code>false</code> turns that off. A
+        node&apos;s own <a href="#actions">actions</a> run either way.
       </>
     ),
   },
@@ -1031,8 +1031,8 @@ generator:
               <a href="https://www.home-assistant.io/dashboards/actions/">actions</a>:{" "}
               <code>more-info</code>, <code>toggle</code>, <code>navigate</code>, <code>url</code>,{" "}
               <code>perform-action</code>, <code>assist</code> or <code>none</code>. Without any of
-              them, tapping a label opens its entity&apos;s details, but only with{" "}
-              <code>clickable_entities: true</code>.
+              them, tapping a label opens its entity&apos;s details, unless{" "}
+              <code>clickable_entities: false</code>.
             </p>
           </Prose>
         </Section>

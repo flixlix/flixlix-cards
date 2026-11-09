@@ -87,7 +87,7 @@ or `battery` are required.
 | `animate_numbers`    | boolean | `true`  | Roll each number to its new value when a reading changes. Always still when your system asks for reduced motion                                     |
 | `disable_dots`       | boolean | `false` | Keep the wires still: no pulses, only the colour of the power they carry                                                                            |
 | `wire_width`         | number  | `1`     | How many times thicker the wires are drawn, for example `2` for twice as thick. Like the labels, they keep a similar size whatever the card's width |
-| `clickable_entities` | boolean | `false` | Tapping a value opens its entity's details. A node's own actions run either way                                                                     |
+| `clickable_entities` | boolean | `true`  | Tapping a value opens its entity's details; `false` turns that off. A node's own actions run either way                                             |
 | `base_decimals`      | number  | `0`     | Decimals of values in W                                                                                                                             |
 | `kilo_decimals`      | number  | `1`     | Decimals of values in kW                                                                                                                            |
 | `kilo_threshold`     | number  | `1000`  | From how many watts a value is shown in kW                                                                                                          |
@@ -229,7 +229,7 @@ Template, sun, zone and device conditions need Home Assistant itself and are ign
 `tap_action`, `hold_action` and `double_tap_action` take Home Assistant's
 [actions](https://www.home-assistant.io/dashboards/actions/): `more-info`, `toggle`, `navigate`,
 `url`, `perform-action`, `assist` or `none`. Without any of them, tapping a label opens its
-entity's details, but only with `clickable_entities: true`.
+entity's details, unless `clickable_entities: false`.
 
 ## Examples
 

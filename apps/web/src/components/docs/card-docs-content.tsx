@@ -445,7 +445,7 @@ const ADVANCED_CARD_OPTIONS = (v: Variant): OptionRow[] => [
   {
     name: "clickable_entities",
     type: "boolean",
-    default: "false",
+    default: "true",
     description: "Open the entity's more-info dialog when clicking a circle.",
   },
   {
@@ -1221,7 +1221,7 @@ entities:
           intro={
             <Prose>
               <p>
-                Requires <code>clickable_entities: true</code>.
+                Turned off by <code>clickable_entities: false</code>.
               </p>
               <p>
                 Each clickable circle supports the standard{" "}
@@ -1232,8 +1232,7 @@ entities:
                 >
                   Home Assistant action
                 </a>{" "}
-                objects. If you don't configure these and have <code>clickable_entities: true</code>
-                , the card falls back to opening more-info.
+                objects. If you don't configure these, the card falls back to opening more-info.
               </p>
             </Prose>
           }
