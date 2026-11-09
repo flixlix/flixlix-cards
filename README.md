@@ -1,5 +1,7 @@
 # Flixlix Cards
 
+[![open bugs](https://img.shields.io/github/issues/flixlix/flixlix-cards/bug?label=open%20bugs&style=flat-square)](https://github.com/flixlix/flixlix-cards/issues?q=is%3Aissue+state%3Aopen+label%3Abug)
+
 This is a monorepo for all my Home Assistant cards, including their source code, release management, and documentation.
 
 > [!TIP]
@@ -11,6 +13,19 @@ This is a monorepo for all my Home Assistant cards, including their source code,
 - **Home Flow Card** — [docs](https://cards.flixlix.com/home-flow-card) · [README](packages/flixlix-cards/home-flow-card/README.md)
 - **Energy Flow Card Plus** — [docs](https://cards.flixlix.com/energy-flow-card-plus) · [README](packages/flixlix-cards/energy-flow-card-plus/README.md)
 - **Energy Breakdown Card** — [docs](https://cards.flixlix.com/energy-breakdown-card) · [README](packages/flixlix-cards/energy-breakdown-card/README.md)
+
+### Home Flow Card
+
+Your own little isometric home, with your live power flowing through it. [Try it live in the playground](https://cards.flixlix.com/home-flow-card/playground), no install needed.
+
+<img width="498" alt="Home Flow Card through a day: a sunny afternoon charging the battery, an evening on the battery, and a grid outage with the generator taking over" src="https://raw.githubusercontent.com/flixlix/flixlix-cards/main/packages/flixlix-cards/home-flow-card/assets/home-flow-card.gif">
+
+<p>
+  <img width="320" alt="Solar charging the battery and exporting, then a cloud, then an evening on the battery" src="https://raw.githubusercontent.com/flixlix/flixlix-cards/main/packages/flixlix-cards/home-flow-card/assets/examples/solar-battery.gif">
+  <img width="320" alt="A car charging from solar, unplugged and faded, then plugged in again" src="https://raw.githubusercontent.com/flixlix/flixlix-cards/main/packages/flixlix-cards/home-flow-card/assets/examples/car.gif">
+</p>
+
+### Power Flow Card Plus, Energy Flow Card Plus and Energy Breakdown Card
 
 ![demo_power_flow_card_plus](https://user-images.githubusercontent.com/61006057/227771568-78497ecc-e863-46f2-b29e-e15c7c20a154.gif)
 ![demo_energy_flow_card_plus](https://github.com/flixlix/energy-flow-card-plus/assets/61006057/d3650e8a-1c82-4993-9951-18c04fbdf4d6)
