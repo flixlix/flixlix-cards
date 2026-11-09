@@ -65,6 +65,8 @@ export type FakeHassOptions = {
   templates?: Record<string, string>;
   statistics?: StatisticsFixture;
   energyCollection?: FakeEnergyCollection;
+  /** Whether Home Assistant is in a dark theme; cards read it from `hass.themes.darkMode`. */
+  darkMode?: boolean;
 };
 
 export const energyCollection = (
@@ -178,6 +180,18 @@ const fakeConnection = (options: FakeHassOptions): Connection => {
  * The next `hass` Home Assistant hands out after the given states changed: a new object in which
  * every other entity keeps its state object.
  */
+// custom-card-helpers' Themes type leaves out `darkMode`; a variable, not a literal, carries it.
+const themes = (darkMode: boolean): HomeAssistant["themes"] => {
+  const value = { default_theme: "default", themes: {}, darkMode };
+  return value;
+};
+
+/** The same Home Assistant in a light or dark theme, as when the user switches it. */
+export const withDarkMode = (hass: HomeAssistant, darkMode: boolean): HomeAssistant => ({
+  ...hass,
+  themes: themes(darkMode),
+});
+
 export const withStates = (hass: HomeAssistant, states: StateFixtures): HomeAssistant => ({
   ...hass,
   states: { ...hass.states, ...entities(states) },
@@ -194,6 +208,7 @@ export const fakeHass = (options: FakeHassOptions = {}): HomeAssistant => {
   };
   const hass: Partial<HomeAssistant> = {
     states: entities(options.states ?? {}),
+    themes: themes(options.darkMode ?? false),
     locale: {
       language: options.language ?? "en",
       number_format: options.numberFormat ?? NumberFormat.language,

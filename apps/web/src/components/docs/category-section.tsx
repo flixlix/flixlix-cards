@@ -112,17 +112,18 @@ export function CategorySection({
         {Icon ? (
           <div
             className={cn(
-              "flex size-10 shrink-0 items-center justify-center rounded-lg ring-1 ring-inset",
+              "flex size-9 shrink-0 items-center justify-center rounded-lg",
               a.bg,
-              a.text,
-              a.ring
+              a.text
             )}
           >
             <Icon className="size-5" />
           </div>
         ) : null}
         <div className="min-w-0 flex-1">
-          <h2 className="text-foreground text-2xl font-semibold tracking-tight">{title}</h2>
+          <h2 className="text-foreground text-[1.5rem] font-semibold tracking-[-0.02em]">
+            {title}
+          </h2>
           {description ? (
             <p className="text-muted-foreground mt-1 text-sm leading-relaxed">{description}</p>
           ) : null}
