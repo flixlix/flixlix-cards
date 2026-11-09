@@ -876,6 +876,12 @@ function houseEntries(): SearchEntry[] {
       "yellow",
       "threshold",
     ]),
+    option(
+      "state_of_charge_position",
+      "Where the battery label shows its charge.",
+      "card-options",
+      ["battery", "inline", "swap", "percent"]
+    ),
     option("kilo_threshold", "From how many watts values are in kW.", "numbers"),
     option("kilo_decimals", "Decimals of values in kW.", "numbers"),
     example("solar-battery", "Solar and a battery", "The full house."),
@@ -888,6 +894,11 @@ function houseEntries(): SearchEntry[] {
       "thresholds",
       "Your own battery thresholds",
       "state_of_charge_severity red and yellow."
+    ),
+    example(
+      "charge-position",
+      "The state of charge beside the power",
+      "state_of_charge_position after_power."
     ),
     example("grid-only", "Grid only", "No solar or battery."),
     example("still", "Still numbers and wires", "animate_numbers and disable_dots off."),

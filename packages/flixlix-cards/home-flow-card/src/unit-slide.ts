@@ -23,6 +23,19 @@ const offsets = (root: ParentNode) =>
     ])
   );
 
+/** A unit and whatever follows it on its line, e.g. the battery's state of charge after its power. */
+const withFollowers = (unit: HTMLElement) => {
+  const elements = [unit];
+  for (
+    let next = unit.nextElementSibling;
+    next instanceof HTMLElement;
+    next = next.nextElementSibling
+  ) {
+    elements.push(next);
+  }
+  return elements;
+};
+
 /**
  * A unit sits right after its number, which rolls to its new width. Recorded before a render,
  * `slide` moves each unit from where it was to its new place with the number's own timing,
@@ -35,7 +48,9 @@ export const unitSlide = (root: ParentNode) => {
   return {
     slide: () => {
       root.querySelectorAll<HTMLElement>(".value .unit").forEach((unit) => {
-        unit.getAnimations().forEach((running) => running.cancel());
+        withFollowers(unit).forEach((element) =>
+          element.getAnimations().forEach((running) => running.cancel())
+        );
       });
       offsets(root).forEach(({ left: after, value }, unit) => {
         const previous = before.get(unit);
@@ -51,9 +66,11 @@ export const unitSlide = (root: ParentNode) => {
         }
         const flow = unit.previousElementSibling;
         const timing = flow instanceof NumberFlow ? flow.transformTiming : undefined;
-        unit.animate(
-          { transform: [`translateX(${from - after}px)`, "none"] },
-          { duration: 900, easing: "ease-out", ...timing }
+        withFollowers(unit).forEach((element) =>
+          element.animate(
+            { transform: [`translateX(${from - after}px)`, "none"] },
+            { duration: 900, easing: "ease-out", ...timing }
+          )
         );
       });
     },

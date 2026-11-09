@@ -78,6 +78,21 @@ const batteryLine = (root: ShadowRoot, node = "battery") => {
   return [percent, direction ? wordOf(direction) : undefined].filter(Boolean).join(" · ");
 };
 
+/** A label's value line as it reads: each number with its unit, in order. */
+const valueLine = (root: ShadowRoot, node = "battery") =>
+  [...labelOf(root, node).querySelectorAll(".value .number")]
+    .map((number) => {
+      const text =
+        number instanceof NumberFlow
+          ? `${number.value}${number.numberSuffix ?? ""}`
+          : number.textContent?.trim();
+      const unit = number.nextElementSibling?.classList.contains("unit")
+        ? ` ${number.nextElementSibling.getAttribute("data-word")}`
+        : "";
+      return `${text}${unit}`;
+    })
+    .join(" · ");
+
 /** The path of the battery's icon for a state of charge. */
 const iconOf = async (soc: string) => {
   const { root } = await mountHouse(
@@ -352,6 +367,50 @@ describe("home flow card", () => {
     const after = labelOf(root, "battery").querySelector(".direction");
     expect(after).toBe(before);
     expect(after ? wordOf(after) : undefined).toBe("charging");
+  });
+
+  test.each([
+    [undefined, "1.8 kW", "22 % · discharging"],
+    ["below_power", "1.8 kW", "22 % · discharging"],
+    ["above_power", "22 %", "1.8 kW · discharging"],
+    ["after_power", "1.8 kW · 22 %", "discharging"],
+    ["before_power", "22 % · 1.8 kW", "discharging"],
+  ] as const)("state_of_charge_position %s: %s, then %s", async (position, value, status) => {
+    const { root } = await mountHouse({
+      battery: {
+        ...allNodes.battery,
+        entity: "sensor.battery",
+        state_of_charge_position: position,
+      },
+    });
+
+    expect(valueLine(root)).toBe(value);
+    expect(batteryLine(root)).toBe(status);
+  });
+
+  test("an idle battery with its state of charge beside its power has no status line", async () => {
+    const { root } = await mountHouse(
+      {
+        battery: {
+          ...allNodes.battery,
+          entity: "sensor.battery",
+          state_of_charge_position: "after_power",
+        },
+      },
+      { ...evening, "sensor.battery": "0" }
+    );
+
+    expect(valueLine(root)).toBe("0 W · 22 %");
+    expect(labelOf(root, "battery").querySelector(".status")).toBeNull();
+  });
+
+  test("without a state of charge, every position shows the power as its value", async () => {
+    const { root } = await mountHouse({
+      battery: { entity: "sensor.battery", state_of_charge_position: "above_power" },
+    });
+
+    expect(valueLine(root)).toBe("1.8 kW");
+    expect(batteryLine(root)).toBe("discharging");
   });
 
   test("an idle battery shows only its state of charge", async () => {

@@ -5,6 +5,20 @@ import { type ChargeSeverity } from "@flixlix-cards/shared/utils/severity";
 /** Red below 15 %, yellow below 30 %, green above. */
 export const DEFAULT_STATE_OF_CHARGE_SEVERITY: ChargeSeverity = { red: 15, yellow: 30 };
 
+/**
+ * Where the battery's label shows its state of charge, relative to its power: under it beside the
+ * direction (`below_power`), swapped with it as the large value (`above_power`), or on the same
+ * line, `after_power` or `before_power`.
+ */
+export type StateOfChargePosition = "below_power" | "above_power" | "after_power" | "before_power";
+
+export const STATE_OF_CHARGE_POSITIONS: readonly StateOfChargePosition[] = [
+  "below_power",
+  "above_power",
+  "after_power",
+  "before_power",
+];
+
 /** Power Flow Card Plus' battery, with where its charge bar changes colour. */
 export type HouseBattery = NonNullable<ConfigEntities["battery"]> & {
   /**
@@ -12,6 +26,8 @@ export type HouseBattery = NonNullable<ConfigEntities["battery"]> & {
    * `DEFAULT_STATE_OF_CHARGE_SEVERITY`.
    */
   state_of_charge_severity?: ChargeSeverity;
+  /** Defaults to `below_power`. */
+  state_of_charge_position?: StateOfChargePosition;
 };
 
 /**

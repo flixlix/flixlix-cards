@@ -218,6 +218,14 @@ export const styles = css`
     letter-spacing: 0;
   }
 
+  .separator {
+    display: inline-block;
+    margin: 0 0.25em;
+    font-size: 0.58em;
+    color: var(--secondary-text-color);
+    opacity: 0.6;
+  }
+
   number-flow {
     --number-flow-mask-height: 0.08em;
     line-height: 1;
@@ -239,11 +247,11 @@ export const styles = css`
     margin: calc(var(--house-unit, 1px) * 0.5) 0 calc(var(--house-unit, 1px) * 3);
   }
 
-  .state-of-charge {
+  .figure {
     color: var(--primary-text-color);
   }
 
-  .status > span:not(.state-of-charge):not(.direction) {
+  .status > span:not(.figure):not(.direction) {
     opacity: 0.6;
   }
 

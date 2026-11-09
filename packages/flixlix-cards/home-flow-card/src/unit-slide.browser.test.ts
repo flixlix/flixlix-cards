@@ -2,9 +2,9 @@ import { afterEach, describe, expect, test } from "vite-plus/test";
 import { unitSlide } from "./unit-slide";
 
 /** A value as the card renders it: its number, then its unit right after. */
-const mountValue = (value: string) => {
+const mountValue = (value: string, after = "") => {
   const root = document.createElement("div");
-  root.innerHTML = `<div class="value"><span class="number" data-value="${value}">${value}</span><span class="unit" style="display: inline-block">W</span></div>`;
+  root.innerHTML = `<div class="value"><span class="number" data-value="${value}">${value}</span><span class="unit" style="display: inline-block">W</span>${after}</div>`;
   document.body.append(root);
   const number = root.querySelector<HTMLElement>(".number");
   const unit = root.querySelector<HTMLElement>(".unit");
@@ -32,6 +32,19 @@ describe("unitSlide", () => {
     slide.slide();
 
     expect(unit()).toHaveLength(1);
+  });
+
+  test("what follows a unit on its line slides along with it", () => {
+    const { root, show } = mountValue(
+      "80",
+      '<span class="aside" style="display: inline-block">22 %</span>'
+    );
+    const slide = unitSlide(root);
+
+    show("2400");
+    slide.slide();
+
+    expect(root.querySelector(".aside")?.getAnimations()).toHaveLength(1);
   });
 
   test("a unit that moves only because the label grew stays put", () => {

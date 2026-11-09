@@ -68,6 +68,12 @@ const isPageHidden = () => typeof document !== "undefined" && document.visibilit
 /** The house's middle, which the viewBox leans towards so the scene reads as centred. */
 const HOUSE_MIDDLE = (project(HOUSE_SPAN[0])[0] + project(HOUSE_SPAN[1])[0]) / 2;
 
+/** Where the battery's charge bar changes colour, and where its label shows the charge. */
+const batteryOptions = ({ entities }: FlowConfig) => ({
+  severity: entities.battery?.state_of_charge_severity ?? DEFAULT_STATE_OF_CHARGE_SEVERITY,
+  position: entities.battery?.state_of_charge_position,
+});
+
 /** The scene, its leaders and labels, and the viewBox that holds them all. */
 const drawHouse = (
   config: FlowConfig,
@@ -76,13 +82,15 @@ const drawHouse = (
   car: CarScene
 ) => {
   const wires = houseWires(config, cardState, car.reading);
+  const battery = batteryOptions(config);
   const labels = houseLabels(
     cardState,
     wires,
     config.generator,
     config.entities.grid?.power_outage?.label_alert,
     language,
-    car.label
+    car.label,
+    battery.position
   );
   const extent = new Extent();
   const reserveGenerator = Boolean(config.entities.grid?.power_outage?.entity_generator);
@@ -90,7 +98,7 @@ const drawHouse = (
     cardState,
     wires,
     extent,
-    severity: config.entities.battery?.state_of_charge_severity ?? DEFAULT_STATE_OF_CHARGE_SEVERITY,
+    severity: battery.severity,
     reserveGenerator,
     car: car.image,
   });

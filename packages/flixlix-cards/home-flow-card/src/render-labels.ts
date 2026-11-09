@@ -4,13 +4,15 @@ import { formatNumber } from "@flixlix-cards/shared/utils/format-number";
 import { type HomeAssistant, numberFormatToLocale } from "custom-card-helpers";
 import { html, nothing, svg } from "lit";
 import { type Box, type Extent } from "./extent";
-import { type BatteryStatus, type Label } from "./labels";
+import { type BatteryStatus, type Figure, type Label } from "./labels";
 import { LABEL_ANCHORS, type LabelledNode, project } from "./scene";
 
 /** Rough size of a label in screen units, so the viewBox leaves room for it. */
 const LABEL_WIDTH = 92;
 const LABEL_HEIGHT = 34;
 const LINE_HEIGHT = 13;
+/** Rough width of a second value on a label's value line, with its separator. */
+const ASIDE_WIDTH = 50;
 
 export type LabelContext = {
   actions: EntityActions;
@@ -20,21 +22,29 @@ export type LabelContext = {
   locale: HomeAssistant["locale"];
 };
 
-/** Makes room in the viewBox for a node's label, with `lines` lines beyond its value and name. */
-export const includeLabel = (extent: Extent, node: LabelledNode, lines: number) => {
+/**
+ * Makes room in the viewBox for a node's label, with `lines` lines beyond its value and name, and
+ * room for an aside on the value's line if it has one.
+ */
+export const includeLabel = (extent: Extent, node: LabelledNode, lines: number, aside = false) => {
   const anchor = LABEL_ANCHORS[node];
   const [x, y] = project(anchor.at);
   const end = y + anchor.leader;
   const height = LABEL_HEIGHT + lines * LINE_HEIGHT;
   extent.include([x, end + Math.sign(anchor.leader) * height], 4);
-  extent.include([x - 10 + LABEL_WIDTH, end], 4);
+  extent.include([x - 10 + LABEL_WIDTH + (aside ? ASIDE_WIDTH : 0), end], 4);
 };
 
 /** The line from what a label measures up or down to the label. */
 export const leaderSvg = (label: Label, extent: Extent) => {
   const anchor = LABEL_ANCHORS[label.node];
   const [x, y] = project(anchor.at);
-  includeLabel(extent, label.node, [label.status, label.alert].filter(Boolean).length);
+  includeLabel(
+    extent,
+    label.node,
+    [label.status, label.alert].filter(Boolean).length,
+    Boolean(label.aside)
+  );
   return svg`<g class="leader">
     <path d="M${x} ${y}V${y + anchor.leader}" stroke="var(--house-leader)" stroke-width="0.8"></path>
     <circle cx=${x} cy=${y} r="1.6" fill="var(--house-leader)"></circle>
@@ -62,15 +72,26 @@ const valueHtml = (reading: ScaledReading | null, context: LabelContext) =>
           data-word=${reading.unit}
         ></span>`;
 
-const statusHtml = ({ charge, direction, word }: BatteryStatus, context: LabelContext) => html`
-  ${
-    charge
-      ? html`<span class="state-of-charge"
-          >${numberHtml(charge.value, charge.decimals, context, charge.suffix)}</span
-        >`
-      : nothing
+const figureHtml = ({ value, decimals, suffix }: Figure, context: LabelContext) =>
+  numberHtml(value, decimals, context, suffix);
+
+/**
+ * The value, with its aside before or after it. Both stay flat in the line, so whatever follows a
+ * unit slides along with it as its number rolls.
+ */
+const valueLineHtml = ({ reading, aside }: Label, context: LabelContext) => {
+  const value = valueHtml(reading, context);
+  if (!aside) {
+    return value;
   }
-  ${charge && direction ? html`<span>·</span>` : nothing}
+  const second = valueHtml(aside.reading, context);
+  const separator = html`<span class="separator">·</span>`;
+  return aside.first ? html`${second}${separator}${value}` : html`${value}${separator}${second}`;
+};
+
+const statusHtml = ({ figure, direction, word }: BatteryStatus, context: LabelContext) => html`
+  ${figure ? html`<span class="figure">${figureHtml(figure, context)}</span>` : nothing}
+  ${figure && direction ? html`<span>·</span>` : nothing}
   <span class="direction ${direction ?? ""}" data-word=${word}></span>
 `;
 
@@ -100,7 +121,7 @@ const labelHtml = (label: Label, position: string, context: LabelContext) => {
       }
     }}
   >
-    <div class="value">${valueHtml(label.reading, context)}</div>
+    <div class="value">${valueLineHtml(label, context)}</div>
     ${label.status ? html`<div class="status">${statusHtml(label.status, context)}</div>` : nothing}
     <div class="name">${label.name}</div>
     ${label.alert ? html`<div class="name outage">${label.alert}</div>` : nothing}

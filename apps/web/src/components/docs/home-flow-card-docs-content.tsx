@@ -395,6 +395,19 @@ const CARD_OPTIONS: OptionRow[] = [
     ),
   },
   {
+    name: "battery.state_of_charge_position",
+    type: "string",
+    default: "below_power",
+    description: (
+      <>
+        Where the battery&apos;s label shows its state of charge: <code>below_power</code>, beside
+        whether it is charging; <code>above_power</code>, swapped with the power as the large value;
+        or on the power&apos;s line, <code>after_power</code> or <code>before_power</code>. Without
+        a state of charge, the label shows the power either way.
+      </>
+    ),
+  },
+  {
     name: "generator",
     type: "object",
     description: (
@@ -641,6 +654,23 @@ battery:
       "sensor.grid_power": "300",
       "sensor.battery_power": "800",
       "sensor.battery_soc": sensor("44", { unit: "%" }),
+    },
+  },
+  {
+    id: "charge-position",
+    title: "The state of charge beside the power",
+    text: "Put the battery's charge on the power's line, or swap the two.",
+    code: `type: ${CARD_TYPE}
+grid:
+  entity: sensor.grid_power
+battery:
+  entity: sensor.battery_power
+  state_of_charge: sensor.battery_soc
+  state_of_charge_position: after_power`,
+    states: {
+      "sensor.grid_power": "300",
+      "sensor.battery_power": "800",
+      "sensor.battery_soc": sensor("68", { unit: "%" }),
     },
   },
   {
