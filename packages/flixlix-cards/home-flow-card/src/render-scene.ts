@@ -22,6 +22,7 @@ import {
   type Point,
   project,
   type SceneGroup,
+  type SceneLayout,
   SHADOW,
   type Shape,
 } from "./scene";
@@ -73,6 +74,7 @@ export type SceneInput = {
   reserveGenerator: boolean;
   /** A configured car: its image, once drawn for the theme; `null` until then. */
   car?: CarImage | null;
+  layout: SceneLayout;
 };
 
 const batteryLook = ({ nodes }: ReadyCardState, severity: ChargeSeverity) => {
@@ -116,6 +118,7 @@ export const sceneSvg = ({
   severity,
   reserveGenerator,
   car,
+  layout,
 }: SceneInput) => {
   const screen = (point: Point) => {
     const projected = project(point);
@@ -125,10 +128,16 @@ export const sceneSvg = ({
   const points = (list: readonly Point[]) => list.map(screen).join(" ");
   const { nodes } = cardState;
   const hasGenerator = wires.some((wire) => wire.node === "generator");
+  const heatPumpWire = wires.find((wire) => wire.node === "heat_pump");
   const parts = fixtures({
     solar: nodes.solar.has,
     generator: hasGenerator,
     battery: batteryLook(cardState, severity),
+    // the fan turns while it draws power, unless the card's pulses are off
+    heatPump: heatPumpWire && {
+      layout,
+      running: heatPumpWire.power > 0 && cardState.animate,
+    },
   });
   if (reserveGenerator && !hasGenerator) {
     fixtures({ solar: false, generator: true })
@@ -138,7 +147,7 @@ export const sceneSvg = ({
   const shape = (item: Shape) =>
     item.kind === "face"
       ? svg`<polygon points=${points(item.points)} fill=${fillOf(item.fill)} stroke=${fillOf(item.fill)} stroke-width="0.4" stroke-linejoin="round"></polygon>`
-      : svg`<g transform=${faceTransform(item.face, item.at)}><path d=${item.path} transform="scale(${item.size / 24}) translate(-12 -12)" fill="var(--house-icon)"></path></g>`;
+      : svg`<g transform=${faceTransform(item.face, item.at)}><g class=${item.spin ? "spin" : nothing}><path d=${item.path} transform="scale(${item.size / 24}) translate(-12 -12)" fill="var(--house-icon)"></path></g></g>`;
   const seams = svg`<path d=${panelSeams()
     .map(([from, to]) => `M${screen(from)}L${screen(to)}`)
     .join("")} stroke="var(--house-panel-seam)" stroke-width="1"></path>`;
@@ -155,7 +164,8 @@ export const sceneSvg = ({
       "wire" in layer
         ? wiresSvg(
             wires.filter((wire) => wire.node === layer.wire),
-            cardState.animate
+            cardState.animate,
+            layout
           )
         : parts.filter((part) => part.node === layer.part).map(group)
     )}

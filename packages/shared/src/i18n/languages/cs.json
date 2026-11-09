@@ -1,11 +1,12 @@
 {
   "card": {
     "battery": {
-      "charging": "nabíjí se",
-      "discharging": "vybíjí se"
+      "charging": "Nabíjí se",
+      "discharging": "Vybíjí se"
     },
     "label": {
       "car": "Auto",
+      "heat_pump": "Tepelné čerpadlo",
       "motorbike": "Motorka"
     }
   },
@@ -64,6 +65,12 @@
     "entity_generator": "Generátor",
     "generator": "Generátor",
     "car": "Auto",
+    "heat_pump": "Tepelné čerpadlo",
+    "climate": "Entita klimatu",
+    "heat_pump_status": "Stav",
+    "heat_pump_status_state": "Stav",
+    "heat_pump_status_temperature": "Teplota",
+    "heat_pump_status_temperature_and_target": "Teplota a cíl",
     "visibility": "Viditelnost",
     "idle": "Nečinné",
     "car_visibility_hint": "Zobrazit auto jen, dokud jsou splněny všechny tyto podmínky. Bez podmínek se zobrazuje vždy.",

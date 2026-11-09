@@ -82,6 +82,7 @@ describe("editor", () => {
       "generator",
       "home",
       "car",
+      "heat_pump",
       "advanced",
     ]);
     editor.remove();
@@ -107,6 +108,7 @@ describe("editor", () => {
       "sensor.import / sensor.export · 250 W · 0 W",
       "sensor.pv · 1,200 W",
       "sensor.battery · -800 W · 55 %",
+      "Not configured",
       "Not configured",
       "Not configured",
       "Not configured",
@@ -236,6 +238,29 @@ describe("editor", () => {
       {
         type: "custom:home-flow-card",
         car: { entity: "sensor.car_power", state_of_charge: "sensor.car_soc" },
+      },
+    ]);
+    editor.remove();
+  });
+
+  test("the heat pump's page: its power, its climate entity, what to show and its name", async () => {
+    const { editor, open, fields, change, changes } = await mountEditor();
+    await open("heat_pump");
+
+    expect(fields()).toEqual(["entity", "climate", "status", "name"]);
+    change({
+      entity: "sensor.heat_pump_power",
+      climate: "climate.heat_pump",
+      status: "temperature",
+    });
+    expect(changes).toEqual([
+      {
+        type: "custom:home-flow-card",
+        heat_pump: {
+          entity: "sensor.heat_pump_power",
+          climate: "climate.heat_pump",
+          status: "temperature",
+        },
       },
     ]);
     editor.remove();

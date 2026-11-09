@@ -12,12 +12,15 @@ import { type StateOfChargePosition } from "./types";
 /** A number with its unit glued on, as the status line shows it. */
 export type Figure = { value: number; decimals: number; suffix: string };
 
-/** The battery's line between its value and its name. */
-export type BatteryStatus = {
-  /** The state of charge, or the power when the two swap places. */
+/** The line between a label's value and its name. */
+export type LabelStatus = {
+  /** The battery's state of charge, or its power when the two swap places; a temperature. */
   figure?: Figure;
-  direction?: "charging" | "discharging";
-  /** The direction in words, empty while the battery idles. */
+  /** What the figure is heading for: the heat pump's target temperature. */
+  target?: Figure;
+  /** Colours the word: the battery's direction, or what the heat pump is doing. */
+  direction?: "charging" | "discharging" | "heating" | "cooling";
+  /** The direction or state in words, empty while the battery idles. */
   word: string;
 };
 
@@ -28,7 +31,7 @@ export type Label = {
   /** A second value on the reading's line, as large as it, after it or `first`. */
   aside?: { reading: ScaledReading; first: boolean };
   name: string;
-  status?: BatteryStatus;
+  status?: LabelStatus;
   /** A line under the name, in the error colour: the grid's outage alert. */
   alert?: string;
   actions: ActionConfigSet;
@@ -38,6 +41,14 @@ export type Label = {
 /** The configured car's name, entity and state of charge, which the card state does not carry. */
 export type CarConfig =
   | { name?: string; entity: string; charge: number | null; idle: boolean }
+  | undefined;
+
+/**
+ * The configured heat pump's name, the entity a tap opens (its climate entity, or its power
+ * sensor without one) and its status line, which the card state does not carry.
+ */
+export type HeatPumpConfig =
+  | { name?: string; entity: string; status: LabelStatus | undefined }
   | undefined;
 
 /** The configured generator's name and entity, which the card state does not carry. */
@@ -65,7 +76,7 @@ const placeCharge = (
   label: Label & { reading: ScaledReading },
   charge: Charge,
   position: StateOfChargePosition | undefined,
-  status: (figure?: Figure) => BatteryStatus | undefined
+  status: (figure?: Figure) => LabelStatus | undefined
 ): Label => {
   switch (position) {
     case "above_power":
@@ -97,7 +108,7 @@ const batteryLabel = (
   const { battery } = nodes;
   const direction = wire.power > 0 ? (wire.intoInverter ? "discharging" : "charging") : undefined;
   const word = direction ? translate(`card.battery.${direction}`, language) : "";
-  const status = (figure?: Figure): BatteryStatus | undefined =>
+  const status = (figure?: Figure): LabelStatus | undefined =>
     figure || direction ? { figure, direction, word } : undefined;
   const label = {
     node: "battery" as const,
@@ -164,6 +175,23 @@ const carLabel = (
   );
 };
 
+/** The heat pump's power, with its state or its temperature under it. */
+const heatPumpLabel = (
+  wire: HouseWire | undefined,
+  heatPump: HeatPumpConfig,
+  language: string
+): Label | undefined =>
+  wire &&
+  heatPump && {
+    node: "heat_pump",
+    reading: wire.reading,
+    name: heatPump.name ?? translate("card.label.heat_pump", language),
+    status: heatPump.status,
+    // no actions of its own: a tap opens its climate entity, as clickable_entities allows
+    actions: { tap_action: undefined },
+    entity: heatPump.entity,
+  };
+
 /**
  * One label per drawn wire, in reading order: solar, home, battery, then the grid or the
  * generator. They share their place: the grid's label shows whenever the generator isn't drawn.
@@ -175,7 +203,8 @@ export const houseLabels = (
   gridAlert: string | undefined,
   language: string,
   car: CarConfig,
-  batteryPosition: StateOfChargePosition | undefined
+  batteryPosition: StateOfChargePosition | undefined,
+  heatPump?: HeatPumpConfig
 ): Label[] => {
   const { nodes } = state;
   const wireOf = (node: HouseNode) => wires.find((wire) => wire.node === node);
@@ -211,6 +240,7 @@ export const houseLabels = (
       entity: generator?.entity,
     },
     carLabel(carWire, car, language),
+    heatPumpLabel(wireOf("heat_pump"), heatPump, language),
   ];
   return labels.filter((label): label is Label => label !== undefined);
 };

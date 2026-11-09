@@ -7,7 +7,8 @@ import {
   type Point,
   project,
   roundedPath,
-  WIRE_ROUTES,
+  type SceneLayout,
+  wireRoute,
 } from "./scene";
 
 /** How round a wire's bends are, in screen units. */
@@ -27,8 +28,8 @@ const reversed = (points: readonly Point[]): Point[] =>
   points.reduceRight<Point[]>((list, point) => list.concat([point]), []);
 
 /** A wire's path in the direction its power flows. */
-const route = (wire: HouseWire) => {
-  const fromNode = WIRE_ROUTES[wire.node];
+const route = (wire: HouseWire, layout: SceneLayout) => {
+  const fromNode = wireRoute(wire.node, layout);
   const points = wire.intoInverter ? fromNode : reversed(fromNode);
   return roundedPath(points.map(project), BEND_RADIUS);
 };
@@ -62,8 +63,8 @@ export const gridFade = (box: Box) => {
   </defs>`;
 };
 
-const powerSvg = (wire: HouseWire, animate: boolean) => {
-  const d = route(wire);
+const powerSvg = (wire: HouseWire, animate: boolean, layout: SceneLayout) => {
+  const d = route(wire, layout);
   const dash = PULSE.shortest + (PULSE.longest - PULSE.shortest) * wire.intensity;
   const style = `animation-duration: ${wire.durationSeconds * PULSE_SLOWDOWN}s; stroke-dasharray: ${dash} ${PULSE.period - dash}`;
   return svg`<g class="power ${wire.node}" style=${`--wire-color: ${wire.color}`} mask=${fadeOf(wire)}>
@@ -76,9 +77,9 @@ const powerSvg = (wire: HouseWire, animate: boolean) => {
  * Every wire as a neutral track; one carrying power also gets its colour and moving pulses.
  * Wires are not part of the extent: the grid cable runs on past the card's edge.
  */
-export const wiresSvg = (wires: HouseWire[], animate: boolean) => svg`
-  ${wires.map((wire) => svg`<path class="track ${wire.node}" d=${route(wire)} mask=${fadeOf(wire)}></path>`)}
-  ${wires.filter((wire) => wire.power > 0).map((wire) => powerSvg(wire, animate))}
+export const wiresSvg = (wires: HouseWire[], animate: boolean, layout: SceneLayout) => svg`
+  ${wires.map((wire) => svg`<path class="track ${wire.node}" d=${route(wire, layout)} mask=${fadeOf(wire)}></path>`)}
+  ${wires.filter((wire) => wire.power > 0).map((wire) => powerSvg(wire, animate, layout))}
 `;
 
 /**

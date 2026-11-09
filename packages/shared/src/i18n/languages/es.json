@@ -1,11 +1,12 @@
 {
   "card": {
     "battery": {
-      "charging": "cargando",
-      "discharging": "descargando"
+      "charging": "Cargando",
+      "discharging": "Descargando"
     },
     "label": {
       "car": "Coche",
+      "heat_pump": "Bomba de calor",
       "motorbike": "Motocicleta"
     }
   },
@@ -64,6 +65,12 @@
     "entity_generator": "Generador",
     "generator": "Generador",
     "car": "Coche",
+    "heat_pump": "Bomba de calor",
+    "climate": "Entidad de clima",
+    "heat_pump_status": "Estado",
+    "heat_pump_status_state": "Estado",
+    "heat_pump_status_temperature": "Temperatura",
+    "heat_pump_status_temperature_and_target": "Temperatura y objetivo",
     "visibility": "Visibilidad",
     "idle": "Inactivo",
     "car_visibility_hint": "Mostrar el coche solo mientras se cumplan todas estas condiciones. Sin condiciones, siempre se muestra.",

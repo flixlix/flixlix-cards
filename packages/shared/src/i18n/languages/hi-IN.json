@@ -6,6 +6,7 @@
     },
     "label": {
       "car": "कार",
+      "heat_pump": "हीट पंप",
       "motorbike": "मोटरसाइकिल"
     }
   },
@@ -64,6 +65,12 @@
     "entity_generator": "जनरेटर",
     "generator": "जनरेटर",
     "car": "कार",
+    "heat_pump": "हीट पंप",
+    "climate": "जलवायु इकाई",
+    "heat_pump_status": "स्थिति",
+    "heat_pump_status_state": "अवस्था",
+    "heat_pump_status_temperature": "तापमान",
+    "heat_pump_status_temperature_and_target": "तापमान और लक्ष्य",
     "visibility": "दृश्यता",
     "idle": "निष्क्रिय",
     "car_visibility_hint": "कार केवल तब दिखाएँ जब ये सभी शर्तें पूरी हों। बिना शर्तों के यह हमेशा दिखती है।",

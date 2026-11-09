@@ -4,10 +4,17 @@ import { type ScaledReading, scaledReading } from "./format";
 import { HOME_SOURCE_COLORS } from "./styles";
 import { type ReadyCardState } from "./types";
 
-export type HouseNode = "solar" | "battery" | "grid" | "generator" | "home" | "car";
+export type HouseNode = "solar" | "battery" | "grid" | "generator" | "home" | "car" | "heat_pump";
 
 /** An electric car charging from the home, in W: positive while it charges, negative while it feeds the home. */
 export type CarReading = {
+  power: number | null;
+  unit_of_measurement?: string;
+  decimals?: number;
+};
+
+/** A heat pump the home feeds, in W; it only ever draws power. */
+export type HeatPumpReading = {
   power: number | null;
   unit_of_measurement?: string;
   decimals?: number;
@@ -118,6 +125,18 @@ const carWire = (state: ReadyCardState, car: CarReading | undefined): Wire | und
     color: HOME_SOURCE_COLORS[state.homeRing.largestSource],
   };
 
+/** Like the car, the heat pump hangs off the home's outlet and takes the home's colour. */
+const heatPumpWire = (
+  state: ReadyCardState,
+  heatPump: HeatPumpReading | undefined
+): Wire | undefined =>
+  heatPump && {
+    node: "heat_pump",
+    power: Math.max(heatPump.power ?? 0, 0),
+    intoInverter: false,
+    color: HOME_SOURCE_COLORS[state.homeRing.largestSource],
+  };
+
 const isWire = (wire: Wire | undefined): wire is Wire => wire !== undefined;
 
 const intensity = (config: FlowCardPlusConfig, power: number): number => {
@@ -127,13 +146,14 @@ const intensity = (config: FlowCardPlusConfig, power: number): number => {
 };
 
 /**
- * The wires of the nodes the card shows, in drawing order: solar, battery, grid, generator, home
- * and the car, when there is one.
+ * The wires of the nodes the card shows, in drawing order: solar, battery, grid, generator, home,
+ * then the car and the heat pump when there are.
  */
 export const houseWires = (
   config: FlowCardPlusConfig,
   state: ReadyCardState,
-  car?: CarReading
+  car?: CarReading,
+  heatPump?: HeatPumpReading
 ): HouseWire[] => {
   const { entities } = config;
   const entityOf: Record<
@@ -146,6 +166,7 @@ export const houseWires = (
     generator: undefined,
     home: entities.home,
     car,
+    heat_pump: heatPump,
   };
   const wires = [
     solarWire(state),
@@ -154,6 +175,7 @@ export const houseWires = (
     generatorWire(config, state),
     homeWire(state),
     carWire(state, car),
+    heatPumpWire(state, heatPump),
   ].filter(isWire);
   const supplied = wires
     .filter((wire) => wire.intoInverter)

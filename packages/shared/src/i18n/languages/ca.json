@@ -1,11 +1,12 @@
 {
   "card": {
     "battery": {
-      "charging": "carregant",
-      "discharging": "descarregant"
+      "charging": "Carregant",
+      "discharging": "Descarregant"
     },
     "label": {
       "car": "Cotxe",
+      "heat_pump": "Bomba de calor",
       "motorbike": "Moto"
     }
   },
@@ -64,6 +65,12 @@
     "entity_generator": "Generador",
     "generator": "Generador",
     "car": "Cotxe",
+    "heat_pump": "Bomba de calor",
+    "climate": "Entitat de clima",
+    "heat_pump_status": "Estat",
+    "heat_pump_status_state": "Estat",
+    "heat_pump_status_temperature": "Temperatura",
+    "heat_pump_status_temperature_and_target": "Temperatura i objectiu",
     "visibility": "Visibilitat",
     "idle": "En repòs",
     "car_visibility_hint": "Mostra el cotxe només mentre es compleixin totes aquestes condicions. Sense condicions, sempre es mostra.",

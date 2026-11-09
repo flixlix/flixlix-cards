@@ -23,6 +23,7 @@ export const styles = css`
     --house-box-side: #e1e2e6;
     --house-icon: #8a8e96;
     --house-soc-track: #e1e2e6;
+    --house-grille: #e1e2e6;
     --house-soc: #3fc28a;
     --house-soc-green: var(--success-color, #43a047);
     --house-soc-yellow: var(--warning-color, #ffa600);
@@ -65,6 +66,7 @@ export const styles = css`
       --house-box-side: color-mix(in srgb, #000 4%, var(--house-surface));
       --house-icon: var(--secondary-text-color, #8a8e96);
       --house-soc-track: color-mix(in srgb, #000 8%, var(--house-surface));
+      --house-grille: color-mix(in srgb, #000 8%, var(--house-surface));
       --house-track: color-mix(
         in srgb,
         var(--primary-text-color, #212121) 22%,
@@ -169,6 +171,10 @@ export const styles = css`
     .pulse {
       display: none;
     }
+
+    .spin {
+      animation: none;
+    }
   }
 
   .labels {
@@ -190,6 +196,26 @@ export const styles = css`
 
   .label.down {
     transform: translate(calc(var(--label-unit, 1px) * -10), var(--label-gap));
+  }
+
+  /* hangs left of its leader, as the heat pump's does to keep off the roof and the home's label */
+  .label.left {
+    transform: translate(calc(-100% + var(--label-unit, 1px) * 10), calc(-100% - var(--label-gap)));
+  }
+
+  .label.down.left {
+    transform: translate(calc(-100% + var(--label-unit, 1px) * 10), var(--label-gap));
+  }
+
+  /* the heat pump's fan, about its own centre on the unit's face */
+  .spin {
+    animation: spin 0.9s linear infinite;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
   }
 
   .label.clickable {
@@ -282,6 +308,14 @@ export const styles = css`
 
   .discharging {
     color: var(--energy-battery-out-color);
+  }
+
+  .heating {
+    color: var(--state-climate-heat-color, #ff8100);
+  }
+
+  .cooling {
+    color: var(--state-climate-cool-color, #2b9af9);
   }
 
   .outage {

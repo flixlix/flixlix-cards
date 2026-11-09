@@ -49,6 +49,29 @@ export type HouseCar = {
   idle?: Condition[];
 };
 
+/**
+ * What the heat pump's label shows under its power, read from its climate entity: what it is
+ * doing (`state`), its current temperature, or its current and target temperature.
+ */
+export type HeatPumpStatus = "state" | "temperature" | "temperature_and_target";
+
+export const HEAT_PUMP_STATUSES: readonly HeatPumpStatus[] = [
+  "state",
+  "temperature",
+  "temperature_and_target",
+];
+
+/** A heat pump hung on the front wall, wired to the home's outlet. */
+export type HouseHeatPump = {
+  /** Its power, in W. */
+  entity: string;
+  name?: string;
+  /** Opened on tap, and where its state and temperatures are read from. */
+  climate?: string;
+  /** Needs `climate`. Defaults to `state`. */
+  status?: HeatPumpStatus;
+};
+
 /** The card's nodes, configured as in Power Flow Card Plus' `entities`. */
 export type HomeFlowNodes = {
   grid?: ConfigEntities["grid"];
@@ -75,6 +98,8 @@ type CardOptions = WithoutEntities<PowerFlowCardPlusConfig> & {
   generator?: HouseGenerator;
   /** Draws a car in front of the house, wired to the home's outlet. */
   car?: HouseCar;
+  /** Draws a heat pump on the front wall, wired to the home's outlet. */
+  heat_pump?: HouseHeatPump;
 };
 
 /** The card's config: Power Flow Card Plus' options, with the nodes at the top level. */
@@ -90,7 +115,7 @@ const NODES = ["grid", "solar", "battery", "home"] as const;
  * shared pipeline reads a generator as the grid's `power_outage.entity_generator`.
  */
 export const toFlowConfig = (config: HomeFlowCardConfig): FlowConfig => {
-  const { grid, solar, battery, home, car, ...options } = config;
+  const { grid, solar, battery, home, car, heat_pump: heatPump, ...options } = config;
   const nodes: HomeFlowNodes = {
     grid:
       grid?.power_outage && options.generator
@@ -106,8 +131,13 @@ export const toFlowConfig = (config: HomeFlowCardConfig): FlowConfig => {
   const entities = Object.fromEntries(
     NODES.flatMap((node) => (nodes[node] === undefined ? [] : [[node, nodes[node]]]))
   );
-  // a car without its entity, e.g. one cleared in the editor, is not drawn at all
-  return { ...options, ...(car?.entity ? { car } : {}), entities };
+  // a car or heat pump without its entity, e.g. one cleared in the editor, is not drawn at all
+  return {
+    ...options,
+    ...(car?.entity ? { car } : {}),
+    ...(heatPump?.entity ? { heat_pump: heatPump } : {}),
+    entities,
+  };
 };
 
 /** Lifts the nodes of an `entities`-shaped config, e.g. a suggested one, to the top level. */

@@ -35,7 +35,7 @@ import {
 
 defineEditorElements();
 
-type Node = keyof HomeFlowNodes | "generator" | "car";
+type Node = keyof HomeFlowNodes | "generator" | "car" | "heat_pump";
 type Page = Node | "advanced";
 
 const NODE_PAGES: { page: Node; icon: string }[] = [
@@ -45,6 +45,7 @@ const NODE_PAGES: { page: Node; icon: string }[] = [
   { page: "generator", icon: "mdi:engine" },
   { page: "home", icon: "mdi:home" },
   { page: "car", icon: "mdi:car-electric" },
+  { page: "heat_pump", icon: "mdi:heat-pump" },
 ];
 
 /** The entity ids a node reads: one, or one per direction. */

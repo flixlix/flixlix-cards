@@ -78,6 +78,49 @@ test("an idle car, parked and unplugged", async () => {
   await expect.element(card).toMatchScreenshot("car-idle");
 });
 
+const heatPumpHeating: StateFixtures = {
+  "sensor.heat_pump_power": "1350",
+  "climate.heat_pump": sensor("heat", {
+    unit: undefined,
+    attributes: { hvac_action: "heating", current_temperature: 38, temperature: 45 },
+  }),
+};
+
+const heatPump = { entity: "sensor.heat_pump_power", climate: "climate.heat_pump" };
+
+test("a heat pump heating, low on the wall without a car", async () => {
+  const card = await mountHouse(
+    {
+      "sensor.solar": "1900",
+      "sensor.battery": "400",
+      "sensor.grid": "620",
+      "sensor.battery_soc": sensor("64", { unit: "%" }),
+      ...heatPumpHeating,
+    },
+    { heat_pump: heatPump }
+  );
+  await expect.element(card).toMatchScreenshot("heat-pump");
+});
+
+test("a heat pump above a charging car, with its temperature and target", async () => {
+  const card = await mountHouse(
+    {
+      "sensor.solar": "9000",
+      "sensor.battery": "0",
+      "sensor.grid": "-200",
+      "sensor.battery_soc": sensor("80", { unit: "%" }),
+      "sensor.car_power": sensor("7.4", { unit: "kW" }),
+      "sensor.car_soc": sensor("64", { unit: "%" }),
+      ...heatPumpHeating,
+    },
+    {
+      car: { entity: "sensor.car_power", state_of_charge: "sensor.car_soc" },
+      heat_pump: { ...heatPump, status: "temperature_and_target" },
+    }
+  );
+  await expect.element(card).toMatchScreenshot("heat-pump-car");
+});
+
 const charging: StateFixtures = {
   "sensor.solar": "9000",
   "sensor.battery": "0",

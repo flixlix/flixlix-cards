@@ -28,12 +28,13 @@ import { HomeFlowCardEditor } from "./ui-editor/ui-editor";
 import { carImage, type CarImage, carResolution, readCarPalette } from "./car-image";
 import { carEntities, type CarScene, carScene, type CarStatus, carStatus } from "./car-node";
 import { Extent } from "./extent";
+import { heatPumpEntities, heatPumpScene } from "./heat-pump-node";
 import { houseLabels } from "./labels";
 import { fitLabels, wireScale } from "./label-size";
 import { includeLabel, includeLabelOf, labelsHtml, leaderSvg } from "./render-labels";
 import { includeCar, sceneSvg } from "./render-scene";
 import { gridFade, keepPulsePhase } from "./render-wires";
-import { HOUSE_SPAN, project } from "./scene";
+import { HOUSE_SPAN, project, type SceneLayout } from "./scene";
 import { styles } from "./styles";
 import {
   DEFAULT_STATE_OF_CHARGE_SEVERITY,
@@ -84,10 +85,14 @@ const batteryOptions = ({ entities }: FlowConfig) => ({
 const drawHouse = (
   config: FlowConfig,
   cardState: ReadyCardState,
-  language: string,
+  hass: HomeAssistant,
   car: CarScene
 ) => {
-  const wires = houseWires(config, cardState, car.reading);
+  const language = hass.locale?.language ?? "en";
+  // a configured car keeps its place whether or not it is home, so the heat pump does too
+  const layout: SceneLayout = { car: Boolean(config.car) };
+  const heatPump = heatPumpScene(hass, config.heat_pump);
+  const wires = houseWires(config, cardState, car.reading, heatPump.reading);
   const battery = batteryOptions(config);
   const labels = houseLabels(
     cardState,
@@ -96,7 +101,8 @@ const drawHouse = (
     config.entities.grid?.power_outage?.label_alert,
     language,
     car.label,
-    battery.position
+    battery.position,
+    heatPump.label
   );
   const extent = new Extent();
   const reserveGenerator = Boolean(config.entities.grid?.power_outage?.entity_generator);
@@ -107,6 +113,7 @@ const drawHouse = (
     severity: battery.severity,
     reserveGenerator,
     car: car.image,
+    layout,
   });
   // the car keeps its room while it is away, so the house does not jump as it comes and goes
   if (car.reserve) {
@@ -114,22 +121,23 @@ const drawHouse = (
   }
   const boxFor = (scale: number) => {
     const withLabels = extent.clone();
-    labels.forEach((label) => includeLabelOf(withLabels, label, scale));
+    labels.forEach((label) => includeLabelOf(withLabels, label, scale, layout));
     // the grid's and the generator's labels take turns: keep room for both, so the card keeps
     // its size as the grid goes down and comes back
     if (config.entities.grid) {
-      includeLabel(withLabels, "grid", 0, { scale });
+      includeLabel(withLabels, "grid", 0, { scale, layout });
     }
     if (reserveGenerator) {
-      includeLabel(withLabels, "generator", 0, { scale });
+      includeLabel(withLabels, "generator", 0, { scale, layout });
     }
     if (car.reserve) {
-      includeLabel(withLabels, "car", 1, { scale });
+      includeLabel(withLabels, "car", 1, { scale, layout });
     }
     // centring the house costs width the larger labels of a narrow card need more
     return withLabels.viewBox(10, HOUSE_MIDDLE, Math.min(Math.max(2 - scale, 0), 1));
   };
-  return { labels, scene, leaders: labels.map(leaderSvg), boxFor };
+  const leaders = labels.map((label) => leaderSvg(label, layout));
+  return { labels, scene, leaders, boxFor, layout };
 };
 
 @customElement("home-flow-card")
@@ -205,7 +213,13 @@ export class HomeFlowCard extends LitElement {
     return cardShouldUpdate(
       changedProps,
       this.hass,
-      this._config ? [...watchedEntities(this._config), ...carEntities(this._config.car)] : []
+      this._config
+        ? [
+            ...watchedEntities(this._config),
+            ...carEntities(this._config.car),
+            ...heatPumpEntities(this._config.heat_pump),
+          ]
+        : []
     );
   }
 
@@ -249,15 +263,16 @@ export class HomeFlowCard extends LitElement {
     if (!this._config || !this.hass || cardState?.status !== "ready") {
       return nothing;
     }
-    const { labels, scene, leaders, boxFor } = drawHouse(
+    const { labels, scene, leaders, boxFor, layout } = drawHouse(
       this._config,
       cardState,
-      this.hass.locale?.language ?? "en",
+      this.hass,
       carScene(this.hass, this._config.car, this._carStatus, this._carImage)
     );
     const fit = fitLabels(this._width.width, boxFor);
     const { box, labelUnit } = fit;
     const context = {
+      layout,
       actions: this._actions,
       clickable: this._config.clickable_entities,
       animateNumbers: this._animatesNumbers(),

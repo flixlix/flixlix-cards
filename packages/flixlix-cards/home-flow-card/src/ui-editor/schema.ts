@@ -5,7 +5,11 @@ import {
   getEntitySeparatedSelectionSchema,
 } from "@flixlix-cards/shared/ui-editor/schema/_schema-base";
 import { defaultValues } from "@flixlix-cards/shared/utils/get-default-config";
-import { DEFAULT_STATE_OF_CHARGE_SEVERITY, STATE_OF_CHARGE_POSITIONS } from "../types";
+import {
+  DEFAULT_STATE_OF_CHARGE_SEVERITY,
+  HEAT_PUMP_STATUSES,
+  STATE_OF_CHARGE_POSITIONS,
+} from "../types";
 
 const percent = { number: { mode: "box", min: 0, max: 100, step: 1, unit_of_measurement: "%" } };
 const decimals = { number: { mode: "box", min: 0, max: 5, step: 1 } };
@@ -118,6 +122,24 @@ export const NODE_SCHEMAS = {
   ],
   generator: [entity, name],
   car: [entity, { name: "state_of_charge", selector: { entity: {} } }, name],
+  heat_pump: [
+    entity,
+    { name: "climate", selector: { entity: { domain: "climate" } } },
+    {
+      name: "status",
+      translation_key: "heat_pump_status",
+      selector: {
+        select: {
+          mode: "dropdown",
+          options: HEAT_PUMP_STATUSES.map((status) => ({
+            value: status,
+            label: localize(`editor.heat_pump_status_${status}`),
+          })),
+        },
+      },
+    },
+    name,
+  ],
   home: [
     entity,
     name,
@@ -227,4 +249,5 @@ export const FIELD_DEFAULTS: Record<string, string> = {
   state_alert: "on",
   wire_width: "1×",
   state_of_charge_position: localize("editor.state_of_charge_position_below_power"),
+  status: localize("editor.heat_pump_status_state"),
 };

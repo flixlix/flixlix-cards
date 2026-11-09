@@ -1,11 +1,12 @@
 {
   "card": {
     "battery": {
-      "charging": "latautuu",
-      "discharging": "purkautuu"
+      "charging": "Latautuu",
+      "discharging": "Purkautuu"
     },
     "label": {
       "car": "Auto",
+      "heat_pump": "Lämpöpumppu",
       "motorbike": "Moottoripyörä"
     }
   },
@@ -64,6 +65,12 @@
     "entity_generator": "Generaattori",
     "generator": "Generaattori",
     "car": "Auto",
+    "heat_pump": "Lämpöpumppu",
+    "climate": "Ilmastointientiteetti",
+    "heat_pump_status": "Tila",
+    "heat_pump_status_state": "Tila",
+    "heat_pump_status_temperature": "Lämpötila",
+    "heat_pump_status_temperature_and_target": "Lämpötila ja tavoite",
     "visibility": "Näkyvyys",
     "idle": "Lepotila",
     "car_visibility_hint": "Näytä auto vain, kun kaikki nämä ehdot täyttyvät. Ilman ehtoja se näytetään aina.",

@@ -1,11 +1,12 @@
 {
   "card": {
     "battery": {
-      "charging": "charging",
-      "discharging": "discharging"
+      "charging": "Charging",
+      "discharging": "Discharging"
     },
     "label": {
       "car": "Car",
+      "heat_pump": "Heat pump",
       "motorbike": "Motorbike"
     }
   },
@@ -64,6 +65,12 @@
     "entity_generator": "Generator",
     "generator": "Generator",
     "car": "Car",
+    "heat_pump": "Heat pump",
+    "climate": "Climate entity",
+    "heat_pump_status": "Status",
+    "heat_pump_status_state": "State",
+    "heat_pump_status_temperature": "Temperature",
+    "heat_pump_status_temperature_and_target": "Temperature and target",
     "visibility": "Visibility",
     "idle": "Idle",
     "car_visibility_hint": "Show the car only while all of these conditions are met. Without conditions, it always shows.",
