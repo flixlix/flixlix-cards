@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vite-plus/test";
+import { userEvent } from "vite-plus/test/browser/context";
 import {
   energyCollection,
   fakeHass,
@@ -124,5 +125,21 @@ describe("updates", () => {
     await setHass(withStates(hass, { "sensor.solar": sensor("3000", { unit: "Wh" }) }));
     expect(updates()).toBe(1);
     expect(text(".solar .solar")).toBe("3 kWh");
+  });
+});
+
+describe("node actions", () => {
+  test("nodes are clickable when the config leaves clickable_entities out", async () => {
+    const { card, root } = await mountLive();
+    const opened: unknown[] = [];
+    for (const type of ["hass-more-info", "hass-action"]) {
+      card.addEventListener(type, (event) => opened.push(event));
+    }
+    const circle = root.querySelector<HTMLElement>(".solar .circle");
+    if (!circle) {
+      throw new Error("solar circle not rendered");
+    }
+    await userEvent.click(circle);
+    expect(opened).toHaveLength(1);
   });
 });

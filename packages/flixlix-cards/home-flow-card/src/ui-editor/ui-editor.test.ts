@@ -161,7 +161,7 @@ describe("editor", () => {
       "kilo_threshold",
       "clickable_entities",
     ]);
-    expect(data()).toMatchObject({ animate_numbers: true });
+    expect(data()).toMatchObject({ animate_numbers: true, clickable_entities: true });
     editor.remove();
   });
 

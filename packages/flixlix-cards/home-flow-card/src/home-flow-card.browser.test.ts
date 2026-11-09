@@ -556,7 +556,7 @@ describe("home flow card", () => {
   });
 
   test("tapping a label opens its entity's more-info dialog", async () => {
-    const { root, card } = await mountHouse({ clickable_entities: true });
+    const { root, card } = await mountHouse();
     const opened: unknown[] = [];
     card.addEventListener("hass-more-info", (event) => {
       opened.push(event instanceof CustomEvent ? event.detail : undefined);
@@ -567,8 +567,8 @@ describe("home flow card", () => {
     expect(opened).toEqual([{ entityId: "sensor.solar" }]);
   });
 
-  test("labels are not buttons unless entities are clickable", async () => {
-    const { root } = await mountHouse();
+  test("labels are not buttons with clickable_entities: false", async () => {
+    const { root } = await mountHouse({ clickable_entities: false });
 
     expect(labelOf(root, "solar").getAttribute("role")).toBeNull();
   });
