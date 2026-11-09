@@ -18,6 +18,8 @@
     "default": "Standaard",
     "more": "Meer opties",
     "interaction": "Interactie",
+    "appearance": "Weergave",
+    "wire_width": "Kabeldikte",
     "not_configured": "Niet ingesteld",
     "number_format": "Getalnotatie",
     "red": "Rood onder (%)",

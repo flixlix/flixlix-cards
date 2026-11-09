@@ -64,6 +64,11 @@ type CardOptions = WithoutEntities<PowerFlowCardPlusConfig> & {
   /** Roll the numbers to their new value when a reading changes. Defaults to true. */
   animate_numbers?: boolean;
   /**
+   * How many times thicker than the default the wires are drawn. Like the labels' text, they
+   * keep a similar size in px whatever the card's width. Defaults to 1.
+   */
+  wire_width?: number;
+  /**
    * Draws a generator wired to the inverter, carrying its power during a grid outage; needs the
    * grid's `power_outage` to know when there is one.
    */

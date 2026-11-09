@@ -464,6 +464,13 @@ const CARD_OPTIONS: OptionRow[] = [
     default: "false",
     description: "Keep the wires still: no pulses, only the colour of the power they carry.",
   },
+  {
+    name: "wire_width",
+    type: "number",
+    default: "1",
+    description:
+      "How many times thicker the wires are drawn, for example 2 for twice as thick. Like the labels' text, wires keep a similar size in px whatever the card's width: they stay visible in a narrow sidebar and do not swell on a wide dashboard.",
+  },
 ];
 
 const NUMBER_OPTIONS: OptionRow[] = [

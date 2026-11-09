@@ -144,11 +144,12 @@ describe("editor", () => {
     editor.remove();
   });
 
-  test("advanced holds animation, number format and interaction", async () => {
+  test("advanced holds appearance, animation, number format and interaction", async () => {
     const { editor, open, fields, data } = await mountEditor();
     await open("advanced");
 
     expect(fields()).toEqual([
+      "wire_width",
       "animate_numbers",
       "disable_dots",
       "min_flow_rate",
@@ -169,6 +170,7 @@ describe("editor", () => {
     await open("advanced");
 
     expect(helper("kilo_threshold")).toBe("Default: 1000 W");
+    expect(helper("wire_width")).toBe("Default: 1×");
     expect(helper("animate_numbers")).toBeUndefined();
     editor.remove();
   });

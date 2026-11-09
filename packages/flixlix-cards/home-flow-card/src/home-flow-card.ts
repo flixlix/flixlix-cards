@@ -27,7 +27,7 @@ import { carImage, type CarImage, carResolution, readCarPalette } from "./car-im
 import { carEntities, type CarScene, carScene, type CarStatus, carStatus } from "./car-node";
 import { Extent } from "./extent";
 import { houseLabels } from "./labels";
-import { fitLabels } from "./label-size";
+import { fitLabels, wireScale } from "./label-size";
 import { includeLabel, includeLabelOf, labelsHtml, leaderSvg } from "./render-labels";
 import { includeCar, sceneSvg } from "./render-scene";
 import { gridFade, keepPulsePhase } from "./render-wires";
@@ -253,7 +253,8 @@ export class HomeFlowCard extends LitElement {
       this.hass.locale?.language ?? "en",
       carScene(this.hass, this._config.car, this._carStatus, this._carImage)
     );
-    const { box, labelUnit } = fitLabels(this._width.width, boxFor);
+    const fit = fitLabels(this._width.width, boxFor);
+    const { box, labelUnit } = fit;
     const context = {
       actions: this._actions,
       clickable: this._config.clickable_entities ?? false,
@@ -264,7 +265,7 @@ export class HomeFlowCard extends LitElement {
       <ha-card .header=${this._config.title}>
         <div
           class="stage ${this._config.title ? "titled" : ""}"
-          style=${`--label-unit: ${labelUnit}px`}
+          style=${`--label-unit: ${labelUnit}px; --wire-scale: ${wireScale(fit, this._config.wire_width)}`}
         >
           <svg
             viewBox="${box.x} ${box.y} ${box.width} ${box.height}"

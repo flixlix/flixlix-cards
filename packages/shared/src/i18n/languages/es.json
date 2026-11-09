@@ -18,6 +18,8 @@
     "default": "Predeterminado",
     "more": "Más opciones",
     "interaction": "Interacción",
+    "appearance": "Apariencia",
+    "wire_width": "Grosor de los cables",
     "not_configured": "Sin configurar",
     "number_format": "Formato de números",
     "red": "Rojo por debajo de (%)",

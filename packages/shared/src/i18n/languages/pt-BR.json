@@ -18,6 +18,8 @@
     "default": "Padrão",
     "more": "Mais opções",
     "interaction": "Interação",
+    "appearance": "Aparência",
+    "wire_width": "Espessura dos fios",
     "not_configured": "Não configurado",
     "number_format": "Formato dos números",
     "red": "Vermelho abaixo de (%)",
