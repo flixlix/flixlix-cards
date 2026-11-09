@@ -379,7 +379,7 @@ const CARD_OPTIONS: OptionRow[] = [
   {
     name: "clickable_entities",
     type: "boolean",
-    default: "false",
+    default: "true",
     description: "Tapping a value opens its entity, or runs the node's tap/hold actions.",
   },
   {

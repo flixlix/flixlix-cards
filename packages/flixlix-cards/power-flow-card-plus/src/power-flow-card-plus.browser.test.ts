@@ -48,12 +48,12 @@ const gridMoreInfo = [
 const opensGridMoreInfo = ({ detail }: HaEvent) =>
   gridMoreInfo.some((matcher) => matcher.asymmetricMatch(detail) === true);
 
-const mountGrid = async (grid: object = {}) => {
+const mountGrid = async (grid: object = {}, options: object = { clickable_entities: true }) => {
   const mounted = await mountCard(
     PowerFlowCardPlus,
     {
       type: "custom:power-flow-card-plus",
-      clickable_entities: true,
+      ...options,
       entities: { grid: { entity: "sensor.grid", ...grid }, solar: { entity: "sensor.solar" } },
     },
     fakeHass({ states: { "sensor.grid": "300", "sensor.solar": "100" } })
@@ -76,6 +76,13 @@ describe("node actions", () => {
     const { circle, events } = await mountGrid();
     await userEvent.click(circle);
     expect(events).toEqual([{ type: "hass-more-info", detail: { entityId: "sensor.grid" } }]);
+  });
+
+  test("nodes are clickable when the config leaves clickable_entities out", async () => {
+    const { circle, events } = await mountGrid({}, {});
+    await userEvent.click(circle);
+    expect(events).toHaveLength(1);
+    expect(events.every(opensGridMoreInfo)).toBe(true);
   });
 
   test("a configured tap action is handed to Home Assistant", async () => {
@@ -143,7 +150,11 @@ describe("node actions", () => {
   test("nodes are not focusable when entities are not clickable", async () => {
     const { root } = await mountCard(
       PowerFlowCardPlus,
-      { type: "custom:power-flow-card-plus", entities: { grid: { entity: "sensor.grid" } } },
+      {
+        type: "custom:power-flow-card-plus",
+        clickable_entities: false,
+        entities: { grid: { entity: "sensor.grid" } },
+      },
       fakeHass({ states: { "sensor.grid": "300" } })
     );
     expect(root.querySelector(".grid .circle")?.hasAttribute("tabindex")).toBe(false);

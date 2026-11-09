@@ -8,6 +8,7 @@ import {
   type ValueChangedEvent,
 } from "@flixlix-cards/shared/ui-editor/ha-form";
 import { loadHaForm } from "@flixlix-cards/shared/ui-editor/utils/load-ha-form";
+import { clickableEntitiesWithDefault } from "@flixlix-cards/shared/utils/flow-card-config";
 import { formatNumber } from "@flixlix-cards/shared/utils/format-number";
 import { type ChargeSeverity } from "@flixlix-cards/shared/utils/severity";
 import { isNumberValue, nonEmpty } from "@flixlix-cards/shared/utils/utils";
@@ -104,7 +105,15 @@ export class HomeFlowCardEditor extends LitElement implements LovelaceCardEditor
     if (this._page === "advanced") {
       return html`
         <subpage-header @go-back=${this._goBack} page="advanced"></subpage-header>
-        ${this._form({ animate_numbers: true, ...this._config }, advancedSchema, this._valueChanged)}
+        ${this._form(
+          {
+            animate_numbers: true,
+            ...this._config,
+            clickable_entities: clickableEntitiesWithDefault(this._config.clickable_entities),
+          },
+          advancedSchema,
+          this._valueChanged
+        )}
       `;
     }
     const node = this._page;
