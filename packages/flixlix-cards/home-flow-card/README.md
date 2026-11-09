@@ -1,7 +1,7 @@
 # Home Flow Card
 
 [![ko-fi support](https://img.shields.io/badge/support-me-ff5e5b?style=flat-square&logo=ko-fi)](https://ko-fi.com/flixlix)
-[![HACS custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=flat-square)](https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=home-flow-card&category=plugin)
+[![hacs_badge](https://img.shields.io/badge/HACS-Default-41BDF5.svg?style=flat-square)](https://github.com/hacs/integration)
 ![GitHub release](https://img.shields.io/github/v/release/flixlix/home-flow-card?style=flat-square)
 ![GitHub total downloads](https://img.shields.io/github/downloads/flixlix/home-flow-card/total?style=flat-square)
 
@@ -39,9 +39,9 @@ for those.
 
 [![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=home-flow-card&category=plugin)
 
-Or by hand: on Home Assistant 2026.11 and newer, go to **Settings → Marketplace → Add from link**,
-enter `https://github.com/flixlix/home-flow-card` and install **Home Flow Card**. Before 2026.11, in
-HACS open **⋮ → Custom repositories**, add the same URL with category **Dashboard**, and download it.
+This card is in the default catalog. On Home Assistant 2026.11 and newer, go to
+**Settings → Marketplace**, search for **Home Flow Card** and install it. Before 2026.11, search for
+it in [HACS](https://hacs.xyz) and download it.
 
 To install manually, copy `home-flow-card.js` from the
 [latest release](https://github.com/flixlix/home-flow-card/releases/latest) into `config/www/` and

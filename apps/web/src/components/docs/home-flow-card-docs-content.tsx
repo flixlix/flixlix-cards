@@ -36,7 +36,7 @@ import {
   Prose,
   Section,
 } from "./doc-primitives";
-import { InstallFromLink } from "./install-from-link";
+import { InstallFromCatalog } from "./install-from-catalog";
 import { OptionList } from "./option-list";
 import { PageTOC, type TocItem } from "./page-toc";
 
@@ -135,7 +135,7 @@ export function OverviewPage() {
         eyebrow={TITLE}
         title="Your own little isometric home"
         description="Home Flow Card draws your live power on a little house: solar on the roof, a battery on the wall and the grid running off to the street. One look tells you where your power comes from and where it goes."
-        badges={[{ label: "HACS custom" }, { label: "YAML & UI editor" }, { label: "Power" }]}
+        badges={[{ label: "HACS Default" }, { label: "YAML & UI editor" }, { label: "Power" }]}
       />
 
       <CardDemo demo="house" className="mx-auto w-fit max-w-full rounded-2xl" />
@@ -197,7 +197,7 @@ export function OverviewPage() {
             {
               to: `${BASE_PATH}/installation`,
               title: "Installation",
-              description: "Marketplace, HACS custom repository or manual install.",
+              description: "Marketplace, HACS or manual install.",
             },
             {
               to: `${BASE_PATH}/configuration`,
@@ -260,10 +260,14 @@ export function InstallationPage() {
       <PageHeader
         eyebrow={TITLE}
         title="Installation"
-        description="Install it from its link in Home Assistant's Marketplace, or as a custom repository in HACS before 2026.11. Manual installation is also supported."
+        description="Install it from Home Assistant's Marketplace, or from HACS before 2026.11. Manual installation is also supported."
       />
 
-      <InstallFromLink title={TITLE} repoUrl={REPO_URL} redirect={HACS_REDIRECT} />
+      <InstallFromCatalog
+        title={TITLE}
+        redirect={HACS_REDIRECT}
+        examplesPath={`${BASE_PATH}/examples`}
+      />
 
       <Section title="Manual installation" id="manual">
         <Prose>
