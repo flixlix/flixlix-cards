@@ -1,11 +1,12 @@
 {
   "card": {
     "battery": {
-      "charging": "laadt op",
-      "discharging": "ontlaadt"
+      "charging": "Laadt op",
+      "discharging": "Ontlaadt"
     },
     "label": {
       "car": "Auto",
+      "heat_pump": "Warmtepomp",
       "motorbike": "Motorfiets"
     }
   },
@@ -63,6 +64,12 @@
     "entity_generator": "Generator",
     "generator": "Generator",
     "car": "Auto",
+    "heat_pump": "Warmtepomp",
+    "climate": "Klimaatentiteit",
+    "heat_pump_status": "Status",
+    "heat_pump_status_state": "Toestand",
+    "heat_pump_status_temperature": "Temperatuur",
+    "heat_pump_status_temperature_and_target": "Temperatuur en doel",
     "visibility": "Zichtbaarheid",
     "idle": "Inactief",
     "car_visibility_hint": "Toon de auto alleen zolang aan al deze voorwaarden is voldaan. Zonder voorwaarden wordt hij altijd getoond.",

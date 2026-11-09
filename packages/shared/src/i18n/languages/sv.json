@@ -1,11 +1,12 @@
 {
   "card": {
     "battery": {
-      "charging": "laddar",
-      "discharging": "laddar ur"
+      "charging": "Laddar",
+      "discharging": "Laddar ur"
     },
     "label": {
       "car": "Bil",
+      "heat_pump": "Värmepump",
       "motorbike": "Motorcykel"
     }
   },
@@ -63,6 +64,12 @@
     "entity_generator": "Generator",
     "generator": "Generator",
     "car": "Bil",
+    "heat_pump": "Värmepump",
+    "climate": "Klimatentitet",
+    "heat_pump_status": "Status",
+    "heat_pump_status_state": "Tillstånd",
+    "heat_pump_status_temperature": "Temperatur",
+    "heat_pump_status_temperature_and_target": "Temperatur och mål",
     "visibility": "Synlighet",
     "idle": "Inaktiv",
     "car_visibility_hint": "Visa bilen bara så länge alla dessa villkor är uppfyllda. Utan villkor visas den alltid.",

@@ -2,7 +2,7 @@ import { type FlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { type HomeAssistant, NumberFormat, TimeFormat } from "custom-card-helpers";
 import { describe, expect, test } from "vite-plus/test";
 import { computeCardState } from "./compute-card-state";
-import { type CarReading, houseWires } from "./house-wires";
+import { type CarReading, type HeatPumpReading, houseWires } from "./house-wires";
 import { type ReadyReadings } from "./types";
 
 /** A `hass` whose outage sensor reads `on` while there is an outage. */
@@ -70,7 +70,12 @@ const readings = (power: Power): ReadyReadings => ({
   individuals: [],
 });
 
-const wiresFor = (cardConfig: FlowCardPlusConfig, power: Power, car?: CarReading) => {
+const wiresFor = (
+  cardConfig: FlowCardPlusConfig,
+  power: Power,
+  car?: CarReading,
+  heatPump?: HeatPumpReading
+) => {
   const state = computeCardState({
     config: cardConfig,
     hass: hassWith(power.outage ?? false),
@@ -87,7 +92,7 @@ const wiresFor = (cardConfig: FlowCardPlusConfig, power: Power, car?: CarReading
   if (state.status !== "ready") {
     throw new Error("expected a ready card state");
   }
-  return houseWires(cardConfig, state, car);
+  return houseWires(cardConfig, state, car, heatPump);
 };
 
 const summary = (cardConfig: FlowCardPlusConfig, power: Power) =>
@@ -127,6 +132,29 @@ describe("house wires", () => {
 
   test("without a car there is no car wire", () => {
     expect(wiresFor(allNodes, { fromGrid: 100 }).some((wire) => wire.node === "car")).toBe(false);
+  });
+
+  test("a running heat pump draws from the home's outlet, in the home's colour", () => {
+    const heatPump = wiresFor(allNodes, { solar: 4000, toGrid: 1000 }, undefined, {
+      power: 1350,
+    }).find((wire) => wire.node === "heat_pump");
+    expect(heatPump).toMatchObject({
+      power: 1350,
+      intoInverter: false,
+      color: "var(--energy-solar-color)",
+      reading: { value: 1.4, unit: "kW" },
+    });
+  });
+
+  test("a heat pump never feeds the home: a negative or missing reading is an idle wire", () => {
+    const negative = wiresFor(allNodes, { fromGrid: 100 }, undefined, { power: -20 });
+    const missing = wiresFor(allNodes, { fromGrid: 100 }, undefined, { power: null });
+    for (const wires of [negative, missing]) {
+      expect(wires.find((wire) => wire.node === "heat_pump")).toMatchObject({
+        power: 0,
+        intoInverter: false,
+      });
+    }
   });
 
   test("an evening on the battery: production and discharge run into the inverter, home out of it", () => {

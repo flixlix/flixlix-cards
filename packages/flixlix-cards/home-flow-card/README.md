@@ -20,7 +20,7 @@ meeting at the inverter. One look tells you where your power comes from and wher
 - **Reads at a glance.** You know where your power comes from before you read a single number.
 - **Motion that means something.** A pulse runs along every wire in the direction its power flows,
   faster and longer the more it carries. Numbers roll to their new value, units slide along, and
-  "charging" becomes "discharging" by growing only the letters that change.
+  "Charging" becomes "Discharging" by changing only the letters that differ.
 - **Made for your dashboard.** Monotone greys from your theme, light and dark, with colour only where
   power flows. It scales to any card width, and the visual editor sets it up without YAML.
 - **Ready for the bad days.** When the grid fails, its cable goes dead and its label says so. An
@@ -30,6 +30,9 @@ meeting at the inverter. One look tells you where your power comes from and wher
 - **Your car, too.** An optional electric car parks in front of the house, wired to the home's
   outlet, with its power and state of charge on its label. Unplugged it waits faded,
   without its cable; away, it is not drawn at all, on conditions you choose.
+- **And your heat pump.** An optional heat pump hangs on the front wall, wired to the home's
+  outlet, its fan turning while it runs. Its label shows its power and what it is doing, or its
+  temperature, and a tap opens its thermostat.
 
 Only what you configure is drawn: solar alone, a battery and the grid, or the whole house.
 Individual devices are not drawn yet; use [Power Flow Card Plus](https://github.com/flixlix/power-flow-card-plus)
@@ -84,6 +87,7 @@ or `battery` are required.
 | `home`               | object  | -       | The home's consumption, see [Home](#home). Without it, the card works out what the home uses from the others                                        |
 | `generator`          | object  | -       | A generator for grid outages, see [Generator](#generator)                                                                                           |
 | `car`                | object  | -       | An electric car in front of the house, see [Car](#car)                                                                                              |
+| `heat_pump`          | object  | -       | A heat pump on the front wall, see [Heat pump](#heat-pump)                                                                                          |
 | `animate_numbers`    | boolean | `true`  | Roll each number to its new value when a reading changes. Always still when your system asks for reduced motion                                     |
 | `disable_dots`       | boolean | `false` | Keep the wires still: no pulses, only the colour of the power they carry                                                                            |
 | `wire_width`         | number  | `1`     | How many times thicker the wires are drawn, for example `2` for twice as thick. Like the labels, they keep a similar size whatever the card's width |
@@ -206,6 +210,19 @@ An electric car parked in front of the house, wired to the home's outlet.
 | `visibility`      | list   | -       | [Conditions](#conditions): the car shows only while all of them hold. While hidden it keeps its room, so the house does not move. Without, it always shows |
 | `idle`            | list   | -       | [Conditions](#conditions): while all of them hold, the car is drawn faded and unplugged, without its cable. Without, it is idle while it draws no power    |
 
+### Heat pump
+
+A heat pump on the front wall, wired to the home's outlet. With a `car` configured it hangs above
+where the car parks; without one, low and further along the wall, its label below it. Only the config decides, so it stays put while
+the car is away.
+
+| Name      | Type   | Default     | Description                                                                                                                                                     |
+| --------- | ------ | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `entity`  | string | -           | **Required.** Its power                                                                                                                                         |
+| `climate` | string | -           | Its climate entity: a tap on its label opens it, and its label reads its state or temperature from it. Without it, a tap opens `entity`                         |
+| `status`  | string | `state`     | What its label shows under its power, read from `climate`: `state` (what it is doing, e.g. Heating), `temperature`, or `temperature_and_target` (38 °C → 45 °C) |
+| `name`    | string | `Heat pump` | Label name                                                                                                                                                      |
+
 #### Conditions
 
 `car.visibility` and `car.idle` take the conditions of a card's visibility tab, and the editor sets
@@ -301,6 +318,20 @@ car:
     - condition: state
       entity: binary_sensor.car_plugged_in
       state: "off"
+```
+
+### A heat pump heating towards its target
+
+```yaml
+type: custom:home-flow-card
+grid:
+  entity: sensor.grid_power
+solar:
+  entity: sensor.solar_power
+heat_pump:
+  entity: sensor.heat_pump_power
+  climate: climate.heat_pump
+  status: temperature_and_target
 ```
 
 ### Your own battery thresholds

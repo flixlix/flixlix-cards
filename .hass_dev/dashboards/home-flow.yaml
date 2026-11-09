@@ -246,3 +246,68 @@ views:
                   entity: sensor.car_power
                   above: -500
                   below: 500
+      - type: grid
+        cards:
+          - type: heading
+            heading: Heat pump
+            icon: mdi:heat-pump
+          - type: entities
+            title: Run a heat pump scenario
+            show_header_toggle: false
+            entities:
+              - script.heat_pump_heating
+              - script.heat_pump_reached_target
+              - script.heat_pump_off
+          - type: entities
+            title: Heat pump knobs
+            show_header_toggle: false
+            entities:
+              - climate.heat_pump
+              - input_number.heat_pump_power
+              - input_number.heat_pump_flow_temperature
+          - type: custom:home-flow-card
+            title: "Heat pump: its state, no car (low, further along the wall)"
+            grid:
+              entity: sensor.grid_power
+            solar:
+              entity: sensor.solar_power
+            battery:
+              entity: sensor.battery_power
+              state_of_charge: sensor.battery_soc
+            heat_pump:
+              entity: sensor.heat_pump_power
+              climate: climate.heat_pump
+          - type: custom:home-flow-card
+            title: "Heat pump: temperature and target, above the car"
+            grid:
+              entity: sensor.grid_power
+            solar:
+              entity: sensor.solar_power
+            car:
+              entity: sensor.car_power
+              state_of_charge: sensor.car_battery
+              visibility:
+                - condition: state
+                  entity: input_select.car_location
+                  state: home
+            heat_pump:
+              entity: sensor.heat_pump_power
+              climate: climate.heat_pump
+              status: temperature_and_target
+          - type: custom:home-flow-card
+            title: "Heat pump: current temperature only"
+            grid:
+              entity: sensor.grid_power
+            heat_pump:
+              entity: sensor.heat_pump_power
+              climate: climate.heat_pump
+              status: temperature
+          - type: custom:home-flow-card
+            title: "Heat pump: no climate entity"
+            grid:
+              entity: sensor.grid_power
+            solar:
+              entity: sensor.solar_power
+            heat_pump:
+              entity: sensor.heat_pump_power
+              name: Wärmepumpe

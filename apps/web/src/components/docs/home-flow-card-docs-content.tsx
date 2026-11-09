@@ -6,6 +6,7 @@ import {
   Car,
   Download,
   Eye,
+  Fan,
   Fuel,
   Github,
   House,
@@ -351,6 +352,15 @@ const CARD_OPTIONS: OptionRow[] = [
     description: (
       <>
         An electric car in front of the house; see <a href="#car">Car</a>.
+      </>
+    ),
+  },
+  {
+    name: "heat_pump",
+    type: "object",
+    description: (
+      <>
+        A heat pump on the front wall; see <a href="#heat-pump">Heat pump</a>.
       </>
     ),
   },
@@ -767,6 +777,33 @@ const CONDITION_ROWS: OptionRow[] = [
   },
 ];
 
+const HEAT_PUMP_OPTIONS: OptionRow[] = [
+  { name: "entity", type: "string", required: true, description: "Its power." },
+  {
+    name: "climate",
+    type: "string",
+    description: (
+      <>
+        Its climate entity: a tap on its label opens it, and its label reads its state or
+        temperature from it. Without it, a tap opens <code>entity</code>.
+      </>
+    ),
+  },
+  {
+    name: "status",
+    type: "string",
+    default: "state",
+    description: (
+      <>
+        What its label shows under its power, read from <code>climate</code>: <code>state</code>{" "}
+        (what it is doing, for example Heating), <code>temperature</code>, or{" "}
+        <code>temperature_and_target</code> (38 °C → 45 °C).
+      </>
+    ),
+  },
+  { name: "name", type: "string", default: "Heat pump", description: "Label name." },
+];
+
 export function ConfigurationPage() {
   const tocItems: TocItem[] = [
     { id: "card-options", label: "Card options" },
@@ -777,6 +814,7 @@ export function ConfigurationPage() {
     { id: "home", label: "Home" },
     { id: "generator", label: "Generator" },
     { id: "car", label: "Car" },
+    { id: "heat-pump", label: "Heat pump" },
     { id: "conditions", label: "Conditions" },
     { id: "actions", label: "Actions" },
   ];
@@ -975,6 +1013,30 @@ generator:
           <OptionList rows={CAR_OPTIONS} />
         </CategorySection>
 
+        <CategorySection
+          id="heat-pump"
+          title="Heat pump"
+          icon={Fan}
+          accent="rose"
+          description={
+            <>
+              Under <code>heat_pump</code>: a heat pump on the front wall, wired to the home&apos;s
+              outlet, its fan turning while it runs. With a <code>car</code> configured it hangs
+              above where the car parks; without one, low and further along the wall, its label
+              below it. Only the config decides, so it stays put while the car is away.
+            </>
+          }
+          example={{
+            language: "yaml",
+            code: `heat_pump:
+  entity: sensor.heat_pump_power
+  climate: climate.heat_pump
+  status: temperature_and_target`,
+          }}
+        >
+          <OptionList rows={HEAT_PUMP_OPTIONS} />
+        </CategorySection>
+
         <Section title="Conditions" id="conditions">
           <Prose>
             <p>
@@ -1091,6 +1153,29 @@ car:
       "sensor.car_battery_level": sensor("64", { unit: "%" }),
       "device_tracker.car": sensor("home", { unit: undefined }),
       "binary_sensor.car_plugged_in": sensor("on", { unit: undefined }),
+    },
+  },
+  {
+    id: "heat-pump",
+    title: "A heat pump heating towards its target",
+    text: "A heat pump on the front wall, fed from the home's outlet, its fan turning while it runs. Its label shows its temperature and the target it heads for; a tap opens its thermostat.",
+    code: `type: ${CARD_TYPE}
+grid:
+  entity: sensor.grid_power
+solar:
+  entity: sensor.solar_power
+heat_pump:
+  entity: sensor.heat_pump_power
+  climate: climate.heat_pump
+  status: temperature_and_target`,
+    states: {
+      "sensor.grid_power": "450",
+      "sensor.solar_power": "1600",
+      "sensor.heat_pump_power": "1350",
+      "climate.heat_pump": sensor("heat", {
+        unit: undefined,
+        attributes: { hvac_action: "heating", current_temperature: 38, temperature: 45 },
+      }),
     },
   },
   {

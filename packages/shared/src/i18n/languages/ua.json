@@ -1,11 +1,12 @@
 {
   "card": {
     "battery": {
-      "charging": "заряджається",
-      "discharging": "розряджається"
+      "charging": "Заряджається",
+      "discharging": "Розряджається"
     },
     "label": {
       "car": "Автомобіль",
+      "heat_pump": "Тепловий насос",
       "motorbike": "Мотоцикл"
     }
   },
@@ -63,6 +64,12 @@
     "entity_generator": "Генератор сутностей",
     "generator": "Генератор сутностей",
     "car": "Автомобіль",
+    "heat_pump": "Тепловий насос",
+    "climate": "Об'єкт клімату",
+    "heat_pump_status": "Статус",
+    "heat_pump_status_state": "Стан",
+    "heat_pump_status_temperature": "Температура",
+    "heat_pump_status_temperature_and_target": "Температура і ціль",
     "visibility": "Видимість",
     "idle": "Неактивний",
     "car_visibility_hint": "Показувати автомобіль, лише поки виконуються всі ці умови. Без умов він показується завжди.",

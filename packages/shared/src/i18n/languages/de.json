@@ -1,11 +1,12 @@
 {
   "card": {
     "battery": {
-      "charging": "lädt",
-      "discharging": "entlädt"
+      "charging": "Lädt",
+      "discharging": "Entlädt"
     },
     "label": {
       "car": "Auto",
+      "heat_pump": "Wärmepumpe",
       "motorbike": "Motorrad"
     }
   },
@@ -63,6 +64,12 @@
     "entity_generator": "Generator",
     "generator": "Generator",
     "car": "Auto",
+    "heat_pump": "Wärmepumpe",
+    "climate": "Klima-Entität",
+    "heat_pump_status": "Status",
+    "heat_pump_status_state": "Zustand",
+    "heat_pump_status_temperature": "Temperatur",
+    "heat_pump_status_temperature_and_target": "Temperatur und Ziel",
     "visibility": "Sichtbarkeit",
     "idle": "Inaktiv",
     "car_visibility_hint": "Das Auto nur anzeigen, solange alle diese Bedingungen erfüllt sind. Ohne Bedingungen wird es immer angezeigt.",

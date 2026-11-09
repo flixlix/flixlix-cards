@@ -4,8 +4,8 @@ import { formatNumber } from "@flixlix-cards/shared/utils/format-number";
 import { type HomeAssistant, numberFormatToLocale } from "custom-card-helpers";
 import { html, nothing, svg } from "lit";
 import { type Box, type Extent } from "./extent";
-import { type BatteryStatus, type Figure, type Label } from "./labels";
-import { LABEL_ANCHORS, type LabelledNode, project } from "./scene";
+import { type Figure, type Label, type LabelStatus } from "./labels";
+import { labelAnchor, type LabelledNode, project, type SceneLayout } from "./scene";
 
 /** Rough size of a label in screen units, so the viewBox leaves room for it. */
 const LABEL_WIDTH = 92;
@@ -16,6 +16,7 @@ const LABEL_INDENT = 10;
 const ASIDE_WIDTH = 50;
 
 export type LabelContext = {
+  layout: SceneLayout;
   actions: EntityActions;
   clickable: boolean;
   /** Numbers roll with number-flow; otherwise they are plain text. */
@@ -32,29 +33,36 @@ export const includeLabel = (
   extent: Extent,
   node: LabelledNode,
   lines: number,
-  { aside = false, scale = 1 }: { aside?: boolean; scale?: number } = {}
+  { aside = false, scale = 1, layout }: { aside?: boolean; scale?: number; layout: SceneLayout }
 ) => {
-  const anchor = LABEL_ANCHORS[node];
+  const anchor = labelAnchor(node, layout);
   const [x, y] = project(anchor.at);
   const end = y + anchor.leader;
   const height = (LABEL_HEIGHT + lines * LINE_HEIGHT) * scale;
   extent.include([x, end + Math.sign(anchor.leader) * height], 4);
-  // a label starts LABEL_INDENT left of its leader, as its CSS moves it; the house's centring
-  // leaves room for that on a wide card, but not on a narrow one
-  extent.require(x - LABEL_INDENT * scale, 4);
-  extent.include([x + (LABEL_WIDTH - LABEL_INDENT + (aside ? ASIDE_WIDTH : 0)) * scale, end], 4);
+  const width = (LABEL_WIDTH + (aside ? ASIDE_WIDTH : 0)) * scale;
+  // a label starts LABEL_INDENT left of its leader, as its CSS moves it, or ends LABEL_INDENT
+  // right of it when it hangs left; the house's centring leaves room for that on a wide card, but
+  // not on a narrow one
+  const left = anchor.side === "left" ? x + LABEL_INDENT * scale - width : x - LABEL_INDENT * scale;
+  extent.require(left, 4);
+  extent.include([left + width, end], 4);
+  if (anchor.side === "left") {
+    extent.include([left, end], 4);
+  }
 };
 
 /** Makes room in the viewBox for a drawn label, at `scale` against the scene. */
-export const includeLabelOf = (extent: Extent, label: Label, scale: number) =>
+export const includeLabelOf = (extent: Extent, label: Label, scale: number, layout: SceneLayout) =>
   includeLabel(extent, label.node, [label.status, label.alert].filter(Boolean).length, {
     aside: Boolean(label.aside),
     scale,
+    layout,
   });
 
 /** The line from what a label measures up or down to the label. */
-export const leaderSvg = (label: Label) => {
-  const anchor = LABEL_ANCHORS[label.node];
+export const leaderSvg = (label: Label, layout: SceneLayout) => {
+  const anchor = labelAnchor(label.node, layout);
   const [x, y] = project(anchor.at);
   return svg`<g class="leader">
     <path d="M${x} ${y}V${y + anchor.leader}" stroke="var(--house-leader)" stroke-width="0.8"></path>
@@ -100,15 +108,24 @@ const valueLineHtml = ({ reading, aside }: Label, context: LabelContext) => {
   return aside.first ? html`${second}${separator}${value}` : html`${value}${separator}${second}`;
 };
 
-const statusHtml = ({ figure, direction, word }: BatteryStatus, context: LabelContext) => html`
+const statusHtml = (
+  { figure, target, direction, word }: LabelStatus,
+  context: LabelContext
+) => html`
   ${figure ? html`<span class="figure">${figureHtml(figure, context)}</span>` : nothing}
+  ${
+    target
+      ? html`<span>→</span><span class="figure">${figureHtml(target, context)}</span>`
+      : nothing
+  }
   ${figure && direction ? html`<span>·</span>` : nothing}
   <span class="direction ${direction ?? ""}" data-word=${word}></span>
 `;
 
 /** A label at the end of its leader, above or below its anchor. */
 const labelHtml = (label: Label, position: string, context: LabelContext) => {
-  const placement = LABEL_ANCHORS[label.node].leader > 0 ? "down" : "up";
+  const anchor = labelAnchor(label.node, context.layout);
+  const placement = `${anchor.leader > 0 ? "down" : "up"}${anchor.side === "left" ? " left" : ""}`;
   const { clickable, actions: handler } = context;
   const { actions, entity } = label;
   return html`<div
@@ -143,7 +160,7 @@ const labelHtml = (label: Label, position: string, context: LabelContext) => {
 export const labelsHtml = (labels: Label[], box: Box, context: LabelContext) =>
   html`<div class="labels">
     ${labels.map((label) => {
-      const anchor = LABEL_ANCHORS[label.node];
+      const anchor = labelAnchor(label.node, context.layout);
       const [x, y] = project(anchor.at);
       const left = ((x - box.x) / box.width) * 100;
       const top = ((y + anchor.leader - box.y) / box.height) * 100;

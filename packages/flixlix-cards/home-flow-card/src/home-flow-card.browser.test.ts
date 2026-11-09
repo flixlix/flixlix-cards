@@ -267,6 +267,195 @@ describe("a car", () => {
   });
 });
 
+/** An evening with the heat pump heating towards its target. */
+const heatPumpHeating: StateFixtures = {
+  ...evening,
+  "sensor.heat_pump_power": "1350",
+  "climate.heat_pump": sensor("heat", {
+    unit: undefined,
+    attributes: { hvac_action: "heating", current_temperature: 38, temperature: 45 },
+  }),
+};
+
+/** The heat pump's own readings, kept when other fixtures are spread over them. */
+const heatPumpStates: StateFixtures = {
+  "sensor.heat_pump_power": "1350",
+  "climate.heat_pump": heatPumpHeating["climate.heat_pump"] ?? "heat",
+};
+
+const heatPump = (
+  options: Partial<NonNullable<HomeFlowCardConfig["heat_pump"]>> = {}
+): Partial<HomeFlowCardConfig> => ({
+  heat_pump: { entity: "sensor.heat_pump_power", climate: "climate.heat_pump", ...options },
+});
+
+/** The heat pump's status line as it reads. */
+const statusOf = (root: ShadowRoot, node: string) =>
+  [...(labelOf(root, node).querySelector(".status")?.children ?? [])]
+    .map((part) => {
+      const number = part.querySelector(".number");
+      if (number instanceof NumberFlow) {
+        return `${number.value}${number.numberSuffix ?? ""}`;
+      }
+      return part.classList.contains("direction") ? wordOf(part) : part.textContent?.trim();
+    })
+    .filter(Boolean)
+    .join(" ");
+
+/** The heat pump's faces as drawn, in the scene's own coordinates. */
+const heatPumpPointsOf = (root: ShadowRoot) =>
+  [...root.querySelectorAll(".node.heat_pump polygon")].map((face) => face.getAttribute("points"));
+
+/** The heat pump's lowest point in the scene's coordinates, larger further down. */
+const heatPumpBottomOf = (root: ShadowRoot) =>
+  Math.max(
+    ...heatPumpPointsOf(root)
+      .flatMap((points) => (points ?? "").split(" ").filter((_, index) => index % 2 === 1))
+      .map(Number)
+  );
+
+/** What lies under a point of `label`: other labels, and drawn parts other than the ground. */
+const hitsAt = (root: ShadowRoot, label: HTMLElement, x: number, y: number) =>
+  root.elementsFromPoint(x, y).flatMap((element) => {
+    const other = element.closest(".label");
+    if (other) {
+      return other === label ? [] : [`label ${other.className}`];
+    }
+    const drawn = ["polygon", "path", "image"].includes(element.tagName.toLowerCase());
+    const ground = element.getAttribute("filter") ?? element.closest(".leader");
+    return drawn && !ground ? [element.closest("g")?.getAttribute("class") ?? element.tagName] : [];
+  });
+
+/** Whether any part of the drawing other than the ground lies under the label. */
+const drawnUnder = (root: ShadowRoot, label: HTMLElement) => {
+  const rect = label.getBoundingClientRect();
+  const hits = new Set<string>();
+  for (let x = rect.left + 1; x < rect.right; x += 2) {
+    for (let y = rect.top + 1; y < rect.bottom; y += 2) {
+      hitsAt(root, label, x, y).forEach((hit) => hits.add(hit));
+    }
+  }
+  return [...hits];
+};
+
+describe("a heat pump", () => {
+  test("its power, what it is doing and its name", async () => {
+    const { root } = await mountHouse(heatPump(), heatPumpHeating);
+
+    expect(reading(root, "heat_pump")).toBe("1.4 kW");
+    expect(statusOf(root, "heat_pump")).toBe("Heating");
+    expect(labelOf(root, "heat_pump").querySelector(".heating")).not.toBeNull();
+    expect(labelOf(root, "heat_pump").querySelector(".name")?.textContent).toBe("Heat pump");
+  });
+
+  test("shows its temperature instead of its state when asked, never both", async () => {
+    const current = await mountHouse(heatPump({ status: "temperature" }), heatPumpHeating);
+    const both = await mountHouse(heatPump({ status: "temperature_and_target" }), heatPumpHeating);
+
+    expect(statusOf(current.root, "heat_pump")).toBe("38 °C");
+    expect(statusOf(both.root, "heat_pump")).toBe("38 °C → 45 °C");
+    expect(labelOf(both.root, "heat_pump").querySelector(".heating")).toBeNull();
+  });
+
+  test("without a climate entity it shows only its power", async () => {
+    const { root } = await mountHouse(heatPump({ climate: undefined }), heatPumpHeating);
+
+    expect(reading(root, "heat_pump")).toBe("1.4 kW");
+    expect(labelOf(root, "heat_pump").querySelector(".status")).toBeNull();
+  });
+
+  test("tapping it opens its climate entity, or its power sensor without one", async () => {
+    const opened: unknown[] = [];
+    const listen = (card: HTMLElement) =>
+      card.addEventListener("hass-more-info", (event) => {
+        opened.push(event instanceof CustomEvent ? event.detail : undefined);
+      });
+    const withClimate = await mountHouse(heatPump(), heatPumpHeating);
+    listen(withClimate.card);
+    await userEvent.click(labelOf(withClimate.root, "heat_pump"));
+    const withoutClimate = await mountHouse(heatPump({ climate: undefined }), heatPumpHeating);
+    listen(withoutClimate.card);
+    await userEvent.click(labelOf(withoutClimate.root, "heat_pump"));
+
+    expect(opened).toEqual([
+      { entityId: "climate.heat_pump" },
+      { entityId: "sensor.heat_pump_power" },
+    ]);
+  });
+
+  test("hangs on the front wall, wired to the home's outlet", async () => {
+    const { root } = await mountHouse(heatPump(), heatPumpHeating);
+
+    expect(root.querySelector(".node.heat_pump")).not.toBeNull();
+    expect(root.querySelector(".power.heat_pump .pulse")).not.toBeNull();
+  });
+
+  test("comes down the wall without a car, and stays put while a configured car is away", async () => {
+    const away = {
+      ...car.car,
+      visibility: [{ condition: "state" as const, entity: "device_tracker.car", state: "home" }],
+    };
+    const states = { ...heatPumpHeating, ...carCharging, ...heatPumpStates };
+    const alone = heatPumpBottomOf((await mountHouse(heatPump(), states)).root);
+    const home = (
+      await mountHouse({ ...heatPump(), car: away }, { ...states, "device_tracker.car": "home" })
+    ).root;
+    const [homeBottom, homePoints] = [heatPumpBottomOf(home), heatPumpPointsOf(home)];
+    const gone = (
+      await mountHouse(
+        { ...heatPump(), car: away },
+        { ...states, "device_tracker.car": "not_home" }
+      )
+    ).root;
+
+    expect(alone).toBeGreaterThan(homeBottom);
+    expect(heatPumpPointsOf(gone)).toEqual(homePoints);
+  });
+
+  test.each([
+    ["without a car", 500, {}],
+    ["with a car", 500, car],
+    ["without a car, narrow", 340, {}],
+    ["with a car, narrow", 340, car],
+  ])("its label covers nothing %s", async (_, width, options) => {
+    const { root } = await mountHouse(
+      { ...heatPump({ status: "temperature_and_target" }), ...options },
+      { ...heatPumpHeating, ...carCharging, ...heatPumpStates },
+      width
+    );
+    const label = labelOf(root, "heat_pump");
+    const stage = root.querySelector(".stage")?.getBoundingClientRect();
+
+    expect(drawnUnder(root, label)).toEqual([]);
+    expect(stage && label.getBoundingClientRect().left).toBeGreaterThanOrEqual(stage?.left ?? 0);
+  });
+
+  test("its fan turns while it runs, and stands still while it is off", async () => {
+    const running = await mountHouse(heatPump(), heatPumpHeating);
+    const off = await mountHouse(heatPump(), { ...heatPumpHeating, "sensor.heat_pump_power": "0" });
+
+    expect(running.root.querySelector(".node.heat_pump .spin")).not.toBeNull();
+    expect(off.root.querySelector(".node.heat_pump .spin")).toBeNull();
+    expect(off.root.querySelector(".power.heat_pump")).toBeNull();
+  });
+
+  test("disable_dots keeps its fan still", async () => {
+    const { root } = await mountHouse({ ...heatPump(), disable_dots: true }, heatPumpHeating);
+
+    expect(root.querySelector(".node.heat_pump .spin")).toBeNull();
+  });
+
+  test("without its entity it is ignored, as when cleared in the editor", async () => {
+    const { root } = await mountHouse(
+      { heat_pump: { entity: "", climate: "climate.heat_pump" } },
+      heatPumpHeating
+    );
+
+    expect(root.querySelector(".node.heat_pump")).toBeNull();
+    expect(root.querySelector(".label.heat_pump")).toBeNull();
+  });
+});
+
 describe("home flow card", () => {
   test("labels every configured node with its value", async () => {
     const { root } = await mountHouse();
@@ -275,7 +464,7 @@ describe("home flow card", () => {
     expect(reading(root, "home")).toBe("2.6 kW");
     expect(reading(root, "grid")).toBe("0 W");
     expect(reading(root, "battery")).toBe("1.8 kW");
-    expect(batteryLine(root)).toBe("22 % · discharging");
+    expect(batteryLine(root)).toBe("22 % · Discharging");
   });
 
   test("draws only what is configured", async () => {
@@ -316,7 +505,7 @@ describe("home flow card", () => {
     expect(startOf(charging)).toBe(endOf(discharging));
     expect(
       batteryLine((await mountHouse({}, { ...evening, "sensor.battery": "-1800" })).root)
-    ).toBe("22 % · charging");
+    ).toBe("22 % · Charging");
   });
 
   test("labels follow the card's width after it is taken out and put back", async () => {
@@ -384,15 +573,15 @@ describe("home flow card", () => {
 
     const after = labelOf(root, "battery").querySelector(".direction");
     expect(after).toBe(before);
-    expect(after ? wordOf(after) : undefined).toBe("charging");
+    expect(after ? wordOf(after) : undefined).toBe("Charging");
   });
 
   test.each([
-    [undefined, "1.8 kW", "22 % · discharging"],
-    ["below_power", "1.8 kW", "22 % · discharging"],
-    ["above_power", "22 %", "1.8 kW · discharging"],
-    ["after_power", "1.8 kW · 22 %", "discharging"],
-    ["before_power", "22 % · 1.8 kW", "discharging"],
+    [undefined, "1.8 kW", "22 % · Discharging"],
+    ["below_power", "1.8 kW", "22 % · Discharging"],
+    ["above_power", "22 %", "1.8 kW · Discharging"],
+    ["after_power", "1.8 kW · 22 %", "Discharging"],
+    ["before_power", "22 % · 1.8 kW", "Discharging"],
   ] as const)("state_of_charge_position %s: %s, then %s", async (position, value, status) => {
     const { root } = await mountHouse({
       battery: {
@@ -428,7 +617,7 @@ describe("home flow card", () => {
     });
 
     expect(valueLine(root)).toBe("1.8 kW");
-    expect(batteryLine(root)).toBe("discharging");
+    expect(batteryLine(root)).toBe("Discharging");
   });
 
   test("an idle battery shows only its state of charge", async () => {

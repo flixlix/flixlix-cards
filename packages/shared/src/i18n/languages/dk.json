@@ -1,11 +1,12 @@
 {
   "card": {
     "battery": {
-      "charging": "oplader",
-      "discharging": "aflader"
+      "charging": "Oplader",
+      "discharging": "Aflader"
     },
     "label": {
       "car": "Bil",
+      "heat_pump": "Varmepumpe",
       "motorbike": "Motorcykel"
     }
   },
@@ -63,6 +64,12 @@
     "entity_generator": "Generator",
     "generator": "Generator",
     "car": "Bil",
+    "heat_pump": "Varmepumpe",
+    "climate": "Klimaenhed",
+    "heat_pump_status": "Status",
+    "heat_pump_status_state": "Tilstand",
+    "heat_pump_status_temperature": "Temperatur",
+    "heat_pump_status_temperature_and_target": "Temperatur og mål",
     "visibility": "Synlighed",
     "idle": "Inaktiv",
     "car_visibility_hint": "Vis kun bilen, så længe alle disse betingelser er opfyldt. Uden betingelser vises den altid.",
