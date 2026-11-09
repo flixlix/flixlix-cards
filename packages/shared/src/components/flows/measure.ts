@@ -19,14 +19,15 @@ const ringOf = (element: Element | null, origin: DOMRect): Ring | undefined => {
   return { cx: x, cy: y, r: round(element.getBoundingClientRect().width / 2) };
 };
 
-/** The middle row's slots: grid, a spacer under solar and the home, each 80px wide. */
+/** The middle row's slots: the grid unless the card has none, the hub and the home, each 80px wide. */
 const middleRow = (middle: Element, origin: DOMRect, radius: number) => {
-  const [gridSlot, hubSlot, homeSlot] = [...middle.children].map((slot) => center(slot, origin));
+  const hubSlot = middle.querySelector(":scope > .hub");
+  const homeSlot = hubSlot?.nextElementSibling;
   return {
     // Circles sit at the top of the middle row, their labels under them.
     axisY: round(middle.getBoundingClientRect().top - origin.top + radius),
-    hubX: hubSlot?.x ?? gridSlot?.x ?? 0,
-    homeX: homeSlot?.x ?? origin.width - radius,
+    hubX: hubSlot ? center(hubSlot, origin).x : 0,
+    homeX: homeSlot ? center(homeSlot, origin).x : origin.width - radius,
   };
 };
 

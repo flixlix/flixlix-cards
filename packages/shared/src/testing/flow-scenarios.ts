@@ -124,6 +124,21 @@ export const flowScenarios: FlowScenario[] = [
     },
   },
   {
+    name: "solar charging the battery without a grid",
+    visual: true,
+    entities: { solar: combinedEntities.solar, battery: combinedEntities.battery },
+    states: {
+      "sensor.solar": "1000",
+      "sensor.battery": "-300",
+      "sensor.battery_soc": "60",
+    },
+    expect: {
+      text: { ".solar .solar": "1 kW", ".battery .battery-in": "300 W", "#home-circle": "700 W" },
+      shown: [dot(flows.solarToHome), dot(flows.solarToBattery)],
+      hidden: [nodes.grid, dot(flows.batteryToHome)],
+    },
+  },
+  {
     name: "battery charging from the grid",
     entities: combinedEntities,
     states: {

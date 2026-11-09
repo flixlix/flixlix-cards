@@ -4,7 +4,7 @@ import { formatter } from "./format";
 import { computeHomeRing } from "./home-ring";
 import { individualNodes, placeIndividuals } from "./individuals";
 import { batteryNode, gridNode, homeNode, nonFossilNode, solarNode } from "./nodes";
-import { type Normalized, normalize } from "./normalize";
+import { hasEntity, type Normalized, normalize } from "./normalize";
 import { solve } from "./solve";
 import { computeCssVars } from "./styles";
 import { type CardState, type CardStateInput, type Flow } from "./types";
@@ -13,6 +13,21 @@ import { type CardState, type CardStateInput, type Flow } from "./types";
 const activeTopology = (input: CardStateInput, { presence }: Normalized) => {
   const topology = input.config.topology ?? "standard";
   return topology === "battery_hub" && !presence.battery ? "standard" : topology;
+};
+
+/**
+ * Share of the gap between the bounding-box centre and the circles' centroid that the columns
+ * move. A full centroid shift reads as overcorrected for circles this far apart.
+ */
+export const OPTICAL_SHIFT_STRENGTH = 2 / 3;
+
+/**
+ * Two columns are centred on their circles' centroid instead of their bounding box, as a play
+ * icon is centred in its button: solar and battery stacked beside a lone home look left-heavy.
+ */
+const opticalShift = (hubCircles: number, homeCircles: number): number => {
+  const circles = hubCircles + homeCircles;
+  return circles === 0 ? 0 : (0.5 - homeCircles / circles) * OPTICAL_SHIFT_STRENGTH;
 };
 
 const HIDDEN_FLOW: Flow = { value: 0, durationSeconds: 0, visible: false, lineClass: "" };
@@ -50,8 +65,14 @@ export function computeCardState(input: CardStateInput): CardState {
   const visible = placement.visible.map((device) => device.node);
   const homeRing = computeHomeRing(input, balance, individuals, format);
   const animate = !config.disable_dots && !input.pageHidden;
-  const { leftBottom, rightTop, rightBottom } = placement.slots;
+  const { leftTop, leftBottom, rightTop, rightBottom } = placement.slots;
   const showBottomRow = nodes.battery.has || !!leftBottom || !!rightBottom;
+  const hasGridColumn = hasEntity(config.entities.grid);
+  const hasRightIndividual = !!rightTop || !!rightBottom;
+  const twoColumns = !hasGridColumn && !hasRightIndividual;
+  const hubCircles = Number(nodes.solar.has) + Number(nodes.battery.has);
+  const homeCircles =
+    Number(!config.entities.home?.hide) + Number(!!leftTop) + Number(!!leftBottom);
   return {
     status: "ready",
     nodes: { ...nodes, individuals: visible },
@@ -66,9 +87,11 @@ export function computeCardState(input: CardStateInput): CardState {
     animate,
     cssVars: computeCssVars(config, nodes, homeRing.largestSource, placement.sorted),
     layout: {
+      hasGridColumn,
+      opticalShift: twoColumns ? opticalShift(hubCircles, homeCircles) : 0,
       showTopRow: nodes.solar.has || visible.length > 0 || nodes.nonFossil.hasPercentage,
       showBottomRow,
-      hasRightIndividual: !!rightTop || !!rightBottom,
+      hasRightIndividual,
       showHomeLabel: visible.length <= 1,
     },
   };

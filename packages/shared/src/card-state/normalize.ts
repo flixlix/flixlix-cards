@@ -87,7 +87,7 @@ export const isOutage = (hass: HomeAssistant, entities: ConfigEntities): boolean
  * A node is configured only with an entity: a non-empty id, or split entities with one side set.
  * An empty one, as the visual editor leaves after clearing the field, does not count.
  */
-const hasEntity = (field: { entity?: string | ComboEntity } | undefined): boolean => {
+export const hasEntity = (field: { entity?: string | ComboEntity } | undefined): boolean => {
   const entity = field?.entity;
   return typeof entity === "object" ? !!(entity.consumption || entity.production) : !!entity;
 };
