@@ -2,9 +2,12 @@ import { Link } from "@tanstack/react-router";
 import {
   Activity,
   ArrowRight,
+  BatteryCharging,
   BookOpen,
+  Car,
   Download,
   Eye,
+  Fuel,
   Github,
   House,
   Package,
@@ -12,6 +15,8 @@ import {
   Play,
   Settings,
   ShieldAlert,
+  Sun,
+  UtilityPole,
   Wrench,
 } from "lucide-react";
 import type * as React from "react";
@@ -356,54 +361,15 @@ export function InstallationPage() {
 
 const CARD_OPTIONS: OptionRow[] = [
   { name: "type", type: "string", required: true, description: <code>{CARD_TYPE}</code> },
+  { name: "title", type: "string", description: "Card title." },
   {
     name: "grid / solar / battery / home",
     type: "object",
     description: (
       <>
-        <code>grid</code>, <code>solar</code>, <code>battery</code> and <code>home</code>,
-        configured as in <Link to="/power-flow-card-plus/configuration">Power Flow Card Plus</Link>,
-        at the top level of the card. Leave one out and it is not drawn; one of grid, solar or
-        battery is required.
-      </>
-    ),
-  },
-  { name: "title", type: "string", description: "Card title." },
-  {
-    name: "animate_numbers",
-    type: "boolean",
-    default: "true",
-    description:
-      "Roll each number to its new value when a reading changes. Always still when your system asks for reduced motion.",
-  },
-  {
-    name: "clickable_entities",
-    type: "boolean",
-    default: "false",
-    description: "Tapping a value opens its entity, or runs the node's tap/hold actions.",
-  },
-  {
-    name: "battery.state_of_charge_severity",
-    type: "object",
-    default: "{ red: 15, yellow: 30 }",
-    description: (
-      <>
-        The battery&apos;s charge bar colours, in %: red below <code>red</code>, yellow below{" "}
-        <code>yellow</code>, green above both. Its icon follows the state of charge as in Power Flow
-        Card Plus, and its label shows the state of charge and whether it is charging.
-      </>
-    ),
-  },
-  {
-    name: "battery.state_of_charge_position",
-    type: "string",
-    default: "below_power",
-    description: (
-      <>
-        Where the battery&apos;s label shows its state of charge: <code>below_power</code>, beside
-        whether it is charging; <code>above_power</code>, swapped with the power as the large value;
-        or on the power&apos;s line, <code>after_power</code> or <code>before_power</code>. Without
-        a state of charge, the label shows the power either way.
+        The nodes, at the top level of the card; see their sections below. Leave one out and it is
+        not drawn; one of grid, solar or battery is required. Without <code>home</code>, the card
+        works out what the home uses from the others.
       </>
     ),
   },
@@ -412,12 +378,7 @@ const CARD_OPTIONS: OptionRow[] = [
     type: "object",
     description: (
       <>
-        <code>entity</code> (and optional <code>name</code>) of a generator the inverter switches to
-        during a grid outage. It gets its own wire into the inverter and is never drawn on the grid
-        cable. Needs <code>grid.power_outage</code> to know when the grid is down. While it runs,
-        its label takes the place of the grid&apos;s; otherwise the grid&apos;s label shows its
-        import or export, or a dash and <code>power_outage.label_alert</code> (default &quot;Power
-        Outage&quot;) when the grid is down.
+        A generator for grid outages; see <a href="#generator">Generator</a>.
       </>
     ),
   },
@@ -426,43 +387,33 @@ const CARD_OPTIONS: OptionRow[] = [
     type: "object",
     description: (
       <>
-        An electric car parked in front of the house, wired to the home&apos;s outlet.{" "}
-        <code>entity</code> is its charging power, positive while it charges and negative while it
-        feeds the home; <code>state_of_charge</code> (optional) shows its battery level on its
-        label, under its power. <code>name</code> (optional) defaults to &quot;Car&quot;.
+        An electric car in front of the house; see <a href="#car">Car</a>.
       </>
     ),
   },
   {
-    name: "car.visibility",
-    type: "list",
-    description: (
-      <>
-        Conditions, as in a card&apos;s visibility tab, and set up with the same editor on the Car
-        page: the car shows only while all of them hold, for example while its tracker reads{" "}
-        <code>home</code>. While hidden it keeps its room, so the house does not move as the car
-        comes and goes. Without conditions the car always shows. Entity state, numeric state,
-        screen, user, time, location, and, or and not are checked; template, sun, zone and device
-        conditions need Home Assistant itself and are ignored.
-      </>
-    ),
-  },
-  {
-    name: "car.idle",
-    type: "list",
-    description: (
-      <>
-        Conditions in the same format: while all of them hold, the car is parked and unplugged. It
-        is drawn faded, without its cable, and its label shows its state of charge. Without
-        conditions the car is idle while it draws no power.
-      </>
-    ),
+    name: "animate_numbers",
+    type: "boolean",
+    default: "true",
+    description:
+      "Roll each number to its new value when a reading changes. Always still when your system asks for reduced motion.",
   },
   {
     name: "disable_dots",
     type: "boolean",
     default: "false",
     description: "Keep the wires still: no pulses, only the colour of the power they carry.",
+  },
+  {
+    name: "clickable_entities",
+    type: "boolean",
+    default: "false",
+    description: (
+      <>
+        Tapping a value opens its entity&apos;s details. A node&apos;s own{" "}
+        <a href="#actions">actions</a> run either way.
+      </>
+    ),
   },
 ];
 
@@ -485,7 +436,364 @@ const NUMBER_OPTIONS: OptionRow[] = [
     name: "min_expected_power / max_expected_power",
     type: "number",
     default: "0.01 / 2000",
-    description: "The power range the pulse speed follows.",
+    description: "The power range the pulse speed follows, in W.",
+  },
+];
+
+const nameRow = (fallback: string, fromEntity = "the name"): OptionRow[] => [
+  { name: "name", type: "string", default: fallback, description: "Label name." },
+  {
+    name: "use_metadata",
+    type: "boolean",
+    default: "false",
+    description: `Take ${fromEntity} from the entity.`,
+  },
+];
+
+const valueRows = (node: string): OptionRow[] => [
+  {
+    name: "display_zero_tolerance",
+    type: "number",
+    default: "0",
+    description: `Below this power, in W, the ${node} counts as idle.`,
+  },
+  {
+    name: "unit_of_measurement",
+    type: "string",
+    description: "Unit shown instead of the sensor's own.",
+  },
+  {
+    name: "decimals",
+    type: "number",
+    description: (
+      <>
+        Decimals of the value, instead of the card&apos;s <code>base_decimals</code> and{" "}
+        <code>kilo_decimals</code>.
+      </>
+    ),
+  },
+];
+
+const ACTION_ROWS: OptionRow[] = [
+  {
+    name: "tap_action / hold_action / double_tap_action",
+    type: "object",
+    description: (
+      <>
+        What tapping, holding or double-tapping the label does; see <a href="#actions">Actions</a>.
+      </>
+    ),
+  },
+];
+
+const colorRows = (consumption: string, production: string): OptionRow[] => [
+  {
+    name: "color.consumption",
+    type: "string | list",
+    default: "theme",
+    description: (
+      <>
+        Colour of the wire {consumption}, as <code>#rrggbb</code> or <code>[r, g, b]</code>.
+      </>
+    ),
+  },
+  {
+    name: "color.production",
+    type: "string | list",
+    default: "theme",
+    description: `Colour of the wire ${production}.`,
+  },
+];
+
+const GRID_OPTIONS: OptionRow[] = [
+  {
+    name: "entity",
+    type: "string | object",
+    required: true,
+    description: (
+      <>
+        A power sensor, positive while importing and negative while exporting; or{" "}
+        <code>consumption</code> (import) and <code>production</code> (export), one sensor per
+        direction, each positive.
+      </>
+    ),
+  },
+  ...nameRow("Grid"),
+  {
+    name: "power_outage.entity",
+    type: "string",
+    description:
+      "The entity that reports an outage. While the grid is down, its cable goes dead and its label shows a dash and an alert.",
+  },
+  {
+    name: "power_outage.state_alert",
+    type: "string",
+    default: "on",
+    description: (
+      <>
+        The state of <code>power_outage.entity</code> that means the grid is down.
+      </>
+    ),
+  },
+  {
+    name: "power_outage.label_alert",
+    type: "string",
+    default: "Power Outage",
+    description: "The alert under the grid's name during an outage.",
+  },
+  {
+    name: "invert_state",
+    type: "boolean",
+    default: "false",
+    description: "Swap import and export, for a sensor that reads the other way round.",
+  },
+  ...valueRows("grid"),
+  ...colorRows("while importing", "while exporting"),
+  ...ACTION_ROWS,
+];
+
+const SOLAR_OPTIONS: OptionRow[] = [
+  { name: "entity", type: "string", required: true, description: "The solar production sensor." },
+  ...nameRow("Solar"),
+  {
+    name: "invert_state",
+    type: "boolean",
+    default: "false",
+    description: "For a sensor that reads production as negative.",
+  },
+  ...valueRows("solar"),
+  {
+    name: "color",
+    type: "string | list",
+    default: "theme",
+    description: (
+      <>
+        Colour of the wire, as <code>#rrggbb</code> or <code>[r, g, b]</code>.
+      </>
+    ),
+  },
+  ...ACTION_ROWS,
+];
+
+const BATTERY_OPTIONS: OptionRow[] = [
+  {
+    name: "entity",
+    type: "string | object",
+    required: true,
+    description: (
+      <>
+        A power sensor, positive while discharging and negative while charging; or{" "}
+        <code>consumption</code> (discharge) and <code>production</code> (charge), one sensor per
+        direction, each positive.
+      </>
+    ),
+  },
+  {
+    name: "state_of_charge",
+    type: "string",
+    description: "The state of charge sensor, in %. Fills the charge bar and shows on the label.",
+  },
+  {
+    name: "state_of_charge_position",
+    type: "string",
+    default: "below_power",
+    description: (
+      <>
+        Where the label shows the state of charge: <code>below_power</code>, beside whether it is
+        charging; <code>above_power</code>, swapped with the power as the large value; or on the
+        power&apos;s line, <code>after_power</code> or <code>before_power</code>. Without a state of
+        charge, the label shows the power either way.
+      </>
+    ),
+  },
+  {
+    name: "state_of_charge_severity.red",
+    type: "number",
+    default: "15",
+    description: "The charge bar is red below this charge, in %.",
+  },
+  {
+    name: "state_of_charge_severity.yellow",
+    type: "number",
+    default: "30",
+    description: "The charge bar is yellow below this charge, in %, and green above it.",
+  },
+  {
+    name: "state_of_charge_unit",
+    type: "string",
+    default: "%",
+    description: "Unit of the state of charge.",
+  },
+  {
+    name: "state_of_charge_unit_white_space",
+    type: "boolean",
+    default: "true",
+    description: "Put a space between the state of charge and its unit.",
+  },
+  {
+    name: "state_of_charge_decimals",
+    type: "number",
+    default: "0",
+    description: "Decimals of the state of charge.",
+  },
+  ...nameRow("Battery", "the name and icon"),
+  {
+    name: "icon",
+    type: "string",
+    default: "by charge",
+    description: (
+      <>
+        The icon on the battery: <code>mdi:battery</code>, <code>mdi:battery-high</code>,{" "}
+        <code>mdi:battery-medium</code>, <code>mdi:battery-low</code> or{" "}
+        <code>mdi:battery-outline</code>. By default it follows the state of charge.
+      </>
+    ),
+  },
+  {
+    name: "invert_state",
+    type: "boolean",
+    default: "false",
+    description: "Swap charging and discharging, for a sensor that reads the other way round.",
+  },
+  ...valueRows("battery"),
+  ...colorRows("while discharging", "while charging"),
+  ...ACTION_ROWS,
+];
+
+const HOME_OPTIONS: OptionRow[] = [
+  {
+    name: "entity",
+    type: "string",
+    description: (
+      <>
+        The home&apos;s consumption sensor, opened on tap and read with <code>override_state</code>.
+      </>
+    ),
+  },
+  ...nameRow("Home"),
+  {
+    name: "override_state",
+    type: "boolean",
+    default: "false",
+    description: (
+      <>
+        Show the <code>entity</code>&apos;s reading instead of the consumption the card works out.
+      </>
+    ),
+  },
+  {
+    name: "unit_of_measurement",
+    type: "string",
+    description: "Unit shown instead of the sensor's own.",
+  },
+  {
+    name: "decimals",
+    type: "number",
+    description: "Decimals of the value, instead of the card's.",
+  },
+  ...ACTION_ROWS,
+];
+
+const GENERATOR_OPTIONS: OptionRow[] = [
+  { name: "entity", type: "string", required: true, description: "The generator's power sensor." },
+  { name: "name", type: "string", default: "Generator", description: "Label name." },
+];
+
+const CAR_OPTIONS: OptionRow[] = [
+  {
+    name: "entity",
+    type: "string",
+    required: true,
+    description:
+      "Its charging power, positive while it charges and negative while it feeds the home.",
+  },
+  {
+    name: "state_of_charge",
+    type: "string",
+    description: "Its battery level, in %, shown on its label under its power.",
+  },
+  { name: "name", type: "string", default: "Car", description: "Label name." },
+  {
+    name: "visibility",
+    type: "list",
+    description: (
+      <>
+        <a href="#conditions">Conditions</a>, set up with the same editor as a card&apos;s
+        visibility tab: the car shows only while all of them hold, for example while its tracker
+        reads <code>home</code>. While hidden it keeps its room, so the house does not move as the
+        car comes and goes. Without conditions the car always shows.
+      </>
+    ),
+  },
+  {
+    name: "idle",
+    type: "list",
+    description: (
+      <>
+        <a href="#conditions">Conditions</a>: while all of them hold, the car is parked and
+        unplugged. It is drawn faded, without its cable, and its label shows its state of charge.
+        Without conditions the car is idle while it draws no power.
+      </>
+    ),
+  },
+];
+
+const CONDITION_ROWS: OptionRow[] = [
+  {
+    name: "state",
+    type: "condition",
+    description: (
+      <>
+        <code>entity</code>, and <code>state</code> or <code>state_not</code>: a value or a list.
+      </>
+    ),
+  },
+  {
+    name: "numeric_state",
+    type: "condition",
+    description: (
+      <>
+        <code>entity</code>, <code>above</code>, <code>below</code>.
+      </>
+    ),
+  },
+  { name: "screen", type: "condition", description: <code>media_query</code> },
+  { name: "user", type: "condition", description: <>{<code>users</code>}: user ids.</> },
+  {
+    name: "time",
+    type: "condition",
+    description: (
+      <>
+        <code>after</code>, <code>before</code>, <code>weekdays</code>.
+      </>
+    ),
+  },
+  {
+    name: "location",
+    type: "condition",
+    description: (
+      <>
+        <code>locations</code>: <code>home</code>, <code>not_home</code> or zones.
+      </>
+    ),
+  },
+  {
+    name: "and / or",
+    type: "condition",
+    description: (
+      <>
+        <code>conditions</code>: all of them, or any of them.
+      </>
+    ),
+  },
+  {
+    name: "not",
+    type: "condition",
+    description: (
+      <>
+        <code>conditions</code>: passes unless all of them hold.
+      </>
+    ),
   },
 ];
 
@@ -493,6 +801,14 @@ export function ConfigurationPage() {
   const tocItems: TocItem[] = [
     { id: "card-options", label: "Card options" },
     { id: "numbers", label: "Numbers and pulses" },
+    { id: "grid", label: "Grid" },
+    { id: "solar", label: "Solar" },
+    { id: "battery", label: "Battery" },
+    { id: "home", label: "Home" },
+    { id: "generator", label: "Generator" },
+    { id: "car", label: "Car" },
+    { id: "conditions", label: "Conditions" },
+    { id: "actions", label: "Actions" },
   ];
 
   return (
@@ -503,8 +819,8 @@ export function ConfigurationPage() {
           title="Configuration"
           description={
             <>
-              The card&apos;s own options. Required fields are marked with{" "}
-              <span className="text-destructive font-mono">*</span>.
+              Every option the card reads, by where it goes in the YAML. Required fields are marked
+              with <span className="text-destructive font-mono">*</span>.
             </>
           }
         />
@@ -543,6 +859,176 @@ max_expected_power: 5000`,
         >
           <OptionList rows={NUMBER_OPTIONS} />
         </CategorySection>
+
+        <CategorySection
+          id="grid"
+          title="Grid"
+          icon={UtilityPole}
+          accent="violet"
+          description={
+            <>
+              Under <code>grid</code>: the cable running off to the street.
+            </>
+          }
+          example={{
+            language: "yaml",
+            code: `grid:
+  entity:
+    consumption: sensor.grid_import_power
+    production: sensor.grid_export_power
+  power_outage:
+    entity: binary_sensor.grid_outage
+    label_alert: Blackout`,
+          }}
+        >
+          <OptionList rows={GRID_OPTIONS} />
+        </CategorySection>
+
+        <CategorySection
+          id="solar"
+          title="Solar"
+          icon={Sun}
+          accent="orange"
+          description={
+            <>
+              Under <code>solar</code>: the panels on the roof.
+            </>
+          }
+          example={{
+            language: "yaml",
+            code: `solar:
+  entity: sensor.solar_power
+  name: Roof
+  color: "#ff9800"`,
+          }}
+        >
+          <OptionList rows={SOLAR_OPTIONS} />
+        </CategorySection>
+
+        <CategorySection
+          id="battery"
+          title="Battery"
+          icon={BatteryCharging}
+          accent="green"
+          description={
+            <>
+              Under <code>battery</code>: the battery on the wall, with its charge bar.
+            </>
+          }
+          example={{
+            language: "yaml",
+            code: `battery:
+  entity: sensor.battery_power
+  state_of_charge: sensor.battery_soc
+  state_of_charge_position: after_power
+  state_of_charge_severity:
+    red: 10
+    yellow: 25`,
+          }}
+        >
+          <OptionList rows={BATTERY_OPTIONS} />
+        </CategorySection>
+
+        <CategorySection
+          id="home"
+          title="Home"
+          icon={House}
+          accent="cyan"
+          description={
+            <>
+              Under <code>home</code>: the outlet inside the house. Optional; without it the card
+              works out what the home uses.
+            </>
+          }
+          example={{
+            language: "yaml",
+            code: `home:
+  entity: sensor.home_power
+  override_state: true`,
+          }}
+        >
+          <OptionList rows={HOME_OPTIONS} />
+        </CategorySection>
+
+        <CategorySection
+          id="generator"
+          title="Generator"
+          icon={Fuel}
+          accent="amber"
+          description={
+            <>
+              Under <code>generator</code>: a generator the inverter switches to during a grid
+              outage. It gets its own wire into the inverter and is never drawn on the grid cable.
+              It needs <code>grid.power_outage</code> to know when the grid is down; while it runs,
+              its label takes the grid&apos;s place.
+            </>
+          }
+          example={{
+            language: "yaml",
+            code: `grid:
+  entity: sensor.grid_power
+  power_outage:
+    entity: binary_sensor.grid_outage
+generator:
+  entity: sensor.generator_power`,
+          }}
+        >
+          <OptionList rows={GENERATOR_OPTIONS} />
+        </CategorySection>
+
+        <CategorySection
+          id="car"
+          title="Car"
+          icon={Car}
+          accent="pink"
+          description={
+            <>
+              Under <code>car</code>: an electric car parked in front of the house, wired to the
+              home&apos;s outlet.
+            </>
+          }
+          example={{
+            language: "yaml",
+            code: `car:
+  entity: sensor.wallbox_power
+  state_of_charge: sensor.car_battery_level
+  visibility:
+    - condition: state
+      entity: device_tracker.car
+      state: home
+  idle:
+    - condition: state
+      entity: binary_sensor.car_plugged_in
+      state: "off"`,
+          }}
+        >
+          <OptionList rows={CAR_OPTIONS} />
+        </CategorySection>
+
+        <Section title="Conditions" id="conditions">
+          <Prose>
+            <p>
+              <code>car.visibility</code> and <code>car.idle</code> take the conditions of a
+              card&apos;s visibility tab. Template, sun, zone and device conditions need Home
+              Assistant itself and are ignored.
+            </p>
+          </Prose>
+          <OptionList rows={CONDITION_ROWS} />
+        </Section>
+
+        <Section title="Actions" id="actions">
+          <Prose>
+            <p>
+              <code>tap_action</code>, <code>hold_action</code> and <code>double_tap_action</code>{" "}
+              take Home Assistant&apos;s{" "}
+              <a href="https://www.home-assistant.io/dashboards/actions/">actions</a>:{" "}
+              <code>more-info</code>, <code>toggle</code>, <code>navigate</code>, <code>url</code>,{" "}
+              <code>perform-action</code>, <code>assist</code> or <code>none</code>. Without any of
+              them, tapping a label opens its entity&apos;s details, but only with{" "}
+              <code>clickable_entities: true</code>.
+            </p>
+          </Prose>
+        </Section>
 
         <NextPageNav
           prev={{ label: "Installation", to: `${BASE_PATH}/installation` }}

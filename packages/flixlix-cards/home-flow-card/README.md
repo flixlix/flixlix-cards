@@ -69,28 +69,176 @@ the top level. Options that only change Power Flow Card Plus' circles and lines 
 
 ## Configuration
 
-| Name                               | Type    | Default                   | Description                                                                                                                                          |
-| ---------------------------------- | ------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `type`                             | string  | —                         | `custom:home-flow-card`                                                                                                                              |
-| `grid`, `solar`, `battery`, `home` | object  | —                         | Each node, configured as in [Power Flow Card Plus](https://cards.flixlix.com/power-flow-card-plus/configuration); leave one out and it is not drawn  |
-| `title`                            | string  | —                         | Card title                                                                                                                                           |
-| `animate_numbers`                  | boolean | `true`                    | Roll each number to its new value when a reading changes. Always still when your system asks for reduced motion                                      |
-| `clickable_entities`               | boolean | `false`                   | Tapping a value opens its entity, or runs the node's tap/hold actions                                                                                |
-| `disable_dots`                     | boolean | `false`                   | Keep the wires still: no pulses, only the colour of the power they carry                                                                             |
-| `battery.state_of_charge_severity` | object  | `{ red: 15, yellow: 30 }` | Battery charge bar colours, in %: red below `red`, yellow below `yellow`, green above both                                                           |
-| `battery.state_of_charge_position` | string  | `below_power`             | Where the battery's label shows its state of charge: `below_power`, `above_power` (swapped with the power), `after_power` or `before_power` (inline) |
-| `generator`                        | object  | —                         | `entity` (and optional `name`) of a generator the inverter switches to during a grid outage; needs `grid.power_outage`                               |
-| `car`                              | object  | —                         | An electric car in front of the house: `entity` (its power, positive while charging), optional `state_of_charge` and `name`                          |
-| `car.visibility`                   | list    | —                         | Show the car only while all of these hold, as in a card's visibility tab and with the same editor; it keeps its room while hidden                    |
-| `car.idle`                         | list    | 0 W                       | Draw the car faded and unplugged while all of these hold; without them, while it draws no power                                                      |
-| `base_decimals`                    | number  | `0`                       | Decimals of values in W                                                                                                                              |
-| `kilo_decimals`                    | number  | `1`                       | Decimals of values in kW                                                                                                                             |
-| `kilo_threshold`                   | number  | `1000`                    | From how many watts a value is shown in kW                                                                                                           |
-| `min_flow_rate`                    | number  | `0.75`                    | Seconds per pulse at the most power                                                                                                                  |
-| `max_flow_rate`                    | number  | `6`                       | Seconds per pulse at the least power                                                                                                                 |
-| `max_expected_power`               | number  | `2000`                    | Power at which pulses run their fastest                                                                                                              |
+Every option the card reads, by where it goes in the YAML. Only `type` and one of `grid`, `solar`
+or `battery` are required.
+
+### Card options
+
+| Name                 | Type    | Default | Description                                                                                                     |
+| -------------------- | ------- | ------- | --------------------------------------------------------------------------------------------------------------- |
+| `type`               | string  | -       | `custom:home-flow-card`                                                                                         |
+| `title`              | string  | -       | Card title                                                                                                      |
+| `grid`               | object  | -       | The grid, see [Grid](#grid)                                                                                     |
+| `solar`              | object  | -       | Solar on the roof, see [Solar](#solar)                                                                          |
+| `battery`            | object  | -       | The battery on the wall, see [Battery](#battery)                                                                |
+| `home`               | object  | -       | The home's consumption, see [Home](#home). Without it, the card works out what the home uses from the others    |
+| `generator`          | object  | -       | A generator for grid outages, see [Generator](#generator)                                                       |
+| `car`                | object  | -       | An electric car in front of the house, see [Car](#car)                                                          |
+| `animate_numbers`    | boolean | `true`  | Roll each number to its new value when a reading changes. Always still when your system asks for reduced motion |
+| `disable_dots`       | boolean | `false` | Keep the wires still: no pulses, only the colour of the power they carry                                        |
+| `clickable_entities` | boolean | `false` | Tapping a value opens its entity's details. A node's own actions run either way                                 |
+| `base_decimals`      | number  | `0`     | Decimals of values in W                                                                                         |
+| `kilo_decimals`      | number  | `1`     | Decimals of values in kW                                                                                        |
+| `kilo_threshold`     | number  | `1000`  | From how many watts a value is shown in kW                                                                      |
+| `min_flow_rate`      | number  | `0.75`  | Seconds per pulse at the most power                                                                             |
+| `max_flow_rate`      | number  | `6`     | Seconds per pulse at the least power                                                                            |
+| `min_expected_power` | number  | `0.01`  | Power at which pulses run their slowest, in W                                                                   |
+| `max_expected_power` | number  | `2000`  | Power at which pulses run their fastest, in W                                                                   |
+
+Leave a node out and the house does not draw it. `grid`, `solar`, `battery` and `home` take the
+same options as in [Power Flow Card Plus](https://cards.flixlix.com/power-flow-card-plus/configuration);
+the tables below list the ones that change the house.
+
+### Grid
+
+| Name                       | Type             | Default        | Description                                                                                                                                      |
+| -------------------------- | ---------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `entity`                   | string or object | -              | **Required.** A power sensor, positive while importing and negative while exporting, or `consumption` and `production`, one sensor per direction |
+| `entity.consumption`       | string           | -              | The import sensor, positive while importing                                                                                                      |
+| `entity.production`        | string           | -              | The export sensor, positive while exporting                                                                                                      |
+| `name`                     | string           | `Grid`         | Label name                                                                                                                                       |
+| `power_outage`             | object           | -              | Tells the card when the grid is down: its cable goes dead and its label shows an alert                                                           |
+| `power_outage.entity`      | string           | -              | **Required** with `power_outage`. The entity that reports an outage                                                                              |
+| `power_outage.state_alert` | string           | `on`           | The state of `power_outage.entity` that means the grid is down                                                                                   |
+| `power_outage.label_alert` | string           | `Power Outage` | The alert under the grid's name during an outage                                                                                                 |
+| `invert_state`             | boolean          | `false`        | Swap import and export, for a sensor that reads the other way round                                                                              |
+| `use_metadata`             | boolean          | `false`        | Take the name from the entity                                                                                                                    |
+| `display_zero_tolerance`   | number           | `0`            | Below this power, in W, the grid counts as idle                                                                                                  |
+| `unit_of_measurement`      | string           | -              | Unit shown instead of the sensor's own                                                                                                           |
+| `decimals`                 | number           | -              | Decimals of the value, instead of the card's `base_decimals` and `kilo_decimals`                                                                 |
+| `color.consumption`        | string or list   | theme          | Colour of the wire while importing, as `#rrggbb` or `[r, g, b]`                                                                                  |
+| `color.production`         | string or list   | theme          | Colour of the wire while exporting                                                                                                               |
+| `tap_action`               | object           | -              | What tapping the label does, see [Actions](#actions)                                                                                             |
+| `hold_action`              | object           | -              | What holding the label does                                                                                                                      |
+| `double_tap_action`        | object           | -              | What double-tapping the label does                                                                                                               |
+
+### Solar
+
+| Name                     | Type           | Default | Description                                          |
+| ------------------------ | -------------- | ------- | ---------------------------------------------------- |
+| `entity`                 | string         | -       | **Required.** The solar production sensor            |
+| `name`                   | string         | `Solar` | Label name                                           |
+| `invert_state`           | boolean        | `false` | For a sensor that reads production as negative       |
+| `use_metadata`           | boolean        | `false` | Take the name from the entity                        |
+| `display_zero_tolerance` | number         | `0`     | Below this power, in W, solar counts as idle         |
+| `unit_of_measurement`    | string         | -       | Unit shown instead of the sensor's own               |
+| `decimals`               | number         | -       | Decimals of the value, instead of the card's         |
+| `color`                  | string or list | theme   | Colour of the wire, as `#rrggbb` or `[r, g, b]`      |
+| `tap_action`             | object         | -       | What tapping the label does, see [Actions](#actions) |
+| `hold_action`            | object         | -       | What holding the label does                          |
+| `double_tap_action`      | object         | -       | What double-tapping the label does                   |
+
+### Battery
+
+| Name                               | Type             | Default       | Description                                                                                                                                                             |
+| ---------------------------------- | ---------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `entity`                           | string or object | -             | **Required.** A power sensor, positive while discharging and negative while charging, or `consumption` and `production`, one per direction                              |
+| `entity.consumption`               | string           | -             | The discharge sensor, positive while discharging                                                                                                                        |
+| `entity.production`                | string           | -             | The charge sensor, positive while charging                                                                                                                              |
+| `state_of_charge`                  | string           | -             | The state of charge sensor, in %. Fills the charge bar and shows on the label                                                                                           |
+| `state_of_charge_position`         | string           | `below_power` | Where the label shows the state of charge: `below_power`, `above_power` (swapped with the power), `after_power` or `before_power` (inline)                              |
+| `state_of_charge_severity`         | object           | -             | Where the charge bar changes colour, in %                                                                                                                               |
+| `state_of_charge_severity.red`     | number           | `15`          | The bar is red below this charge                                                                                                                                        |
+| `state_of_charge_severity.yellow`  | number           | `30`          | The bar is yellow below this charge, and green above it                                                                                                                 |
+| `state_of_charge_unit`             | string           | `%`           | Unit of the state of charge                                                                                                                                             |
+| `state_of_charge_unit_white_space` | boolean          | `true`        | Put a space between the state of charge and its unit                                                                                                                    |
+| `state_of_charge_decimals`         | number           | `0`           | Decimals of the state of charge                                                                                                                                         |
+| `name`                             | string           | `Battery`     | Label name                                                                                                                                                              |
+| `icon`                             | string           | by charge     | The icon on the battery: `mdi:battery`, `mdi:battery-high`, `mdi:battery-medium`, `mdi:battery-low` or `mdi:battery-outline`. By default it follows the state of charge |
+| `invert_state`                     | boolean          | `false`       | Swap charging and discharging, for a sensor that reads the other way round                                                                                              |
+| `use_metadata`                     | boolean          | `false`       | Take the name and icon from the entity                                                                                                                                  |
+| `display_zero_tolerance`           | number           | `0`           | Below this power, in W, the battery counts as idle                                                                                                                      |
+| `unit_of_measurement`              | string           | -             | Unit shown instead of the sensor's own                                                                                                                                  |
+| `decimals`                         | number           | -             | Decimals of the value, instead of the card's                                                                                                                            |
+| `color.consumption`                | string or list   | theme         | Colour of the wire while discharging, as `#rrggbb` or `[r, g, b]`                                                                                                       |
+| `color.production`                 | string or list   | theme         | Colour of the wire while charging                                                                                                                                       |
+| `tap_action`                       | object           | -             | What tapping the label does, see [Actions](#actions)                                                                                                                    |
+| `hold_action`                      | object           | -             | What holding the label does                                                                                                                                             |
+| `double_tap_action`                | object           | -             | What double-tapping the label does                                                                                                                                      |
+
+### Home
+
+Without a `home`, the card works out what the home uses from the other nodes.
+
+| Name                  | Type    | Default | Description                                                                      |
+| --------------------- | ------- | ------- | -------------------------------------------------------------------------------- |
+| `entity`              | string  | -       | The home's consumption sensor, opened on tap and read with `override_state`      |
+| `name`                | string  | `Home`  | Label name                                                                       |
+| `override_state`      | boolean | `false` | Show the `entity`'s reading instead of the home's consumption the card works out |
+| `use_metadata`        | boolean | `false` | Take the name from the entity                                                    |
+| `unit_of_measurement` | string  | -       | Unit shown instead of the sensor's own                                           |
+| `decimals`            | number  | -       | Decimals of the value, instead of the card's                                     |
+| `tap_action`          | object  | -       | What tapping the label does, see [Actions](#actions)                             |
+| `hold_action`         | object  | -       | What holding the label does                                                      |
+| `double_tap_action`   | object  | -       | What double-tapping the label does                                               |
+
+### Generator
+
+A generator the inverter switches to during a grid outage. It gets its own wire into the inverter
+and is never drawn on the grid cable. It needs [`grid.power_outage`](#grid) to know when the grid
+is down; while it runs, its label takes the grid's place.
+
+| Name     | Type   | Default     | Description                                |
+| -------- | ------ | ----------- | ------------------------------------------ |
+| `entity` | string | -           | **Required.** The generator's power sensor |
+| `name`   | string | `Generator` | Label name                                 |
+
+### Car
+
+An electric car parked in front of the house, wired to the home's outlet.
+
+| Name              | Type   | Default | Description                                                                                                                                                |
+| ----------------- | ------ | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `entity`          | string | -       | **Required.** Its charging power, positive while it charges and negative while it feeds the home                                                           |
+| `state_of_charge` | string | -       | Its battery level, in %, shown on its label under its power                                                                                                |
+| `name`            | string | `Car`   | Label name                                                                                                                                                 |
+| `visibility`      | list   | -       | [Conditions](#conditions): the car shows only while all of them hold. While hidden it keeps its room, so the house does not move. Without, it always shows |
+| `idle`            | list   | -       | [Conditions](#conditions): while all of them hold, the car is drawn faded and unplugged, without its cable. Without, it is idle while it draws no power    |
+
+#### Conditions
+
+`car.visibility` and `car.idle` take the conditions of a card's visibility tab, and the editor sets
+them up the same way:
+
+| `condition`     | Options                                              |
+| --------------- | ---------------------------------------------------- |
+| `state`         | `entity`, `state` or `state_not` (a value or a list) |
+| `numeric_state` | `entity`, `above`, `below`                           |
+| `screen`        | `media_query`                                        |
+| `user`          | `users` (user ids)                                   |
+| `time`          | `after`, `before`, `weekdays`                        |
+| `location`      | `locations` (`home`, `not_home` or zones)            |
+| `and`, `or`     | `conditions`                                         |
+| `not`           | `conditions`, passes unless all of them hold         |
+
+Template, sun, zone and device conditions need Home Assistant itself and are ignored.
+
+### Actions
+
+`tap_action`, `hold_action` and `double_tap_action` take Home Assistant's
+[actions](https://www.home-assistant.io/dashboards/actions/): `more-info`, `toggle`, `navigate`,
+`url`, `perform-action`, `assist` or `none`. Without any of them, tapping a label opens its
+entity's details, but only with `clickable_entities: true`.
 
 ## Examples
+
+Each recorded from the real card.
+
+### Solar and a battery
+
+The full house: solar, a battery with its state of charge, and the grid.
+
+<img width="478" alt="Solar charging the battery and exporting, then a cloud, then an evening on the battery" src="https://raw.githubusercontent.com/flixlix/flixlix-cards/main/packages/flixlix-cards/home-flow-card/assets/examples/solar-battery.gif">
 
 ```yaml
 type: custom:home-flow-card
@@ -103,9 +251,15 @@ battery:
   state_of_charge: sensor.battery_soc
 ```
 
+### Separate sensors, an outage and a generator
+
+One sensor per direction, the grid's outage sensor, and a generator that steps in when the grid
+goes down.
+
+<img width="478" alt="The grid goes down, the generator takes over, then the grid comes back" src="https://raw.githubusercontent.com/flixlix/flixlix-cards/main/packages/flixlix-cards/home-flow-card/assets/examples/outage-generator.gif">
+
 ```yaml
 type: custom:home-flow-card
-animate_numbers: false
 grid:
   entity:
     consumption: sensor.grid_import_power
@@ -117,13 +271,17 @@ generator:
 solar:
   entity: sensor.solar_power
 battery:
-  entity: sensor.battery_power
+  entity:
+    consumption: sensor.battery_discharge_power
+    production: sensor.battery_charge_power
   state_of_charge: sensor.battery_soc
-  state_of_charge_position: after_power
-  state_of_charge_severity:
-    red: 10
-    yellow: 25
 ```
+
+### A car charging off the sun
+
+The car shows only while it is home, and waits faded and unplugged while its cable is out.
+
+<img width="478" alt="A car charging from solar, unplugged and faded, then plugged in again" src="https://raw.githubusercontent.com/flixlix/flixlix-cards/main/packages/flixlix-cards/home-flow-card/assets/examples/car.gif">
 
 ```yaml
 type: custom:home-flow-card
@@ -142,6 +300,68 @@ car:
     - condition: state
       entity: binary_sensor.car_plugged_in
       state: "off"
+```
+
+### Your own battery thresholds
+
+Turn the charge bar yellow and red where it matters for your battery.
+
+<img width="478" alt="The battery discharging, its bar turning from green to yellow below 50 % and red below 25 %" src="https://raw.githubusercontent.com/flixlix/flixlix-cards/main/packages/flixlix-cards/home-flow-card/assets/examples/thresholds.gif">
+
+```yaml
+type: custom:home-flow-card
+grid:
+  entity: sensor.grid_power
+battery:
+  entity: sensor.battery_power
+  state_of_charge: sensor.battery_soc
+  state_of_charge_severity:
+    red: 25
+    yellow: 50
+```
+
+### Where the state of charge sits
+
+Under the power, swapped with it, or on its line.
+
+<img width="478" alt="The battery's label with each state_of_charge_position: below_power, above_power, after_power and before_power" src="https://raw.githubusercontent.com/flixlix/flixlix-cards/main/packages/flixlix-cards/home-flow-card/assets/examples/charge-position.gif">
+
+```yaml
+type: custom:home-flow-card
+grid:
+  entity: sensor.grid_power
+battery:
+  entity: sensor.battery_power
+  state_of_charge: sensor.battery_soc
+  state_of_charge_position: after_power
+```
+
+### Grid only
+
+Without solar or a battery, the house shows the grid feeding the home.
+
+<img width="478" alt="The grid feeding the home as its power changes" src="https://raw.githubusercontent.com/flixlix/flixlix-cards/main/packages/flixlix-cards/home-flow-card/assets/examples/grid-only.gif">
+
+```yaml
+type: custom:home-flow-card
+grid:
+  entity: sensor.grid_power
+```
+
+### Still numbers and wires
+
+Plain numbers and no pulses, for a calmer dashboard.
+
+<img width="478" alt="Solar and the grid with still wires and numbers that change without rolling" src="https://raw.githubusercontent.com/flixlix/flixlix-cards/main/packages/flixlix-cards/home-flow-card/assets/examples/still.gif">
+
+```yaml
+type: custom:home-flow-card
+animate_numbers: false
+disable_dots: true
+grid:
+  entity: sensor.grid_power
+solar:
+  entity: sensor.solar_power
 ```
 
 ## Source and issues
