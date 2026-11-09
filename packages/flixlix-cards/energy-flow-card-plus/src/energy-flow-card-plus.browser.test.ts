@@ -7,6 +7,7 @@ import {
   type StateFixtures,
   withStates,
 } from "@flixlix-cards/shared/testing/fake-hass";
+import { dotLoop } from "@flixlix-cards/shared/testing/dot-loop";
 import { expectFlowCard } from "@flixlix-cards/shared/testing/expect-flow-card";
 import { asEnergyUnits, flowScenarios } from "@flixlix-cards/shared/testing/flow-scenarios";
 import { mountCard } from "@flixlix-cards/shared/testing/mount-card";
@@ -141,5 +142,34 @@ describe("node actions", () => {
     }
     await userEvent.click(circle);
     expect(opened).toHaveLength(1);
+  });
+});
+
+describe("dot speed", () => {
+  test("at the same energy, loop time follows the square root of line length", async () => {
+    const { root } = await mountCard(
+      EnergyFlowCardPlus,
+      {
+        type: "custom:energy-flow-card-plus",
+        entities: {
+          grid: { entity: { consumption: "sensor.grid_import" } },
+          individual: [{ entity: "sensor.device" }],
+        },
+      },
+      fakeHass({
+        statistics: { "sensor.grid_import": 1000, "sensor.device": 1000 },
+        energyCollection: energyCollection(day(1).start, day(1).end),
+      }),
+      { width: 500 }
+    );
+    const grid = '.flow-dot[data-path="grid"]';
+    const device = '.flow-dot[data-path="individual-top"]';
+    expect(root.querySelector(grid)?.getAttribute("data-duration")).toBe(
+      root.querySelector(device)?.getAttribute("data-duration")
+    );
+    const short = dotLoop(root, device);
+    const long = dotLoop(root, grid);
+    expect(short.pixels).toBeLessThan(long.pixels / 2);
+    expect(short.seconds / long.seconds).toBeCloseTo(Math.sqrt(short.pixels / long.pixels), 1);
   });
 });

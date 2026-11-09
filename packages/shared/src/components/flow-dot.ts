@@ -14,6 +14,7 @@ export type FlowDotOptions = {
   className: string;
   /** Classes of the dot's own `<svg>`, for colour rules that match an ancestor of the circle. */
   hostClass?: string;
+  /** Per `REFERENCE_LINE_LENGTH` pixels of line, not per whole line. */
   durationSeconds: number;
   /** In the line's SVG units. */
   radius?: number;

@@ -1,4 +1,4 @@
-import { type ReadyCardState } from "@flixlix-cards/shared/card-state";
+import { lineDuration, type ReadyCardState } from "@flixlix-cards/shared/card-state";
 
 /** Points sampled along a line; the dot moves straight between them. */
 const SAMPLES = 40;
@@ -47,12 +47,18 @@ const dotMotion = (root: ShadowRoot, dot: SVGSVGElement) => {
         onScreen.y <= box.bottom);
     return { transform: `translate(${x}px, ${y}px)`, opacity: shown ? 1 : 0 };
   });
-  return { keyframes, radius: Number(dot.dataset.radius) * Math.hypot(toPixels.a, toPixels.b) };
+  const pixelsPerUnit = Math.hypot(toPixels.a, toPixels.b);
+  return {
+    keyframes,
+    radius: Number(dot.dataset.radius) * pixelsPerUnit,
+    lengthPixels: length * pixelsPerUnit,
+  };
 };
 
 /**
- * Moves every flow dot along its line at an even pace. A dot keeps its place on the line when its
- * speed changes, instead of jumping. All dots are stopped and measured before any moves again.
+ * Moves every flow dot along its line at an even pace. `data-duration` is seconds per reference
+ * line, stretched to the line's length (`lineDuration`). A dot keeps its place on the line when its speed changes, instead of jumping. All dots are stopped and
+ * measured before any moves again.
  */
 const animateFlowDots = (root: ShadowRoot): void => {
   if (typeof Element.prototype.animate !== "function") {
@@ -63,8 +69,11 @@ const animateFlowDots = (root: ShadowRoot): void => {
   const paths = dots.map((dot) => dotMotion(root, dot));
   dots.forEach((dot, index) => {
     const motion = paths[index];
-    const duration = Number(dot.dataset.duration) * 1000;
-    if (!motion || !(duration > 0)) {
+    if (!motion) {
+      return;
+    }
+    const duration = lineDuration(Number(dot.dataset.duration), motion.lengthPixels) * 1000;
+    if (!(duration > 0)) {
       return;
     }
     dot.firstElementChild?.setAttribute("r", String(motion.radius));

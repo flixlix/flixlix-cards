@@ -7,6 +7,7 @@ import {
   sensor,
   withStates,
 } from "@flixlix-cards/shared/testing/fake-hass";
+import { dotLoop } from "@flixlix-cards/shared/testing/dot-loop";
 import { expectFlowCard } from "@flixlix-cards/shared/testing/expect-flow-card";
 import { flowScenarios } from "@flixlix-cards/shared/testing/flow-scenarios";
 import { type MountedCard, mountCard } from "@flixlix-cards/shared/testing/mount-card";
@@ -527,5 +528,31 @@ describe("entity names", () => {
       Object.assign({ ...hass }, { entities: {}, formatEntityName: nameFormatter("Basement") })
     );
     expect(text(".grid .label")).toBe("Basement Grid power");
+  });
+});
+
+describe("dot speed", () => {
+  test("at the same power, loop time follows the square root of line length", async () => {
+    const { root } = await mountCard(
+      PowerFlowCardPlus,
+      {
+        type: "custom:power-flow-card-plus",
+        entities: {
+          grid: { entity: "sensor.grid" },
+          individual: [{ entity: "sensor.device" }],
+        },
+      },
+      fakeHass({ states: { "sensor.grid": "1000", "sensor.device": "1000" } }),
+      { width: 500 }
+    );
+    const grid = '.flow-dot[data-path="grid"]';
+    const device = '.flow-dot[data-path="individual-top"]';
+    expect(root.querySelector(grid)?.getAttribute("data-duration")).toBe(
+      root.querySelector(device)?.getAttribute("data-duration")
+    );
+    const short = dotLoop(root, device);
+    const long = dotLoop(root, grid);
+    expect(short.pixels).toBeLessThan(long.pixels / 2);
+    expect(short.seconds / long.seconds).toBeCloseTo(Math.sqrt(short.pixels / long.pixels), 1);
   });
 });
