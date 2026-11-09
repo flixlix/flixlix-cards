@@ -567,6 +567,26 @@ describe("home flow card", () => {
     expect(opened).toEqual([{ entityId: "sensor.solar" }]);
   });
 
+  test("a short label is still easy to tap beside its text", async () => {
+    const { root, card } = await mountHouse({}, { ...evening, "sensor.solar": "0" }, 400);
+    const opened: unknown[] = [];
+    card.addEventListener("hass-more-info", (event) => {
+      opened.push(event instanceof CustomEvent ? event.detail : undefined);
+    });
+    const label = labelOf(root, "solar");
+    const rect = label.getBoundingClientRect();
+    expect(rect.width).toBeLessThan(44);
+
+    // just right of "Solar", where a thumb aimed at it lands
+    const x = rect.right + 6;
+    const y = rect.bottom - 4;
+    const target = root.elementFromPoint(x, y);
+    expect(target instanceof HTMLElement && label.contains(target)).toBe(true);
+    await userEvent.click(label, { position: { x: x - rect.left, y: y - rect.top } });
+
+    expect(opened).toEqual([{ entityId: "sensor.solar" }]);
+  });
+
   test("labels are not buttons with clickable_entities: false", async () => {
     const { root } = await mountHouse({ clickable_entities: false });
 
