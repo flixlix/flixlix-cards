@@ -7,10 +7,11 @@ import { type CardStateInput, type HomeRing } from "./types";
 
 type Segments = Readonly<Pick<HomeRing, "battery" | "solar" | "grid" | "nonFossil">>;
 
-/** Arc lengths of each source's share of home; they sum to the circumference, or are all 0. */
+/** Arc lengths of each source's share of home; they always sum to the circumference. */
 export const ringSegments = (flows: NodeFlows): Segments => {
+  // With nothing consumed there are no shares, but the home still needs a closed ring (#449).
   if (flows.home <= 0) {
-    return { battery: 0, solar: 0, grid: 0, nonFossil: 0 };
+    return { battery: 0, solar: 0, grid: CIRCLE_CIRCUMFERENCE, nonFossil: 0 };
   }
   const arc = (value: number) => CIRCLE_CIRCUMFERENCE * (value / flows.home);
   const battery = arc(flows.batteryToHome);
