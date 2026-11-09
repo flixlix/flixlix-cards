@@ -1,0 +1,3 @@
+if git diff --cached --name-only --diff-filter=ACMR | grep -q '^\.changeset/.*\.md$'; then
+  pnpm check:changesets
+fi

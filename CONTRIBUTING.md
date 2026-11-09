@@ -115,7 +115,7 @@ This monorepo uses [Changesets](https://github.com/changesets/changesets) to man
   feat: the battery's label can show its state of charge before, after or above its power with `battery.state_of_charge_position`.
   ```
 
-  Say what changed for the user; leave the how, examples and tables to the README and docs. `pnpm check` rejects a changeset without a type, with more than one paragraph or over 280 characters.
+  Say what changed for the user; leave the how, examples and tables to the README and docs. `pnpm check` and the pre-commit hook reject a changeset without a type, with more than one paragraph or over 280 characters. `pnpm install` sets up the hook; if your global git config sets `core.hooksPath`, point this repository at it once with `git config core.hooksPath .vite-hooks/_ && pnpm exec vp hooks enable`.
 
 - **Release notes and versioning** are handled automatically. Each card's GitHub release groups its changesets by type and ends with the support links and a link to the full changelog (`packages/tooling/release-notes`).
 

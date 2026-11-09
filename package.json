@@ -3,6 +3,7 @@
   "private": true,
   "license": "MIT",
   "scripts": {
+    "prepare": "vp config --no-agent",
     "build": "vp run -r --cache build",
     "dev": "vp run -r --parallel dev",
     "check": "vp check && pnpm check:changesets",
