@@ -839,7 +839,7 @@ function houseEntries(): SearchEntry[] {
       HOUSE,
       "page",
       "Configuration",
-      "The card's own options.",
+      "Every option the card reads.",
       ["yaml", "options", "reference"]
     ),
     houseEntry(`${HOUSE_BASE}/examples`, HOUSE, "page", "Examples", "Copy-pastable configs.", [
@@ -866,23 +866,41 @@ function houseEntries(): SearchEntry[] {
     ]),
     option("clickable_entities", "Tap a value to open its entity.", "card-options"),
     option("disable_dots", "Keep the wires still.", "card-options", ["pulses"]),
+    ...(
+      [
+        ["grid", "Grid", "Import and export sensors, power outage, colours, actions."],
+        ["solar", "Solar", "The solar sensor, name, colour, actions."],
+        ["battery", "Battery", "Power and state of charge, charge bar thresholds, icon, colours."],
+        ["home", "Home", "The home's own sensor and override_state."],
+        ["generator", "Generator", "A generator on the inverter during a grid outage."],
+        ["car", "Car", "An electric car, its charge, visibility and idle conditions."],
+        ["conditions", "Conditions", "Conditions for the car's visibility and idle state."],
+        ["actions", "Actions", "Tap, hold and double-tap actions on a label."],
+      ] as const
+    ).map(([id, title, description]) =>
+      houseEntry(`${HOUSE_BASE}/configuration#${id}`, configuration, "section", title, description)
+    ),
     option("wire_width", "Draw the wires thicker.", "card-options", ["lines", "thickness"]),
-    option("generator", "A generator on the inverter during a grid outage.", "card-options", [
+    option("power_outage", "The grid's outage sensor and alert.", "grid", ["outage", "blackout"]),
+    option("override_state", "Show the home sensor's own reading.", "home"),
+    option("visibility", "When the car is drawn.", "car", ["car", "conditions", "home"]),
+    option("idle", "When the car is parked and unplugged.", "car", ["car", "plugged", "faded"]),
+    option("generator", "A generator on the inverter during a grid outage.", "generator", [
       "outage",
       "backup",
     ]),
-    option("state_of_charge_severity", "Battery charge bar colours.", "card-options", [
+    option("state_of_charge_severity", "Battery charge bar colours.", "battery", [
       "battery",
       "red",
       "yellow",
       "threshold",
     ]),
-    option(
-      "state_of_charge_position",
-      "Where the battery label shows its charge.",
-      "card-options",
-      ["battery", "inline", "swap", "percent"]
-    ),
+    option("state_of_charge_position", "Where the battery label shows its charge.", "battery", [
+      "battery",
+      "inline",
+      "swap",
+      "percent",
+    ]),
     option("kilo_threshold", "From how many watts values are in kW.", "numbers"),
     option("kilo_decimals", "Decimals of values in kW.", "numbers"),
     example("solar-battery", "Solar and a battery", "The full house."),
@@ -902,6 +920,7 @@ function houseEntries(): SearchEntry[] {
       "state_of_charge_position after_power."
     ),
     example("grid-only", "Grid only", "No solar or battery."),
+    example("wire-width", "Thicker wires", "wire_width 2."),
     example("still", "Still numbers and wires", "animate_numbers and disable_dots off."),
   ];
 }
