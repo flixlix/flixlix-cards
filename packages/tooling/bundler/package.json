@@ -16,7 +16,9 @@
     "rollup-plugin-minify-html-literals": "catalog:packages"
   },
   "devDependencies": {
+    "@types/node": "catalog:",
     "esm-env": "catalog:packages",
+    "playwright": "catalog:packages",
     "vite-plus": "catalog:packages"
   },
   "peerDependencies": {
