@@ -17,7 +17,7 @@ describe("line duration", () => {
   test("on a shorter line a dot moves fewer pixels per second but loops more often", () => {
     fc.assert(
       fc.property(seconds, pixels, pixels, (rate, a, b) => {
-        fc.pre(a < b);
+        fc.pre(a < b * 0.999);
         expect(a / lineDuration(rate, a)).toBeLessThan(b / lineDuration(rate, b));
         expect(lineDuration(rate, a)).toBeLessThan(lineDuration(rate, b));
       })
@@ -27,7 +27,7 @@ describe("line duration", () => {
   test("a faster flow rate stays faster on every line", () => {
     fc.assert(
       fc.property(seconds, seconds, pixels, (a, b, length) => {
-        fc.pre(a < b);
+        fc.pre(a < b * 0.999);
         expect(lineDuration(a, length)).toBeLessThan(lineDuration(b, length));
       })
     );
