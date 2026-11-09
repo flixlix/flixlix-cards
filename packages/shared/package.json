@@ -45,6 +45,6 @@
     "memoize-one": "catalog:packages",
     "sortablejs": "catalog:packages",
     "superstruct": "catalog:packages",
-    "tslib": "^2.8.1"
+    "tslib": "catalog:packages"
   }
 }

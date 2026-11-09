@@ -161,6 +161,10 @@ catalogs:
       specifier: ^2.0.2
       version: 2.0.2
 
+    tslib:
+      specifier: ^2.8.1
+      version: 2.8.1
+
     vite:
       specifier: npm:@voidzero-dev/vite-plus-core@1.5.0
       version: 1.5.0
@@ -398,6 +402,9 @@ importers:
       rollup-plugin-serve:
         specifier: catalog:packages
         version: 1.1.1
+      tslib:
+        specifier: catalog:packages
+        version: 2.8.1
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -492,6 +499,9 @@ importers:
       rollup-plugin-serve:
         specifier: catalog:packages
         version: 1.1.1
+      tslib:
+        specifier: catalog:packages
+        version: 2.8.1
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -571,6 +581,9 @@ importers:
       rollup-plugin-serve:
         specifier: catalog:packages
         version: 1.1.1
+      tslib:
+        specifier: catalog:packages
+        version: 2.8.1
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -653,6 +666,9 @@ importers:
       rollup-plugin-serve:
         specifier: catalog:packages
         version: 1.1.1
+      tslib:
+        specifier: catalog:packages
+        version: 2.8.1
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -747,6 +763,9 @@ importers:
       rollup-plugin-serve:
         specifier: catalog:packages
         version: 1.1.1
+      tslib:
+        specifier: catalog:packages
+        version: 2.8.1
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -832,6 +851,9 @@ importers:
       rollup-plugin-serve:
         specifier: catalog:packages
         version: 1.1.1
+      tslib:
+        specifier: catalog:packages
+        version: 2.8.1
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -866,7 +888,7 @@ importers:
         specifier: catalog:packages
         version: 2.0.2
       tslib:
-        specifier: ^2.8.1
+        specifier: catalog:packages
         version: 2.8.1
     devDependencies:
       '@flixlix-cards/testing':

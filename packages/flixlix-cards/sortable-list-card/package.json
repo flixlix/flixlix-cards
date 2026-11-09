@@ -68,6 +68,7 @@
     "rollup": "catalog:packages",
     "rollup-plugin-minify-html-literals": "catalog:packages",
     "rollup-plugin-serve": "catalog:packages",
+    "tslib": "catalog:packages",
     "typescript": "catalog:",
     "vite-tsconfig-paths": "catalog:",
     "vite-plus": "catalog:packages"
