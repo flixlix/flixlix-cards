@@ -1,5 +1,13 @@
 # home-flow-card
 
+## 0.1.4
+
+### Patch Changes
+
+- [#450](https://github.com/flixlix/flixlix-cards/pull/450) [`4109729`](https://github.com/flixlix/flixlix-cards/commit/4109729a5050eb6829a24e3645aa7fb41cd31cd0) Thanks [@flixlix](https://github.com/flixlix)! - The battery's label can place its state of charge where you want it with `battery.state_of_charge_position`: under the power as before (`below_power`, the default), swapped with the power so the charge is the large value (`above_power`), or on the power's own line, after it (`after_power`) or before it (`before_power`). It is also in the battery page of the UI editor.
+
+- [#450](https://github.com/flixlix/flixlix-cards/pull/450) [`38057fd`](https://github.com/flixlix/flixlix-cards/commit/38057fd99f78e395e1fe1b863d137ba2c4fd3661) Thanks [@flixlix](https://github.com/flixlix)! - The labels keep a readable size on narrow cards, such as in a sidebar or on a phone, and stop growing on wide ones. Names and the status line stay between 12 and 19 px, and values between about 21 and 34 px; the house makes room for them. Cards between about 450 and 700 px wide look as before.
+
 ## 0.1.3
 
 ### Patch Changes

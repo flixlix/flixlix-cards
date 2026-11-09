@@ -1,5 +1,12 @@
 # @flixlix-cards/web
 
+## 1.1.2
+
+### Patch Changes
+
+- Updated dependencies [[`4109729`](https://github.com/flixlix/flixlix-cards/commit/4109729a5050eb6829a24e3645aa7fb41cd31cd0), [`38057fd`](https://github.com/flixlix/flixlix-cards/commit/38057fd99f78e395e1fe1b863d137ba2c4fd3661)]:
+  - home-flow-card@0.1.4
+
 ## 1.1.1
 
 ### Patch Changes
