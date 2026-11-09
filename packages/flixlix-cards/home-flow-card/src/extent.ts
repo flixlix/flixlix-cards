@@ -11,6 +11,22 @@ export class Extent {
     -Infinity,
   ];
 
+  /** Points the box must hold without being centred on them, as `require` keeps them. */
+  private _required: [left: number, right: number] = [Infinity, -Infinity];
+
+  clone(): Extent {
+    const copy = new Extent();
+    copy._box = [...this._box];
+    copy._required = [...this._required];
+    return copy;
+  }
+
+  /** Widens the box to hold `x`, without moving the middle the box is centred on. */
+  require(x: number, margin = 0): void {
+    const [left, right] = this._required;
+    this._required = [Math.min(left, x - margin), Math.max(right, x + margin)];
+  }
+
   include([x, y]: ScreenPoint, margin = 0): void {
     const [left, top, right, bottom] = this._box;
     this._box = [
@@ -22,14 +38,18 @@ export class Extent {
   }
 
   /**
-   * The box around everything, widened on one side to pull its middle halfway towards
+   * The box around everything, widened on one side to pull its middle `pull` of halfway towards
    * `focusX`: centring on the house alone leaves the left empty, as the labels and the grid
    * cable reach further right than the house does left.
    */
-  viewBox(padding: number, focusX: number): Box {
+  viewBox(padding: number, focusX: number, pull = 1): Box {
     const [left, top, right, bottom] = this._box;
-    const centerX = (focusX + (left + right) / 2) / 2;
-    const half = Math.max(centerX - left, right - centerX) + padding;
+    const middle = (left + right) / 2;
+    const centerX = middle + ((focusX - middle) / 2) * pull;
+    const [requiredLeft, requiredRight] = this._required;
+    const half =
+      Math.max(centerX - Math.min(left, requiredLeft), Math.max(right, requiredRight) - centerX) +
+      padding;
     return {
       x: centerX - half,
       y: top - padding,

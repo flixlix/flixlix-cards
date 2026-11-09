@@ -11,6 +11,7 @@ import { LABEL_ANCHORS, type LabelledNode, project } from "./scene";
 const LABEL_WIDTH = 92;
 const LABEL_HEIGHT = 34;
 const LINE_HEIGHT = 13;
+const LABEL_INDENT = 10;
 /** Rough width of a second value on a label's value line, with its separator. */
 const ASIDE_WIDTH = 50;
 
@@ -24,27 +25,37 @@ export type LabelContext = {
 
 /**
  * Makes room in the viewBox for a node's label, with `lines` lines beyond its value and name, and
- * room for an aside on the value's line if it has one.
+ * room for an aside on the value's line if it has one. `scale` is the label's size against the
+ * scene's: labels keep a readable size as the scene shrinks, and stop growing as it grows.
  */
-export const includeLabel = (extent: Extent, node: LabelledNode, lines: number, aside = false) => {
+export const includeLabel = (
+  extent: Extent,
+  node: LabelledNode,
+  lines: number,
+  { aside = false, scale = 1 }: { aside?: boolean; scale?: number } = {}
+) => {
   const anchor = LABEL_ANCHORS[node];
   const [x, y] = project(anchor.at);
   const end = y + anchor.leader;
-  const height = LABEL_HEIGHT + lines * LINE_HEIGHT;
+  const height = (LABEL_HEIGHT + lines * LINE_HEIGHT) * scale;
   extent.include([x, end + Math.sign(anchor.leader) * height], 4);
-  extent.include([x - 10 + LABEL_WIDTH + (aside ? ASIDE_WIDTH : 0), end], 4);
+  // a label starts LABEL_INDENT left of its leader, as its CSS moves it; the house's centring
+  // leaves room for that on a wide card, but not on a narrow one
+  extent.require(x - LABEL_INDENT * scale, 4);
+  extent.include([x + (LABEL_WIDTH - LABEL_INDENT + (aside ? ASIDE_WIDTH : 0)) * scale, end], 4);
 };
 
+/** Makes room in the viewBox for a drawn label, at `scale` against the scene. */
+export const includeLabelOf = (extent: Extent, label: Label, scale: number) =>
+  includeLabel(extent, label.node, [label.status, label.alert].filter(Boolean).length, {
+    aside: Boolean(label.aside),
+    scale,
+  });
+
 /** The line from what a label measures up or down to the label. */
-export const leaderSvg = (label: Label, extent: Extent) => {
+export const leaderSvg = (label: Label) => {
   const anchor = LABEL_ANCHORS[label.node];
   const [x, y] = project(anchor.at);
-  includeLabel(
-    extent,
-    label.node,
-    [label.status, label.alert].filter(Boolean).length,
-    Boolean(label.aside)
-  );
   return svg`<g class="leader">
     <path d="M${x} ${y}V${y + anchor.leader}" stroke="var(--house-leader)" stroke-width="0.8"></path>
     <circle cx=${x} cy=${y} r="1.6" fill="var(--house-leader)"></circle>

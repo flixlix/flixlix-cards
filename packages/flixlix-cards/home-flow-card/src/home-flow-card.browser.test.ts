@@ -53,6 +53,14 @@ const reading = (root: ShadowRoot, node: string) => {
   return `${value ?? "—"} ${labelOf(root, node).querySelector(".unit")?.textContent ?? ""}`.trim();
 };
 
+const fontSizeOf = (root: ShadowRoot, selector: string) => {
+  const element = root.querySelector(selector);
+  return element ? Number.parseFloat(getComputedStyle(element).fontSize) : 0;
+};
+
+const intersects = (a: DOMRect, b: DOMRect) =>
+  a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+
 const startOf = (d: string) => d.match(/^M([\d.-]+ [\d.-]+)/)?.[1];
 const endOf = (d: string) => d.match(/L([\d.-]+ [\d.-]+)$/)?.[1];
 
@@ -301,19 +309,16 @@ describe("home flow card", () => {
   test("labels follow the card's width after it is taken out and put back", async () => {
     // Home Assistant moves cards around while a dashboard loads
     const { root, card, resize } = await mountHouse();
-    const unit = () =>
-      Number.parseFloat(
-        getComputedStyle(root.querySelector(".stage") ?? card).getPropertyValue("--house-unit")
-      );
-    const atFull = unit();
+    const size = () => fontSizeOf(root, ".label.home .value");
+    const atFull = size();
     const container = card.parentElement;
     card.remove();
     container?.append(card);
     await card.updateComplete;
 
-    await resize(250);
+    await resize(900);
 
-    expect(unit()).toBeLessThan(atFull * 0.6);
+    expect(size()).toBeGreaterThan(atFull * 1.2);
   });
 
   test("a pulse keeps its place in its cycle when its speed changes", async () => {
@@ -564,6 +569,60 @@ describe("home flow card", () => {
 
     expect(card.hasAttribute("dark")).toBe(true);
   });
+
+  test("label text stays readable on a narrow card and stops growing on a wide one", async () => {
+    const narrow = await mountHouse({}, evening, 330);
+    expect(fontSizeOf(narrow.root, ".label.home .name")).toBeGreaterThanOrEqual(12);
+    expect(fontSizeOf(narrow.root, ".label.battery .status")).toBeGreaterThanOrEqual(12);
+    expect(fontSizeOf(narrow.root, ".label.home .value")).toBeGreaterThanOrEqual(21);
+
+    const wide = await mountHouse({}, evening, 1300);
+    expect(fontSizeOf(wide.root, ".label.home .value")).toBeLessThanOrEqual(34);
+    expect(fontSizeOf(wide.root, ".label.home .name")).toBeLessThanOrEqual(19);
+  });
+
+  test.each([250, 300, 360, 430, 600, 900, 1300])(
+    "at %ipx every label stays inside the card, clear of the others",
+    async (width) => {
+      const { root } = await mountHouse(
+        {
+          battery: {
+            ...allNodes.battery,
+            entity: "sensor.battery",
+            state_of_charge_position: "after_power",
+          },
+          ...car,
+        },
+        carCharging,
+        width
+      );
+      const stage = root.querySelector(".stage")?.getBoundingClientRect();
+      const labels = [...root.querySelectorAll(".label")].map((label) => ({
+        node: label.className,
+        box: label.getBoundingClientRect(),
+      }));
+      expect(labels.length).toBe(5);
+      labels.forEach(({ node, box }) => {
+        expect({
+          node,
+          inside:
+            stage !== undefined &&
+            box.left >= stage.left - 0.5 &&
+            box.right <= stage.right + 0.5 &&
+            box.top >= stage.top - 0.5 &&
+            box.bottom <= stage.bottom + 0.5,
+        }).toEqual({ node, inside: true });
+      });
+      labels.forEach((a, i) =>
+        labels.slice(i + 1).forEach((b) => {
+          expect({ pair: [a.node, b.node], overlap: intersects(a.box, b.box) }).toEqual({
+            pair: [a.node, b.node],
+            overlap: false,
+          });
+        })
+      );
+    }
+  );
 
   test("labels grow and shrink with the card", async () => {
     const { root, resize } = await mountHouse({}, evening, 600);

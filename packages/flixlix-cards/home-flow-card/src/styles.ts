@@ -184,12 +184,12 @@ export const styles = css`
     color: var(--primary-text-color);
     pointer-events: auto;
     /* clear of the leader line's end */
-    --label-gap: calc(var(--house-unit, 1px) * 5);
-    transform: translate(calc(var(--house-unit, 1px) * -10), calc(-100% - var(--label-gap)));
+    --label-gap: calc(var(--label-unit, 1px) * 5);
+    transform: translate(calc(var(--label-unit, 1px) * -10), calc(-100% - var(--label-gap)));
   }
 
   .label.down {
-    transform: translate(calc(var(--house-unit, 1px) * -10), var(--label-gap));
+    transform: translate(calc(var(--label-unit, 1px) * -10), var(--label-gap));
   }
 
   .label.clickable {
@@ -203,7 +203,7 @@ export const styles = css`
   }
 
   .value {
-    font-size: calc(var(--house-unit, 1px) * 17);
+    font-size: calc(var(--label-unit, 1px) * 17);
     font-weight: 700;
     letter-spacing: -0.02em;
     line-height: 1;
@@ -236,7 +236,7 @@ export const styles = css`
     display: flex;
     align-items: center;
     gap: 0.35em;
-    font-size: calc(var(--house-unit, 1px) * 9.5);
+    font-size: calc(var(--label-unit, 1px) * 9.5);
     font-weight: 500;
     color: var(--secondary-text-color);
   }
@@ -244,7 +244,7 @@ export const styles = css`
   /* even space above and below, so the status sits between value and name */
   .status {
     gap: 0.3em;
-    margin: calc(var(--house-unit, 1px) * 0.5) 0 calc(var(--house-unit, 1px) * 3);
+    margin: calc(var(--label-unit, 1px) * 0.5) 0 calc(var(--label-unit, 1px) * 3);
   }
 
   .figure {
