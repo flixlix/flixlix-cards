@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import * as React from "react";
 
+import { trackEvent } from "#/lib/analytics";
 import { Button } from "@flixlix-cards/ui/components/button";
 
 import { CardDemo } from "@/components/card-demo";
@@ -271,7 +272,12 @@ export function InstallationPage({ cardKey }: { cardKey: CardKey }) {
         <Prose>
           <p>
             Download <code>{v.cardSlug}.js</code> from the{" "}
-            <a href={v.releaseUrl} target="_blank" rel="noopener noreferrer">
+            <a
+              href={v.releaseUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackEvent("Download release", { card: v.title })}
+            >
               latest release
             </a>{" "}
             and copy it into <code>config/www</code>.

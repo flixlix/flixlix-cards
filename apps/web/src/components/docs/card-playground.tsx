@@ -2,6 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import * as React from "react";
 import { parse, stringify } from "yaml";
 
+import { trackEvent } from "#/lib/analytics";
 import { CardPreview, type CardConfig } from "@/components/card-preview";
 import {
   type Demo,
@@ -427,6 +428,7 @@ export function CardPlayground({
               const preset = scenarios[Number(index)];
               if (preset) {
                 update(preset.state);
+                trackEvent("Load playground scenario", { kind, scenario: preset.name });
               }
             }}
           >

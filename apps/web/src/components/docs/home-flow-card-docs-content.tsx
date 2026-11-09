@@ -20,6 +20,7 @@ import {
 import type * as React from "react";
 import { parse, stringify } from "yaml";
 
+import { trackEvent } from "#/lib/analytics";
 import { CardDemo } from "@/components/card-demo";
 import { type CardConfig, CardPreview } from "@/components/card-preview";
 import { type HouseMoment, houseMoments } from "@/components/demos";
@@ -274,7 +275,12 @@ export function InstallationPage() {
         <Prose>
           <p>
             Download <code>{PKG}.js</code> from the{" "}
-            <a href={RELEASE_URL} target="_blank" rel="noopener noreferrer">
+            <a
+              href={RELEASE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackEvent("Download release", { card: TITLE })}
+            >
               latest release
             </a>{" "}
             and copy it into <code>config/www/</code>, then register the resource:
