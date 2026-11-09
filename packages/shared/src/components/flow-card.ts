@@ -1,7 +1,7 @@
-import { type ReadyCardState } from "@flixlix-cards/shared/card-state";
+import { type CardLayout, type ReadyCardState } from "@flixlix-cards/shared/card-state";
 import { type CardMainContext, type FlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { type HomeAssistant } from "custom-card-helpers";
-import { html, nothing } from "lit";
+import { html, nothing, type TemplateResult } from "lit";
 import { batteryElement } from "./battery";
 import { type FlowLayout } from "./flows/geometry";
 import { flowElement } from "./flows/index";
@@ -15,6 +15,12 @@ import { spacer } from "./spacer";
 
 type RowContext = { main: CardMainContext; config: FlowCardPlusConfig; cardState: ReadyCardState };
 
+/** The slot under solar and above the battery, where their lines cross the grid–home axis. */
+const hub = html`<div class="spacer hub"></div>`;
+
+const gridColumn = (layout: CardLayout, content: TemplateResult) =>
+  layout.hasGridColumn ? content : nothing;
+
 /** Non-fossil, solar and the top individual slots. */
 const topRow = ({ main, config, cardState }: RowContext) => {
   const { nodes, individualSlots, layout, animate } = cardState;
@@ -23,7 +29,15 @@ const topRow = ({ main, config, cardState }: RowContext) => {
   }
   const solarSlot = nodes.individuals.length > 0 ? spacer : nothing;
   return html`<div class="row">
-    ${nonFossilElement(main, config, { nonFossil: nodes.nonFossil, flow: cardState.flows.nonFossil, animate })}
+    ${
+      layout.hasGridColumn
+        ? nonFossilElement(main, config, {
+            nonFossil: nodes.nonFossil,
+            flow: cardState.flows.nonFossil,
+            animate,
+          })
+        : nothing
+    }
     ${nodes.solar.has ? solarElement(main, config, nodes.solar) : solarSlot}
     ${individualElement(main, config, "left-top", { slot: individualSlots.leftTop, animate })}
     ${
@@ -38,7 +52,7 @@ const topRow = ({ main, config, cardState }: RowContext) => {
 const middleRow = ({ main, config, cardState }: RowContext) => {
   const { nodes, layout } = cardState;
   return html`<div class="row middle">
-    ${nodes.grid.has ? gridElement(main, config, nodes.grid) : spacer} ${spacer}
+    ${gridColumn(layout, nodes.grid.has ? gridElement(main, config, nodes.grid) : spacer)} ${hub}
     ${
       !config.entities.home?.hide
         ? homeElement(main, config, {
@@ -59,7 +73,8 @@ const bottomRow = ({ main, config, cardState }: RowContext) => {
     return spacer;
   }
   return html`<div class="row">
-    ${spacer} ${nodes.battery.has ? batteryElement(main, config, nodes.battery) : spacer}
+    ${gridColumn(layout, spacer)}
+    ${nodes.battery.has ? batteryElement(main, config, nodes.battery) : spacer}
     ${individualElement(main, config, "left-bottom", { slot: individualSlots.leftBottom, animate })}
     ${
       layout.hasRightIndividual
@@ -92,9 +107,9 @@ export const flowCard = (
       <div
         class="card-content ${config.full_size ? "full-size" : ""} ${
           config.no_labels ? "no-labels" : ""
-        }"
+        } ${cardState.layout.hasGridColumn ? "" : "no-grid"}"
         id=${contentId}
-        style=${config.style_card_content ?? ""}
+        style="--optical-shift: ${cardState.layout.opticalShift}; ${config.style_card_content ?? ""}"
       >
         ${topRow(rows)} ${middleRow(rows)} ${bottomRow(rows)} ${flowElement(cardState, flowLayout)}
       </div>

@@ -153,6 +153,11 @@ export const styles = css`
   .spacer {
     width: var(--size-circle-entity);
   }
+  /* Without the grid column, two columns keep the spacing they have among three. */
+  .card-content.no-grid .row:not(:has(> :nth-child(3))) {
+    max-width: calc((100% + var(--size-circle-entity)) / 2);
+    translate: calc((100% - var(--size-circle-entity)) * var(--optical-shift, 0));
+  }
 
   .circle-container .circle {
     cursor: var(--clickable-cursor);

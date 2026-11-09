@@ -90,6 +90,13 @@ export type HomeRing = {
 };
 
 export type CardLayout = {
+  /** Off only without a grid entity, so a grid hidden at zero keeps its column and nothing shifts. */
+  hasGridColumn: boolean;
+  /**
+   * How far the columns move right, in distances between columns, so the group looks centred:
+   * negative moves left. Only a card with two columns moves.
+   */
+  opticalShift: number;
   showTopRow: boolean;
   showBottomRow: boolean;
   hasRightIndividual: boolean;

@@ -207,6 +207,23 @@ describe("labels", () => {
   });
 });
 
+const solarHomeCircles = async (entities: object) => {
+  const { root } = await mountCard(
+    PowerFlowCardPlus,
+    { type: "custom:power-flow-card-plus", entities },
+    fakeHass({ states: { "sensor.grid": "100", "sensor.solar": "300", "sensor.battery": "0" } }),
+    { width: 500 }
+  );
+  return {
+    content: centerOf(root.querySelector(".card-content")),
+    solar: centerOf(root.querySelector(".solar .circle")),
+    battery: root.querySelector(".battery .circle")
+      ? centerOf(root.querySelector(".battery .circle"))
+      : undefined,
+    home: centerOf(root.querySelector(".home .circle")),
+  };
+};
+
 describe("layout", () => {
   test("resizing between narrow and wide moves individuals in and out of the right slots", async () => {
     const individual = [1, 2, 3, 4].map((index) => ({ entity: `sensor.device_${index}` }));
@@ -247,6 +264,42 @@ describe("layout", () => {
 
     expect(rtl[".grid .circle"]?.x).toBeLessThan(rtl[".home .circle"]?.x ?? 0);
     expect(rtl).toEqual(ltr);
+  });
+
+  test("without a grid, solar and home keep the spacing they have with one", async () => {
+    const solarAndBattery = {
+      solar: { entity: "sensor.solar" },
+      battery: { entity: "sensor.battery" },
+    };
+    const withGrid = await solarHomeCircles({
+      grid: { entity: "sensor.grid" },
+      ...solarAndBattery,
+    });
+    const withoutGrid = await solarHomeCircles(solarAndBattery);
+
+    expect(withoutGrid.home.x - withoutGrid.solar.x).toBeCloseTo(
+      withGrid.home.x - withGrid.solar.x,
+      0
+    );
+    expect(withoutGrid.battery?.x).toBeCloseTo(withoutGrid.solar.x, 0);
+  });
+
+  test("without a grid, solar and battery beside a lone home move right to look centred", async () => {
+    const { content, solar, home } = await solarHomeCircles({
+      solar: { entity: "sensor.solar" },
+      battery: { entity: "sensor.battery" },
+    });
+    const pitch = home.x - solar.x;
+    const centroid = (2 * solar.x + home.x) / 3;
+
+    expect((solar.x + home.x) / 2 - content.x).toBeCloseTo(pitch / 9, 0);
+    expect(content.x - centroid).toBeCloseTo(pitch / 18, 0);
+  });
+
+  test("without a grid, solar and home alone balance and stay centred", async () => {
+    const { content, solar, home } = await solarHomeCircles({ solar: { entity: "sensor.solar" } });
+
+    expect((solar.x + home.x) / 2).toBeCloseTo(content.x, 0);
   });
 
   test("stays under a fixed overlay earlier on the page, like a floating nav bar", async () => {
