@@ -239,6 +239,9 @@ export class EnergyFlowCardPlus extends LitElement {
     pushEntity(entities.fossil_fuel_percentage?.entity);
     entities.individual?.forEach((individual) => {
       pushEntity(individual.entity);
+      if (individual.secondary_info?.sum_total) {
+        pushEntity(individual.secondary_info.entity);
+      }
     });
     return [...ids];
   }

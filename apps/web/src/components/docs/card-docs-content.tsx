@@ -1001,7 +1001,8 @@ const SECONDARY_INFO_OPTIONS: OptionRow[] = [
   {
     name: "sum_total",
     type: "boolean",
-    description: "On the solar bubble, sum the secondary info with the main entity.",
+    description:
+      "On solar or an individual device, add the secondary entity to the main entity. On an individual device the sum drives the shown value, the flow and subtract_individual; the secondary info keeps its own value.",
   },
   { name: "tap_action", type: "object", description: "Action triggered on tap." },
   { name: "hold_action", type: "object", description: "Action triggered on long press." },

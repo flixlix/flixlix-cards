@@ -464,6 +464,25 @@ export const flowScenarios: FlowScenario[] = [
     expect: { text: { ".individual-top .secondary-info": "heating" } },
   },
   {
+    name: "an individual summing its secondary entity with sum_total",
+    entities: {
+      grid: { entity: "sensor.grid" },
+      individual: [
+        {
+          entity: "sensor.charger",
+          name: "Charger",
+          secondary_info: { entity: "sensor.charger_2", sum_total: true },
+        },
+      ],
+    },
+    states: { "sensor.grid": "7200", "sensor.charger": "0", "sensor.charger_2": "7200" },
+    energy: true,
+    expect: {
+      text: { "span.individual-left-top": "7.2 kW", ".individual-top .label": "Charger" },
+      shown: ['.flow-dot[data-path="individual-top"] circle'],
+    },
+  },
+  {
     name: "zero lines greyed out",
     visual: true,
     entities: combinedEntities,

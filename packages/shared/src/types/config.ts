@@ -6,6 +6,7 @@ import {
   type IndividualDeviceType,
   type LovelaceCardConfig,
   type SecondaryInfoType,
+  type SummableSecondaryInfoType,
 } from "./type";
 
 /** How a flow's value maps to seconds per dot; see the flow formula docs. */
@@ -98,9 +99,7 @@ interface Solar extends BaseConfigEntity {
   color_icon?: boolean;
   color_value?: boolean;
   color_label?: boolean;
-  secondary_info?: SecondaryInfoType & {
-    sum_total?: boolean;
-  };
+  secondary_info?: SummableSecondaryInfoType;
   display_zero?: boolean;
   display_zero_state?: boolean;
 }

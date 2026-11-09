@@ -111,6 +111,7 @@
     "state_type": "Тип стану",
     "subtract_individual": "Віднімати індивідуальні значення",
     "sum_total": "Сумувати сонячну та вторинну",
+    "sum_total_individual": "Сумувати пристрій та вторинну",
     "tap_action": "Дія при натисканні",
     "template": "Шаблон",
     "transparency": "Прозорість",

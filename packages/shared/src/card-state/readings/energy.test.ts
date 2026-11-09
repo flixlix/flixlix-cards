@@ -117,4 +117,18 @@ describe("energyReadings", () => {
 
     expect(result.individuals[0]).toBeCloseTo(expected);
   });
+
+  test("an individual with secondary_info.sum_total adds its secondary entity's growth", () => {
+    const individual = {
+      entity: "sensor.charger",
+      secondary_info: { entity: "sensor.charger_2", sum_total: true },
+    };
+    const read = (growth: Record<string, number>) =>
+      ready(energyReadings(hassWith(), config({ individual: [individual] }), growth)).individuals;
+
+    expect(read({ "sensor.charger": 1200, "sensor.charger_2": 300 })).toEqual([1500]);
+    expect(read({ "sensor.charger_2": 300 })).toEqual([300]);
+    expect(read({ "sensor.charger": 1200 })).toEqual([1200]);
+    expect(read({})).toEqual([null]);
+  });
 });
