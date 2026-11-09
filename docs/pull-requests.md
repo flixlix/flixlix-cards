@@ -24,13 +24,9 @@ Closes #<issue>
 ## Not in this PR
 
 <what was deliberately left out, and why>
-
-## Checklist
-
-<the checklist from .github/pull_request_template.md, ticked>
 ```
 
-Skip preambles, keep prose brief, and use the vocabulary from [`CONTEXT.md`](../CONTEXT.md): node, flow, readings, node totals, card state, solver, slot. Drop a section only when it would be empty (a pure refactor has no "Not in this PR" worth writing). Never drop the checklist.
+Skip preambles, keep prose brief, and use the vocabulary from [`CONTEXT.md`](../CONTEXT.md): node, flow, readings, node totals, card state, solver, slot. Drop a section only when it would be empty (a pure refactor has no "Not in this PR" worth writing).
 
 ## Summary
 
@@ -105,8 +101,6 @@ Show a before and an after.
      main 4.2 kW, secondary 3.0 kW
      before: bubble 4.2 kW   after: bubble 7.2 kW, flow to home visible
    ```
-
-"`pnpm check && pnpm typecheck && pnpm test` pass" belongs in the checklist, not here; it proves nothing about this change.
 
 ## Merge danger
 
