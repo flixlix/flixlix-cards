@@ -542,6 +542,58 @@ export const flowScenarios: FlowScenario[] = [
       fastestFirst: [dot(flows.solarToGrid), dot(flows.batteryGrid), dot(flows.gridToHome)],
     },
   },
+  {
+    name: "battery hub: solar and grid charge the battery, only the battery feeds home",
+    visual: true,
+    entities: splitEntities,
+    options: { topology: "battery_hub" },
+    states: {
+      "sensor.grid_import": "500",
+      "sensor.grid_export": "0",
+      "sensor.solar": "3000",
+      "sensor.battery_charge": "1500",
+      "sensor.battery_discharge": "0",
+    },
+    energy: true,
+    expect: {
+      text: { "#home-circle": "2 kW" },
+      shown: [
+        dot(flows.solarToBattery),
+        `${dot(flows.batteryGrid)}.battery-from-grid`,
+        dot(flows.batteryToHome),
+      ],
+      hidden: [flows.solarToHome, flows.solarToGrid, flows.gridToHome],
+      fastestFirst: [dot(flows.batteryToHome), `${dot(flows.batteryGrid)}.battery-from-grid`],
+    },
+  },
+  {
+    name: "battery hub without a battery keeps the standard wires",
+    entities: { grid: combinedEntities.grid, solar: combinedEntities.solar },
+    options: { topology: "battery_hub" },
+    states: { "sensor.grid": "200", "sensor.solar": "1000" },
+    expect: {
+      text: { "#home-circle": "1.2 kW" },
+      shown: [dot(flows.solarToHome), dot(flows.gridToHome)],
+    },
+  },
+  {
+    name: "isolated battery: no wire between battery and grid",
+    entities: splitEntities,
+    options: { topology: "isolated_battery" },
+    states: {
+      "sensor.grid_import": "0",
+      "sensor.grid_export": "2000",
+      "sensor.solar": "2500",
+      "sensor.battery_charge": "0",
+      "sensor.battery_discharge": "30",
+    },
+    energy: true,
+    expect: {
+      text: { "#home-circle": "530 W" },
+      shown: [dot(flows.solarToGrid), dot(flows.solarToHome), dot(flows.batteryToHome)],
+      hidden: [flows.batteryGrid],
+    },
+  },
 ];
 
 /** A screenshot name for a scenario. */

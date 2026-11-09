@@ -1,6 +1,6 @@
 import localize from "@flixlix-cards/shared/i18n";
 import { displayZeroLinesSchema } from "@flixlix-cards/shared/ui-editor/schema/display-zero-lines";
-import { FLOW_RATE_MODELS } from "@flixlix-cards/shared/types";
+import { FLOW_RATE_MODELS, TOPOLOGIES } from "@flixlix-cards/shared/types";
 import memoizeOne from "memoize-one";
 import {
   any,
@@ -65,6 +65,7 @@ export const cardConfigStruct = assign(
     }),
     sort_individual_devices: optional(boolean()),
     allow_layout_break: optional(boolean()),
+    topology: optional(enums([...TOPOLOGIES])),
 
     /* LEGACY - JUST TO AVOID ERRORS */
     watt_threshold: optional(number()),
@@ -179,6 +180,19 @@ export const advancedOptionsSchema = memoizeOne((displayZeroLinesMode: string) =
         name: "allow_layout_break",
         label: "Allow Layout Break",
         selector: { boolean: {} },
+      },
+      {
+        name: "topology",
+        label: localize("editor.topology"),
+        selector: {
+          select: {
+            mode: "dropdown",
+            options: TOPOLOGIES.map((topology) => ({
+              value: topology,
+              label: localize(`editor.topology_${topology}`),
+            })),
+          },
+        },
       },
     ],
   },

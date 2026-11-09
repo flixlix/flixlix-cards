@@ -12,6 +12,7 @@ import {
   type SecondaryInfoObject,
   type SecondaryInfoType,
   type SolarObject,
+  type Topology,
 } from "@flixlix-cards/shared/types";
 import {
   computeFieldIcon,
@@ -27,7 +28,7 @@ import { type NodeFlows } from "./solve";
 import { type CardStateInput, type ReadyReadings } from "./types";
 
 /** Node totals and presence with the flows solved from them. */
-export type Balance = Normalized & Readonly<{ flows: NodeFlows }>;
+export type Balance = Normalized & Readonly<{ flows: NodeFlows; topology: Topology }>;
 
 type NodeContext = {
   input: CardStateInput;

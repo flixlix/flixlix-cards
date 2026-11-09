@@ -1,4 +1,4 @@
-import { type PowerFlowCardPlusConfig } from "@flixlix-cards/shared/types";
+import { type PowerFlowCardPlusConfig, TOPOLOGIES } from "@flixlix-cards/shared/types";
 import { type HomeAssistant } from "custom-card-helpers";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vite-plus/test";
 import { EnergyFlowCardPlusEditor } from "./ui-editor";
@@ -274,6 +274,19 @@ describe("energy flow ui editor", () => {
 
     expect(() => editor.setConfig(editorConfig({ entities: {}, not_an_option: true }))).toThrow(
       /not_an_option/
+    );
+  });
+  test.each(TOPOLOGIES)("setConfig accepts topology %s", (topology) => {
+    const editor = new EnergyFlowCardPlusEditor();
+
+    expect(() => editor.setConfig(editorConfig({ entities: {}, topology }))).not.toThrow();
+  });
+
+  test("setConfig rejects an unknown topology so HA falls back to YAML", () => {
+    const editor = new EnergyFlowCardPlusEditor();
+
+    expect(() => editor.setConfig(editorConfig({ entities: {}, topology: "mesh" }))).toThrow(
+      /topology/
     );
   });
 });

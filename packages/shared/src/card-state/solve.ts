@@ -1,9 +1,10 @@
+import { type Topology } from "@flixlix-cards/shared/types";
 import { type NodeTotals } from "./normalize";
 
 type Source = "grid" | "solar" | "battery";
 type Sink = "battery" | "grid" | "home";
 
-type AllocatedFlow =
+export type AllocatedFlow =
   | "solarToHome"
   | "solarToBattery"
   | "solarToGrid"
@@ -97,9 +98,46 @@ const opening = (totals: NodeTotals): Ledger => ({
   },
 });
 
-/** Allocates the node totals to flows in {@link ALLOCATION_ORDER}. */
-export const solve = (totals: NodeTotals): NodeFlows => {
-  const { flows } = ALLOCATION_ORDER.reduce(allocate, opening(totals));
+type AllocatedFlows = Ledger["flows"];
+
+/** Flows a topology has no wire for. */
+const MISSING_WIRES: Record<Topology, ReadonlyArray<AllocatedFlow>> = {
+  standard: [],
+  battery_hub: ["solarToHome", "solarToGrid", "gridToHome"],
+  isolated_battery: ["gridToBattery", "batteryToGrid"],
+};
+
+export const hasWire = (topology: Topology, flow: AllocatedFlow): boolean =>
+  !MISSING_WIRES[topology].includes(flow);
+
+/**
+ * The battery hub has no direct wires to home or out of solar, so whatever the standard allocation
+ * moves past the battery passes through it instead: home and the battery's net stay the same.
+ */
+const throughBattery = (flows: AllocatedFlows): AllocatedFlows => ({
+  solarToHome: 0,
+  solarToGrid: 0,
+  gridToHome: 0,
+  solarToBattery: flows.solarToBattery + flows.solarToHome + flows.solarToGrid,
+  gridToBattery: flows.gridToBattery + flows.gridToHome,
+  batteryToHome: flows.batteryToHome + flows.solarToHome + flows.gridToHome,
+  batteryToGrid: flows.batteryToGrid + flows.solarToGrid,
+});
+
+/**
+ * Allocates the node totals to flows in {@link ALLOCATION_ORDER}, skipping the steps the topology
+ * has no wire for. Readings that need a missing wire stay unallocated: the topology wins.
+ */
+const allocateWithin = (totals: NodeTotals, topology: Topology): AllocatedFlows => {
+  if (topology === "battery_hub") {
+    return throughBattery(allocateWithin(totals, "standard"));
+  }
+  const steps = ALLOCATION_ORDER.filter((step) => hasWire(topology, step.flow));
+  return steps.reduce(allocate, opening(totals)).flows;
+};
+
+export const solve = (totals: NodeTotals, topology: Topology = "standard"): NodeFlows => {
+  const flows = allocateWithin(totals, topology);
   const home = flows.solarToHome + flows.batteryToHome + flows.gridToHome;
   return {
     ...flows,

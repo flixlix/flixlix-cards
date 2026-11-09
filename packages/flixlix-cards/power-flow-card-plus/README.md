@@ -140,6 +140,7 @@ Else, if you prefer the graphical editor, use the menu to add the resource:
 | use_new_flow_rate_model     | `boolean` |                                          | Older alias of `flow_rate_model`: `false` is `relative`, `true` is `duration`. Ignored when `flow_rate_model` is set.                                                                                                    |
 | sort_individual_devices     | `boolean` |           true (since v0.3.1)            | If `true`, sort devices in order of power consumption -> entity id -> alphabetically.                                                                                                                                    |
 | allow_layout_break          | `boolean` |                  false                   | Always allow up to 4 individual devices to show, even when there is not enough space, causing visual layout break.                                                                                                       |
+| topology                    | `string`  |                `standard`                | Which wires your installation has: `standard`, `battery_hub` or `isolated_battery`. See [Topology](#topology).                                                                                                           |
 
 #### Action Configuration
 
@@ -335,6 +336,16 @@ This object allows you to control the behavior of the flow lines that are inacti
 | mode         | string                        | Valid Options are: `show`, `hide`, `transparency`, `grey_out`, `custom`                                                                                                                     |
 | transparency | number                        | A number between 0 and 100. 100 means the line doesn't show at all. 0 means the line shows in full opacity. Default is 50. Will be used when the mode is either `transparency` or `custom`. |
 | grey_color   | `string` or `list of numbers` | Either a HEX Code or a List of three numbers between 0 and 255 in RGB order. Will be used when the mode is either `grey_out` or `custom`.                                                   |
+
+#### Topology
+
+`topology` tells the card which wires exist between grid, solar, battery and home. The card only draws those wires and routes power along them.
+
+| Value              | Wires                                                                                          | For                                                                                                                                                                                                                                                          |
+| ------------------ | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `standard`         | Every wire (default).                                                                          | Most installations, AC or DC coupled.                                                                                                                                                                                                                        |
+| `battery_hub`      | Solar → battery, grid ↔ battery, battery → home. No solar → home, solar → grid or grid → home. | Portable power stations, UPS-style and off-grid inverters where every load runs through the battery. Power that would skip the battery passes through it instead, so home consumption stays the same. Needs a battery; without one the card uses `standard`. |
+| `isolated_battery` | Every wire except grid ↔ battery.                                                              | Batteries that never charge from or discharge into the grid. A battery reading that would need that wire is credited to solar or home instead, so small sensor noise no longer draws a battery ↔ grid flow.                                                  |
 
 ### Minimal Configuration
 
