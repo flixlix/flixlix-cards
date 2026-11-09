@@ -29,3 +29,7 @@ pnpm hass:down   # stop; pnpm hass:reset wipes generated state
 Dummy entities and scenario scripts: `.hass_dev/packages/`; one YAML dashboard per card: `.hass_dev/dashboards/`. The scenario matrix belongs in the browser tests with a fake hass; e2e covers only what needs a real HA.
 
 User-facing changes to a released card need, in the same PR: a changeset (`pnpm changeset`), the card README, the docs site (`apps/web`) and, for config options, the UI editor schema.
+
+## Pull requests
+
+Write the PR body following [`docs/pull-requests.md`](docs/pull-requests.md): summary from the issue with the smallest visual of the change, before/after evidence, merge danger, what was left out, and the template checklist.
