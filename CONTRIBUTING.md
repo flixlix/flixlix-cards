@@ -61,13 +61,13 @@ Each package contains its source code, changelogs, and relevant scripts.
 The repo uses [Vite+](https://viteplus.dev) (`vp`): Oxfmt for formatting, Oxlint (type-aware) for linting and Vitest for tests. Configuration lives in the root [`vite.config.ts`](vite.config.ts); repo-specific lint rules live in [`packages/tooling/lint-rules`](packages/tooling/lint-rules/).
 
 ```bash
-pnpm check      # format check + lint + type-aware checks
+pnpm check      # format check + lint + type errors (tsgolint)
 pnpm format     # apply formatting
-pnpm typecheck  # tsc per package
+pnpm typecheck  # tsc per package; optional, pnpm check already reports type errors
 pnpm test       # Vitest per package: node tests, then browser tests in Chromium
 ```
 
-CI runs the same commands; a pull request must pass all of them with zero lint errors.
+CI runs the same commands except `pnpm typecheck`; a pull request must pass all of them with zero lint errors.
 
 The Vite+ docs ship locally at `node_modules/vite-plus/docs`.
 
