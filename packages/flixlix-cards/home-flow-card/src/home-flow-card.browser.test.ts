@@ -53,6 +53,19 @@ const reading = (root: ShadowRoot, node: string) => {
   return `${value ?? "—"} ${labelOf(root, node).querySelector(".unit")?.textContent ?? ""}`.trim();
 };
 
+/** How thick a wire's path is on screen, in px. */
+const wirePxOf = (root: ShadowRoot, selector: string) => {
+  const svg = root.querySelector("svg");
+  const path = root.querySelector(selector);
+  if (!svg || !path) {
+    return 0;
+  }
+  const pxPerUnit = svg.getBoundingClientRect().width / svg.viewBox.baseVal.width;
+  // Chrome serializes a calc() stroke width as calc(2px)
+  const units = /[\d.]+/.exec(getComputedStyle(path).strokeWidth)?.[0];
+  return Number(units) * pxPerUnit;
+};
+
 const fontSizeOf = (root: ShadowRoot, selector: string) => {
   const element = root.querySelector(selector);
   return element ? Number.parseFloat(getComputedStyle(element).fontSize) : 0;
@@ -623,6 +636,27 @@ describe("home flow card", () => {
       );
     }
   );
+
+  test("wires stay about as thick on a narrow card as on a wide one", async () => {
+    const narrow = wirePxOf((await mountHouse({}, evening, 330)).root, ".battery .flow");
+    const wide = wirePxOf((await mountHouse({}, evening, 1300)).root, ".battery .flow");
+
+    expect(narrow).toBeGreaterThanOrEqual(1.5);
+    expect(wide).toBeLessThanOrEqual(2.4 + 0.01);
+    expect(wide / narrow).toBeLessThan(1.6);
+  });
+
+  test("wire_width draws every wire that many times thicker", async () => {
+    const wires = [".track.battery", ".battery .flow", ".battery .pulse"];
+    const measure = async (options: Partial<HomeFlowCardConfig>) => {
+      const { root } = await mountHouse(options, evening, 600);
+      return wires.map((selector) => wirePxOf(root, selector));
+    };
+    const thin = await measure({});
+    const thick = await measure({ wire_width: 2 });
+
+    thick.forEach((px, i) => expect(px / (thin[i] ?? 0)).toBeCloseTo(2, 1));
+  });
 
   test("labels grow and shrink with the card", async () => {
     const { root, resize } = await mountHouse({}, evening, 600);

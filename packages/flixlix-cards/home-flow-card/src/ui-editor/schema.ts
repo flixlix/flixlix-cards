@@ -148,9 +148,23 @@ export const generalSchema = [{ name: "title", selector: { text: {} } }] as cons
 export const advancedSchema = [
   {
     type: "expandable",
+    title: localize("editor.appearance"),
+    icon: "mdi:palette-outline",
+    expanded: true,
+    name: "",
+    schema: [
+      {
+        name: "wire_width",
+        selector: {
+          number: { mode: "slider", min: 0.5, max: 4, step: 0.25, unit_of_measurement: "×" },
+        },
+      },
+    ],
+  },
+  {
+    type: "expandable",
     title: localize("editor.animation"),
     icon: "mdi:animation-play",
-    expanded: true,
     name: "",
     schema: [
       {
@@ -211,5 +225,6 @@ export const FIELD_DEFAULTS: Record<string, string> = {
   red: `${DEFAULT_STATE_OF_CHARGE_SEVERITY.red} %`,
   yellow: `${DEFAULT_STATE_OF_CHARGE_SEVERITY.yellow} %`,
   state_alert: "on",
+  wire_width: "1×",
   state_of_charge_position: localize("editor.state_of_charge_position_below_power"),
 };

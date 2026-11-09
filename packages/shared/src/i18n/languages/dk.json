@@ -18,6 +18,8 @@
     "default": "Standard",
     "more": "Flere indstillinger",
     "interaction": "Interaktion",
+    "appearance": "Udseende",
+    "wire_width": "Ledningsbredde",
     "not_configured": "Ikke opsat",
     "number_format": "Talformat",
     "red": "Rød under (%)",

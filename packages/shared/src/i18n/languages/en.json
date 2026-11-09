@@ -18,6 +18,8 @@
     "default": "Default",
     "more": "More options",
     "interaction": "Interaction",
+    "appearance": "Appearance",
+    "wire_width": "Wire width",
     "not_configured": "Not configured",
     "number_format": "Number format",
     "red": "Red below (%)",

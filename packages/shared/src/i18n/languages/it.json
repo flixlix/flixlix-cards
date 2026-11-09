@@ -18,6 +18,8 @@
     "default": "Predefinito",
     "more": "Altre opzioni",
     "interaction": "Interazione",
+    "appearance": "Aspetto",
+    "wire_width": "Spessore dei cavi",
     "not_configured": "Non configurato",
     "number_format": "Formato dei numeri",
     "red": "Rosso sotto (%)",

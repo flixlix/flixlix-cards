@@ -18,6 +18,8 @@
     "default": "Predvolené",
     "more": "Ďalšie možnosti",
     "interaction": "Interakcia",
+    "appearance": "Vzhľad",
+    "wire_width": "Hrúbka vodičov",
     "not_configured": "Nenastavené",
     "number_format": "Formát čísel",
     "red": "Červená pod (%)",
