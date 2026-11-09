@@ -9,6 +9,7 @@ import * as fc from "fast-check";
 import { describe, expect, test } from "vite-plus/test";
 import { computeCardState } from "./compute-card-state";
 import { energyReadings } from "./readings/energy";
+import { powerReadings } from "./readings/power";
 import {
   type CardState,
   type CardStateInput,
@@ -1019,4 +1020,50 @@ const individualSecondaryShownAt = (state: string) =>
 test("individual secondary info hides numbers below its tolerance", () => {
   expect(individualSecondaryShownAt("5")).toBe(false);
   expect(individualSecondaryShownAt("50")).toBe(true);
+});
+
+const chargerConfig = (sumTotal: boolean) =>
+  config({
+    entities: {
+      home: { entity: "sensor.home", subtract_individual: true },
+      individual: [
+        {
+          entity: "sensor.charger",
+          secondary_info: { entity: "sensor.charger_2", sum_total: sumTotal },
+        },
+      ],
+    },
+  });
+const chargerHass = hassWith({
+  "sensor.grid": "9000",
+  "sensor.charger": "0",
+  "sensor.charger_2": "7200",
+  "binary_sensor.outage": "off",
+});
+const chargerState = (sumTotal: boolean) =>
+  ready(
+    compute({
+      config: chargerConfig(sumTotal),
+      hass: chargerHass,
+      readings: powerReadings(chargerHass, chargerConfig(sumTotal)),
+    })
+  );
+
+describe("an individual with secondary_info.sum_total", () => {
+  test("shows and flows the summed value while the secondary line keeps its own reading", () => {
+    const device = chargerState(true).individualSlots.leftTop;
+
+    expect(device?.node.displayState).toBe(`7.2${thinSpace}kW`);
+    expect(device?.flow.visible).toBe(true);
+    expect(device?.flow.durationSeconds).toBe(0.75);
+    expect(device?.node.secondary.text).toBe(`7${thinSpace}kW`);
+  });
+
+  test("is subtracted from the home in full by subtract_individual", () => {
+    expect(chargerState(true).homeRing.usageText).toBe(`1.8${thinSpace}kW`);
+  });
+
+  test("without sum_total, a device at 0 W is hidden", () => {
+    expect(chargerState(false).individualSlots.leftTop).toBeUndefined();
+  });
 });

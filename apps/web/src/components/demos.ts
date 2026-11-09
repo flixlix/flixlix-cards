@@ -117,6 +117,29 @@ export const houseMoments: HouseMoment[] = [
   },
 ];
 
+/**
+ * The same moments on one card, configured with the outage and the generator throughout: the
+ * card draws the generator only during the outage, so it stays mounted from moment to moment and
+ * rolls its readings and morphs its words between them. States merge into the previous `hass`,
+ * so every moment sets the outage sensor and the generator.
+ */
+export const houseDay: { config: CardConfig; moments: HouseMoment[] } = (() => {
+  const outage = houseMoments.find((moment) => "generator" in moment.config);
+  const config = outage?.config ?? { type: HOUSE, ...houseNodes };
+  const gridUp: StateFixtures = {
+    "binary_sensor.grid_outage": sensor("off", { unit: undefined }),
+    "sensor.generator_power": "0",
+  };
+  return {
+    config,
+    moments: houseMoments.map((moment) => ({
+      ...moment,
+      config,
+      states: { ...gridUp, ...moment.states },
+    })),
+  };
+})();
+
 const [sunnyAfternoon] = houseMoments;
 
 /** The sunny afternoon on the house, the card's first impression. */
@@ -253,6 +276,9 @@ export const periodDemo: Demo = {
   states: energyStates,
   energy: true,
 };
+
+/** The period selector on its own, as it sits at the top of an energy dashboard. */
+export const selectorDemo: Demo = { configs: [periodSelector], states: energyStates, energy: true };
 
 export const breakdownDemo: Demo = {
   configs: [

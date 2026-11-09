@@ -19,7 +19,12 @@ export const Route = createRootRoute({
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "flixlix-cards",
+        title: "flixlix-cards: Home Assistant energy cards",
+      },
+      {
+        name: "description",
+        content:
+          "Open-source Lovelace cards that show where your home's electricity comes from and where it goes.",
       },
     ],
     links: [
@@ -46,7 +51,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <script defer src="https://assets.onedollarstats.com/stonks.js"></script>
         <HeadContent />
       </head>
-      <body className="font-sans antialiased wrap-anywhere selection:bg-orange-300/50">
+      <body className="font-sans antialiased wrap-anywhere selection:bg-solar/30">
         <TooltipProvider>
           {/* <SidebarProvider> */}
           {/* <AppSidebar /> */}

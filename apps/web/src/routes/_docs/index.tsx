@@ -1,20 +1,11 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import {
-  ArrowRight,
-  CalendarRange,
-  ChartPie,
-  Compass,
-  Github,
-  HeartHandshake,
-  House,
-  ListOrdered,
-  Search,
-  Sparkles,
-  Zap,
-} from "lucide-react";
+import { GripVertical } from "lucide-react";
 import * as React from "react";
 
 import { CardDemo } from "@/components/card-demo";
+import { CardPreview } from "@/components/card-preview";
+import { houseDay } from "@/components/demos";
+import { SegmentedControl } from "@/components/segmented-control";
 import { cn } from "cn";
 import { Button } from "@flixlix-cards/ui/components/button";
 
@@ -22,337 +13,346 @@ export const Route = createFileRoute("/_docs/")({
   component: IndexPage,
 });
 
+type DocLink = { label: string; to: string };
+
+type CardSlug =
+  | "power-flow-card-plus"
+  | "home-flow-card"
+  | "energy-flow-card-plus"
+  | "energy-breakdown-card"
+  | "energy-period-selector-plus"
+  | "sortable-list-card";
+
 type CardEntry = {
-  to: string;
+  slug: CardSlug;
   title: string;
-  icon: React.ComponentType<{ className?: string }>;
-  accent: { chip: string; border: string };
-  media: React.ReactNode;
-  description: React.ReactNode;
-  bullets: { id: string; content: React.ReactNode }[];
+  summary: React.ReactNode;
+  preview: React.ReactNode;
+  pages: ("installation" | "configuration" | "examples" | "playground")[];
+  note?: string;
 };
 
-const CARDS: CardEntry[] = [
+type Group = { id: string; title: string; lead: React.ReactNode; cards: CardEntry[] };
+
+const ALL_PAGES: CardEntry["pages"] = ["installation", "configuration", "examples", "playground"];
+const NO_PLAYGROUND: CardEntry["pages"] = ["installation", "configuration", "examples"];
+
+const PAGE_LABELS: Record<CardEntry["pages"][number], string> = {
+  installation: "Install",
+  configuration: "Configure",
+  examples: "Examples",
+  playground: "Playground",
+};
+
+const GROUPS: Group[] = [
   {
-    to: "/power-flow-card-plus",
-    title: "Power Flow Card Plus",
-    icon: Sparkles,
-    accent: {
-      chip: "bg-amber-500/10 text-amber-600 ring-amber-500/25 dark:text-amber-400",
-      border: "hover:border-amber-500/40",
-    },
-    media: (
-      <Thumbnail zoom={0.4}>
-        <CardDemo demo="power" width={420} />
-      </Thumbnail>
-    ),
-    description: (
-      <>
-        Visualizes <strong>instantaneous</strong> power distribution (W / kW). Best for live
-        dashboards where you want to see what is flowing right now.
-      </>
-    ),
-    bullets: [
-      { id: "editor", content: "UI editor & YAML support" },
-      { id: "devices", content: "Up to 4 individual devices" },
-      { id: "bidirectional", content: "Bidirectional grid & battery flows" },
-      { id: "outage", content: "Power outage handling and templates" },
-    ],
-  },
-  {
-    to: "/home-flow-card",
-    title: "Home Flow Card",
-    icon: House,
-    accent: {
-      chip: "bg-orange-500/10 text-orange-600 ring-orange-500/25 dark:text-orange-400",
-      border: "hover:border-orange-500/40",
-    },
-    media: (
-      <Thumbnail zoom={0.4}>
-        <CardDemo demo="house" width={420} />
-      </Thumbnail>
-    ),
-    description: (
-      <>
-        Your own little isometric home, with your <strong>live</strong> power flowing through it:
-        solar on the roof, a battery on the wall, the grid off to the street.
-      </>
-    ),
-    bullets: [
-      { id: "glance", content: "Where your power comes from, at a glance" },
-      { id: "motion", content: "Pulses, rolling numbers and morphing words" },
-      { id: "outage", content: "Grid outages, with an optional generator" },
-      { id: "config", content: "Power Flow Card Plus' sensors and options" },
-    ],
-  },
-  {
-    to: "/energy-flow-card-plus",
-    title: "Energy Flow Card Plus",
-    icon: Zap,
-    accent: {
-      chip: "bg-sky-500/10 text-sky-600 ring-sky-500/25 dark:text-sky-400",
-      border: "hover:border-sky-500/40",
-    },
-    media: (
-      <Thumbnail zoom={0.4}>
-        <CardDemo demo="energy" width={420} />
-      </Thumbnail>
-    ),
-    description: (
-      <>
-        Visualizes <strong>accumulated</strong> energy values (Wh / kWh) for the selected dashboard
-        period (today, week, custom range, etc.).
-      </>
-    ),
-    bullets: [
-      { id: "collections", content: "Binds to Home Assistant energy collections" },
-      { id: "config-style", content: "Same flexible config style as Power Flow" },
+    id: "live-power",
+    title: "What's flowing right now",
+    lead: "Live power in watts and kilowatts, redrawn every time a sensor changes.",
+    cards: [
       {
-        id: "dashboards",
-        content: (
-          <>
-            Multiple dashboard support via <code>collection_key</code>
-          </>
-        ),
+        slug: "power-flow-card-plus",
+        title: "Power Flow Card Plus",
+        summary:
+          "The classic flow diagram: grid, solar, battery and home as circles, with up to four of your own devices. A drop-in replacement for Home Assistant's distribution card, with far more to tune.",
+        preview: <CardDemo demo="power" width={400} />,
+        pages: ALL_PAGES,
       },
-      { id: "translations", content: "Translatable labels in 14+ languages" },
-    ],
-  },
-  {
-    to: "/energy-breakdown-card",
-    title: "Energy Breakdown Card",
-    icon: ChartPie,
-    accent: {
-      chip: "bg-emerald-500/10 text-emerald-600 ring-emerald-500/25 dark:text-emerald-400",
-      border: "hover:border-emerald-500/40",
-    },
-    media: (
-      <Thumbnail zoom={0.24}>
-        <CardDemo demo="breakdown" width={420} />
-      </Thumbnail>
-    ),
-    description: (
-      <>
-        Visualizes how your energy use is <strong>broken down</strong> across sources, as a donut or
-        stacked bar. Pairs well with the energy dashboard's selected period.
-      </>
-    ),
-    bullets: [
-      { id: "variants", content: "Donut and stacked-bar variants" },
-      { id: "legend", content: "Optional legend with values & percentages" },
       {
-        id: "grouping",
-        content: (
-          <>
-            <code>group_others</code> + <code>max_items</code> to keep things tidy
-          </>
-        ),
-      },
-      { id: "hacs", content: "Custom HACS repository (not yet in the default index)" },
-    ],
-  },
-  {
-    to: "/energy-period-selector-plus",
-    title: "Energy Period Selector Plus",
-    icon: CalendarRange,
-    accent: {
-      chip: "bg-rose-500/10 text-rose-600 ring-rose-500/25 dark:text-rose-400",
-      border: "hover:border-rose-500/40",
-    },
-    media: (
-      <Thumbnail zoom={0.28}>
-        <CardDemo demo="period" width={420} />
-      </Thumbnail>
-    ),
-    description: (
-      <>
-        Picks the <strong>period</strong> every energy card on the dashboard shows: day, week,
-        month, year or a custom range, like Home Assistant's energy date picker.
-      </>
-    ),
-    bullets: [
-      { id: "buttons", content: "Period buttons in the order you list them" },
-      { id: "picker", content: "Custom ranges in Home Assistant's own calendar" },
-      { id: "compare", content: "Previous, next, today and compare buttons" },
-      {
-        id: "cards",
-        content: (
-          <>
-            Drives Energy Flow Card Plus and Energy Breakdown Card with{" "}
-            <code>energy_date_selection</code>
-          </>
-        ),
+        slug: "home-flow-card",
+        title: "Home Flow Card",
+        summary:
+          "The same sensors, drawn as a little isometric house. Solar on the roof, the battery on the wall, the grid out at the street, and power pulsing between them.",
+        preview: <CardDemo demo="house" width={400} />,
+        pages: ALL_PAGES,
       },
     ],
   },
   {
-    to: "/sortable-list-card",
-    title: "Sortable List Card",
-    icon: ListOrdered,
-    accent: {
-      chip: "bg-violet-500/10 text-violet-600 ring-violet-500/25 dark:text-violet-400",
-      border: "hover:border-violet-500/40",
-    },
-    media: <ListOrdered className="size-20 text-violet-500/40" />,
-    description: (
-      <>
-        A generic <strong>drag-and-drop reorderable list</strong>. Saves the order via any service —
-        perfect for a HEMS load-priority list, room ordering, or any ranking.
-      </>
-    ),
-    bullets: [
-      { id: "reorder", content: "Drag or use arrows to reorder" },
-      { id: "persist", content: "Persist via any service with placeholders" },
-      { id: "entities", content: "Entity-backed items (name, icon, state)" },
-      { id: "hacs", content: "Custom HACS repository (not yet in the default index)" },
+    id: "energy-period",
+    title: "How much over a day, a week, a year",
+    lead: "Accumulated energy in kilowatt-hours for the period you pick. The period selector sets it for every energy card on the dashboard.",
+    cards: [
+      {
+        slug: "energy-flow-card-plus",
+        title: "Energy Flow Card Plus",
+        summary:
+          "The flow diagram again, this time adding up what moved over the selected period. Reads Home Assistant's energy collections, including extra dashboards.",
+        preview: <CardDemo demo="energy" width={400} />,
+        pages: ALL_PAGES,
+      },
+      {
+        slug: "energy-breakdown-card",
+        title: "Energy Breakdown Card",
+        summary:
+          "Where the energy went, as a donut or a stacked bar, with an optional legend of values and shares. Small consumers can be folded into one slice.",
+        preview: (
+          <Scaled scale={0.72}>
+            <CardDemo demo="breakdown" width={420} />
+          </Scaled>
+        ),
+        pages: NO_PLAYGROUND,
+        note: "Custom HACS repository",
+      },
+      {
+        slug: "energy-period-selector-plus",
+        title: "Energy Period Selector Plus",
+        summary:
+          "Day, week, month, year or a custom range in Home Assistant's own calendar, plus previous, next and compare buttons. Drives both cards above.",
+        preview: <CardDemo demo="selector" width={400} />,
+        pages: ALL_PAGES,
+      },
+    ],
+  },
+  {
+    id: "beyond-energy",
+    title: "Beyond energy",
+    lead: "Not every dashboard problem is about watts.",
+    cards: [
+      {
+        slug: "sortable-list-card",
+        title: "Sortable List Card",
+        summary:
+          "A list you reorder by dragging, saved through any service call you like. Made for load priorities in a home energy manager, and just as good for rooms or chores.",
+        preview: <SortableListSketch />,
+        pages: NO_PLAYGROUND,
+        note: "Custom HACS repository",
+      },
     ],
   },
 ];
 
 /**
- * A live card, scaled down to fit a card tile; the tile links to its docs, so the card is inert.
- * A transform, not CSS `zoom`: Chrome draws a zoomed card's flow dots and line ends off their
- * lines. The scaled card keeps its layout size, centred in the fixed-height tile.
+ * Scales a live card down while keeping the surrounding layout honest: `transform` leaves the
+ * layout box at full size, so the wrapper takes the scaled height measured from the card.
+ * A transform, not CSS `zoom`: Chrome draws a zoomed card's flow dots off their lines.
  */
-function Thumbnail({ zoom, children }: { zoom: number; children: React.ReactNode }) {
+function Scaled({ scale, children }: { scale: number; children: React.ReactNode }) {
+  const inner = React.useRef<HTMLDivElement>(null);
+  const [size, setSize] = React.useState<{ width: number; height: number }>();
+
+  React.useEffect(() => {
+    const element = inner.current;
+    if (!element) {
+      return undefined;
+    }
+    const observer = new ResizeObserver(([entry]) => {
+      if (entry) {
+        setSize({ width: entry.contentRect.width, height: entry.contentRect.height });
+      }
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <div style={{ transform: `scale(${zoom})` }} className="pointer-events-none shrink-0" inert>
-      {children}
+    <div
+      style={size ? { width: size.width * scale, height: size.height * scale } : undefined}
+      className="relative"
+    >
+      <div
+        ref={inner}
+        style={{ transform: `scale(${scale})` }}
+        className="absolute top-0 left-0 w-max origin-top-left"
+      >
+        {children}
+      </div>
     </div>
+  );
+}
+
+const PRIORITIES = ["EV charger", "Heat pump", "Water heater", "Pool pump"];
+
+function SortableListSketch() {
+  return (
+    <div className="bg-card w-72 rounded-xl border p-4 shadow-[0_1px_2px_rgb(0_0_0/0.04)]">
+      <div className="mb-3 text-sm font-medium">Surplus solar goes to</div>
+      <ol className="space-y-1.5">
+        {PRIORITIES.map((name, index) => (
+          <li
+            key={name}
+            className={cn(
+              "flex items-center gap-3 rounded-lg border px-3 py-2 text-sm",
+              index === 1 ? "bg-background -rotate-1 shadow-md" : "bg-card"
+            )}
+          >
+            <span className="text-muted-foreground w-3 text-xs tabular-nums">{index + 1}</span>
+            <span className="flex-1">{name}</span>
+            <GripVertical aria-hidden className="text-muted-foreground size-4" />
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
+const MOMENT_LABELS = ["Afternoon", "Evening", "Night", "Outage"];
+
+const MOMENTS = houseDay.moments.map((moment, index) => ({
+  ...moment,
+  value: moment.name,
+  label: MOMENT_LABELS[index] ?? moment.name,
+}));
+
+const HERO_CONFIGS = [houseDay.config];
+
+function HeroHouse() {
+  const [selected, setSelected] = React.useState(MOMENTS[0]?.value ?? "");
+  const moment = MOMENTS.find((m) => m.value === selected) ?? MOMENTS[0];
+  if (!moment) {
+    return null;
+  }
+
+  return (
+    <figure className="flex min-w-0 flex-col items-center">
+      <CardPreview
+        configs={HERO_CONFIGS}
+        states={moment.states}
+        width={460}
+        className="w-fit max-w-full rounded-2xl"
+      />
+      <SegmentedControl
+        legend="Time of day"
+        options={MOMENTS}
+        value={moment.value}
+        onChange={setSelected}
+        className="mt-5"
+      />
+      <figcaption
+        aria-live="polite"
+        className="text-muted-foreground mt-3 min-h-[2.75rem] max-w-sm text-center text-sm leading-snug text-balance"
+      >
+        <span
+          key={moment.value}
+          className="block transition-[opacity,filter,translate] duration-300 ease-(--ease-out-strong) starting:translate-y-1 starting:opacity-0 starting:blur-[2px] motion-reduce:starting:translate-y-0"
+        >
+          {moment.caption}
+        </span>
+      </figcaption>
+    </figure>
+  );
+}
+
+function pageLinks(card: CardEntry): DocLink[] {
+  return card.pages.map((page) => ({
+    label: PAGE_LABELS[page],
+    to: `/${card.slug}/${page}`,
+  }));
+}
+
+function CardRow({ card }: { card: CardEntry }) {
+  return (
+    <article className="grid grid-cols-1 items-center gap-x-12 gap-y-6 py-10 first:pt-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,27rem)]">
+      <div className="max-w-md">
+        <h3 className="text-xl font-semibold tracking-[-0.015em]">
+          <Link
+            to={`/${card.slug}`}
+            className="decoration-solar underline-offset-[5px] hover:underline"
+          >
+            {card.title}
+          </Link>
+        </h3>
+        {card.note ? <p className="text-muted-foreground mt-1 text-xs">{card.note}</p> : null}
+        <p className="text-foreground/80 mt-3 text-[15px] leading-relaxed text-pretty">
+          {card.summary}
+        </p>
+        <nav aria-label={`${card.title} docs`} className="mt-5 flex flex-wrap gap-1.5">
+          {pageLinks(card).map((link) => (
+            <Link
+              key={link.to}
+              to={link.to}
+              className="press bg-card hover:bg-accent rounded-full border px-3 py-1 text-[13px] font-medium"
+            >
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+      </div>
+      <div className="flex min-w-0 justify-center lg:justify-end" inert>
+        {card.preview}
+      </div>
+    </article>
   );
 }
 
 function IndexPage() {
   return (
-    <>
-      <section className="from-card to-background relative mb-12 overflow-hidden rounded-3xl border bg-gradient-to-b">
-        <div className="bg-grid-faint absolute inset-0 [mask-image:radial-gradient(ellipse_at_top,black,transparent_75%)]" />
-        <div className="bg-primary/10 absolute -top-24 right-0 size-80 rounded-full blur-3xl" />
-
-        <div className="relative grid items-center gap-x-10 gap-y-8 p-8 md:p-12 lg:grid-cols-[1fr_minmax(0,26rem)]">
-          <div>
-            <p className="border-primary/30 bg-primary/10 text-primary inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-mono text-[11px] font-medium tracking-wide">
-              <Zap className="size-3" /> Open source · MIT · HACS · Home Assistant
-            </p>
-            <h1 className="mt-5 max-w-xl text-4xl font-bold tracking-tight text-balance md:text-5xl">
-              See your home's energy{" "}
-              <span className="from-amber-500 via-primary to-orange-600 bg-gradient-to-r bg-clip-text text-transparent">
-                flow
-              </span>
-            </h1>
-            <p className="text-muted-foreground mt-4 max-w-xl text-base leading-relaxed">
-              Customizable Lovelace cards that tell the energy story of your home — animated flow
-              diagrams between grid, solar, battery and devices, plus a breakdown chart for
-              proportional consumption. Install, configure, and contribute, all documented here.
-            </p>
-            <div className="mt-7 flex flex-wrap items-center gap-3">
-              <Button asChild size="lg">
-                <Link to="/power-flow-card-plus">
-                  Get started <ArrowRight className="size-4" />
-                </Link>
-              </Button>
-              <Button asChild size="lg" variant="outline">
-                <a
-                  href="https://github.com/flixlix/flixlix-cards"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Github className="size-4" /> GitHub
-                </a>
-              </Button>
-            </div>
+    <div className="pb-8">
+      <section className="grid grid-cols-1 items-center gap-x-12 gap-y-10 pt-4 pb-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,30rem)] lg:pt-10 lg:pb-24">
+        <div>
+          <h1 className="max-w-[13ch] text-[2.75rem] leading-[1.02] font-semibold tracking-[-0.035em] md:text-[3.75rem]">
+            Lovelace cards for the power in your home
+          </h1>
+          <p className="text-foreground/75 mt-6 max-w-[46ch] text-lg leading-relaxed text-pretty">
+            See where your power comes from and where it goes, live on your Home Assistant
+            dashboard. Solar, battery, grid and the devices in between, clear at a glance and
+            beautiful enough to leave on the wall tablet.
+          </p>
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <Button asChild size="lg" className="rounded-full px-6">
+              <a href="#live-power">Pick a card</a>
+            </Button>
+            <Button asChild size="lg" variant="outline" className="rounded-full px-6">
+              <a
+                href="https://github.com/flixlix/flixlix-cards"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Source on GitHub
+              </a>
+            </Button>
           </div>
-
-          <CardDemo
-            demo="power"
-            width={400}
-            className="mx-auto w-fit max-w-full rounded-2xl border shadow-sm"
-          />
+          <p className="text-muted-foreground mt-6 text-sm">
+            Free and MIT licensed. Installs through HACS, configures in the dashboard editor.
+          </p>
         </div>
+        <HeroHouse />
       </section>
 
-      <h2 className="mb-1 text-2xl font-semibold tracking-tight">The cards</h2>
-      <p className="text-muted-foreground mb-6 text-sm">
-        Five cards, one goal: making your dashboard worth looking at.
-      </p>
+      {GROUPS.map((group) => (
+        <section key={group.id} id={group.id} className="scroll-mt-20 border-t pt-12 pb-6">
+          <div className="mb-6 grid grid-cols-1 gap-x-12 gap-y-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,27rem)]">
+            <h2 className="text-[1.75rem] leading-tight font-semibold tracking-[-0.025em]">
+              {group.title}
+            </h2>
+            <p className="text-muted-foreground max-w-md text-[15px] leading-relaxed lg:pt-1.5">
+              {group.lead}
+            </p>
+          </div>
+          <div className="divide-y">
+            {group.cards.map((card) => (
+              <CardRow key={card.slug} card={card} />
+            ))}
+          </div>
+        </section>
+      ))}
 
-      <div className="grid gap-4 md:grid-cols-2">
-        {CARDS.map((card) => (
-          <article
-            key={card.to}
-            className={cn(
-              "group bg-card relative flex flex-col overflow-hidden rounded-2xl border transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg",
-              card.accent.border
-            )}
+      <section className="mt-6 border-t pt-12">
+        <h2 className="text-[1.75rem] leading-tight font-semibold tracking-[-0.025em]">
+          Something missing?
+        </h2>
+        <p className="text-foreground/80 mt-3 max-w-[60ch] text-[15px] leading-relaxed">
+          Every card lives in one repository.{" "}
+          <a
+            href="https://github.com/flixlix/flixlix-cards/issues"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="decoration-solar font-medium underline underline-offset-4"
           >
-            <div className="bg-muted/50 flex h-44 items-center justify-center overflow-hidden border-b">
-              {card.media}
-            </div>
-            <div className="flex flex-1 flex-col gap-3 p-5">
-              <h3 className="flex items-center gap-2.5 text-base font-semibold tracking-tight">
-                <span
-                  className={cn(
-                    "flex size-8 shrink-0 items-center justify-center rounded-lg ring-1 ring-inset",
-                    card.accent.chip
-                  )}
-                >
-                  <card.icon className="size-4" />
-                </span>
-                <Link to={card.to} className="after:absolute after:inset-0">
-                  {card.title}
-                </Link>
-              </h3>
-              <p className="text-muted-foreground text-sm leading-relaxed">{card.description}</p>
-              <ul className="text-muted-foreground mb-2 list-disc space-y-1 pl-5 text-sm leading-relaxed">
-                {card.bullets.map((bullet) => (
-                  <li key={bullet.id}>{bullet.content}</li>
-                ))}
-              </ul>
-              <span className="text-primary mt-auto inline-flex items-center gap-1 text-sm font-medium">
-                Read the docs{" "}
-                <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
-              </span>
-            </div>
-          </article>
-        ))}
-      </div>
-
-      <div className="mt-12 grid gap-px overflow-hidden rounded-2xl border md:grid-cols-3">
-        <div className="bg-card p-6">
-          <Compass className="text-primary mb-3 size-5" />
-          <h3 className="text-sm font-semibold">Sidebar navigation</h3>
-          <p className="text-muted-foreground mt-1.5 text-sm leading-relaxed">
-            Use the sidebar to jump between Overview, Installation, Configuration, and ready-made
-            Examples for each card.
-          </p>
-        </div>
-        <div className="bg-card border-t p-6 md:border-t-0 md:border-l">
-          <Search className="text-primary mb-3 size-5" />
-          <h3 className="text-sm font-semibold">Search the docs</h3>
-          <p className="text-muted-foreground mt-1.5 text-sm leading-relaxed">
-            Find any page, option, or example in seconds. Press{" "}
-            <kbd className="border-input bg-muted text-foreground rounded border px-1.5 py-0.5 font-mono text-[10px] font-medium">
-              ⌘K
-            </kbd>{" "}
-            (or{" "}
-            <kbd className="border-input bg-muted text-foreground rounded border px-1.5 py-0.5 font-mono text-[10px] font-medium">
-              Ctrl K
-            </kbd>
-            ) anywhere to jump straight in.
-          </p>
-        </div>
-        <div className="bg-card border-t p-6 md:border-t-0 md:border-l">
-          <HeartHandshake className="text-primary mb-3 size-5" />
-          <h3 className="text-sm font-semibold">Contribute</h3>
-          <p className="text-muted-foreground mt-1.5 text-sm leading-relaxed">
-            Found a bug or have an idea? Read the{" "}
-            <Link to="/contributing" className="text-primary underline underline-offset-2">
-              contributing guide
-            </Link>{" "}
-            to set up the monorepo locally.
-          </p>
-        </div>
-      </div>
-    </>
+            Open an issue
+          </a>{" "}
+          for a bug or an idea, or{" "}
+          <Link
+            to="/contributing"
+            className="decoration-solar font-medium underline underline-offset-4"
+          >
+            set up the monorepo
+          </Link>{" "}
+          and send a pull request. Press{" "}
+          <kbd className="bg-card rounded border px-1.5 py-0.5 font-mono text-xs">⌘K</kbd> to search
+          every option on this site.
+        </p>
+      </section>
+    </div>
   );
 }

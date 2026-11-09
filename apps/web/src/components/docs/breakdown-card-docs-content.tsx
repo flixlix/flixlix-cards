@@ -1,7 +1,5 @@
 import { Link } from "@tanstack/react-router";
 import {
-  ArrowRight,
-  BookOpen,
   CalendarRange,
   ChartPie,
   Filter,
@@ -9,21 +7,12 @@ import {
   Layers,
   ListChecks,
   MousePointerClick,
-  Package,
   PaintBucket,
   Settings,
-  Wrench,
 } from "lucide-react";
 import type * as React from "react";
 
 import { Button } from "@flixlix-cards/ui/components/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@flixlix-cards/ui/components/card";
 import { Checkbox } from "@flixlix-cards/ui/components/checkbox";
 
 import { CardDemo } from "@/components/card-demo";
@@ -33,10 +22,11 @@ import {
   Callout,
   CodeBlock,
   NextPageNav,
+  type OptionRow,
   PageHeader,
+  PageLinks,
   Prose,
   Section,
-  type OptionRow,
 } from "./doc-primitives";
 import { InstallFromLink } from "./install-from-link";
 import { OptionList } from "./option-list";
@@ -72,7 +62,7 @@ export function OverviewPage() {
         badges={[{ label: "HACS custom" }, { label: "YAML & UI editor" }, { label: "Donut + bar" }]}
       />
 
-      <CardDemo demo="breakdown" className="mx-auto w-fit max-w-full rounded-xl border" />
+      <CardDemo demo="breakdown" className="mx-auto w-fit max-w-full rounded-2xl" />
       <p className="text-muted-foreground mt-2 text-center text-sm">
         The real card, live, under Energy Period Selector Plus: pick a period to see it change.
       </p>
@@ -105,55 +95,25 @@ export function OverviewPage() {
       </Section>
 
       <Section title="What's in this section">
-        <div className="grid gap-3 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Package className="size-4" /> Installation
-              </CardTitle>
-              <CardDescription>
-                Marketplace, HACS custom repository or manual install.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button asChild size="sm" variant="outline">
-                <Link to={`${BASE_PATH}/installation`}>
-                  Open <ArrowRight className="size-3.5" />
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <BookOpen className="size-4" /> Configuration
-              </CardTitle>
-              <CardDescription>Every option, with defaults and types.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button asChild size="sm" variant="outline">
-                <Link to={`${BASE_PATH}/configuration`}>
-                  Open <ArrowRight className="size-3.5" />
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Wrench className="size-4" /> Examples
-              </CardTitle>
-              <CardDescription>Copy-pastable configs for common setups.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button asChild size="sm" variant="outline">
-                <Link to={`${BASE_PATH}/examples`}>
-                  Open <ArrowRight className="size-3.5" />
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+        <PageLinks
+          links={[
+            {
+              to: `${BASE_PATH}/installation`,
+              title: "Installation",
+              description: "Marketplace, HACS custom repository or manual install.",
+            },
+            {
+              to: `${BASE_PATH}/configuration`,
+              title: "Configuration",
+              description: "Every option, with defaults and types.",
+            },
+            {
+              to: `${BASE_PATH}/examples`,
+              title: "Examples",
+              description: "Copy-pastable configs for common setups.",
+            },
+          ]}
+        />
       </Section>
 
       <Section title="Source & releases">

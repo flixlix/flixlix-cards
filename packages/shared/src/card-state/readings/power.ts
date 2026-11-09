@@ -3,6 +3,7 @@ import { getEntityStateWatts } from "@flixlix-cards/shared/states/utils/get-enti
 import { type ComboEntity, type FlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { type HomeAssistant } from "custom-card-helpers";
 import { type ReadyReadings, type TwoWayReading } from "../types";
+import { individualReading } from "./individual";
 
 /** Reading in W, or null while the entity is unavailable or not numeric. */
 const watts = (hass: HomeAssistant, entity: string | undefined): number | null =>
@@ -52,7 +53,7 @@ export function powerReadings(hass: HomeAssistant, config: FlowCardPlusConfig): 
         : null,
     generator: generator ? watts(hass, generator) : null,
     individuals: (entities.individual ?? []).map((individual) =>
-      individual?.entity ? watts(hass, individual.entity) : null
+      individualReading(individual, (entity) => watts(hass, entity))
     ),
   };
 }

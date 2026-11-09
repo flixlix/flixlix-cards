@@ -273,7 +273,11 @@ function configOptions(
       "Show negative values as-is; on an individual device, flip its dots when it feeds the home.",
       "secondary-info"
     ),
-    make("sum_total", "Sum solar's secondary info into the main entity.", "secondary-info"),
+    make(
+      "sum_total",
+      "Add the secondary entity to the main entity of solar or an individual device.",
+      "secondary-info"
+    ),
   ];
   if (card === "energy") {
     opts.push(make("collection_key", "Bind to a specific energy collection.", "collection-key"));

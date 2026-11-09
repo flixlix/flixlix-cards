@@ -147,7 +147,14 @@ export function CardPreview({
     if (preview && dashboard.current) {
       dashboard.current.style.cssText = preview.haDashboardStyle(scheme);
     }
-  }, [preview, scheme]);
+    // Cards that shade themselves for a dark theme read it from `hass`, as in Home Assistant.
+    if (preview && hass.current) {
+      hass.current = preview.withDarkMode(hass.current, scheme === "dark");
+      for (const { setHass } of created) {
+        setHass?.(hass.current);
+      }
+    }
+  }, [preview, scheme, created]);
 
   // Mounts the cards, then hands them a new `hass` per state change that keeps the connection, as
   // Home Assistant does; energy cards refetch their statistics.
@@ -172,6 +179,7 @@ export function CardPreview({
       hass.current = preview.fakeHass({
         states,
         templates,
+        darkMode: scheme === "dark",
         energyCollection,
         statistics: (window) => growthOver(latestStates.current, window),
       });
@@ -179,7 +187,7 @@ export function CardPreview({
     for (const { setHass } of created) {
       setHass?.(hass.current);
     }
-  }, [preview, created, states, templates, energy]);
+  }, [preview, created, states, templates, energy, scheme]);
 
   const error = loadError ?? created.find((card) => card.error)?.error;
   return (

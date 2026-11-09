@@ -196,6 +196,17 @@ export const styles = css`
     cursor: pointer;
   }
 
+  /* a short label like "0 W / Solar" is too small a touch target; widen what takes the tap, not the label */
+  .label.clickable::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: max(100%, 48px);
+    height: max(100%, 48px);
+    transform: translate(-50%, -50%);
+  }
+
   .label:focus-visible {
     outline: 2px solid var(--primary-color);
     outline-offset: 2px;
