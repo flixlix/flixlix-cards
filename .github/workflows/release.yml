@@ -300,12 +300,12 @@ jobs:
               [ -f "${PKG_DIR}/${file}" ] && cp -f "${PKG_DIR}/${file}" "dist-repo/${file}"
             done
 
-            # Extract changelog
-            NOTES="Release v${VERSION}"
-            if [ -f "${PKG_DIR}/CHANGELOG.md" ]; then
-              # The lines under this version's heading, up to the next version's (or the end).
-              EXTRACTED=$(awk -v heading="## ${VERSION}" '$0 == heading { found = 1; next } /^## / { found = 0 } found' "${PKG_DIR}/CHANGELOG.md" | sed '/^$/d')
-              [ -n "$EXTRACTED" ] && NOTES="$EXTRACTED"
+            if ! NOTES=$(node packages/tooling/release-notes/cli.js "${PKG_DIR}/CHANGELOG.md" "$VERSION" "flixlix/${CLEAN_NAME}"); then
+              echo "::error::Could not write the release notes for $NAME@$VERSION"
+              echo "$NAME" >> "$FAIL_LOG"
+              rm -rf dist-repo
+              echo "::endgroup::"
+              continue
             fi
 
             # Commit and push

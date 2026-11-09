@@ -96,9 +96,28 @@ This monorepo uses [Changesets](https://github.com/changesets/changesets) to man
   pnpm changeset
   ```
 
-  Follow the prompts to create a changeset. Write a clear summary of what changed in the generated markdown file.
+  Follow the prompts to create a changeset, then write its summary for someone using the card: one paragraph of at most 280 characters, starting with its type. The type picks the section of the release notes:
 
-- **Release notes and versioning** will be handled automatically during the release process.
+  | Type        | Section             |
+  | ----------- | ------------------- |
+  | `breaking:` | ⚠️ Breaking changes |
+  | `feat:`     | ✨ New              |
+  | `fix:`      | 🐛 Fixes            |
+  | `perf:`     | ⚡ Performance      |
+  | `docs:`     | 📖 Docs             |
+  | `chore:`    | 🧰 Maintenance      |
+
+  ```md
+  ---
+  "home-flow-card": patch
+  ---
+
+  feat: the battery's label can show its state of charge before, after or above its power with `battery.state_of_charge_position`.
+  ```
+
+  Say what changed for the user; leave the how, examples and tables to the README and docs. `pnpm check` rejects a changeset without a type, with more than one paragraph or over 280 characters.
+
+- **Release notes and versioning** are handled automatically. Each card's GitHub release groups its changesets by type and ends with the support links and a link to the full changelog (`packages/tooling/release-notes`).
 
 ## Questions & Help
 
