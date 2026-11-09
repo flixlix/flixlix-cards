@@ -18,6 +18,8 @@
     "default": "Par défaut",
     "more": "Plus d'options",
     "interaction": "Interaction",
+    "appearance": "Apparence",
+    "wire_width": "Épaisseur des câbles",
     "not_configured": "Non configuré",
     "number_format": "Format des nombres",
     "red": "Rouge en dessous de (%)",

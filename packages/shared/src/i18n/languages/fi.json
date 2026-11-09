@@ -18,6 +18,8 @@
     "default": "Oletus",
     "more": "Lisää asetuksia",
     "interaction": "Vuorovaikutus",
+    "appearance": "Ulkoasu",
+    "wire_width": "Johtojen leveys",
     "not_configured": "Ei määritetty",
     "number_format": "Lukumuoto",
     "red": "Punainen alle (%)",

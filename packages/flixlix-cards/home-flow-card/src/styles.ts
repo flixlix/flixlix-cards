@@ -129,7 +129,7 @@ export const styles = css`
 
   .track {
     stroke: var(--house-track);
-    stroke-width: 1;
+    stroke-width: calc(var(--wire-scale, 1) * 1);
   }
 
   /* a wire taking up power fades its colour in rather than popping */
@@ -145,13 +145,13 @@ export const styles = css`
 
   .flow {
     stroke: var(--wire-color);
-    stroke-width: 1.2;
+    stroke-width: calc(var(--wire-scale, 1) * 1.2);
     opacity: 0.35;
   }
 
   .pulse {
     stroke: var(--wire-color);
-    stroke-width: 1.8;
+    stroke-width: calc(var(--wire-scale, 1) * 1.8);
     /* period 70, as PULSE in the card; each wire sets its own dash length */
     stroke-dasharray: 18 52;
     animation: pulse linear infinite;

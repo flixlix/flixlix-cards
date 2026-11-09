@@ -18,6 +18,8 @@
     "default": "Per defecte",
     "more": "Més opcions",
     "interaction": "Interacció",
+    "appearance": "Aparença",
+    "wire_width": "Gruix dels cables",
     "not_configured": "No configurat",
     "number_format": "Format dels números",
     "red": "Vermell per sota de (%)",

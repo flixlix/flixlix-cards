@@ -47,3 +47,11 @@ export const fitLabels = (width: number, boxFor: (scale: number) => Box): LabelF
     ),
   };
 };
+
+/**
+ * How many times thicker than the scene's own scale the wires are drawn, for `width` times their
+ * default thickness. Wires keep to the labels' px per unit, so like the text they stay visible on
+ * a narrow card and stop thickening on a wide one. A width that is not a positive number is 1.
+ */
+export const wireScale = ({ sceneUnit, labelUnit }: LabelFit, width?: number) =>
+  (labelUnit / sceneUnit) * (typeof width === "number" && width > 0 ? width : 1);

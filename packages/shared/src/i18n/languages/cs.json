@@ -18,6 +18,8 @@
     "default": "Výchozí",
     "more": "Další možnosti",
     "interaction": "Interakce",
+    "appearance": "Vzhled",
+    "wire_width": "Tloušťka vodičů",
     "not_configured": "Nenastaveno",
     "number_format": "Formát čísel",
     "red": "Červená pod (%)",
