@@ -52,6 +52,11 @@ catalogs:
 overrides:
   vite@*: catalog:packages
   vitest@*: catalog:packages
+  # One @types/node and one playwright across the repo, so every package resolves the same
+  # vite-plus peer variant. Two variants mean two vitest instances and mismatched config types.
+  "@types/node": "catalog:"
+  playwright: catalog:packages
+  "@playwright/test": 1.64.1
 peerDependencyRules:
   allowAny:
     - vite
