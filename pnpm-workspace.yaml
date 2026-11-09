@@ -27,8 +27,8 @@ catalogs:
   packages:
     "@babel/core": ^7.29.0
     "@babel/preset-env": ^7.29.3
-    "@changesets/changelog-github": ^0.6.0
     "@changesets/cli": ^2.31.0
+    "@changesets/get-github-info": ^0.8.0
     "@mdi/js": ^7.4.47
     "@playwright/test": ^1.64.1
     "@rollup/plugin-babel": ^7.0.0

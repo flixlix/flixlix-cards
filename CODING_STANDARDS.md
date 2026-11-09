@@ -10,6 +10,7 @@ Read by `/code-review` (Standards axis). One line per standard. Mechanical rules
 - No speculative abstractions: an interface with one implementation needs a reason in the PR description.
 - Errors carry enough context to act on them; never swallow, never log-and-continue.
 - Changesets describe the change for the reader of the changelog, not the reviewer.
+- A changeset is one paragraph of at most 280 characters, starting with its type (`breaking:`, `feat:`, `fix:`, `perf:`, `docs:`, `chore:`): what the user notices, not how it works. Details, examples and tables go in the README and docs. One changeset per user-visible change.
 - Never silence the linter or type checker (`oxlint-disable`, `@ts-expect-error`, `as any`, `as unknown as`); fix the type or the code.
 - A bug fix lands with a test that fails without it; a bug class that can recur lands with a rule in `packages/tooling/lint-rules`.
 - Card modules render; calculations (states, tolerance, distribution, flow rates) live in shared, pure, typed modules that take their inputs as arguments.
