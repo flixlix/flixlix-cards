@@ -347,6 +347,12 @@ This object allows you to control the behavior of the flow lines that are inacti
 | `battery_hub`      | Solar → battery, grid ↔ battery, battery → home. No solar → home, solar → grid or grid → home. | Portable power stations, UPS-style and off-grid inverters where every load runs through the battery. Power that would skip the battery passes through it instead, so home consumption stays the same. Needs a battery; without one the card uses `standard`. |
 | `isolated_battery` | Every wire except grid ↔ battery.                                                              | Batteries that never charge from or discharge into the grid. A battery reading that would need that wire is credited to solar or home instead, so small sensor noise no longer draws a battery ↔ grid flow.                                                  |
 
+Same readings with each topology (solar charging the battery, the grid topping up home):
+
+| `standard`                                                                                                                                         | `battery_hub`                                                                                                                                            | `isolated_battery`                                                                                                                                                 |
+| -------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| ![standard](https://raw.githubusercontent.com/flixlix/flixlix-cards/main/packages/flixlix-cards/power-flow-card-plus/assets/topology-standard.png) | ![battery_hub](https://raw.githubusercontent.com/flixlix/flixlix-cards/main/packages/flixlix-cards/power-flow-card-plus/assets/topology-battery-hub.png) | ![isolated_battery](https://raw.githubusercontent.com/flixlix/flixlix-cards/main/packages/flixlix-cards/power-flow-card-plus/assets/topology-isolated-battery.png) |
+
 ### Minimal Configuration
 
 > Don't forget to change the entity ids

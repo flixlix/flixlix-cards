@@ -48,6 +48,7 @@ import {
 } from "./doc-primitives";
 import { OptionList } from "./option-list";
 import { PageTOC, type TocItem } from "./page-toc";
+import { TopologyDemo } from "./topology-demo";
 
 export type CardKey = "power" | "energy";
 
@@ -1604,6 +1605,7 @@ entities:
             code: `topology: battery_hub`,
           }}
         >
+          <TopologyDemo card={cardKey} />
           <OptionList rows={TOPOLOGY_OPTIONS} />
         </CategorySection>
 
