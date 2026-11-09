@@ -1,6 +1,7 @@
-import { type PowerFlowCardPlusConfig } from "@flixlix-cards/shared/types";
+import { type PowerFlowCardPlusConfig, TOPOLOGIES } from "@flixlix-cards/shared/types";
 import { type HomeAssistant } from "custom-card-helpers";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vite-plus/test";
+import { advancedOptionsSchema } from "./schema/_schema-all";
 import { EnergyFlowCardPlusEditor } from "./ui-editor";
 
 const { loadHaFormMock } = vi.hoisted(() => ({
@@ -10,6 +11,14 @@ const { loadHaFormMock } = vi.hoisted(() => ({
 vi.mock("@flixlix-cards/shared/ui-editor/utils/load-ha-form", () => ({
   loadHaForm: loadHaFormMock,
 }));
+
+const isToggle = (field: unknown) =>
+  typeof field === "object" &&
+  field !== null &&
+  "selector" in field &&
+  typeof field.selector === "object" &&
+  field.selector !== null &&
+  "boolean" in field.selector;
 
 const hass: Partial<HomeAssistant> = { localize: () => "" };
 
@@ -275,5 +284,32 @@ describe("energy flow ui editor", () => {
     expect(() => editor.setConfig(editorConfig({ entities: {}, not_an_option: true }))).toThrow(
       /not_an_option/
     );
+  });
+  test.each(TOPOLOGIES)("setConfig accepts topology %s", (topology) => {
+    const editor = new EnergyFlowCardPlusEditor();
+
+    expect(() => editor.setConfig(editorConfig({ entities: {}, topology }))).not.toThrow();
+  });
+
+  test("setConfig rejects an unknown topology so HA falls back to YAML", () => {
+    const editor = new EnergyFlowCardPlusEditor();
+
+    expect(() => editor.setConfig(editorConfig({ entities: {}, topology: "mesh" }))).toThrow(
+      /topology/
+    );
+  });
+  // HA's ha-form grid top-aligns its cells, so a toggle next to a taller field sits off-centre.
+  test("every row of the advanced grids pairs toggles with toggles and fields with fields", () => {
+    const grids = advancedOptionsSchema("show").filter((item) => "column_min_width" in item);
+    const mixedRows = grids.flatMap((grid) => {
+      const fields: unknown[] = "schema" in grid && Array.isArray(grid.schema) ? grid.schema : [];
+      const kinds = fields.map((field) => (isToggle(field) ? "toggle" : "field"));
+      return Array.from({ length: Math.ceil(kinds.length / 2) }, (_, row) =>
+        kinds.slice(row * 2, row * 2 + 2)
+      ).filter((row) => new Set(row).size > 1);
+    });
+
+    expect(grids.length).toBeGreaterThan(0);
+    expect(mixedRows).toEqual([]);
   });
 });

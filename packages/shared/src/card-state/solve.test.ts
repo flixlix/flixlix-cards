@@ -1,6 +1,7 @@
 import * as fc from "fast-check";
 import { describe, expect, test } from "vite-plus/test";
 import { type NodeTotals } from "./normalize";
+import { type Topology } from "../types";
 import { type NodeFlows, solve } from "./solve";
 
 const RUNS = { numRuns: 1000, seed: 20261107 };
@@ -240,6 +241,92 @@ describe("solve properties", () => {
       fc.property(arbitraryTotals, (t) => {
         const f = solve(t);
         expect(f.unaccounted).toBe(t.measuredHome === undefined ? 0 : t.measuredHome - f.home);
+      }),
+      RUNS
+    );
+  });
+});
+
+const batteryNet = (f: NodeFlows) =>
+  f.solarToBattery + f.gridToBattery - f.batteryToHome - f.batteryToGrid;
+
+describe("topologies", () => {
+  test("standard is the default", () => {
+    fc.assert(
+      fc.property(arbitraryTotals, (t) => {
+        expect(solve(t, "standard")).toEqual(solve(t));
+      }),
+      RUNS
+    );
+  });
+
+  test.each<[string, Topology, Partial<NodeTotals>, Partial<NodeFlows>]>([
+    [
+      "battery_hub: issue #123, solar and grid charge the battery and only the battery feeds home",
+      "battery_hub",
+      { gridImport: 500, solar: 3000, batteryCharge: 1500, nonFossilFraction: 0.5 },
+      {
+        solarToHome: 0,
+        solarToGrid: 0,
+        gridToHome: 0,
+        solarToBattery: 3000,
+        gridToBattery: 500,
+        batteryToHome: 2000,
+        batteryToGrid: 0,
+        nonFossilToHome: 0,
+        home: 2000,
+      },
+    ],
+    [
+      "battery_hub: export leaves through the battery",
+      "battery_hub",
+      { gridExport: 400, solar: 1000, batteryDischarge: 200 },
+      { solarToGrid: 0, solarToBattery: 1000, batteryToGrid: 400, batteryToHome: 800, home: 800 },
+    ],
+    [
+      "isolated_battery: a battery discharging during export feeds home, solar covers the export",
+      "isolated_battery",
+      { gridExport: 2000, solar: 2500, batteryDischarge: 30 },
+      { batteryToGrid: 0, solarToGrid: 2000, batteryToHome: 30, solarToHome: 500, home: 530 },
+    ],
+    [
+      "isolated_battery: the grid never charges the battery",
+      "isolated_battery",
+      { gridImport: 200, gridExport: 600, solar: 500, batteryDischarge: 150, batteryCharge: 200 },
+      { gridToBattery: 0, batteryToGrid: 0, solarToBattery: 200 },
+    ],
+  ])("%s", (_name, topology, given, expected) => {
+    expect(solve(totals(given), topology)).toMatchObject(expected);
+  });
+
+  test("battery_hub routes every flow through the battery without changing home or the battery's net", () => {
+    fc.assert(
+      fc.property(arbitraryTotals, (t) => {
+        const standard = solve(t);
+        const hub = solve(t, "battery_hub");
+        const m = scale(t);
+        expect(hub.solarToHome + hub.solarToGrid + hub.gridToHome).toBe(0);
+        expect(Math.abs(hub.home - standard.home)).toBeLessThanOrEqual(1e-9 * m);
+        expect(Math.abs(batteryNet(hub) - batteryNet(standard))).toBeLessThanOrEqual(1e-9 * m);
+      }),
+      RUNS
+    );
+  });
+
+  test("isolated_battery never moves power between battery and grid and stays within every total", () => {
+    fc.assert(
+      fc.property(arbitraryTotals, (t) => {
+        const f = solve(t, "isolated_battery");
+        const m = scale(t);
+        expect(f.gridToBattery + f.batteryToGrid).toBe(0);
+        expect(f.solarToHome + f.solarToBattery + f.solarToGrid).toBeLessThanOrEqual(
+          withSlack(t.solar, m)
+        );
+        expect(f.gridToHome).toBeLessThanOrEqual(withSlack(t.gridImport, m));
+        expect(f.batteryToHome).toBeLessThanOrEqual(withSlack(t.batteryDischarge, m));
+        expect(f.solarToBattery).toBeLessThanOrEqual(withSlack(t.batteryCharge, m));
+        expect(f.solarToGrid).toBeLessThanOrEqual(withSlack(t.gridExport, m));
+        expect(f.home).toBe(f.solarToHome + f.batteryToHome + f.gridToHome);
       }),
       RUNS
     );

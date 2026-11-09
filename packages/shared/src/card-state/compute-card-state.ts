@@ -4,10 +4,16 @@ import { formatter } from "./format";
 import { computeHomeRing } from "./home-ring";
 import { individualNodes, placeIndividuals } from "./individuals";
 import { batteryNode, gridNode, homeNode, nonFossilNode, solarNode } from "./nodes";
-import { normalize } from "./normalize";
+import { type Normalized, normalize } from "./normalize";
 import { solve } from "./solve";
 import { computeCssVars } from "./styles";
 import { type CardState, type CardStateInput, type Flow } from "./types";
+
+/** A battery hub without a battery has nothing to route through, so it falls back to standard. */
+const activeTopology = (input: CardStateInput, { presence }: Normalized) => {
+  const topology = input.config.topology ?? "standard";
+  return topology === "battery_hub" && !presence.battery ? "standard" : topology;
+};
 
 const HIDDEN_FLOW: Flow = { value: 0, durationSeconds: 0, visible: false, lineClass: "" };
 
@@ -19,7 +25,8 @@ export function computeCardState(input: CardStateInput): CardState {
   }
   const format = formatter(input.hass, config, readings.family);
   const normalized = normalize(input, readings);
-  const balance = { ...normalized, flows: solve(normalized.totals) };
+  const topology = activeTopology(input, normalized);
+  const balance = { ...normalized, topology, flows: solve(normalized.totals, topology) };
   const context = { input, readings, balance, format };
   const nodes = {
     grid: gridNode(context),

@@ -189,6 +189,79 @@ export const energyStates: StateFixtures = {
   "sensor.heat_pump_energy": kilowattHours("6.2"),
 };
 
+/** What a topology demo shows: the same readings drawn with one topology's wires. */
+export type TopologyDemo = { topology: string; caption: string; demo: Demo };
+
+const TOPOLOGY_CAPTIONS: ReadonlyArray<Pick<TopologyDemo, "topology" | "caption">> = [
+  { topology: "standard", caption: "Every wire. Solar and grid reach home directly." },
+  {
+    topology: "battery_hub",
+    caption: "Solar and grid charge the battery; only the battery feeds home.",
+  },
+  { topology: "isolated_battery", caption: "No wire between battery and grid." },
+];
+
+const powerTopologyDemo = (topology: string): Demo => ({
+  configs: [
+    {
+      type: "custom:power-flow-card-plus",
+      topology,
+      entities: {
+        grid: { entity: "sensor.grid_power" },
+        solar: { entity: "sensor.solar_power" },
+        battery: { entity: "sensor.battery_power", state_of_charge: "sensor.battery_soc" },
+      },
+    },
+  ],
+  states: {
+    "sensor.grid_power": "500",
+    "sensor.solar_power": "3000",
+    "sensor.battery_power": "-1500",
+    "sensor.battery_soc": percent("64"),
+  },
+});
+
+const energyTopologyDemo = (topology: string): Demo => ({
+  configs: [
+    {
+      type: "custom:energy-flow-card-plus",
+      energy_date_selection: true,
+      topology,
+      entities: {
+        grid: {
+          entity: {
+            consumption: "sensor.grid_import_energy",
+            production: "sensor.grid_export_energy",
+          },
+        },
+        solar: { entity: "sensor.solar_energy" },
+        battery: {
+          entity: {
+            consumption: "sensor.battery_discharge_energy",
+            production: "sensor.battery_charge_energy",
+          },
+        },
+      },
+    },
+  ],
+  states: {
+    "sensor.grid_import_energy": kilowattHours("2"),
+    "sensor.grid_export_energy": kilowattHours("0"),
+    "sensor.solar_energy": kilowattHours("12"),
+    "sensor.battery_discharge_energy": kilowattHours("0"),
+    "sensor.battery_charge_energy": kilowattHours("6"),
+  },
+  energy: true,
+});
+
+/** One reading, three topologies: solar charges the battery and the grid tops up home. */
+export const topologyDemos = (card: "power" | "energy"): TopologyDemo[] =>
+  TOPOLOGY_CAPTIONS.map(({ topology, caption }) => ({
+    topology,
+    caption,
+    demo: card === "power" ? powerTopologyDemo(topology) : energyTopologyDemo(topology),
+  }));
+
 export const energyDemo: Demo = { configs: [energyFlowCard], states: energyStates, energy: true };
 
 export const periodSelector: CardConfig = {
