@@ -111,6 +111,7 @@
     "state_type": "Type of State",
     "subtract_individual": "Subtract Individual",
     "sum_total": "Sum solar and secondary",
+    "sum_total_individual": "Sum device and secondary",
     "tap_action": "Tap Action",
     "template": "Template",
     "transparency": "Transparency",

@@ -1,4 +1,10 @@
 import { type PowerFlowCardPlusConfig } from "@flixlix-cards/shared/types";
+import {
+  computeEditorLabel,
+  type HaFormLabelSchema,
+} from "@flixlix-cards/shared/ui-editor/ha-form";
+import { individualSchema } from "@flixlix-cards/shared/ui-editor/schema/individual";
+import { solarSchema } from "@flixlix-cards/shared/ui-editor/schema/solar";
 import { type HomeAssistant } from "custom-card-helpers";
 import { LitElement } from "lit";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vite-plus/test";
@@ -387,4 +393,24 @@ describe("power flow ui editor", () => {
       /not_an_option/
     );
   });
+});
+
+const secondaryInfoField = (schema: readonly unknown[], name: string): HaFormLabelSchema => {
+  const secondaryInfo = schema.find(
+    (item): item is { schema: readonly HaFormLabelSchema[] } =>
+      typeof item === "object" && item !== null && "name" in item && item.name === "secondary_info"
+  );
+  const field = secondaryInfo?.schema.find((item) => item.name === name);
+  if (!field) {
+    throw new Error(`secondary_info.${name} not in schema`);
+  }
+  return field;
+};
+
+const sumTotalLabel = (schema: readonly unknown[]) =>
+  computeEditorLabel(hass as HomeAssistant, secondaryInfoField(schema, "sum_total"));
+
+test("the sum_total toggle is labelled after the node it sums into", () => {
+  expect(sumTotalLabel(solarSchema)).toBe("Sum solar and secondary");
+  expect(sumTotalLabel(individualSchema)).toBe("Sum device and secondary");
 });

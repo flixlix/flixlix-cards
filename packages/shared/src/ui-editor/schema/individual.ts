@@ -92,7 +92,15 @@ export const individualSchema = [
     title: localize("editor.secondary_info"),
     name: "secondary_info",
     type: "expandable",
-    schema: secondaryInfoSchema,
+    schema: [
+      ...secondaryInfoSchema,
+      {
+        name: "sum_total",
+        label: "Sum Total",
+        translation_key: "sum_total_individual",
+        selector: { boolean: {} },
+      },
+    ],
   },
   {
     title: localize("editor.action"),

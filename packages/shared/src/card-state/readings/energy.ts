@@ -5,6 +5,7 @@ import { getEntityStateWh } from "@flixlix-cards/shared/states/utils/get-entity-
 import { getEntityNames } from "@flixlix-cards/shared/states/utils/mutli-entity";
 import { type HomeAssistant } from "custom-card-helpers";
 import { type Readings, type TwoWayReading } from "../types";
+import { individualReading } from "./individual";
 
 type Read = (entity?: string) => number | null;
 
@@ -53,7 +54,7 @@ export function energyReadings(
     home: entities.home?.override_state && entities.home.entity ? read(entities.home.entity) : null,
     generator: generator ? read(generator) : null,
     individuals: (entities.individual ?? []).map((individual) =>
-      individual?.entity ? read(individual.entity) : null
+      individualReading(individual, read)
     ),
     fossilEnergyConsumption,
   };

@@ -50,6 +50,11 @@ export type SecondaryInfoType = {
   decimals?: number;
 } & ActionConfigSet;
 
+/** Secondary info whose entity can be added to the node's own reading with `sum_total`. */
+export type SummableSecondaryInfoType = SecondaryInfoType & {
+  sum_total?: boolean;
+};
+
 /** A `name` option: a plain string, or name parts resolved from the registry. */
 export type EntityName = string | EntityNameItem | EntityNameItem[];
 
@@ -94,6 +99,7 @@ export type IndividualDeviceType = BaseConfigEntity & {
   use_metadata?: boolean;
   show_direction?: boolean;
   accept_negative?: boolean;
+  secondary_info?: SummableSecondaryInfoType;
 };
 
 export type EntityType =
