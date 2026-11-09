@@ -238,6 +238,7 @@ The Individual fields must be an array of objects. Each object must follow the f
 | name                   | `string` / `list` | `Car` or `Motorcycle`                          | Label for the individual device option. If you don't populate this option, the label will continue to update based on the language selected.                                         |
 | icon                   | `string`          | `mdi:car-electric` or `mdi:motorbike-electric` | Icon path for the icon inside the Individual Device Circle.                                                                                                                          |
 | color                  | `string`          | `#d0cc5b` or `#964cb5`                         | HEX value of the color for circles labels and lines of the individual device.                                                                                                        |
+| color_idle             | `string`          |                                                | HEX value of the circle color while the device draws nothing (below `display_zero_tolerance`). Unset keeps `color`.                                                                  |
 | color_icon             | `boolean`         | `false`                                        | If set to `true`, icon color will match the circle's color. If set to `false`, icon color will match the text's color.                                                               |
 | unit_of_measurement    | `string`          | `W`or `kW` (dynamic)                           | Sets the unit of measurement to show in the corresponding circle                                                                                                                     |
 | inverted_animation     | `boolean`         | `false`                                        | If set to true, the small dots will flow in the opposite direction.                                                                                                                  |
@@ -279,10 +280,11 @@ The Individual fields must be an array of objects. Each object must follow the f
 
 #### Color Object
 
-| Name        | Type     | Description                                                         |
-| ----------- | -------- | ------------------------------------------------------------------- |
-| production  | `string` | HEX value of the color for circles labels and lines of production.  |
-| consumption | `string` | HEX value of the color for circles labels and lines of consumption. |
+| Name        | Type     | Description                                                                                                                                 |
+| ----------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| production  | `string` | HEX value of the color for circles labels and lines of production.                                                                          |
+| consumption | `string` | HEX value of the color for circles labels and lines of consumption.                                                                         |
+| idle        | `string` | HEX value of the circle color while nothing flows in either direction (below `display_zero_tolerance`). Unset keeps the usual circle color. |
 
 #### Split entities
 
@@ -331,11 +333,12 @@ This feature allows you to configure how the card handles a Grid Power Outage sc
 
 This object allows you to control the behavior of the flow lines that are inactive.
 
-| Name         | Type                          | Description                                                                                                                                                                                 |
-| ------------ | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| mode         | string                        | Valid Options are: `show`, `hide`, `transparency`, `grey_out`, `custom`                                                                                                                     |
-| transparency | number                        | A number between 0 and 100. 100 means the line doesn't show at all. 0 means the line shows in full opacity. Default is 50. Will be used when the mode is either `transparency` or `custom`. |
-| grey_color   | `string` or `list of numbers` | Either a HEX Code or a List of three numbers between 0 and 255 in RGB order. Will be used when the mode is either `grey_out` or `custom`.                                                   |
+| Name             | Type                          | Description                                                                                                                                                                                                                                  |
+| ---------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| mode             | string                        | Valid Options are: `show`, `hide`, `transparency`, `grey_out`, `custom`                                                                                                                                                                      |
+| transparency     | number                        | A number between 0 and 100. 100 means the line doesn't show at all. 0 means the line shows in full opacity. Default is 50. Will be used when the mode is either `transparency` or `custom`.                                                  |
+| grey_color       | `string` or `list of numbers` | Either a HEX Code or a List of three numbers between 0 and 255 in RGB order. Will be used when the mode is either `grey_out` or `custom`.                                                                                                    |
+| grey_out_circles | `boolean`                     | If `true`, grid, battery and individual circles also take `grey_color` while nothing flows through them. A node's own idle color (`color.idle`, `color_idle`) wins. Used when the mode is either `grey_out` or `custom`. Default is `false`. |
 
 #### Topology
 

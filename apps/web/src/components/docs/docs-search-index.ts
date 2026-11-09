@@ -130,7 +130,7 @@ function configSections(
     make("individual", "Individual devices", "Up to 4 extra circles (car, EV, etc)."),
     make("home", "Home configuration", "Home entity, subtract_individual, override_state."),
     make("fossil-fuel", "Fossil fuel / low-carbon", "Fossil fuel percentage circle config."),
-    make("color-object", "Color object", "Production / consumption HEX colors."),
+    make("color-object", "Color object", "Production / consumption / idle HEX colors."),
     make("split-entities", "Split entities", "Separate sensors for production and consumption."),
     make("secondary-info", "Secondary info", "Extra value next to a circle, supports templates."),
     make("power-outage", "Power outage", "Configure outage detection and generator entity."),

@@ -1,7 +1,7 @@
 import {
   type BaseConfigEntity,
   type ColorValue,
-  type ComboEntity,
+  type DirectionalColors,
   type GridPowerOutage,
   type IndividualDeviceType,
   type LovelaceCardConfig,
@@ -46,6 +46,8 @@ interface mainConfigOptions {
     mode?: DisplayZeroLinesMode;
     transparency?: number;
     grey_color?: string | number[];
+    /** Also grey out grid, battery and individual circles while nothing flows through them. */
+    grey_out_circles?: boolean;
   };
   sort_individual_devices?: boolean;
   allow_layout_break?: boolean;
@@ -86,7 +88,7 @@ interface Battery extends BaseConfigEntity {
   color_state_of_charge_value?: "no_color" | "color_dynamically" | "production" | "consumption";
   color_circle?: "color_dynamically" | "production" | "consumption" | "no_color";
   color_value?: boolean;
-  color?: ComboEntity;
+  color?: DirectionalColors;
 }
 
 interface Grid extends BaseConfigEntity {
@@ -95,7 +97,7 @@ interface Grid extends BaseConfigEntity {
   display_zero?: boolean;
   color_circle?: "color_dynamically" | "production" | "consumption" | "no_color";
   color_value?: boolean;
-  color?: ComboEntity;
+  color?: DirectionalColors;
 }
 
 interface Solar extends BaseConfigEntity {

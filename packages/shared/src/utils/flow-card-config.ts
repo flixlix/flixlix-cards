@@ -24,6 +24,7 @@ export const displayZeroLinesWithDefaults = (
   mode: lines?.mode ?? defaultValues.displayZeroLines.mode,
   transparency: coerceNumber(lines?.transparency, defaultValues.displayZeroLines.transparency),
   grey_color: lines?.grey_color ?? defaultValues.displayZeroLines.grey_color,
+  ...(lines?.grey_out_circles === undefined ? {} : { grey_out_circles: lines.grey_out_circles }),
 });
 
 /**

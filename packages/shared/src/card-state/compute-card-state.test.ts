@@ -823,6 +823,96 @@ describe("zero lines", () => {
   });
 });
 
+const cssVarsFor = (
+  overrides: Partial<FlowCardPlusConfig>,
+  readingsOverrides: ReadingsOverrides = {}
+) => ready(compute({ config: config(overrides), readings: readings(readingsOverrides) })).cssVars;
+
+describe("idle circles", () => {
+  const charger = { entity: "sensor.charger", display_zero: true, color_idle: "#999999" };
+
+  test("take the node's idle colour while nothing flows", () => {
+    const cssVars = cssVarsFor({
+      entities: {
+        grid: { ...gridEntity, color: { idle: [1, 2, 3] } },
+        battery: { entity: "sensor.battery", color: { idle: "#123456" } },
+        individual: [charger],
+      },
+    });
+
+    expect(cssVars["--circle-grid-color"]).toBe("#010203");
+    expect(cssVars["--circle-battery-color"]).toBe("#123456");
+    expect(cssVars["--circle-individual-left-top-color"]).toBe("#999999");
+  });
+
+  test("keep their direction colour while power flows", () => {
+    const cssVars = cssVarsFor(
+      {
+        entities: {
+          grid: { ...gridEntity, color: { idle: "#010203" } },
+          battery: { entity: "sensor.battery", color: { idle: "#123456" } },
+          individual: [charger],
+        },
+      },
+      { grid: { toGrid: 100 }, battery: { fromBattery: 50 }, individuals: [40] }
+    );
+
+    expect(cssVars["--circle-grid-color"]).toBe("var(--energy-grid-return-color)");
+    expect(cssVars["--circle-battery-color"]).toBe("var(--energy-battery-out-color)");
+    expect(cssVars["--circle-individual-left-top-color"]).toBeUndefined();
+  });
+
+  test("count readings below the display zero tolerance as idle", () => {
+    const cssVars = cssVarsFor(
+      {
+        entities: {
+          grid: { ...gridEntity, display_zero_tolerance: 10, color: { idle: "#010203" } },
+        },
+      },
+      { grid: { fromGrid: 5 } }
+    );
+
+    expect(cssVars["--circle-grid-color"]).toBe("#010203");
+  });
+
+  test("without an idle colour keep the consumption colour, as before", () => {
+    expect(cssVarsFor({})["--circle-grid-color"]).toBe("var(--energy-grid-consumption-color)");
+    expect(cssVarsFor({ display_zero_lines: { mode: "grey_out" } })["--circle-grid-color"]).toBe(
+      "var(--energy-grid-consumption-color)"
+    );
+  });
+
+  test.each(["grey_out", "custom"] as const)(
+    "with grey_out_circles in %s mode take the greyed-out line colour",
+    (mode) => {
+      const cssVars = cssVarsFor({
+        display_zero_lines: { mode, grey_color: [1, 2, 3], grey_out_circles: true },
+        entities: { individual: [{ entity: "sensor.charger", display_zero: true }] },
+      });
+
+      expect(cssVars["--greyed-out--line-color"]).toBe("#010203");
+      expect(cssVars["--circle-grid-color"]).toBe("var(--greyed-out--line-color)");
+      expect(cssVars["--circle-battery-color"]).toBe("var(--greyed-out--line-color)");
+      expect(cssVars["--circle-individual-left-top-color"]).toBe("var(--greyed-out--line-color)");
+    }
+  );
+
+  test("prefer the node's idle colour over grey_out_circles", () => {
+    const cssVars = cssVarsFor({
+      display_zero_lines: { mode: "grey_out", grey_out_circles: true },
+      entities: { grid: { ...gridEntity, color: { idle: "#010203" } } },
+    });
+
+    expect(cssVars["--circle-grid-color"]).toBe("#010203");
+  });
+
+  test("ignore grey_out_circles when lines are not greyed out", () => {
+    const cssVars = cssVarsFor({ display_zero_lines: { mode: "hide", grey_out_circles: true } });
+
+    expect(cssVars["--circle-grid-color"]).toBe("var(--energy-grid-consumption-color)");
+  });
+});
+
 describe("secondary info", () => {
   test("formats the secondary entity and prefers a rendered template", () => {
     const secondaryConfig = config({

@@ -57,6 +57,24 @@ export const customColorsSchema = {
   ],
 } as const;
 
+/** `customColorsSchema` plus the circle colour while nothing flows, for grid and battery. */
+export const directionalColorsSchema = {
+  ...customColorsSchema,
+  schema: [
+    {
+      ...customColorsSchema.schema[0],
+      schema: [
+        ...customColorsSchema.schema[0].schema,
+        {
+          name: "idle",
+          label: "Idle",
+          selector: { color_rgb: {} },
+        },
+      ],
+    },
+  ],
+} as const;
+
 export const actionSchema = [
   {
     name: "tap_action",

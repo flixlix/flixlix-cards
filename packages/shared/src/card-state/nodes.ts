@@ -110,6 +110,7 @@ const gridPowerOutage = (grid: GridConfig, outage: boolean): GridObject["powerOu
 const gridColor = (grid: GridConfig): GridObject["color"] => ({
   fromGrid: grid?.color?.consumption,
   toGrid: grid?.color?.production,
+  idle: grid?.color?.idle,
   icon_type: toGridIconType(grid?.color_icon),
   circle_type: grid?.color_circle,
 });
@@ -283,6 +284,7 @@ export const batteryNode = ({ input, balance, format }: NodeContext): BatteryObj
     color: {
       fromBattery: battery?.color?.consumption,
       toBattery: battery?.color?.production,
+      idle: battery?.color?.idle,
       icon_type: undefined,
       circle_type: battery?.color_circle,
     },
