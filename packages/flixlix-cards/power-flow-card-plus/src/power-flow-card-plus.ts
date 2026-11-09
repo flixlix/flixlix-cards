@@ -24,14 +24,15 @@ import { WidthController } from "@flixlix-cards/shared/utils/width-controller";
 import { type HomeAssistant, type LovelaceCardEditor } from "custom-card-helpers";
 import { LitElement, nothing, type PropertyValues, type TemplateResult } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import packageJson from "../package.json" with { type: "json" };
+import { version } from "../package.json";
+import { PowerFlowCardPlusEditor } from "./ui-editor/ui-editor";
 
 registerCustomCard({
   type: "power-flow-card-plus",
   name: "Power Flow Card Plus",
   description:
     "An extended version of the power flow card with richer options, advanced features and a few small UI enhancements. Inspired by the Energy Dashboard.",
-  version: packageJson.version,
+  version: version,
 });
 
 const isPageHidden = () => typeof document !== "undefined" && document.visibilityState === "hidden";
@@ -87,9 +88,8 @@ export class PowerFlowCardPlus extends LitElement {
     super.disconnectedCallback();
   }
 
-  public static async getConfigElement(): Promise<LovelaceCardEditor> {
-    await import("./ui-editor/ui-editor");
-    return document.createElement("power-flow-card-plus-editor");
+  public static getConfigElement(): LovelaceCardEditor {
+    return new PowerFlowCardPlusEditor();
   }
 
   public static getStubConfig(hass: HomeAssistant): object {

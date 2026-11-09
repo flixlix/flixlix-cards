@@ -12,25 +12,14 @@
     "test": "vp test run"
   },
   "dependencies": {
-    "@babel/core": "catalog:packages",
-    "@babel/preset-env": "catalog:packages",
-    "@rollup/plugin-babel": "catalog:packages",
-    "@rollup/plugin-commonjs": "catalog:packages",
-    "@rollup/plugin-json": "catalog:packages",
-    "@rollup/plugin-node-resolve": "catalog:packages",
-    "@rollup/plugin-terser": "catalog:packages",
     "acorn": "catalog:packages",
-    "@rollup/plugin-typescript": "catalog:packages",
-    "rollup-plugin-minify-html-literals": "catalog:packages",
-    "rollup-plugin-serve": "catalog:packages"
+    "rollup-plugin-minify-html-literals": "catalog:packages"
   },
   "devDependencies": {
     "esm-env": "catalog:packages",
-    "rollup": "catalog:packages",
     "vite-plus": "catalog:packages"
   },
   "peerDependencies": {
-    "rollup": "catalog:packages",
-    "typescript": "catalog:"
+    "vite-plus": "catalog:packages"
   }
 }

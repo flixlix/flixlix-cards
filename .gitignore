@@ -35,7 +35,6 @@ test/screenshots/**/failed
 _site/
 /dist/
 /out-tsc/
-/.rollup.cache/
 .tsbuildinfo
 
 storybook-static

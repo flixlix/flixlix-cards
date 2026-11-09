@@ -11,16 +11,13 @@ import {
 } from "@flixlix-cards/shared/ui-editor/ha-form";
 import { loadHaForm } from "@flixlix-cards/shared/ui-editor/utils/load-ha-form";
 import { sortableStyles } from "@flixlix-cards/shared/ui-editor/utils/sortable-styles";
-import {
-  loadSortable,
-  type SortableInstance,
-} from "@flixlix-cards/shared/ui-editor/utils/sortable.ondemand";
 import { mdiClose, mdiDrag, mdiPencil } from "@mdi/js";
 import { type HomeAssistant } from "custom-card-helpers";
 import { css, type CSSResultGroup, html, LitElement } from "lit";
 import { property, state } from "lit/decorators.js";
 import { repeat } from "lit/directives/repeat.js";
-import type { SortableEvent } from "sortablejs";
+// The default sortablejs build mounts the AutoScroll and OnSpill plugins.
+import SortableJs, { type SortableEvent } from "sortablejs";
 import { individualSchema } from "../schema/individual";
 
 declare global {
@@ -44,7 +41,7 @@ export class IndividualRowEditor extends LitElement {
 
   private _entityKeys = new WeakMap<IndividualDeviceType, string>();
 
-  private _sortable?: SortableInstance;
+  private _sortable?: SortableJs;
 
   /** Keeps the dragged row's DOM slot so lit's `repeat` can reorder from the original position. */
   private _dragPlaceholder?: Comment;
@@ -160,19 +157,18 @@ export class IndividualRowEditor extends LitElement {
   };
 
   protected firstUpdated(): void {
-    void this._createSortable();
+    this._createSortable();
   }
 
   private _computeLabelCallback = (schema: HaFormLabelSchema) =>
     computeEditorLabel(this.hass, schema);
 
-  private async _createSortable() {
-    const Sortable = await loadSortable();
+  private _createSortable() {
     const list = this.shadowRoot?.querySelector<HTMLElement>(".entities");
     if (!list) {
       return;
     }
-    this._sortable = new Sortable(list, {
+    this._sortable = new SortableJs(list, {
       animation: 150,
       fallbackClass: "sortable-fallback",
       handle: ".handle",

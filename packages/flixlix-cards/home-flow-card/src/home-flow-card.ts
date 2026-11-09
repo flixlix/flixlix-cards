@@ -23,7 +23,8 @@ import { type HomeAssistant, type LovelaceCardEditor } from "custom-card-helpers
 import { html, LitElement, nothing, type PropertyValues, type TemplateResult } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import NumberFlow, { canAnimate } from "number-flow";
-import packageJson from "../package.json" with { type: "json" };
+import { version } from "../package.json";
+import { HomeFlowCardEditor } from "./ui-editor/ui-editor";
 import { carImage, type CarImage, carResolution, readCarPalette } from "./car-image";
 import { carEntities, type CarScene, carScene, type CarStatus, carStatus } from "./car-node";
 import { Extent } from "./extent";
@@ -49,7 +50,7 @@ registerCustomCard({
   name: "Home Flow Card",
   description:
     "Power flows drawn on an isometric house: solar on the roof, a battery on the wall and every wire running through the inverter.",
-  version: packageJson.version,
+  version: version,
 });
 
 /** Home Assistant's `hass.themes.darkMode`, which custom-card-helpers' types leave out. */
@@ -188,9 +189,8 @@ export class HomeFlowCard extends LitElement {
     super.disconnectedCallback();
   }
 
-  public static async getConfigElement(): Promise<LovelaceCardEditor> {
-    await import("./ui-editor/ui-editor");
-    return document.createElement("home-flow-card-editor");
+  public static getConfigElement(): LovelaceCardEditor {
+    return new HomeFlowCardEditor();
   }
 
   public static getStubConfig(hass: HomeAssistant): object {

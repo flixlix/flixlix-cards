@@ -8,7 +8,6 @@
     "rootDir": "src",
     "experimentalDecorators": true,
     "useDefineForClassFields": false,
-    "emitDecoratorMetadata": true,
     "paths": {
       "@flixlix-cards/shared/*": ["./src/*"]
     },

@@ -31,7 +31,7 @@ frontend breakages early; run `pnpm hass:reset` when switching back, since a dat
 by a newer HA cannot be opened by an older one.
 
 **Live development:** compose mounts each card's `dist/` at `/local/<card>/`. Run `pnpm dev`
-(rollup watch) and reload the browser to pick up changes; no restart needed.
+(`vp build --watch`) and reload the browser to pick up changes; no restart needed.
 
 The instance runs in UTC so "today" is the same day for the imported statistics and the energy
 cards; a browser in another time zone sees day boundaries shifted.
