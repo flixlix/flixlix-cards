@@ -425,10 +425,16 @@ describe("zero tolerance and display_zero", () => {
 });
 
 describe("home ring", () => {
-  test("has no NaN segments when nothing is consumed", () => {
+  test("bug #449: draws a full grid ring, without NaN segments, when nothing is consumed", () => {
     const { homeRing } = ready(compute({}));
 
-    expect(homeRing).toMatchObject({ battery: 0, solar: 0, grid: 0, nonFossil: 0 });
+    expect(homeRing).toMatchObject({
+      battery: 0,
+      solar: 0,
+      grid: CIRCLE_CIRCUMFERENCE,
+      nonFossil: 0,
+      largestSource: "grid",
+    });
     expect(homeRing.usageText).toBe(`0${thinSpace}W`);
   });
 
@@ -998,16 +1004,16 @@ const totalsReadings = fc.record({
 });
 
 describe("card state properties", () => {
-  test("home ring segments sum to the circumference, or are all 0", () => {
+  test("home ring segments always sum to the circumference", () => {
     fc.assert(
       fc.property(totalsReadings, (overrides) => {
-        const { homeRing, homeBalance } = ready(
+        const { homeRing } = ready(
           compute({ config: withFossil, hass: fossilHass("40"), readings: readings(overrides) })
         );
         const segments = [homeRing.battery, homeRing.solar, homeRing.grid, homeRing.nonFossil];
         const sum = segments.reduce((total, segment) => total + segment, 0);
         expect(segments.every((segment) => segment >= 0)).toBe(true);
-        expect(sum).toBeCloseTo(homeBalance.balanced === 0 ? 0 : CIRCLE_CIRCUMFERENCE, 9);
+        expect(sum).toBeCloseTo(CIRCLE_CIRCUMFERENCE, 9);
       }),
       RUNS
     );
