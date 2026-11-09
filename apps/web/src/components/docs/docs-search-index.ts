@@ -846,8 +846,8 @@ function houseEntries(): SearchEntry[] {
       HOUSE,
       "page",
       "Installation",
-      "Marketplace, HACS custom repository and manual installation instructions.",
-      ["marketplace", "hacs", "custom repository", "install", "resource", "lovelace"]
+      "Marketplace, HACS and manual installation instructions.",
+      ["marketplace", "hacs", "install", "resource", "lovelace"]
     ),
     houseEntry(
       `${HOUSE_BASE}/configuration`,

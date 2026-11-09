@@ -37,6 +37,7 @@ import {
   Prose,
   Section,
 } from "./doc-primitives";
+import { InstallFromCatalog } from "./install-from-catalog";
 import { OptionList } from "./option-list";
 import { PageTOC, type TocItem } from "./page-toc";
 import { TopologyDemo } from "./topology-demo";
@@ -260,33 +261,11 @@ export function InstallationPage({ cardKey }: { cardKey: CardKey }) {
         description="Install it from Home Assistant's Marketplace, or from HACS before 2026.11. Manual installation is also supported."
       />
 
-      <Section title="Marketplace or HACS (recommended)" id="hacs">
-        <Prose>
-          <p>
-            The card is in the default catalog, which Home Assistant&apos;s{" "}
-            <strong>Marketplace</strong> (2026.11 and newer) and <strong>HACS</strong> (before
-            2026.11) share.
-          </p>
-          <ol>
-            <li>
-              Go to <strong>Settings → Marketplace</strong>, or open <strong>HACS</strong> before
-              2026.11, and search for <strong>{v.title}</strong>.
-            </li>
-            <li>
-              Select <strong>Install</strong> (<strong>Download</strong> in HACS) and confirm.
-            </li>
-            <li>
-              Reload your dashboard, then add the card via the UI or paste the YAML from the{" "}
-              <Link to={`${v.basePath}/examples`}>Examples</Link> page.
-            </li>
-          </ol>
-        </Prose>
-        <Button asChild variant="outline" size="sm">
-          <a href={v.hacsRedirect} target="_blank" rel="noopener noreferrer">
-            Open in Home Assistant
-          </a>
-        </Button>
-      </Section>
+      <InstallFromCatalog
+        title={v.title}
+        redirect={v.hacsRedirect}
+        examplesPath={`${v.basePath}/examples`}
+      />
 
       <Section title="Manual installation" id="manual">
         <Prose>
