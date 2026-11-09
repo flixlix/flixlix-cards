@@ -7,11 +7,15 @@ import {
 import { translate } from "@flixlix-cards/shared/i18n";
 import { type ActionConfigSet, type BatteryObject } from "@flixlix-cards/shared/types";
 import { type LabelledNode } from "./scene";
+import { type StateOfChargePosition } from "./types";
+
+/** A number with its unit glued on, as the status line shows it. */
+export type Figure = { value: number; decimals: number; suffix: string };
 
 /** The battery's line between its value and its name. */
 export type BatteryStatus = {
-  /** The state of charge with its unit, when the battery reports one. */
-  charge?: { value: number; decimals: number; suffix: string };
+  /** The state of charge, or the power when the two swap places. */
+  figure?: Figure;
   direction?: "charging" | "discharging";
   /** The direction in words, empty while the battery idles. */
   word: string;
@@ -21,6 +25,8 @@ export type BatteryStatus = {
 export type Label = {
   node: LabelledNode;
   reading: ScaledReading | null;
+  /** A second value on the reading's line, as large as it, after it or `first`. */
+  aside?: { reading: ScaledReading; first: boolean };
   name: string;
   status?: BatteryStatus;
   /** A line under the name, in the error colour: the grid's outage alert. */
@@ -37,25 +43,71 @@ export type CarConfig =
 /** The configured generator's name and entity, which the card state does not carry. */
 export type GeneratorConfig = { name?: string; entity: string } | undefined;
 
-const batteryStatus = (
-  wire: HouseWire,
-  soc: BatteryObject["state_of_charge"],
-  language: string
-): BatteryStatus | undefined => {
-  const direction = wire.power > 0 ? (wire.intoInverter ? "discharging" : "charging") : undefined;
-  const charge =
-    typeof soc.state === "number"
-      ? {
-          value: soc.state,
-          decimals: soc.decimals,
-          suffix: `${soc.unit_white_space ? " " : ""}${soc.unit}`,
-        }
-      : undefined;
-  if (!charge && !direction) {
-    return undefined;
+const figureOf = ({ value, decimals, unit }: ScaledReading): Figure => ({
+  value,
+  decimals,
+  suffix: ` ${unit}`,
+});
+
+/** The state of charge as a figure, and as a reading with its unit apart; none without a number. */
+const chargeOf = ({ state, unit, decimals, unit_white_space }: BatteryObject["state_of_charge"]) =>
+  typeof state === "number"
+    ? {
+        figure: { value: state, decimals, suffix: `${unit_white_space ? " " : ""}${unit}` },
+        reading: { value: state, unit, decimals },
+      }
+    : undefined;
+
+type Charge = NonNullable<ReturnType<typeof chargeOf>>;
+
+/** Places the state of charge relative to the power, `below_power` unless set otherwise. */
+const placeCharge = (
+  label: Label & { reading: ScaledReading },
+  charge: Charge,
+  position: StateOfChargePosition | undefined,
+  status: (figure?: Figure) => BatteryStatus | undefined
+): Label => {
+  switch (position) {
+    case "above_power":
+      return { ...label, reading: charge.reading, status: status(figureOf(label.reading)) };
+    case "after_power":
+    case "before_power":
+      return {
+        ...label,
+        aside: { reading: charge.reading, first: position === "before_power" },
+        status: status(),
+      };
+    case "below_power":
+    case undefined:
+    default:
+      return { ...label, status: status(charge.figure) };
   }
+};
+
+/**
+ * The battery's power and state of charge, placed as `position` asks; without a state of charge,
+ * its power and direction as always.
+ */
+const batteryLabel = (
+  { nodes }: ReadyCardState,
+  wire: HouseWire,
+  position: StateOfChargePosition | undefined,
+  language: string
+): Label => {
+  const { battery } = nodes;
+  const direction = wire.power > 0 ? (wire.intoInverter ? "discharging" : "charging") : undefined;
   const word = direction ? translate(`card.battery.${direction}`, language) : "";
-  return { charge, direction, word };
+  const status = (figure?: Figure): BatteryStatus | undefined =>
+    figure || direction ? { figure, direction, word } : undefined;
+  const label = {
+    node: "battery" as const,
+    reading: wire.reading,
+    name: battery.name,
+    actions: battery,
+    entity: battery.mainEntity,
+  };
+  const charge = chargeOf(battery.state_of_charge);
+  return charge ? placeCharge(label, charge, position, status) : { ...label, status: status() };
 };
 
 /**
@@ -107,7 +159,7 @@ const carLabel = (
       status:
         car.charge === null
           ? undefined
-          : { charge: { value: car.charge, decimals: 0, suffix: " %" }, word: "" },
+          : { figure: { value: car.charge, decimals: 0, suffix: " %" }, word: "" },
     }
   );
 };
@@ -122,7 +174,8 @@ export const houseLabels = (
   generator: GeneratorConfig,
   gridAlert: string | undefined,
   language: string,
-  car?: CarConfig
+  car: CarConfig,
+  batteryPosition: StateOfChargePosition | undefined
 ): Label[] => {
   const { nodes } = state;
   const wireOf = (node: HouseNode) => wires.find((wire) => wire.node === node);
@@ -147,14 +200,7 @@ export const houseLabels = (
       actions: nodes.home,
       entity: nodes.home.entity,
     },
-    battery && {
-      node: "battery",
-      reading: battery.reading,
-      name: nodes.battery.name,
-      status: batteryStatus(battery, nodes.battery.state_of_charge, language),
-      actions: nodes.battery,
-      entity: nodes.battery.mainEntity,
-    },
+    battery && batteryLabel(state, battery, batteryPosition, language),
     grid && !generatorWire ? gridLabel(state, grid, gridAlert, language) : undefined,
     generatorWire && {
       node: "generator",

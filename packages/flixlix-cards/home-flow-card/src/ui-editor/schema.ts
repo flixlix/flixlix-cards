@@ -5,7 +5,7 @@ import {
   getEntitySeparatedSelectionSchema,
 } from "@flixlix-cards/shared/ui-editor/schema/_schema-base";
 import { defaultValues } from "@flixlix-cards/shared/utils/get-default-config";
-import { DEFAULT_STATE_OF_CHARGE_SEVERITY } from "../types";
+import { DEFAULT_STATE_OF_CHARGE_SEVERITY, STATE_OF_CHARGE_POSITIONS } from "../types";
 
 const percent = { number: { mode: "box", min: 0, max: 100, step: 1, unit_of_measurement: "%" } };
 const decimals = { number: { mode: "box", min: 0, max: 5, step: 1 } };
@@ -74,6 +74,18 @@ export const NODE_SCHEMAS = {
     entity,
     getEntitySeparatedSelectionSchema(),
     { name: "state_of_charge", selector: { entity: {} } },
+    {
+      name: "state_of_charge_position",
+      selector: {
+        select: {
+          mode: "dropdown",
+          options: STATE_OF_CHARGE_POSITIONS.map((position) => ({
+            value: position,
+            label: localize(`editor.state_of_charge_position_${position}`),
+          })),
+        },
+      },
+    },
     {
       type: "grid",
       name: "",
@@ -199,4 +211,5 @@ export const FIELD_DEFAULTS: Record<string, string> = {
   red: `${DEFAULT_STATE_OF_CHARGE_SEVERITY.red} %`,
   yellow: `${DEFAULT_STATE_OF_CHARGE_SEVERITY.yellow} %`,
   state_alert: "on",
+  state_of_charge_position: localize("editor.state_of_charge_position_below_power"),
 };

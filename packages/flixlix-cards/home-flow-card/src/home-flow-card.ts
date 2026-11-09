@@ -27,7 +27,8 @@ import { carImage, type CarImage, carResolution, readCarPalette } from "./car-im
 import { carEntities, type CarScene, carScene, type CarStatus, carStatus } from "./car-node";
 import { Extent } from "./extent";
 import { houseLabels } from "./labels";
-import { includeLabel, labelsHtml, leaderSvg } from "./render-labels";
+import { fitLabels } from "./label-size";
+import { includeLabel, includeLabelOf, labelsHtml, leaderSvg } from "./render-labels";
 import { includeCar, sceneSvg } from "./render-scene";
 import { gridFade, keepPulsePhase } from "./render-wires";
 import { HOUSE_SPAN, project } from "./scene";
@@ -68,7 +69,16 @@ const isPageHidden = () => typeof document !== "undefined" && document.visibilit
 /** The house's middle, which the viewBox leans towards so the scene reads as centred. */
 const HOUSE_MIDDLE = (project(HOUSE_SPAN[0])[0] + project(HOUSE_SPAN[1])[0]) / 2;
 
-/** The scene, its leaders and labels, and the viewBox that holds them all. */
+/** Where the battery's charge bar changes colour, and where its label shows the charge. */
+const batteryOptions = ({ entities }: FlowConfig) => ({
+  severity: entities.battery?.state_of_charge_severity ?? DEFAULT_STATE_OF_CHARGE_SEVERITY,
+  position: entities.battery?.state_of_charge_position,
+});
+
+/**
+ * The scene, its leaders and labels, and the viewBox that holds them all for labels at a scale
+ * against the scene.
+ */
 const drawHouse = (
   config: FlowConfig,
   cardState: ReadyCardState,
@@ -76,13 +86,15 @@ const drawHouse = (
   car: CarScene
 ) => {
   const wires = houseWires(config, cardState, car.reading);
+  const battery = batteryOptions(config);
   const labels = houseLabels(
     cardState,
     wires,
     config.generator,
     config.entities.grid?.power_outage?.label_alert,
     language,
-    car.label
+    car.label,
+    battery.position
   );
   const extent = new Extent();
   const reserveGenerator = Boolean(config.entities.grid?.power_outage?.entity_generator);
@@ -90,25 +102,32 @@ const drawHouse = (
     cardState,
     wires,
     extent,
-    severity: config.entities.battery?.state_of_charge_severity ?? DEFAULT_STATE_OF_CHARGE_SEVERITY,
+    severity: battery.severity,
     reserveGenerator,
     car: car.image,
   });
-  const leaders = labels.map((label) => leaderSvg(label, extent));
-  // the grid's and the generator's labels take turns: keep room for both, so the card keeps its
-  // size as the grid goes down and comes back
-  if (config.entities.grid) {
-    includeLabel(extent, "grid", 0);
-  }
-  if (reserveGenerator) {
-    includeLabel(extent, "generator", 0);
-  }
   // the car keeps its room while it is away, so the house does not jump as it comes and goes
   if (car.reserve) {
     includeCar(extent);
-    includeLabel(extent, "car", 1);
   }
-  return { labels, scene, leaders, box: extent.viewBox(10, HOUSE_MIDDLE) };
+  const boxFor = (scale: number) => {
+    const withLabels = extent.clone();
+    labels.forEach((label) => includeLabelOf(withLabels, label, scale));
+    // the grid's and the generator's labels take turns: keep room for both, so the card keeps
+    // its size as the grid goes down and comes back
+    if (config.entities.grid) {
+      includeLabel(withLabels, "grid", 0, { scale });
+    }
+    if (reserveGenerator) {
+      includeLabel(withLabels, "generator", 0, { scale });
+    }
+    if (car.reserve) {
+      includeLabel(withLabels, "car", 1, { scale });
+    }
+    // centring the house costs width the larger labels of a narrow card need more
+    return withLabels.viewBox(10, HOUSE_MIDDLE, Math.min(Math.max(2 - scale, 0), 1));
+  };
+  return { labels, scene, leaders: labels.map(leaderSvg), boxFor };
 };
 
 @customElement("home-flow-card")
@@ -228,13 +247,13 @@ export class HomeFlowCard extends LitElement {
     if (!this._config || !this.hass || cardState?.status !== "ready") {
       return nothing;
     }
-    const { labels, scene, leaders, box } = drawHouse(
+    const { labels, scene, leaders, boxFor } = drawHouse(
       this._config,
       cardState,
       this.hass.locale?.language ?? "en",
       carScene(this.hass, this._config.car, this._carStatus, this._carImage)
     );
-    const unit = this._width.width > 0 ? this._width.width / box.width : 1;
+    const { box, labelUnit } = fitLabels(this._width.width, boxFor);
     const context = {
       actions: this._actions,
       clickable: this._config.clickable_entities ?? false,
@@ -243,7 +262,10 @@ export class HomeFlowCard extends LitElement {
     };
     return html`
       <ha-card .header=${this._config.title}>
-        <div class="stage ${this._config.title ? "titled" : ""}" style=${`--house-unit: ${unit}px`}>
+        <div
+          class="stage ${this._config.title ? "titled" : ""}"
+          style=${`--label-unit: ${labelUnit}px`}
+        >
           <svg
             viewBox="${box.x} ${box.y} ${box.width} ${box.height}"
             role="img"

@@ -69,25 +69,26 @@ the top level. Options that only change Power Flow Card Plus' circles and lines 
 
 ## Configuration
 
-| Name                               | Type    | Default                   | Description                                                                                                                                         |
-| ---------------------------------- | ------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `type`                             | string  | —                         | `custom:home-flow-card`                                                                                                                             |
-| `grid`, `solar`, `battery`, `home` | object  | —                         | Each node, configured as in [Power Flow Card Plus](https://cards.flixlix.com/power-flow-card-plus/configuration); leave one out and it is not drawn |
-| `title`                            | string  | —                         | Card title                                                                                                                                          |
-| `animate_numbers`                  | boolean | `true`                    | Roll each number to its new value when a reading changes. Always still when your system asks for reduced motion                                     |
-| `clickable_entities`               | boolean | `false`                   | Tapping a value opens its entity, or runs the node's tap/hold actions                                                                               |
-| `disable_dots`                     | boolean | `false`                   | Keep the wires still: no pulses, only the colour of the power they carry                                                                            |
-| `battery.state_of_charge_severity` | object  | `{ red: 15, yellow: 30 }` | Battery charge bar colours, in %: red below `red`, yellow below `yellow`, green above both                                                          |
-| `generator`                        | object  | —                         | `entity` (and optional `name`) of a generator the inverter switches to during a grid outage; needs `grid.power_outage`                              |
-| `car`                              | object  | —                         | An electric car in front of the house: `entity` (its power, positive while charging), optional `state_of_charge` and `name`                         |
-| `car.visibility`                   | list    | —                         | Show the car only while all of these hold, as in a card's visibility tab and with the same editor; it keeps its room while hidden                   |
-| `car.idle`                         | list    | 0 W                       | Draw the car faded and unplugged while all of these hold; without them, while it draws no power                                                     |
-| `base_decimals`                    | number  | `0`                       | Decimals of values in W                                                                                                                             |
-| `kilo_decimals`                    | number  | `1`                       | Decimals of values in kW                                                                                                                            |
-| `kilo_threshold`                   | number  | `1000`                    | From how many watts a value is shown in kW                                                                                                          |
-| `min_flow_rate`                    | number  | `0.75`                    | Seconds per pulse at the most power                                                                                                                 |
-| `max_flow_rate`                    | number  | `6`                       | Seconds per pulse at the least power                                                                                                                |
-| `max_expected_power`               | number  | `2000`                    | Power at which pulses run their fastest                                                                                                             |
+| Name                               | Type    | Default                   | Description                                                                                                                                          |
+| ---------------------------------- | ------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `type`                             | string  | —                         | `custom:home-flow-card`                                                                                                                              |
+| `grid`, `solar`, `battery`, `home` | object  | —                         | Each node, configured as in [Power Flow Card Plus](https://cards.flixlix.com/power-flow-card-plus/configuration); leave one out and it is not drawn  |
+| `title`                            | string  | —                         | Card title                                                                                                                                           |
+| `animate_numbers`                  | boolean | `true`                    | Roll each number to its new value when a reading changes. Always still when your system asks for reduced motion                                      |
+| `clickable_entities`               | boolean | `false`                   | Tapping a value opens its entity, or runs the node's tap/hold actions                                                                                |
+| `disable_dots`                     | boolean | `false`                   | Keep the wires still: no pulses, only the colour of the power they carry                                                                             |
+| `battery.state_of_charge_severity` | object  | `{ red: 15, yellow: 30 }` | Battery charge bar colours, in %: red below `red`, yellow below `yellow`, green above both                                                           |
+| `battery.state_of_charge_position` | string  | `below_power`             | Where the battery's label shows its state of charge: `below_power`, `above_power` (swapped with the power), `after_power` or `before_power` (inline) |
+| `generator`                        | object  | —                         | `entity` (and optional `name`) of a generator the inverter switches to during a grid outage; needs `grid.power_outage`                               |
+| `car`                              | object  | —                         | An electric car in front of the house: `entity` (its power, positive while charging), optional `state_of_charge` and `name`                          |
+| `car.visibility`                   | list    | —                         | Show the car only while all of these hold, as in a card's visibility tab and with the same editor; it keeps its room while hidden                    |
+| `car.idle`                         | list    | 0 W                       | Draw the car faded and unplugged while all of these hold; without them, while it draws no power                                                      |
+| `base_decimals`                    | number  | `0`                       | Decimals of values in W                                                                                                                              |
+| `kilo_decimals`                    | number  | `1`                       | Decimals of values in kW                                                                                                                             |
+| `kilo_threshold`                   | number  | `1000`                    | From how many watts a value is shown in kW                                                                                                           |
+| `min_flow_rate`                    | number  | `0.75`                    | Seconds per pulse at the most power                                                                                                                  |
+| `max_flow_rate`                    | number  | `6`                       | Seconds per pulse at the least power                                                                                                                 |
+| `max_expected_power`               | number  | `2000`                    | Power at which pulses run their fastest                                                                                                              |
 
 ## Examples
 
@@ -118,6 +119,7 @@ solar:
 battery:
   entity: sensor.battery_power
   state_of_charge: sensor.battery_soc
+  state_of_charge_position: after_power
   state_of_charge_severity:
     red: 10
     yellow: 25

@@ -10,11 +10,12 @@ const nodes = {
   grid: { entity: "sensor.grid" },
 };
 
-const mountHouse = async (states: StateFixtures, config: object = {}) => {
+const mountHouse = async (states: StateFixtures, config: object = {}, width?: number) => {
   const { card } = await mountCard(
     HomeFlowCard,
     { type: "custom:home-flow-card", ...nodes, animate_numbers: false, ...config },
-    fakeHass({ states })
+    fakeHass({ states }),
+    { width }
   );
   return page.elementLocator(card);
 };
@@ -75,4 +76,37 @@ test("an idle car, parked and unplugged", async () => {
     { car: { entity: "sensor.car_power", state_of_charge: "sensor.car_soc" } }
   );
   await expect.element(card).toMatchScreenshot("car-idle");
+});
+
+const charging: StateFixtures = {
+  "sensor.solar": "9000",
+  "sensor.battery": "0",
+  "sensor.grid": "-200",
+  "sensor.battery_soc": sensor("80", { unit: "%" }),
+  "sensor.car_power": sensor("7.4", { unit: "kW" }),
+  "sensor.car_soc": sensor("64", { unit: "%" }),
+};
+
+test("a narrow card keeps its labels readable", async () => {
+  const card = await mountHouse(
+    charging,
+    { car: { entity: "sensor.car_power", state_of_charge: "sensor.car_soc" } },
+    330
+  );
+  await expect.element(card).toMatchScreenshot("narrow");
+});
+
+test("a wide card gives the house the room its labels stop taking", async () => {
+  // the shared viewport is 500 px wide, too narrow for the card
+  await page.viewport(1340, 1400);
+  try {
+    const card = await mountHouse(
+      charging,
+      { car: { entity: "sensor.car_power", state_of_charge: "sensor.car_soc" } },
+      1300
+    );
+    await expect.element(card).toMatchScreenshot("wide");
+  } finally {
+    await page.viewport(500, 700);
+  }
 });

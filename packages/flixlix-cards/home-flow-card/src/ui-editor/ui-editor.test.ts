@@ -123,6 +123,7 @@ describe("editor", () => {
       "entity",
       "entity",
       "state_of_charge",
+      "state_of_charge_position",
       "(group)",
       "state_of_charge_severity",
       "(group)",
@@ -177,6 +178,14 @@ describe("editor", () => {
     await open("battery");
 
     expect(data()).toMatchObject({ state_of_charge_severity: { red: 15, yellow: 30 } });
+    editor.remove();
+  });
+
+  test("the state of charge position says it stays under the power by default", async () => {
+    const { editor, open, helper } = await mountEditor({ battery: { entity: "sensor.battery" } });
+    await open("battery");
+
+    expect(helper("state_of_charge_position")).toBe("Default: Under the power");
     editor.remove();
   });
 

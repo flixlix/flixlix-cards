@@ -75,6 +75,51 @@ views:
       - type: grid
         cards:
           - type: heading
+            heading: State of charge position
+            icon: mdi:battery-arrow-up-outline
+          - type: custom:home-flow-card
+            title: Under the power (default)
+            grid:
+              entity: sensor.grid_power
+            solar:
+              entity: sensor.solar_power
+            battery:
+              entity: sensor.battery_power
+              state_of_charge: sensor.battery_soc
+              state_of_charge_position: below_power
+          - type: custom:home-flow-card
+            title: Swapped with the power
+            grid:
+              entity: sensor.grid_power
+            solar:
+              entity: sensor.solar_power
+            battery:
+              entity: sensor.battery_power
+              state_of_charge: sensor.battery_soc
+              state_of_charge_position: above_power
+          - type: custom:home-flow-card
+            title: After the power
+            grid:
+              entity: sensor.grid_power
+            solar:
+              entity: sensor.solar_power
+            battery:
+              entity: sensor.battery_power
+              state_of_charge: sensor.battery_soc
+              state_of_charge_position: after_power
+          - type: custom:home-flow-card
+            title: Before the power
+            grid:
+              entity: sensor.grid_power
+            solar:
+              entity: sensor.solar_power
+            battery:
+              entity: sensor.battery_power
+              state_of_charge: sensor.battery_soc
+              state_of_charge_position: before_power
+      - type: grid
+        cards:
+          - type: heading
             heading: With the grid
             icon: mdi:transmission-tower
           - type: custom:home-flow-card
