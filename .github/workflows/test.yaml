@@ -31,11 +31,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Format, lint and type-aware checks
+      - name: Format, lint and type checks
         run: pnpm check
-
-      - name: Typecheck
-        run: pnpm typecheck
 
       - name: Build cards (fails on syntax older browsers cannot parse)
         run: pnpm build:cards
