@@ -18,6 +18,8 @@
     "default": "Standard",
     "more": "Weitere Optionen",
     "interaction": "Interaktion",
+    "appearance": "Darstellung",
+    "wire_width": "Leitungsbreite",
     "not_configured": "Nicht eingerichtet",
     "number_format": "Zahlenformat",
     "red": "Rot unter (%)",

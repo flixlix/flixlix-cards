@@ -880,6 +880,7 @@ function houseEntries(): SearchEntry[] {
     ).map(([id, title, description]) =>
       houseEntry(`${HOUSE_BASE}/configuration#${id}`, configuration, "section", title, description)
     ),
+    option("wire_width", "Draw the wires thicker.", "card-options", ["lines", "thickness"]),
     option("power_outage", "The grid's outage sensor and alert.", "grid", ["outage", "blackout"]),
     option("override_state", "Show the home sensor's own reading.", "home"),
     option("visibility", "When the car is drawn.", "car", ["car", "conditions", "home"]),
@@ -919,6 +920,7 @@ function houseEntries(): SearchEntry[] {
       "state_of_charge_position after_power."
     ),
     example("grid-only", "Grid only", "No solar or battery."),
+    example("wire-width", "Thicker wires", "wire_width 2."),
     example("still", "Still numbers and wires", "animate_numbers and disable_dots off."),
   ];
 }

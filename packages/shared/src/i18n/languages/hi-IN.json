@@ -18,6 +18,8 @@
     "default": "डिफ़ॉल्ट",
     "more": "और विकल्प",
     "interaction": "इंटरैक्शन",
+    "appearance": "दिखावट",
+    "wire_width": "तारों की मोटाई",
     "not_configured": "कॉन्फ़िगर नहीं किया गया",
     "number_format": "संख्या प्रारूप",
     "red": "लाल (%) से कम",

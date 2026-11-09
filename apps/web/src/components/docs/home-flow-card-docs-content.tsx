@@ -405,6 +405,13 @@ const CARD_OPTIONS: OptionRow[] = [
     description: "Keep the wires still: no pulses, only the colour of the power they carry.",
   },
   {
+    name: "wire_width",
+    type: "number",
+    default: "1",
+    description:
+      "How many times thicker the wires are drawn, for example 2 for twice as thick. Like the labels' text, wires keep a similar size in px whatever the card's width: they stay visible in a narrow sidebar and do not swell on a wide dashboard.",
+  },
+  {
     name: "clickable_entities",
     type: "boolean",
     default: "false",
@@ -1167,6 +1174,14 @@ battery:
 grid:
   entity: sensor.grid_power`,
     states: { "sensor.grid_power": "860" },
+  },
+  {
+    id: "wire-width",
+    title: "Thicker wires",
+    text: "Draw the wires twice as thick. They keep that size whatever the card's width.",
+    code: `${MINIMAL_CONFIG}
+wire_width: 2`,
+    states: AFTERNOON,
   },
   {
     id: "still",

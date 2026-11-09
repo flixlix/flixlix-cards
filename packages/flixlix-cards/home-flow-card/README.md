@@ -74,26 +74,27 @@ or `battery` are required.
 
 ### Card options
 
-| Name                 | Type    | Default | Description                                                                                                     |
-| -------------------- | ------- | ------- | --------------------------------------------------------------------------------------------------------------- |
-| `type`               | string  | -       | `custom:home-flow-card`                                                                                         |
-| `title`              | string  | -       | Card title                                                                                                      |
-| `grid`               | object  | -       | The grid, see [Grid](#grid)                                                                                     |
-| `solar`              | object  | -       | Solar on the roof, see [Solar](#solar)                                                                          |
-| `battery`            | object  | -       | The battery on the wall, see [Battery](#battery)                                                                |
-| `home`               | object  | -       | The home's consumption, see [Home](#home). Without it, the card works out what the home uses from the others    |
-| `generator`          | object  | -       | A generator for grid outages, see [Generator](#generator)                                                       |
-| `car`                | object  | -       | An electric car in front of the house, see [Car](#car)                                                          |
-| `animate_numbers`    | boolean | `true`  | Roll each number to its new value when a reading changes. Always still when your system asks for reduced motion |
-| `disable_dots`       | boolean | `false` | Keep the wires still: no pulses, only the colour of the power they carry                                        |
-| `clickable_entities` | boolean | `false` | Tapping a value opens its entity's details. A node's own actions run either way                                 |
-| `base_decimals`      | number  | `0`     | Decimals of values in W                                                                                         |
-| `kilo_decimals`      | number  | `1`     | Decimals of values in kW                                                                                        |
-| `kilo_threshold`     | number  | `1000`  | From how many watts a value is shown in kW                                                                      |
-| `min_flow_rate`      | number  | `0.75`  | Seconds per pulse at the most power                                                                             |
-| `max_flow_rate`      | number  | `6`     | Seconds per pulse at the least power                                                                            |
-| `min_expected_power` | number  | `0.01`  | Power at which pulses run their slowest, in W                                                                   |
-| `max_expected_power` | number  | `2000`  | Power at which pulses run their fastest, in W                                                                   |
+| Name                 | Type    | Default | Description                                                                                                                                         |
+| -------------------- | ------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `type`               | string  | -       | `custom:home-flow-card`                                                                                                                             |
+| `title`              | string  | -       | Card title                                                                                                                                          |
+| `grid`               | object  | -       | The grid, see [Grid](#grid)                                                                                                                         |
+| `solar`              | object  | -       | Solar on the roof, see [Solar](#solar)                                                                                                              |
+| `battery`            | object  | -       | The battery on the wall, see [Battery](#battery)                                                                                                    |
+| `home`               | object  | -       | The home's consumption, see [Home](#home). Without it, the card works out what the home uses from the others                                        |
+| `generator`          | object  | -       | A generator for grid outages, see [Generator](#generator)                                                                                           |
+| `car`                | object  | -       | An electric car in front of the house, see [Car](#car)                                                                                              |
+| `animate_numbers`    | boolean | `true`  | Roll each number to its new value when a reading changes. Always still when your system asks for reduced motion                                     |
+| `disable_dots`       | boolean | `false` | Keep the wires still: no pulses, only the colour of the power they carry                                                                            |
+| `wire_width`         | number  | `1`     | How many times thicker the wires are drawn, for example `2` for twice as thick. Like the labels, they keep a similar size whatever the card's width |
+| `clickable_entities` | boolean | `false` | Tapping a value opens its entity's details. A node's own actions run either way                                                                     |
+| `base_decimals`      | number  | `0`     | Decimals of values in W                                                                                                                             |
+| `kilo_decimals`      | number  | `1`     | Decimals of values in kW                                                                                                                            |
+| `kilo_threshold`     | number  | `1000`  | From how many watts a value is shown in kW                                                                                                          |
+| `min_flow_rate`      | number  | `0.75`  | Seconds per pulse at the most power                                                                                                                 |
+| `max_flow_rate`      | number  | `6`     | Seconds per pulse at the least power                                                                                                                |
+| `min_expected_power` | number  | `0.01`  | Power at which pulses run their slowest, in W                                                                                                       |
+| `max_expected_power` | number  | `2000`  | Power at which pulses run their fastest, in W                                                                                                       |
 
 Leave a node out and the house does not draw it. `grid`, `solar`, `battery` and `home` take the
 same options as in [Power Flow Card Plus](https://cards.flixlix.com/power-flow-card-plus/configuration);
@@ -346,6 +347,24 @@ Without solar or a battery, the house shows the grid feeding the home.
 type: custom:home-flow-card
 grid:
   entity: sensor.grid_power
+```
+
+### Thicker wires
+
+Draw the wires twice as thick. They keep that size whatever the card's width.
+
+<img width="478" alt="Solar, a battery and the grid with wires drawn twice as thick" src="https://raw.githubusercontent.com/flixlix/flixlix-cards/main/packages/flixlix-cards/home-flow-card/assets/examples/wire-width.gif">
+
+```yaml
+type: custom:home-flow-card
+wire_width: 2
+grid:
+  entity: sensor.grid_power
+solar:
+  entity: sensor.solar_power
+battery:
+  entity: sensor.battery_power
+  state_of_charge: sensor.battery_soc
 ```
 
 ### Still numbers and wires
