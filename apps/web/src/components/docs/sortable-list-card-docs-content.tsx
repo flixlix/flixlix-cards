@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Eye, Github, ListOrdered, Save, Settings } from "lucide-react";
 import type * as React from "react";
 
+import { trackEvent } from "#/lib/analytics";
 import { Button } from "@flixlix-cards/ui/components/button";
 import { Checkbox } from "@flixlix-cards/ui/components/checkbox";
 
@@ -178,7 +179,12 @@ export function InstallationPage() {
         <Prose>
           <p>
             Download <code>{PKG}.js</code> from the{" "}
-            <a href={RELEASE_URL} target="_blank" rel="noopener noreferrer">
+            <a
+              href={RELEASE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackEvent("Download release", { card: TITLE })}
+            >
               latest release
             </a>{" "}
             and copy it into <code>config/www/</code>.

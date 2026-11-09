@@ -14,6 +14,7 @@ import {
 import * as React from "react";
 import { createPortal } from "react-dom";
 
+import { trackEvent } from "#/lib/analytics";
 import { setThemeMode } from "#/lib/theme";
 import { cn } from "cn";
 
@@ -231,6 +232,7 @@ function CommandMenu({ onClose }: { onClose: () => void }) {
 
   function navigateTo(entry: SearchEntry) {
     const [pathname, hash] = entry.to.split("#");
+    trackEvent("Open search result", { result: entry.to });
     void router.navigate({ to: pathname, hash: hash ?? undefined });
     onClose();
   }

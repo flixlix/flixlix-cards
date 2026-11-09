@@ -1,5 +1,7 @@
 import { Button } from "@flixlix-cards/ui/components/button";
 
+import { trackEvent } from "#/lib/analytics";
+
 import { Callout, Prose, Section } from "./doc-primitives";
 
 /**
@@ -24,7 +26,12 @@ export function InstallFromLink({
       </Callout>
 
       <Button asChild className="mb-10">
-        <a href={redirect} target="_blank" rel="noopener noreferrer">
+        <a
+          href={redirect}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => trackEvent("Open in Home Assistant", { card: title })}
+        >
           Open in Home Assistant
         </a>
       </Button>

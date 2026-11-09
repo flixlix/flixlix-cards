@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import * as React from "react";
 
+import { trackEvent } from "#/lib/analytics";
 import { cn } from "cn";
 import { Badge } from "@flixlix-cards/ui/components/badge";
 import { Button } from "@flixlix-cards/ui/components/button";
@@ -115,6 +116,7 @@ export function CodeBlock({
 
   function copy() {
     void navigator.clipboard.writeText(code.trim());
+    trackEvent("Copy code", language ? { language } : undefined);
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1500);
   }
