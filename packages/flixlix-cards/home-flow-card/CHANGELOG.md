@@ -1,5 +1,19 @@
 # home-flow-card
 
+## 0.3.0
+
+### Minor Changes
+
+- **New:** A `heat_pump` on the front wall, wired to the home's outlet. Its label shows its power and its state or temperature from its `climate` entity, which a tap opens. It hangs above a configured car, lower without one; the car's wire now rises beside the outlet. ([#476](https://github.com/flixlix/flixlix-cards/pull/476))
+
+### Patch Changes
+
+- **Docs:** Home Flow Card is now in the default HACS catalog. Search for it in Settings → Marketplace (or in HACS before 2026.11) instead of adding it as a custom repository. ([#470](https://github.com/flixlix/flixlix-cards/pull/470))
+
+- **Fix:** Short labels such as "0 W Solar" are easier to tap on mobile: every clickable label now takes taps from an area at least 48px wide and tall. ([#463](https://github.com/flixlix/flixlix-cards/pull/463))
+
+- **Performance:** The card file is 2 to 5% smaller. Cards are now built with Vite+ instead of Rollup and Babel; they still run on the same browsers, including Chromecast and older tablets. ([#471](https://github.com/flixlix/flixlix-cards/pull/471))
+
 ## 0.2.0
 
 ### Minor Changes
