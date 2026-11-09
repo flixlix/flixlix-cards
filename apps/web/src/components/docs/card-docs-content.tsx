@@ -430,13 +430,13 @@ const ADVANCED_CARD_OPTIONS = (v: Variant): OptionRow[] => [
     name: "min_flow_rate",
     type: "number",
     default: "0.75",
-    description: "Time (s) for the fastest dot to travel an entire line.",
+    description: "Time (s) for the fastest dot to travel 140px of line; shorter lines take less.",
   },
   {
     name: "max_flow_rate",
     type: "number",
     default: "6",
-    description: "Time (s) for the slowest dot to travel an entire line.",
+    description: "Time (s) for the slowest dot to travel 140px of line; shorter lines take less.",
   },
   // The energy card always uses the relative formula, so these never apply there
   ...(v.key === "energy"
@@ -925,7 +925,7 @@ const FOSSIL_OPTIONS: OptionRow[] = [
     type: "boolean | number",
     default: "true",
     description:
-      "Unset or true uses the calculated flow rate, false a fixed pace, a number a fixed dot interval (seconds).",
+      "Unset or true uses the calculated flow rate, false a fixed pace, a number fixed seconds per 140px of line.",
   },
 ];
 
@@ -1007,7 +1007,7 @@ const POWER_OUTAGE_OPTIONS: OptionRow[] = [
     type: "boolean | number",
     default: "true",
     description:
-      "Unset or true uses the calculated flow rate, false a fixed pace, a number a fixed dot interval (seconds).",
+      "Unset or true uses the calculated flow rate, false a fixed pace, a number fixed seconds per 140px of line.",
   },
 ];
 
@@ -1583,8 +1583,8 @@ entities:
           accent="violet"
           description={
             cardKey === "energy"
-              ? "The card animates dots along the lines. It always uses the relative formula: period totals in Wh don't fit an absolute power scale, so flow_rate_model, use_new_flow_rate_model, min_expected_power and max_expected_power have no effect."
-              : "The card animates dots along the lines. flow_rate_model picks one of three formulas for how fast they travel. With the defaults, a 1000 W line takes 3.38 s per dot with duration and 1.33 s with speed; relative depends on the line's share of all lines."
+              ? "The card animates dots along the lines. It always uses the relative formula: period totals in Wh don't fit an absolute power scale, so flow_rate_model, use_new_flow_rate_model, min_expected_power and max_expected_power have no effect. Every flow rate is seconds per 140px of line, scaled by each line's length, so the same rate moves dots equally fast on short and long lines."
+              : "The card animates dots along the lines. flow_rate_model picks one of three formulas for how fast they travel. With the defaults, a 1000 W line takes 3.38 s per 140px with duration and 1.33 s with speed; relative depends on the line's share of all lines. Every flow rate, including min/max_flow_rate and a fixed calculate_flow_rate, is seconds per 140px of line, scaled by each line's length, so equal power moves dots equally fast on short individual lines and long main lines."
           }
         >
           <div className={cardKey === "energy" ? "grid gap-4" : "grid gap-4 md:grid-cols-3"}>

@@ -7,6 +7,7 @@ import {
   sensor,
   withStates,
 } from "@flixlix-cards/shared/testing/fake-hass";
+import { dotSpeed } from "@flixlix-cards/shared/testing/dot-speed";
 import { expectFlowCard } from "@flixlix-cards/shared/testing/expect-flow-card";
 import { flowScenarios } from "@flixlix-cards/shared/testing/flow-scenarios";
 import { type MountedCard, mountCard } from "@flixlix-cards/shared/testing/mount-card";
@@ -527,5 +528,28 @@ describe("entity names", () => {
       Object.assign({ ...hass }, { entities: {}, formatEntityName: nameFormatter("Basement") })
     );
     expect(text(".grid .label")).toBe("Basement Grid power");
+  });
+});
+
+describe("dot speed", () => {
+  test("a short individual line and a long main line carrying the same power move equally fast", async () => {
+    const { root } = await mountCard(
+      PowerFlowCardPlus,
+      {
+        type: "custom:power-flow-card-plus",
+        entities: {
+          grid: { entity: "sensor.grid" },
+          individual: [{ entity: "sensor.device" }],
+        },
+      },
+      fakeHass({ states: { "sensor.grid": "1000", "sensor.device": "1000" } }),
+      { width: 500 }
+    );
+    const grid = '.flow-dot[data-path="grid"]';
+    const device = '.flow-dot[data-path="individual-top"]';
+    expect(root.querySelector(grid)?.getAttribute("data-duration")).toBe(
+      root.querySelector(device)?.getAttribute("data-duration")
+    );
+    expect(dotSpeed(root, device) / dotSpeed(root, grid)).toBeCloseTo(1, 1);
   });
 });

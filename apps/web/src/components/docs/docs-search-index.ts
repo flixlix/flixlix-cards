@@ -139,7 +139,11 @@ function configSections(
       "Display zero lines",
       "show / hide / transparency / grey_out / custom."
     ),
-    make("flow-formula", "Flow formulas", "Legacy vs new (absolute) flow rate model."),
+    make(
+      "flow-formula",
+      "Flow formulas",
+      "Flow rate models, and how durations are normalized by line length."
+    ),
   ];
   if (card === "energy") {
     sections.push(
@@ -183,8 +187,8 @@ function configOptions(
       "kilo_threshold",
       `${card === "power" ? "Watts" : "Watt-hours"} before switching to ${card === "power" ? "kW" : "kWh"}.`
     ),
-    make("min_flow_rate", "Time (s) for the fastest dot to travel a line."),
-    make("max_flow_rate", "Time (s) for the slowest dot to travel a line."),
+    make("min_flow_rate", "Time (s) for the fastest dot to travel 140px of line."),
+    make("max_flow_rate", "Time (s) for the slowest dot to travel 140px of line."),
     make("clickable_entities", "Open the entity's more-info dialog when clicking a circle."),
     ...(card === "energy"
       ? []

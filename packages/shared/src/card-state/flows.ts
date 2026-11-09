@@ -86,6 +86,20 @@ const configuredDuration = (calculateFlowRate: boolean | number | undefined, rat
   return calculateFlowRate !== false && rate ? rate : FIXED_FLOW_DURATION;
 };
 
+/**
+ * Every flow rate (calculated, `min_flow_rate`/`max_flow_rate`, a fixed `calculate_flow_rate`) is
+ * in seconds per this many pixels of line: about a main line of a card in a 400px column, so main
+ * lines keep roughly the pace they always had.
+ */
+export const REFERENCE_LINE_LENGTH = 140;
+
+/**
+ * Seconds a dot takes along a line `lengthPixels` long, so that the same flow rate moves dots
+ * equally fast on short and long lines.
+ */
+export const lineDuration = (secondsPerReferenceLine: number, lengthPixels: number): number =>
+  (secondsPerReferenceLine * lengthPixels) / REFERENCE_LINE_LENGTH;
+
 /** Lines with nothing flowing are hidden, greyed out or faded per `display_zero_lines`. */
 const zeroLine = (config: FlowCardPlusConfig, value: number, visible: boolean) => {
   const mode = config.display_zero_lines?.mode;

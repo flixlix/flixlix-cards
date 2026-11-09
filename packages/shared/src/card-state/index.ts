@@ -5,7 +5,7 @@ export {
   conditionsMet,
   type ConditionContext,
 } from "./conditions";
-export { flowRateModel } from "./flows";
+export { flowRateModel, lineDuration, REFERENCE_LINE_LENGTH } from "./flows";
 export { type CarReading, type HouseNode, type HouseWire, houseWires } from "./house-wires";
 export { type ScaledReading } from "./format";
 export { energyReadings } from "./readings/energy";
