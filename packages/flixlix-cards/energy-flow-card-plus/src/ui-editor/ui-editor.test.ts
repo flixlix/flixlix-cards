@@ -298,16 +298,18 @@ describe("energy flow ui editor", () => {
       /topology/
     );
   });
-  // HA's ha-form grid tops-aligns its cells, so a toggle next to a taller field sits off-centre.
-  test("every row of the advanced grid pairs toggles with toggles and fields with fields", () => {
-    const grid = advancedOptionsSchema("show").find((item) => "column_min_width" in item);
-    const fields: unknown[] =
-      grid && "schema" in grid && Array.isArray(grid.schema) ? grid.schema : [];
-    const kinds = fields.map((field) => (isToggle(field) ? "toggle" : "field"));
-    const rows = Array.from({ length: Math.ceil(kinds.length / 2) }, (_, row) =>
-      kinds.slice(row * 2, row * 2 + 2)
-    );
+  // HA's ha-form grid top-aligns its cells, so a toggle next to a taller field sits off-centre.
+  test("every row of the advanced grids pairs toggles with toggles and fields with fields", () => {
+    const grids = advancedOptionsSchema("show").filter((item) => "column_min_width" in item);
+    const mixedRows = grids.flatMap((grid) => {
+      const fields: unknown[] = "schema" in grid && Array.isArray(grid.schema) ? grid.schema : [];
+      const kinds = fields.map((field) => (isToggle(field) ? "toggle" : "field"));
+      return Array.from({ length: Math.ceil(kinds.length / 2) }, (_, row) =>
+        kinds.slice(row * 2, row * 2 + 2)
+      ).filter((row) => new Set(row).size > 1);
+    });
 
-    expect(rows.filter((row) => new Set(row).size > 1)).toEqual([]);
+    expect(grids.length).toBeGreaterThan(0);
+    expect(mixedRows).toEqual([]);
   });
 });

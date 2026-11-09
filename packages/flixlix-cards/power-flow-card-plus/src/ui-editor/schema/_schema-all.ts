@@ -82,120 +82,130 @@ export const generalConfigSchema = [
   },
 ] as const;
 
-export const advancedOptionsSchema = memoizeOne((displayZeroLinesMode: string) => [
-  {
-    type: "grid",
-    column_min_width: "200px",
-    schema: [
-      {
-        name: "dashboard_link",
-        label: "Dashboard Link",
-        selector: { navigation: {} },
-      },
-      {
-        name: "dashboard_link_label",
-        label: "Dashboard Link Label",
-        selector: { text: {} },
-      },
-      {
-        name: "base_decimals",
-        label: "Watt Decimals",
-        selector: { number: { mode: "box", min: 0, max: 5, step: 1 } },
-      },
-      {
-        name: "kilo_decimals",
-        label: "kW Decimals",
-        selector: { number: { mode: "box", min: 0, max: 5, step: 1 } },
-      },
-      {
-        name: "mega_decimals",
-        label: "MW Decimals",
-        selector: { number: { mode: "box", min: 0, max: 5, step: 1 } },
-      },
-      {
-        name: "max_flow_rate",
-        label: "Max Flow Rate (Sec/Dot)",
-        selector: { number: { mode: "box", min: 0, max: 1000000, step: 0.01 } },
-      },
-      {
-        name: "min_flow_rate",
-        label: "Min Flow Rate (Sec/Dot)",
-        selector: { number: { mode: "box", min: 0, max: 1000000, step: 0.01 } },
-      },
-      {
-        name: "max_expected_power",
-        label: "Max Expected Power (in Watts)",
-        selector: { number: { mode: "box", min: 0, max: 1000000, step: 0.01 } },
-      },
-      {
-        name: "min_expected_power",
-        label: "Min Expected Power (in Watts)",
-        selector: { number: { mode: "box", min: 0, max: 1000000, step: 0.01 } },
-      },
-      {
-        name: "kilo_threshold",
-        label: "Kilowatt Threshold",
-        selector: { number: { mode: "box", min: 0, max: 1000000, step: 1 } },
-      },
-      {
-        name: "mega_threshold",
-        label: "Megawatt Threshold",
-        selector: { number: { mode: "box", min: 0, max: 10000000, step: 1 } },
-      },
-      {
-        name: "flow_rate_model",
-        selector: {
-          select: {
-            mode: "dropdown",
-            options: FLOW_RATE_MODELS.map((model) => ({
-              value: model,
-              label: localize(`editor.flow_rate_model_${model}`),
-            })),
-          },
+const advancedFieldsGrid = () => ({
+  type: "grid",
+  column_min_width: "200px",
+  schema: [
+    {
+      name: "dashboard_link",
+      label: "Dashboard Link",
+      selector: { navigation: {} },
+    },
+    {
+      name: "dashboard_link_label",
+      label: "Dashboard Link Label",
+      selector: { text: {} },
+    },
+    {
+      name: "flow_rate_model",
+      selector: {
+        select: {
+          mode: "dropdown",
+          options: FLOW_RATE_MODELS.map((model) => ({
+            value: model,
+            label: localize(`editor.flow_rate_model_${model}`),
+          })),
         },
       },
-      {
-        name: "clickable_entities",
-        label: "Clickable Entities",
-        selector: { boolean: {} },
-        default: true,
-      },
-      {
-        name: "disable_dots",
-        label: "Disable Moving Dots",
-        selector: { boolean: {} },
-      },
-      {
-        name: "no_labels",
-        label: localize("editor.no_labels"),
-        selector: { boolean: {} },
-      },
-      {
-        name: "sort_individual_devices",
-        label: "Sort individual devices by usage",
-        selector: { boolean: {} },
-        default: true,
-      },
-      {
-        name: "allow_layout_break",
-        label: "Allow Layout Break",
-        selector: { boolean: {} },
-      },
-    ],
-  },
-  {
-    name: "topology",
-    label: localize("editor.topology"),
-    selector: {
-      select: {
-        mode: "dropdown",
-        options: TOPOLOGIES.map((topology) => ({
-          value: topology,
-          label: localize(`editor.topology_${topology}`),
-        })),
+    },
+    {
+      name: "topology",
+      label: localize("editor.topology"),
+      selector: {
+        select: {
+          mode: "dropdown",
+          options: TOPOLOGIES.map((topology) => ({
+            value: topology,
+            label: localize(`editor.topology_${topology}`),
+          })),
+        },
       },
     },
-  },
+    {
+      name: "base_decimals",
+      label: "Watt Decimals",
+      selector: { number: { mode: "box", min: 0, max: 5, step: 1 } },
+    },
+    {
+      name: "kilo_decimals",
+      label: "kW Decimals",
+      selector: { number: { mode: "box", min: 0, max: 5, step: 1 } },
+    },
+    {
+      name: "mega_decimals",
+      label: "MW Decimals",
+      selector: { number: { mode: "box", min: 0, max: 5, step: 1 } },
+    },
+    {
+      name: "max_flow_rate",
+      label: "Max Flow Rate (Sec/Dot)",
+      selector: { number: { mode: "box", min: 0, max: 1000000, step: 0.01 } },
+    },
+    {
+      name: "min_flow_rate",
+      label: "Min Flow Rate (Sec/Dot)",
+      selector: { number: { mode: "box", min: 0, max: 1000000, step: 0.01 } },
+    },
+    {
+      name: "max_expected_power",
+      label: "Max Expected Power (in Watts)",
+      selector: { number: { mode: "box", min: 0, max: 1000000, step: 0.01 } },
+    },
+    {
+      name: "min_expected_power",
+      label: "Min Expected Power (in Watts)",
+      selector: { number: { mode: "box", min: 0, max: 1000000, step: 0.01 } },
+    },
+    {
+      name: "kilo_threshold",
+      label: "Kilowatt Threshold",
+      selector: { number: { mode: "box", min: 0, max: 1000000, step: 1 } },
+    },
+    {
+      name: "mega_threshold",
+      label: "Megawatt Threshold",
+      selector: { number: { mode: "box", min: 0, max: 10000000, step: 1 } },
+    },
+  ],
+});
+
+const advancedTogglesGrid = () => ({
+  type: "grid",
+  column_min_width: "200px",
+  schema: [
+    {
+      name: "clickable_entities",
+      label: "Clickable Entities",
+      selector: { boolean: {} },
+      default: true,
+    },
+    {
+      name: "disable_dots",
+      label: "Disable Moving Dots",
+      selector: { boolean: {} },
+    },
+    {
+      name: "no_labels",
+      label: localize("editor.no_labels"),
+      selector: { boolean: {} },
+    },
+    {
+      name: "sort_individual_devices",
+      label: "Sort individual devices by usage",
+      selector: { boolean: {} },
+      default: true,
+    },
+    {
+      name: "allow_layout_break",
+      label: "Allow Layout Break",
+      selector: { boolean: {} },
+    },
+  ],
+});
+
+export const advancedOptionsSchema = memoizeOne((displayZeroLinesMode: string) => [
+  advancedFieldsGrid(),
+  advancedTogglesGrid(),
   {
     type: "expandable",
     title: localize("editor.display_zero_lines"),

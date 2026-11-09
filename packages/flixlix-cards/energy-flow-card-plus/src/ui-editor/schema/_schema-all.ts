@@ -86,109 +86,119 @@ export const generalConfigSchema = [
   },
 ] as const;
 
-export const advancedOptionsSchema = memoizeOne((displayZeroLinesMode: string) => [
-  {
-    type: "grid",
-    column_min_width: "200px",
-    schema: [
-      {
-        name: "dashboard_link",
-        label: "Dashboard Link",
-        selector: { navigation: {} },
-      },
-      {
-        name: "dashboard_link_label",
-        label: "Dashboard Link Label",
-        selector: { text: {} },
-      },
-      {
-        name: "base_decimals",
-        label: "Wh Decimals",
-        selector: { number: { mode: "box", min: 0, max: 5, step: 1 } },
-      },
-      {
-        name: "kilo_decimals",
-        label: "kWh Decimals",
-        selector: { number: { mode: "box", min: 0, max: 5, step: 1 } },
-      },
-      {
-        name: "mega_decimals",
-        label: "MWh Decimals",
-        selector: { number: { mode: "box", min: 0, max: 5, step: 1 } },
-      },
-      {
-        name: "max_flow_rate",
-        label: "Max Flow Rate (Sec/Dot)",
-        selector: { number: { mode: "box", min: 0, max: 1000000, step: 0.01 } },
-      },
-      {
-        name: "min_flow_rate",
-        label: "Min Flow Rate (Sec/Dot)",
-        selector: { number: { mode: "box", min: 0, max: 1000000, step: 0.01 } },
-      },
-      {
-        name: "kilo_threshold",
-        label: "kWh Threshold",
-        selector: { number: { mode: "box", min: 0, max: 1000000, step: 1 } },
-      },
-      {
-        name: "mega_threshold",
-        label: "MWh Threshold",
-        selector: { number: { mode: "box", min: 0, max: 10000000, step: 1 } },
-      },
-      {
-        name: "collection_key",
-        label: "Energy Collection Key",
-        selector: { text: {} },
-      },
-      {
-        name: "clickable_entities",
-        label: "Clickable Entities",
-        selector: { boolean: {} },
-        default: true,
-      },
-      {
-        name: "disable_dots",
-        label: "Disable Moving Dots",
-        selector: { boolean: {} },
-      },
-      {
-        name: "energy_date_selection",
-        label: "Use Date Selection",
-        selector: { boolean: {} },
-        default: true,
-      },
-      {
-        name: "no_labels",
-        label: localize("editor.no_labels"),
-        selector: { boolean: {} },
-      },
-      {
-        name: "sort_individual_devices",
-        label: "Sort individual devices by usage",
-        selector: { boolean: {} },
-        default: true,
-      },
-      {
-        name: "allow_layout_break",
-        label: "Allow Layout Break",
-        selector: { boolean: {} },
-      },
-    ],
-  },
-  {
-    name: "topology",
-    label: localize("editor.topology"),
-    selector: {
-      select: {
-        mode: "dropdown",
-        options: TOPOLOGIES.map((topology) => ({
-          value: topology,
-          label: localize(`editor.topology_${topology}`),
-        })),
+const advancedFieldsGrid = () => ({
+  type: "grid",
+  column_min_width: "200px",
+  schema: [
+    {
+      name: "dashboard_link",
+      label: "Dashboard Link",
+      selector: { navigation: {} },
+    },
+    {
+      name: "dashboard_link_label",
+      label: "Dashboard Link Label",
+      selector: { text: {} },
+    },
+    {
+      name: "collection_key",
+      label: "Energy Collection Key",
+      selector: { text: {} },
+    },
+    {
+      name: "topology",
+      label: localize("editor.topology"),
+      selector: {
+        select: {
+          mode: "dropdown",
+          options: TOPOLOGIES.map((topology) => ({
+            value: topology,
+            label: localize(`editor.topology_${topology}`),
+          })),
+        },
       },
     },
-  },
+    {
+      name: "base_decimals",
+      label: "Wh Decimals",
+      selector: { number: { mode: "box", min: 0, max: 5, step: 1 } },
+    },
+    {
+      name: "kilo_decimals",
+      label: "kWh Decimals",
+      selector: { number: { mode: "box", min: 0, max: 5, step: 1 } },
+    },
+    {
+      name: "mega_decimals",
+      label: "MWh Decimals",
+      selector: { number: { mode: "box", min: 0, max: 5, step: 1 } },
+    },
+    {
+      name: "max_flow_rate",
+      label: "Max Flow Rate (Sec/Dot)",
+      selector: { number: { mode: "box", min: 0, max: 1000000, step: 0.01 } },
+    },
+    {
+      name: "min_flow_rate",
+      label: "Min Flow Rate (Sec/Dot)",
+      selector: { number: { mode: "box", min: 0, max: 1000000, step: 0.01 } },
+    },
+    {
+      name: "kilo_threshold",
+      label: "kWh Threshold",
+      selector: { number: { mode: "box", min: 0, max: 1000000, step: 1 } },
+    },
+    {
+      name: "mega_threshold",
+      label: "MWh Threshold",
+      selector: { number: { mode: "box", min: 0, max: 10000000, step: 1 } },
+    },
+  ],
+});
+
+const advancedTogglesGrid = () => ({
+  type: "grid",
+  column_min_width: "200px",
+  schema: [
+    {
+      name: "clickable_entities",
+      label: "Clickable Entities",
+      selector: { boolean: {} },
+      default: true,
+    },
+    {
+      name: "disable_dots",
+      label: "Disable Moving Dots",
+      selector: { boolean: {} },
+    },
+    {
+      name: "energy_date_selection",
+      label: "Use Date Selection",
+      selector: { boolean: {} },
+      default: true,
+    },
+    {
+      name: "no_labels",
+      label: localize("editor.no_labels"),
+      selector: { boolean: {} },
+    },
+    {
+      name: "sort_individual_devices",
+      label: "Sort individual devices by usage",
+      selector: { boolean: {} },
+      default: true,
+    },
+    {
+      name: "allow_layout_break",
+      label: "Allow Layout Break",
+      selector: { boolean: {} },
+    },
+  ],
+});
+
+export const advancedOptionsSchema = memoizeOne((displayZeroLinesMode: string) => [
+  advancedFieldsGrid(),
+  advancedTogglesGrid(),
   {
     type: "expandable",
     title: localize("editor.display_zero_lines"),
