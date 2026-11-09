@@ -13,6 +13,10 @@ import {
 export const FLOW_RATE_MODELS = ["duration", "speed", "relative"] as const;
 export type FlowRateModel = (typeof FLOW_RATE_MODELS)[number];
 
+/** Which wires exist between grid, solar, battery and home; see the topology docs. */
+export const TOPOLOGIES = ["standard", "battery_hub", "isolated_battery"] as const;
+export type Topology = (typeof TOPOLOGIES)[number];
+
 export type DisplayZeroLinesMode = "show" | "grey_out" | "transparency" | "hide" | "custom";
 
 interface mainConfigOptions {
@@ -45,6 +49,7 @@ interface mainConfigOptions {
   };
   sort_individual_devices?: boolean;
   allow_layout_break?: boolean;
+  topology?: Topology;
   /* LEGACY - JUST TO AVOID ERRORS */
   w_threshold?: number;
   w_decimals?: number;

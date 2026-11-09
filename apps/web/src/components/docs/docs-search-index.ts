@@ -140,6 +140,11 @@ function configSections(
       "show / hide / transparency / grey_out / custom."
     ),
     make(
+      "topology",
+      "Topology",
+      "standard / battery_hub / isolated_battery: which wires the card draws."
+    ),
+    make(
       "flow-formula",
       "Flow formulas",
       "Flow rate models, and how durations scale with line length."
@@ -225,6 +230,12 @@ function configOptions(
         ]),
     make("sort_individual_devices", "Sort individual devices by value, then id, then name."),
     make("allow_layout_break", "Force showing up to 4 individual devices."),
+    make("topology", "Which wires exist: standard, battery_hub or isolated_battery.", "topology", [
+      "standard",
+      "battery_hub",
+      "isolated_battery",
+      "power station",
+    ]),
     make("tap_action", "Action triggered on tap.", "actions"),
     make("hold_action", "Action triggered on long press.", "actions"),
     make("double_tap_action", "Action triggered on double tap.", "actions"),

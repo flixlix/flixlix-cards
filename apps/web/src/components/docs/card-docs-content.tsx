@@ -13,6 +13,7 @@ import {
   Layers,
   Leaf,
   MousePointerClick,
+  Network,
   Palette,
   Settings,
   Split,
@@ -38,6 +39,7 @@ import {
 } from "./doc-primitives";
 import { OptionList } from "./option-list";
 import { PageTOC, type TocItem } from "./page-toc";
+import { TopologyDemo } from "./topology-demo";
 
 export type CardKey = "power" | "energy";
 
@@ -516,6 +518,17 @@ const ADVANCED_CARD_OPTIONS = (v: Variant): OptionRow[] => [
     type: "boolean",
     default: "false",
     description: "Force showing up to 4 individual devices even if they don't fit.",
+  },
+  {
+    name: "topology",
+    type: "string",
+    default: "standard",
+    description: (
+      <>
+        Which wires your installation has: <code>standard</code>, <code>battery_hub</code> or{" "}
+        <code>isolated_battery</code>. See <a href="#topology">topology</a>.
+      </>
+    ),
   },
   ...(v.key === "energy"
     ? [
@@ -1011,6 +1024,27 @@ const POWER_OUTAGE_OPTIONS: OptionRow[] = [
   },
 ];
 
+const TOPOLOGY_OPTIONS: OptionRow[] = [
+  {
+    name: "standard",
+    type: "value",
+    default: "yes",
+    description: "Every wire. Most installations, AC or DC coupled.",
+  },
+  {
+    name: "battery_hub",
+    type: "value",
+    description:
+      "Solar → battery, grid ↔ battery, battery → home, and nothing else. For portable power stations, UPS-style and off-grid inverters where every load runs through the battery. Power that would skip the battery passes through it instead, so home consumption stays the same. Needs a battery; without one the card uses standard.",
+  },
+  {
+    name: "isolated_battery",
+    type: "value",
+    description:
+      "Every wire except grid ↔ battery. For batteries that never charge from or discharge into the grid. A battery reading that would need that wire is credited to solar or home instead, so sensor noise no longer draws a battery ↔ grid flow.",
+  },
+];
+
 const DISPLAY_ZERO_LINES_OPTIONS: OptionRow[] = [
   {
     name: "mode",
@@ -1083,6 +1117,7 @@ export function ConfigurationPage({ cardKey }: { cardKey: CardKey }) {
     { id: "secondary-info", label: "Secondary info", depth: 2 },
     { id: "power-outage", label: "Power outage", depth: 2 },
     { id: "display-zero-lines", label: "Display zero lines", depth: 2 },
+    { id: "topology", label: "Topology", depth: 2 },
     ...(cardKey === "energy" ? [{ id: "collection-key", label: "Collection key" } as TocItem] : []),
     { id: "flow-formula", label: "Flow formulas" },
   ];
@@ -1526,6 +1561,21 @@ entities:
           }}
         >
           <OptionList rows={DISPLAY_ZERO_LINES_OPTIONS} />
+        </CategorySection>
+
+        <CategorySection
+          id="topology"
+          title="Topology"
+          icon={Network}
+          accent="amber"
+          description="Which wires exist between grid, solar, battery and home. The card only draws those wires and routes power along them."
+          example={{
+            language: "yaml",
+            code: `topology: battery_hub`,
+          }}
+        >
+          <TopologyDemo card={cardKey} />
+          <OptionList rows={TOPOLOGY_OPTIONS} />
         </CategorySection>
 
         {cardKey === "energy" ? (

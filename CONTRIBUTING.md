@@ -69,6 +69,8 @@ pnpm test       # Vitest per package: node tests, then browser tests in Chromium
 
 CI runs the same commands; a pull request must pass all of them with zero lint errors.
 
+The Vite+ docs ship locally at `node_modules/vite-plus/docs`.
+
 ### Browser and visual tests
 
 Each card has `<card>.browser.test.ts` files next to its source that mount the card in a real Chromium (Vitest browser mode with Playwright) against a fake Home Assistant: `fakeHass`, `mountCard` and the shared `flowScenarios` table live in [`packages/shared/src/testing`](packages/shared/src/testing/). Install Chromium once:

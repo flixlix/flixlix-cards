@@ -5,6 +5,7 @@ import {
   type IndividualObject,
 } from "@flixlix-cards/shared/types";
 import { type Balance } from "./nodes";
+import { type AllocatedFlow, hasWire } from "./solve";
 import { type Flow, type Flows } from "./types";
 
 /** Seconds per dot when a flow's rate is not calculated from its value. */
@@ -139,8 +140,9 @@ export const computeFlows = ({
   individuals,
   hasReturnToGrid,
 }: FlowContext): Flows => {
-  const { presence: has, flows } = balance;
+  const { presence: has, flows, topology } = balance;
   const toHomeDrawn = !config.entities.home?.hide;
+  const wired = (flow: AllocatedFlow) => hasWire(topology, flow);
   const total = [
     flows.gridToHome,
     flows.solarToHome,
@@ -159,18 +161,20 @@ export const computeFlows = ({
   return {
     batteryGrid: batteryGridLine(config, balance, total),
     batteryToHome: line(config, flows.batteryToHome, total, {
-      visible: has.battery && toHomeDrawn,
+      visible: has.battery && toHomeDrawn && wired("batteryToHome"),
     }),
-    gridToHome: gridToHomeLine(config, balance, total, toHomeDrawn),
+    gridToHome: gridToHomeLine(config, balance, total, toHomeDrawn && wired("gridToHome")),
     solarToBattery: line(config, flows.solarToBattery, total, {
-      visible: has.battery && has.solar,
+      visible: has.battery && has.solar && wired("solarToBattery"),
     }),
     solarToGrid: line(config, flows.solarToGrid, total, {
-      visible: has.grid && hasReturnToGrid && has.solar,
+      visible: has.grid && hasReturnToGrid && has.solar && wired("solarToGrid"),
     }),
-    solarToHome: line(config, flows.solarToHome, total, { visible: has.solar && toHomeDrawn }),
+    solarToHome: line(config, flows.solarToHome, total, {
+      visible: has.solar && toHomeDrawn && wired("solarToHome"),
+    }),
     nonFossil: line(config, nonFossilPower, total, {
-      visible: true,
+      visible: wired("gridToHome"),
       duration: configuredDuration(
         fossil?.calculate_flow_rate,
         flowRate(config, nonFossilPower, total)
@@ -206,13 +210,14 @@ const gridToHomeLine = (
 /** One line carries both directions between grid and battery. */
 const batteryGridLine = (
   config: FlowCardPlusConfig,
-  { presence, flows }: Balance,
+  { presence, flows, topology }: Balance,
   total: number
 ): Flow => {
+  const wired = hasWire(topology, "gridToBattery") || hasWire(topology, "batteryToGrid");
   const value = Math.max(flows.gridToBattery, flows.batteryToGrid);
   const styledBy = flows.batteryToGrid === 0 ? flows.gridToBattery : flows.batteryToGrid;
   return {
-    ...line(config, value, total, { visible: presence.grid && presence.battery }),
+    ...line(config, value, total, { visible: presence.grid && presence.battery && wired }),
     lineClass: zeroLine(config, styledBy, true).lineClass,
   };
 };
