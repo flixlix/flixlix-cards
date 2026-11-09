@@ -9,7 +9,8 @@ import { LitElement, css, html, nothing, type PropertyValues, type TemplateResul
 import { customElement, property, state } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 import { repeat } from "lit/directives/repeat.js";
-import packageJson from "../package.json" with { type: "json" };
+import { version } from "../package.json";
+import { SortableListCardEditor } from "./ui-editor/ui-editor";
 import { type ResolvedItem, type SortableListCardConfig } from "./types";
 import {
   buildSaveCall,
@@ -24,7 +25,7 @@ registerCustomCard({
   type: "sortable-list-card",
   name: "Sortable List Card",
   description: "A drag-and-drop reorderable list that saves the order via any service.",
-  version: packageJson.version,
+  version: version,
 });
 
 const PENDING_TIMEOUT = 3000;
@@ -46,9 +47,8 @@ export class SortableListCard extends LitElement implements LovelaceCard {
   private _flipAnims: Animation[] = [];
   private _animTimer?: ReturnType<typeof setTimeout>;
 
-  public static async getConfigElement(): Promise<LovelaceCardEditor> {
-    await import("./ui-editor/ui-editor");
-    return document.createElement("sortable-list-card-editor");
+  public static getConfigElement(): LovelaceCardEditor {
+    return new SortableListCardEditor();
   }
 
   public static getStubConfig(hass: HomeAssistant): SortableListCardConfig {

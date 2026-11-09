@@ -974,7 +974,7 @@ const CONTRIBUTING_SECTIONS: SearchEntry[] = [
     breadcrumb: "How to contribute",
     card: "general",
     type: "section",
-    keywords: ["pnpm dev", "rollup", "watch"],
+    keywords: ["pnpm dev", "vite", "watch"],
   },
   {
     title: "Working on the docs site",

@@ -1,25 +1,22 @@
-import { babel } from "@rollup/plugin-babel";
-import commonjs from "@rollup/plugin-commonjs";
-import json from "@rollup/plugin-json";
-import { nodeResolve } from "@rollup/plugin-node-resolve";
-import terser from "@rollup/plugin-terser";
 import { parse } from "acorn";
-import typescript from "@rollup/plugin-typescript";
-import minifyHTML from "rollup-plugin-minify-html-literals";
-import serve from "rollup-plugin-serve";
+import minifyHTMLLiterals from "rollup-plugin-minify-html-literals";
 import { execSync } from "node:child_process";
+import { createServer } from "node:http";
+import { readFile } from "node:fs/promises";
+import { join, normalize } from "node:path";
 
 // Home Assistant's own legacy-build floors (home-assistant/frontend .browserslistrc):
 // Chrome 67 covers Chromecast 1st gen (Chrome 70), Nest Hub and old kiosk webviews.
 // Safari/iOS and Firefox stay at their previous, lower floors.
-const browserTargets =
-  "Chrome >= 67, Edge >= 79, Samsung >= 9, Firefox >= 80, Safari >= 15, iOS >= 15";
+export const browserTargets = ["chrome67", "edge79", "firefox80", "safari15", "ios15"];
 // The newest syntax every browser in browserTargets parses: Chrome 67 stops before `?.` and `??`.
 const ecmaVersion = 2019;
 
+/** @returns {import("vite-plus").Plugin} */
 function legacySyntaxGuard() {
   return {
     name: "legacy-syntax-guard",
+    apply: "build",
     generateBundle(_options, bundle) {
       for (const chunk of Object.values(bundle)) {
         if (chunk.type !== "chunk") {
@@ -31,9 +28,8 @@ function legacySyntaxGuard() {
           const position = error.pos ?? 0;
           this.error({
             message:
-              `${chunk.fileName} contains syntax newer than ES${ecmaVersion}, which ${browserTargets} cannot parse: ` +
-              `${error.message} near "${chunk.code.slice(Math.max(0, position - 40), position + 40)}". ` +
-              "Is a dependency excluded from Babel?",
+              `${chunk.fileName} contains syntax newer than ES${ecmaVersion}, which ${browserTargets.join(", ")} cannot parse: ` +
+              `${error.message} near "${chunk.code.slice(Math.max(0, position - 40), position + 40)}".`,
             cause: error,
           });
         }
@@ -41,8 +37,6 @@ function legacySyntaxGuard() {
     },
   };
 }
-
-const BUILD_PLACEHOLDER = /\b__FLIXLIX_BUILD__\b/g;
 
 function git(command) {
   try {
@@ -63,96 +57,74 @@ export function buildId(now = new Date()) {
 }
 
 /** Release builds (RELEASE_BUILD=true in the release workflow) stamp an empty id: users see only the version. */
-function buildStamp(release = globalThis.process.env.RELEASE_BUILD === "true") {
-  const id = JSON.stringify(release ? "" : buildId());
+const buildStamp = (release = globalThis.process.env.RELEASE_BUILD === "true") =>
+  release ? "" : buildId();
+
+/**
+ * Serves the build output with CORS while `vp build --watch` runs, so a Home Assistant instance
+ * elsewhere can load the card from `http://<host>:<port>/<card>.js`.
+ */
+/**
+ * @param {string} outDir
+ * @param {number} port
+ * @returns {import("vite-plus").Plugin}
+ */
+function serveWhileWatching(outDir, port) {
+  let started = false;
   return {
-    name: "build-stamp",
-    transform(code) {
-      return BUILD_PLACEHOLDER.test(code)
-        ? { code: code.replace(BUILD_PLACEHOLDER, id), map: null }
-        : null;
+    name: "serve-while-watching",
+    apply: "build",
+    buildStart() {
+      if (started || !this.meta.watchMode) {
+        return;
+      }
+      started = true;
+      const root = normalize(outDir);
+      createServer((request, response) => {
+        const file = normalize(
+          join(root, decodeURIComponent(new URL(request.url ?? "/", "http://card").pathname))
+        );
+        response.setHeader("Access-Control-Allow-Origin", "*");
+        if (!file.startsWith(root)) {
+          response.writeHead(403).end();
+          return;
+        }
+        readFile(file).then(
+          (body) =>
+            response.writeHead(200, { "Content-Type": "text/javascript; charset=utf-8" }).end(body),
+          () => response.writeHead(404).end()
+        );
+      }).listen(port, "0.0.0.0");
+      this.info(`serving ${outDir} on http://localhost:${port}`);
     },
   };
 }
 
-export function createCardConfig(options) {
-  const {
-    input = "src/main.ts",
-    outDir = "dist",
-    port = 5001,
-    watch = globalThis.process.env.ROLLUP_WATCH,
-  } = options;
-  const minifyHtmlPlugin =
-    typeof minifyHTML === "function"
-      ? minifyHTML
-      : typeof minifyHTML?.default === "function"
-        ? minifyHTML.default
-        : typeof minifyHTML?.minifyHTMLLiterals === "function"
-          ? minifyHTML.minifyHTMLLiterals
-          : null;
+const minifyTemplates =
+  typeof minifyHTMLLiterals === "function" ? minifyHTMLLiterals : minifyHTMLLiterals.default;
 
+/**
+ * The Vite+ config that bundles a card into one ES module, `<outDir>/<name>.js`, that Home
+ * Assistant loads as a dashboard resource.
+ *
+ * @param {{ entry: string; name: string; outDir?: string; port?: number }} options
+ * @returns {import("vite-plus").UserConfig}
+ */
+export function createCardConfig({ entry, name, outDir = "dist", port = 5001 }) {
   return {
-    input,
-    output: {
-      dir: outDir,
-      format: "es",
-      inlineDynamicImports: true,
-      sourcemap: !!watch,
-    },
-    plugins: [
-      buildStamp(),
-      ...(minifyHtmlPlugin ? [minifyHtmlPlugin()] : []),
-      typescript({
-        declaration: false,
-        declarationMap: false,
-        ignoreDeprecations: "6.0",
-        compilerOptions: {
-          rootDir: "../..",
-          target: "es2020",
+    define: { __FLIXLIX_BUILD__: JSON.stringify(buildStamp()) },
+    plugins: [minifyTemplates(), legacySyntaxGuard(), serveWhileWatching(outDir, port)],
+    build: {
+      outDir,
+      target: browserTargets,
+      lib: { entry, formats: ["es"], fileName: () => `${name}.js` },
+      rolldownOptions: {
+        output: {
+          codeSplitting: false,
+          // Pinned: the minifier otherwise targets esnext and reintroduces `?.` and `??`.
+          minify: { compress: { target: browserTargets }, mangle: true, codegen: true },
         },
-        filterRoot: false,
-        include: ["**/*.ts", "**/*.tsx", "../../shared/src/**/*.ts", "../../shared/src/**/*.tsx"],
-      }),
-      // Cards run in a browser: packages that branch on it (esm-env, used by number-flow) must
-      // resolve their browser build, or their browser-only code is folded away as dead.
-      nodeResolve({ exportConditions: ["browser"] }),
-      json({ compact: true }),
-      commonjs(),
-      babel({
-        babelHelpers: "bundled",
-        extensions: [".js", ".mjs", ".ts", ".tsx"],
-        exclude: [/node_modules\/@mdi/],
-        presets: [
-          [
-            "@babel/preset-env",
-            {
-              targets: browserTargets,
-              bugfixes: true,
-              modules: false,
-            },
-          ],
-        ],
-      }),
-      ...(!watch
-        ? [terser({ output: { comments: false } }), legacySyntaxGuard()]
-        : [
-            serve({
-              contentBase: [outDir],
-              host: "0.0.0.0",
-              port,
-              allowCrossOrigin: true,
-              headers: { "Access-Control-Allow-Origin": "*" },
-            }),
-          ]),
-    ],
-    moduleContext: (id) => {
-      const thisAsWindowForModules = [
-        "node_modules/@formatjs/intl-utils/lib/src/diff.js",
-        "node_modules/@formatjs/intl-utils/lib/src/resolve-locale.js",
-      ];
-      return thisAsWindowForModules.some((id_) => id.trimEnd().endsWith(id_))
-        ? "window"
-        : undefined;
+      },
     },
   };
 }
