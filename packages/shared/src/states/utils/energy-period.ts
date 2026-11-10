@@ -454,6 +454,30 @@ export const subscribeEnergyCollectionData = (
     : null;
 };
 
+/**
+ * The fossil share of the grid import over the window, in kWh per bucket, as HA's own energy
+ * collection computes it. For pages where no HA energy card created a collection to read it from.
+ */
+export const fetchFossilEnergyConsumption = async (
+  hass: HomeAssistant,
+  gridImportIds: string[],
+  co2StatisticId: string,
+  window: EnergyPeriodWindow
+): Promise<FossilEnergyConsumption | undefined> => {
+  if (!gridImportIds.length) {
+    return undefined;
+  }
+  const raw = await hass.callWS<unknown>({
+    type: "energy/fossil_energy_consumption",
+    start_time: window.start.toISOString(),
+    end_time: window.end.toISOString(),
+    energy_statistic_ids: gridImportIds,
+    co2_statistic_id: co2StatisticId,
+    period: getSuggestedPeriod(window.start, window.end),
+  });
+  return isFossilEnergyConsumption(raw) ? raw : undefined;
+};
+
 export const computeNonFossilFromCollection = (
   fossilEnergyConsumption: FossilEnergyConsumption,
   gridFromGridWh: number

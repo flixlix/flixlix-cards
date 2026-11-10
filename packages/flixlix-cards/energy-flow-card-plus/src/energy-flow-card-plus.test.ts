@@ -176,6 +176,56 @@ describe("rendered values", () => {
   });
 });
 
+/** Answers the period statistics with 10 kWh of grid import, and the fossil query with `fossil`. */
+const hassAnswering = (fossil: unknown) => {
+  const messages: Array<Record<string, unknown>> = [];
+  const hass = makeHass({ "sensor.fossil": "90", "sensor.grid_in": "0", "sensor.grid_out": "0" });
+  hass.callWS = <T>(message: Record<string, unknown>) => {
+    messages.push(message);
+    const response =
+      message.type === "energy/fossil_energy_consumption"
+        ? fossil
+        : { "sensor.grid_in": [{ change: 10_000 }], "sensor.grid_out": [{ change: 0 }] };
+    return Promise.resolve(response as T);
+  };
+  return { hass, messages };
+};
+
+describe("non-fossil energy without an HA energy collection on the page", () => {
+  const fossilConfig = {
+    type: "custom:energy-flow-card-plus",
+    entities: {
+      grid: { entity: { consumption: "sensor.grid_in", production: "sensor.grid_out" } },
+      fossil_fuel_percentage: { entity: "sensor.fossil" },
+    },
+  } as EnergyFlowCardPlusConfig;
+
+  test("weighs the period's grid import with the period's fossil share, not the live one", async () => {
+    const { hass, messages } = hassAnswering({ a: 1, b: 1.5 });
+    const { text } = await renderCard(fossilConfig, hass);
+
+    await vi.waitFor(() => {
+      expect(text(".circle-container.low-carbon span.low-carbon")).toBe(`7.5${thinSpace}kWh`);
+    });
+    expect(messages).toContainEqual(
+      expect.objectContaining({
+        type: "energy/fossil_energy_consumption",
+        energy_statistic_ids: ["sensor.grid_in"],
+        co2_statistic_id: "sensor.fossil",
+      })
+    );
+  });
+
+  test("falls back to the fossil sensor's state when HA has no period data", async () => {
+    const { hass } = hassAnswering(null);
+    const { text } = await renderCard(fossilConfig, hass);
+
+    await vi.waitFor(() => {
+      expect(text(".circle-container.low-carbon span.low-carbon")).toBe(`1,000${thinSpace}Wh`);
+    });
+  });
+});
+
 function makeSubscribingHass(subscribed: string[], unsubscribed: string[]): HomeAssistant {
   const subscribeMessage: Connection["subscribeMessage"] = (_callback, message) => {
     const template = String(message.template);
