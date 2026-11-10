@@ -98,7 +98,7 @@ This monorepo uses [Changesets](https://github.com/changesets/changesets) to man
   pnpm changeset
   ```
 
-  Follow the prompts to create a changeset, then write its summary for someone using the card: one paragraph of at most 280 characters, starting with its type. The type picks the section of the release notes:
+  Follow the prompts to create a changeset. Pick `patch` as the bump, also for new options and features: the cards are still on 0.x, where `minor` is kept for very large features (on the scale of multiple batteries) and nothing gets `major` before 1.0. When in doubt, choose `patch` and say so in the PR. Then write its summary for someone using the card: one paragraph of at most 280 characters, starting with its type. The type picks the section of the release notes:
 
   | Type        | Section             |
   | ----------- | ------------------- |
