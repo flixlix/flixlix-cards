@@ -46,6 +46,7 @@
     "color_dynamically": "Kleur dynamisch",
     "color_icon": "Kleur van Pictogram",
     "color_idle": "Kleur bij inactiviteit",
+    "color_alert": "Kleur voor Alarm",
     "color_state_of_charge_value": "Kleur",
     "color_value": "Kleur van Waarde",
     "combined": "Gecombineerde entiteit (één entiteit met positieve en negatieve waarden)",

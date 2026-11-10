@@ -46,6 +46,7 @@
     "color_dynamically": "गतिशील रंग",
     "color_icon": "आइकन का रंग",
     "color_idle": "निष्क्रिय रंग",
+    "color_alert": "अलर्ट के लिए रंग",
     "color_state_of_charge_value": "रंग",
     "color_value": "मान का रंग",
     "combined": "संयुक्त इकाई (सकारात्मक और नकारात्मक मानों के साथ)",

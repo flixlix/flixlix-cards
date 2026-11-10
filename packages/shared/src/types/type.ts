@@ -86,6 +86,8 @@ export type GridPowerOutage = {
   state_alert?: string;
   label_alert?: string;
   icon_alert?: string;
+  /** Colour of the icon and label while the power is out. */
+  color_alert?: ColorValue;
   entity_generator?: string;
 };
 
@@ -164,6 +166,7 @@ export type GridObject = ActionConfigSet & {
     isOutage: boolean;
     icon: string;
     name: string | TemplateResult<1>;
+    color?: ColorValue;
     entityGenerator?: string;
   };
   icon: string;

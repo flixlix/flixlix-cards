@@ -46,6 +46,7 @@
     "color_dynamically": "Farve dynamisk",
     "color_icon": "Farve af ikon",
     "color_idle": "Farve ved inaktivitet",
+    "color_alert": "Farve for alarm",
     "color_state_of_charge_value": "Farve",
     "color_value": "Farve af værdi",
     "combined": "Kombineret enhed (Én enhed med positive og negative værdier)",

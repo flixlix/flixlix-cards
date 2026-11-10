@@ -305,6 +305,30 @@ export const flowScenarios: FlowScenario[] = [
     },
   },
   {
+    name: "grid outage in a custom alert colour",
+    visual: true,
+    entities: {
+      grid: {
+        entity: "sensor.grid",
+        power_outage: {
+          entity: "binary_sensor.grid_outage",
+          label_alert: "Outage",
+          color_alert: "#db4437",
+        },
+      },
+      solar: { entity: "sensor.solar" },
+    },
+    states: {
+      "sensor.grid": "250",
+      "binary_sensor.grid_outage": sensor("on", { unit: undefined }),
+      "sensor.solar": "100",
+    },
+    expect: {
+      text: { ".grid.power-outage": "Outage", "#home-circle": "100 W" },
+      hidden: [".grid .consumption", dot(flows.gridToHome)],
+    },
+  },
+  {
     name: "readings within the zero tolerance",
     entities: {
       grid: { entity: "sensor.grid", display_zero_tolerance: 5 },

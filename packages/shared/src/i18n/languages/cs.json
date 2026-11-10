@@ -46,6 +46,7 @@
     "color_dynamically": "Dynamická barva",
     "color_icon": "Barevná ikona",
     "color_idle": "Barva při nečinnosti",
+    "color_alert": "Barva pro upozornění",
     "color_state_of_charge_value": "Barva",
     "color_value": "Barevná hodnota",
     "combined": "Kombinovaná entita (jedna entita s kladnými a zápornými hodnotami)",

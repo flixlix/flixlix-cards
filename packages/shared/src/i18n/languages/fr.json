@@ -46,6 +46,7 @@
     "color_dynamically": "Couleur dynamique",
     "color_icon": "Couleur de l'icône",
     "color_idle": "Couleur au repos",
+    "color_alert": "Couleur de l'alerte",
     "color_state_of_charge_value": "Couleur",
     "color_value": "Couleur de la valeur",
     "combined": "Entité combinée (une entité avec des valeurs positives et négatives)",
