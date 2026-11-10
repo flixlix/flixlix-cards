@@ -129,6 +129,28 @@ const withFossil = config({
   entities: { fossil_fuel_percentage: { entity: "sensor.fossil", secondary_info: {} } },
 });
 
+/** The non-fossil node of 1000 W grid import with a fossil entity at "30" read as low-carbon. */
+const greenShare = (
+  state_type: "power" | "percentage",
+  fossilEnergyConsumption?: ReadyReadings["fossilEnergyConsumption"]
+) =>
+  ready(
+    compute({
+      config: config({
+        entities: {
+          fossil_fuel_percentage: {
+            entity: "sensor.fossil",
+            invert_state: true,
+            state_type,
+            secondary_info: {},
+          },
+        },
+      }),
+      hass: fossilHass("30"),
+      readings: readings({ grid: { fromGrid: 1000 }, fossilEnergyConsumption }),
+    })
+  ).nodes.nonFossil;
+
 const energy = (overrides: ReadingsOverrides) => readings({ family: "energy", ...overrides });
 
 const rateConfig = (overrides: Partial<FlowCardPlusConfig> = {}) =>
@@ -360,6 +382,12 @@ describe("energy distribution", () => {
     expect(nodes.grid.state.toHome).toBe(1000);
     expect(nodes.nonFossil.state.power).toBe(800);
     expect(nodes.nonFossil.display).toBe(`800${thinSpace}Wh`);
+  });
+
+  test("an inverted fossil entity is read as the low-carbon share of grid import", () => {
+    expect(greenShare("power").state.power).toBeCloseTo(300, 10);
+    expect(greenShare("percentage").display).toBe(`30${thinSpace}%`);
+    expect(greenShare("power", { coal: 0.2 }).state.power).toBe(800);
   });
 });
 

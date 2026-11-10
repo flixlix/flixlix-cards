@@ -91,6 +91,7 @@
     "icon_alert": "Ikon for alarm",
     "individual": "Individuel",
     "invert_state": "Omvendt tilstand",
+    "invert_state_non_fossil": "Enheden angiver den kulstoffattige andel i % (omvendt)",
     "inverted_animation": "Omvendt Animation",
     "kilo_decimals": "Decimaler for kilo",
     "kilo_threshold": "Tærskel fra basis til kilo",

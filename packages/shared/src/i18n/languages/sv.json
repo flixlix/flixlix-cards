@@ -91,6 +91,7 @@
     "icon_alert": "Varningsikon",
     "individual": "Individuell",
     "invert_state": "Invertera status",
+    "invert_state_non_fossil": "Entiteten anger den koldioxidsnåla andelen i % (invertera)",
     "inverted_animation": "Reversera animation",
     "kilo_decimals": "Decimaler för kilo",
     "kilo_threshold": "Tröskel från bas till kilo",

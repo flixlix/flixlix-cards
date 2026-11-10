@@ -91,6 +91,7 @@
     "icon_alert": "Symbol für Alarm",
     "individual": "Individuell",
     "invert_state": "Zustand umkehren",
+    "invert_state_non_fossil": "Entität meldet den CO2-armen Anteil in % (umkehren)",
     "inverted_animation": "Animation umkehren",
     "kilo_decimals": "Dezimalstellen für Kilo",
     "kilo_threshold": "Schwellenwert von Basis zu Kilo",

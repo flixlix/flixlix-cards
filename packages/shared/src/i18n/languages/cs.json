@@ -91,6 +91,7 @@
     "icon_alert": "Ikona pro upozornění",
     "individual": "Individuální",
     "invert_state": "Invertovat stav",
+    "invert_state_non_fossil": "Entita udává % nízkouhlíkové energie (invertovat)",
     "inverted_animation": "Invertovat animaci",
     "kilo_decimals": "Desetinná místa pro kilo",
     "kilo_threshold": "Práh ze základu na kilo",

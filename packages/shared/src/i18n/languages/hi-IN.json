@@ -91,6 +91,7 @@
     "icon_alert": "अलर्ट के लिए आइकन",
     "individual": "व्यक्तिगत",
     "invert_state": "स्थिति उलटें",
+    "invert_state_non_fossil": "एंटिटी कम-कार्बन % बताती है (उलटें)",
     "inverted_animation": "एनिमेशन उलटें",
     "kilo_decimals": "किलो दशमलव",
     "kilo_threshold": "बेस से किलो सीमा",

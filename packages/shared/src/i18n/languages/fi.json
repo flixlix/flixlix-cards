@@ -91,6 +91,7 @@
     "icon_alert": "Hälytyksen kuvake",
     "individual": "Yksittäinen",
     "invert_state": "Käänteinen tila",
+    "invert_state_non_fossil": "Entiteetti ilmoittaa vähähiilisen osuuden % (käänteinen)",
     "inverted_animation": "Käänteinen animaatio",
     "kilo_decimals": "kWhien desimaalit",
     "kilo_threshold": "Whin ja kWhin kynnysarvo",

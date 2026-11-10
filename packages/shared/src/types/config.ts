@@ -130,6 +130,8 @@ interface FossilFuelPercentage extends BaseConfigEntity {
   entity: string;
   color?: string;
   state_type?: "percentage" | "power";
+  /** The entity reports the low-carbon share (100 - fossil percentage), e.g. a "green energy %". */
+  invert_state?: boolean;
   color_icon?: boolean;
   display_zero?: boolean;
   display_zero_state?: boolean;

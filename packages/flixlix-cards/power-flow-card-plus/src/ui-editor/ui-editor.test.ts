@@ -3,6 +3,7 @@ import {
   computeEditorLabel,
   type HaFormLabelSchema,
 } from "@flixlix-cards/shared/ui-editor/ha-form";
+import { nonFossilSchema } from "@flixlix-cards/shared/ui-editor/schema/fossil-fuel-percentage";
 import { individualSchema } from "@flixlix-cards/shared/ui-editor/schema/individual";
 import { solarSchema } from "@flixlix-cards/shared/ui-editor/schema/solar";
 import { type HomeAssistant } from "custom-card-helpers";
@@ -455,4 +456,21 @@ const sumTotalLabel = (schema: readonly unknown[]) =>
 test("the sum_total toggle is labelled after the node it sums into", () => {
   expect(sumTotalLabel(solarSchema)).toBe("Sum solar and secondary");
   expect(sumTotalLabel(individualSchema)).toBe("Sum device and secondary");
+});
+
+test("the non-fossil invert_state toggle says the entity reports the low-carbon share", () => {
+  const field = (nonFossilSchema as readonly unknown[])
+    .filter(
+      (item): item is { schema: readonly HaFormLabelSchema[] } =>
+        typeof item === "object" && item !== null && "schema" in item
+    )
+    .flatMap((item) => item.schema)
+    .find((item) => item.name === "invert_state");
+  if (!field) {
+    throw new Error("invert_state not in the non-fossil schema");
+  }
+
+  expect(computeEditorLabel(hass as HomeAssistant, field)).toBe(
+    "Entity reports the low-carbon % (invert)"
+  );
 });
