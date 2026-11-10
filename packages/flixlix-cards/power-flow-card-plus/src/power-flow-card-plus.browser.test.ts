@@ -851,3 +851,25 @@ describe("dot motion across updates", () => {
     expect(dotLoop(root, gridDot).seconds).toBeLessThan(slow);
   });
 });
+
+const homeValue = ".home span.home:not(.secondary-info)";
+
+describe("custom CSS", () => {
+  test("styles the home's value apart from its icon and secondary info, like the other circles", async () => {
+    const { root, text } = await mountWatched();
+    const custom = new CSSStyleSheet();
+    custom.replaceSync(`${homeValue} { color: rgb(255, 0, 0); }`);
+    root.adoptedStyleSheets = [...root.adoptedStyleSheets, custom];
+    const colorOf = (selector: string) => {
+      const element = root.querySelector(selector);
+      if (!element) {
+        throw new Error(`${selector} not rendered`);
+      }
+      return getComputedStyle(element).color;
+    };
+    expect(text(homeValue)).toBe("400 W");
+    expect(colorOf(homeValue)).toBe("rgb(255, 0, 0)");
+    expect(colorOf(".home .secondary-info")).not.toBe("rgb(255, 0, 0)");
+    expect(colorOf("#home-icon")).not.toBe("rgb(255, 0, 0)");
+  });
+});

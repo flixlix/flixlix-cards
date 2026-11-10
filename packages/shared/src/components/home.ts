@@ -54,7 +54,7 @@ export const homeElement = (
         <ha-ripple .disabled=${disableEntityClick}></ha-ripple>
         ${generalSecondarySpan(main, home.secondary, "home")}
         ${home.icon !== " " ? html`<ha-icon id="home-icon" .icon=${home.icon}></ha-icon>` : nothing}
-        ${ring.usageText}
+        <span class="home">${ring.usageText}</span>
         <svg class="home-circle-sections">
           <circle
             class="solar"

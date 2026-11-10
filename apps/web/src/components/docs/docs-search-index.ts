@@ -150,6 +150,11 @@ function configSections(
       "standard / battery_hub / isolated_battery: which wires the card draws."
     ),
     make(
+      "custom-css",
+      "Custom CSS",
+      "card-mod selectors for each circle's value, icon and secondary info."
+    ),
+    make(
       "flow-formula",
       "Flow formulas",
       "Flow rate models, and how durations scale with line length."

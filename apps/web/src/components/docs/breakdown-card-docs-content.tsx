@@ -466,6 +466,7 @@ function ConfigShortcut({
   return (
     <a
       href={to}
+      data-llms-skip
       className="group bg-card hover:border-foreground/20 flex items-start gap-3 rounded-lg border p-3 transition-colors"
     >
       <div className={`flex size-8 shrink-0 items-center justify-center rounded-md ${accent}`}>

@@ -10,8 +10,11 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as DocsRouteImport } from './routes/_docs'
+import { Route as LlmsFullDottxtRouteImport } from './routes/llms-full[.]txt'
+import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
 import { Route as DocsIndexRouteImport } from './routes/_docs/index'
 import { Route as DocsContributingRouteImport } from './routes/_docs/contributing'
+import { Route as LlmsSplatRouteImport } from './routes/llms/$'
 import { Route as DocsEnergyBreakdownCardIndexRouteImport } from './routes/_docs/energy-breakdown-card/index'
 import { Route as DocsEnergyBreakdownCardConfigurationRouteImport } from './routes/_docs/energy-breakdown-card/configuration'
 import { Route as DocsEnergyBreakdownCardExamplesRouteImport } from './routes/_docs/energy-breakdown-card/examples'
@@ -45,6 +48,16 @@ const DocsRoute = DocsRouteImport.update({
   id: '/_docs',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LlmsFullDottxtRoute = LlmsFullDottxtRouteImport.update({
+  id: '/llms-full.txt',
+  path: '/llms-full.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LlmsDottxtRoute = LlmsDottxtRouteImport.update({
+  id: '/llms.txt',
+  path: '/llms.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DocsIndexRoute = DocsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -54,6 +67,11 @@ const DocsContributingRoute = DocsContributingRouteImport.update({
   id: '/contributing',
   path: '/contributing',
   getParentRoute: () => DocsRoute,
+} as any)
+const LlmsSplatRoute = LlmsSplatRouteImport.update({
+  id: '/llms/$',
+  path: '/llms/$',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const DocsEnergyBreakdownCardIndexRoute =
   DocsEnergyBreakdownCardIndexRouteImport.update({
@@ -225,7 +243,10 @@ const DocsSortableListCardInstallationRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof DocsIndexRoute
+  '/llms-full.txt': typeof LlmsFullDottxtRoute
+  '/llms.txt': typeof LlmsDottxtRoute
   '/contributing': typeof DocsContributingRoute
+  '/llms/$': typeof LlmsSplatRoute
   '/energy-breakdown-card/configuration': typeof DocsEnergyBreakdownCardConfigurationRoute
   '/energy-breakdown-card/examples': typeof DocsEnergyBreakdownCardExamplesRoute
   '/energy-breakdown-card/installation': typeof DocsEnergyBreakdownCardInstallationRoute
@@ -256,7 +277,10 @@ export interface FileRoutesByFullPath {
   '/sortable-list-card/': typeof DocsSortableListCardIndexRoute
 }
 export interface FileRoutesByTo {
+  '/llms-full.txt': typeof LlmsFullDottxtRoute
+  '/llms.txt': typeof LlmsDottxtRoute
   '/contributing': typeof DocsContributingRoute
+  '/llms/$': typeof LlmsSplatRoute
   '/': typeof DocsIndexRoute
   '/energy-breakdown-card/configuration': typeof DocsEnergyBreakdownCardConfigurationRoute
   '/energy-breakdown-card/examples': typeof DocsEnergyBreakdownCardExamplesRoute
@@ -290,7 +314,10 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_docs': typeof DocsRouteWithChildren
+  '/llms-full.txt': typeof LlmsFullDottxtRoute
+  '/llms.txt': typeof LlmsDottxtRoute
   '/_docs/contributing': typeof DocsContributingRoute
+  '/llms/$': typeof LlmsSplatRoute
   '/_docs/': typeof DocsIndexRoute
   '/_docs/energy-breakdown-card/configuration': typeof DocsEnergyBreakdownCardConfigurationRoute
   '/_docs/energy-breakdown-card/examples': typeof DocsEnergyBreakdownCardExamplesRoute
@@ -325,7 +352,10 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/llms-full.txt'
+    | '/llms.txt'
     | '/contributing'
+    | '/llms/$'
     | '/energy-breakdown-card/configuration'
     | '/energy-breakdown-card/examples'
     | '/energy-breakdown-card/installation'
@@ -356,7 +386,10 @@ export interface FileRouteTypes {
     | '/sortable-list-card/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/llms-full.txt'
+    | '/llms.txt'
     | '/contributing'
+    | '/llms/$'
     | '/'
     | '/energy-breakdown-card/configuration'
     | '/energy-breakdown-card/examples'
@@ -389,7 +422,10 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_docs'
+    | '/llms-full.txt'
+    | '/llms.txt'
     | '/_docs/contributing'
+    | '/llms/$'
     | '/_docs/'
     | '/_docs/energy-breakdown-card/configuration'
     | '/_docs/energy-breakdown-card/examples'
@@ -423,6 +459,9 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   DocsRoute: typeof DocsRouteWithChildren
+  LlmsFullDottxtRoute: typeof LlmsFullDottxtRoute
+  LlmsDottxtRoute: typeof LlmsDottxtRoute
+  LlmsSplatRoute: typeof LlmsSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -432,6 +471,20 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof DocsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/llms-full.txt': {
+      id: '/llms-full.txt'
+      path: '/llms-full.txt'
+      fullPath: '/llms-full.txt'
+      preLoaderRoute: typeof LlmsFullDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/llms.txt': {
+      id: '/llms.txt'
+      path: '/llms.txt'
+      fullPath: '/llms.txt'
+      preLoaderRoute: typeof LlmsDottxtRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_docs/': {
@@ -447,6 +500,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/contributing'
       preLoaderRoute: typeof DocsContributingRouteImport
       parentRoute: typeof DocsRoute
+    }
+    '/llms/$': {
+      id: '/llms/$'
+      path: '/llms/$'
+      fullPath: '/llms/$'
+      preLoaderRoute: typeof LlmsSplatRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_docs/energy-breakdown-card/': {
       id: '/_docs/energy-breakdown-card/'
@@ -729,6 +789,9 @@ const DocsRouteWithChildren = DocsRoute._addFileChildren(DocsRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   DocsRoute: DocsRouteWithChildren,
+  LlmsFullDottxtRoute: LlmsFullDottxtRoute,
+  LlmsDottxtRoute: LlmsDottxtRoute,
+  LlmsSplatRoute: LlmsSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

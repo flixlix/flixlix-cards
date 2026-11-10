@@ -1059,6 +1059,39 @@ const BUTTON_OPTIONS: OptionRow[] = [
   { name: "double_tap_action", type: "object", description: "Triggered on double tap." },
 ];
 
+const CUSTOM_CSS_SELECTORS: OptionRow[] = [
+  {
+    name: ".grid .consumption, .grid .return",
+    type: "selector",
+    description: "The grid's import and export values.",
+  },
+  {
+    name: ".solar span.solar:not(.secondary-info)",
+    type: "selector",
+    description: "The solar value.",
+  },
+  {
+    name: ".battery .battery-in, .battery .battery-out",
+    type: "selector",
+    description: "The battery's charge and discharge values.",
+  },
+  {
+    name: ".home span.home:not(.secondary-info)",
+    type: "selector",
+    description: "The home consumption value.",
+  },
+  {
+    name: "#grid-icon, #solar-icon, #battery-icon, #home-icon",
+    type: "selector",
+    description: "Each circle's icon.",
+  },
+  {
+    name: ".<node> .secondary-info",
+    type: "selector",
+    description: "A circle's secondary info, e.g. .home .secondary-info.",
+  },
+];
+
 const TOPOLOGY_OPTIONS: OptionRow[] = [
   {
     name: "standard",
@@ -1123,6 +1156,7 @@ function ConfigShortcut({
   return (
     <a
       href={to}
+      data-llms-skip
       className="group bg-card hover:border-foreground/20 flex items-start gap-3 rounded-lg border p-3 transition-colors"
     >
       <div className={`flex size-8 shrink-0 items-center justify-center rounded-md ${accent}`}>
@@ -1161,6 +1195,7 @@ export function ConfigurationPage({ cardKey }: { cardKey: CardKey }) {
     { id: "power-outage", label: "Power outage", depth: 2 },
     { id: "display-zero-lines", label: "Display zero lines", depth: 2 },
     { id: "topology", label: "Topology", depth: 2 },
+    { id: "custom-css", label: "Custom CSS", depth: 2 },
     ...(cardKey === "energy" ? [{ id: "collection-key", label: "Collection key" } as TocItem] : []),
     { id: "flow-formula", label: "Flow formulas" },
   ];
@@ -1703,6 +1738,25 @@ entities:
         >
           <TopologyDemo card={cardKey} />
           <OptionList rows={TOPOLOGY_OPTIONS} />
+        </CategorySection>
+
+        <CategorySection
+          id="custom-css"
+          title="Custom CSS"
+          icon={Palette}
+          accent="violet"
+          description="With card-mod you can style each part of a circle. Every value has its own element, so it can be moved or recoloured without touching the icon or the secondary info."
+          example={{
+            language: "yaml",
+            code: `card_mod:
+  style: |
+    .home span.home:not(.secondary-info) {
+      color: red;
+      transform: translateY(-17px);
+    }`,
+          }}
+        >
+          <OptionList rows={CUSTOM_CSS_SELECTORS} />
         </CategorySection>
 
         {cardKey === "energy" ? (

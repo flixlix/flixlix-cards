@@ -63,6 +63,10 @@ function OptionItem({ row }: { row: OptionRow }) {
   return (
     <div
       id={anchor}
+      data-option={row.name}
+      data-option-type={row.type}
+      data-option-default={row.default}
+      data-option-required={row.required ? "" : undefined}
       className="hover:bg-accent/40 group relative scroll-mt-24 rounded-lg px-3 py-3.5 transition-colors"
     >
       <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
@@ -87,7 +91,12 @@ function OptionItem({ row }: { row: OptionRow }) {
           <span className="text-destructive ml-auto text-xs font-medium">Required</span>
         ) : null}
       </div>
-      <div className="text-foreground/80 mt-1.5 text-[13px] leading-relaxed">{row.description}</div>
+      <div
+        data-option-description
+        className="text-foreground/80 mt-1.5 text-[13px] leading-relaxed"
+      >
+        {row.description}
+      </div>
     </div>
   );
 }
@@ -129,7 +138,8 @@ export function OptionList({
               </span>
               <ChevronDown className="size-4 shrink-0 transition-transform group-data-[state=open]/advanced:rotate-180" />
             </CollapsibleTrigger>
-            <CollapsibleContent className="overflow-hidden">
+            {/* Mounted while closed so the server HTML, search engines and llms.txt see every option. */}
+            <CollapsibleContent forceMount className="overflow-hidden">
               <div className="divide-border border-border divide-y border-t">
                 {advanced.rows.map((row) => (
                   <OptionItem key={row.name} row={row} />
