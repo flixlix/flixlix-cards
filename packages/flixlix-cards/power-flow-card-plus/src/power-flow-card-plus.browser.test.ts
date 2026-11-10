@@ -542,6 +542,39 @@ const toggleKitchenLight = async (card: MountedCard, hass: HomeAssistant, times:
   await toggleKitchenLight(card, next, times - 1);
 };
 
+describe("individual visibility (#332)", () => {
+  test("a device shows only while its conditions hold, following the entity they read", async () => {
+    const hass = fakeHass({
+      states: { "sensor.grid": "300", "sensor.ev": "0", "binary_sensor.ev_plugged": "off" },
+    });
+    const { root, setHass, text } = await mountCard(
+      PowerFlowCardPlus,
+      {
+        type: "custom:power-flow-card-plus",
+        entities: {
+          grid: { entity: "sensor.grid" },
+          individual: [
+            {
+              entity: "sensor.ev",
+              display_zero: true,
+              visibility: [{ condition: "state", entity: "binary_sensor.ev_plugged", state: "on" }],
+            },
+          ],
+        },
+      },
+      hass
+    );
+    expect(root.querySelector("span.individual-left-top")).toBeNull();
+
+    const pluggedIn = withStates(hass, { "binary_sensor.ev_plugged": "on" });
+    await setHass(pluggedIn);
+    expect(text("span.individual-left-top")).toBe("0 W");
+
+    await setHass(withStates(pluggedIn, { "binary_sensor.ev_plugged": "off" }));
+    expect(root.querySelector("span.individual-left-top")).toBeNull();
+  });
+});
+
 describe("updates", () => {
   test("changes to an entity the card does not show neither compute nor render", async () => {
     const { hass, ...card } = await mountWatched();

@@ -1,5 +1,5 @@
 import { fakeHass, sensor } from "@flixlix-cards/shared/testing/fake-hass";
-import { fakeConfig } from "@flixlix-cards/shared/testing/fixtures";
+import { fakeConditionContext, fakeConfig } from "@flixlix-cards/shared/testing/fixtures";
 import { type TemplatesObj } from "@flixlix-cards/shared/types";
 import { type HomeAssistant } from "custom-card-helpers";
 import { describe, expect, test } from "vite-plus/test";
@@ -48,7 +48,20 @@ const everyOption = fakeConfig({
       ...secondary("sensor.fossil_secondary"),
     },
     individual: [
-      { entity: "sensor.ev", use_metadata: true, ...secondary("sensor.ev_secondary") },
+      {
+        entity: "sensor.ev",
+        use_metadata: true,
+        ...secondary("sensor.ev_secondary"),
+        visibility: [
+          { condition: "state", entity: "binary_sensor.ev_plugged", state_not: "off" },
+          {
+            condition: "or",
+            conditions: [
+              { condition: "numeric_state", entity: "sensor.ev_soc", below: "input_number.ev_max" },
+            ],
+          },
+        ],
+      },
       {
         entity: "sensor.heat_pump",
         use_metadata: true,
@@ -82,6 +95,7 @@ const cardInput = (hass: HomeAssistant) => ({
   config: everyOption,
   hass,
   templates: noTemplates,
+  conditionContext: fakeConditionContext,
   width: 500,
 });
 

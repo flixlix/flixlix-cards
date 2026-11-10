@@ -21,10 +21,10 @@ import {
   type HomeFlowNodes,
 } from "../types";
 import {
-  carConditionsHtml,
-  carConditionsStyles,
   conditionsEditorAvailable,
-} from "./car-conditions";
+  conditionsPanelStyles,
+} from "@flixlix-cards/shared/ui-editor/components/conditions-panel";
+import { carConditionsHtml } from "./car-conditions";
 import {
   advancedSchema,
   CAR_CONDITIONS_AS_YAML,
@@ -226,7 +226,7 @@ export class HomeFlowCardEditor extends LitElement implements LovelaceCardEditor
   };
 
   static styles = [
-    carConditionsStyles,
+    conditionsPanelStyles,
     css`
       ha-form {
         width: 100%;

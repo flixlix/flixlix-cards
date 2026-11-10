@@ -11,6 +11,7 @@ import {
   type TemplatesObj,
 } from "@flixlix-cards/shared/types";
 import { type HomeAssistant } from "custom-card-helpers";
+import { type ConditionContext } from "./conditions";
 
 /**
  * What a reading measures. It picks the display units (W or Wh) and which direction a single
@@ -52,6 +53,8 @@ export type CardStateInput = {
   hass: HomeAssistant;
   readings: Readings;
   templates: TemplatesObj;
+  /** The screen and the time, for an individual device's `visibility` conditions. */
+  conditionContext: ConditionContext;
   /** Card content width in pixels. */
   width: number;
   /** Dots are not animated while the page is hidden. */

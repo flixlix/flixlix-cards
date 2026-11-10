@@ -1,5 +1,6 @@
 import { getEntityNames } from "@flixlix-cards/shared/states/utils/mutli-entity";
 import { type ComboEntity, type FlowCardPlusConfig } from "@flixlix-cards/shared/types";
+import { conditionEntities } from "./conditions";
 
 type EntityField = {
   entity?: string | ComboEntity;
@@ -32,8 +33,10 @@ export function watchedEntities(config: FlowCardPlusConfig): string[] {
     ...(individual ?? []),
     auxiliary,
   ];
-  const ids = fields
-    .flatMap(fieldEntities)
+  const ids = [
+    ...fields.flatMap(fieldEntities),
+    ...(individual ?? []).flatMap((device) => conditionEntities(device.visibility)),
+  ]
     .flatMap((entity) => (entity ? getEntityNames(entity) : []))
     .filter((id) => id !== "");
   return [...new Set(ids)];

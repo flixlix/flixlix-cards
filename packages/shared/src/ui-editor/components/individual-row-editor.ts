@@ -11,14 +11,23 @@ import {
 } from "@flixlix-cards/shared/ui-editor/ha-form";
 import { loadHaForm } from "@flixlix-cards/shared/ui-editor/utils/load-ha-form";
 import { sortableStyles } from "@flixlix-cards/shared/ui-editor/utils/sortable-styles";
-import { mdiClose, mdiDrag, mdiPencil } from "@mdi/js";
+import { type Condition } from "@flixlix-cards/shared/card-state";
+import { mdiClose, mdiDrag, mdiEyeOutline, mdiPencil } from "@mdi/js";
 import { type HomeAssistant } from "custom-card-helpers";
-import { css, type CSSResultGroup, html, LitElement } from "lit";
+import { css, type CSSResultGroup, html, LitElement, nothing } from "lit";
 import { property, state } from "lit/decorators.js";
 import { repeat } from "lit/directives/repeat.js";
 // The default sortablejs build mounts the AutoScroll and OnSpill plugins.
 import SortableJs, { type SortableEvent } from "sortablejs";
-import { individualSchema } from "../schema/individual";
+import { individualSchema, individualVisibilityAsYaml } from "../schema/individual";
+import {
+  conditionsEditorAvailable,
+  conditionsPanelHtml,
+  conditionsPanelStyles,
+} from "./conditions-panel";
+
+/** Home Assistant's conditions editor hands back a list of conditions. */
+const isConditionList = (value: unknown): value is Condition[] => Array.isArray(value);
 
 declare global {
   interface HASSDomEvents {
@@ -72,6 +81,8 @@ export class IndividualRowEditor extends LitElement {
     }
 
     if (this._indexBeingEdited !== -1) {
+      const device = this.entities[this._indexBeingEdited];
+      const visual = conditionsEditorAvailable();
       return html`
         <div class="individual-header">
           <h4>
@@ -86,11 +97,25 @@ export class IndividualRowEditor extends LitElement {
         </div>
         <ha-form
           .hass=${hass}
-          .data=${this.entities[this._indexBeingEdited]}
-          .schema=${individualSchema}
+          .data=${device}
+          .schema=${visual ? individualSchema : [...individualSchema, individualVisibilityAsYaml]}
           .computeLabel=${this._computeLabelCallback}
-          @value-changed=${this._configChanged}
+          @value-changed=${(ev: ValueChangedEvent<IndividualDeviceType>) =>
+            this._deviceChanged(ev.detail.value)}
         ></ha-form>
+        ${
+          visual
+            ? conditionsPanelHtml(hass, {
+                key: "visibility",
+                header: localize("editor.advanced"),
+                label: localize("editor.visibility"),
+                hint: localize("editor.individual_visibility_hint"),
+                icon: mdiEyeOutline,
+                conditions: device?.visibility ?? [],
+                onChange: this._visibilityChanged,
+              })
+            : nothing
+        }
       `;
     }
 
@@ -136,14 +161,28 @@ export class IndividualRowEditor extends LitElement {
     `;
   }
 
-  private _configChanged = (ev: ValueChangedEvent<IndividualDeviceType>): void => {
+  private _visibilityChanged = (conditions: unknown): void => {
+    const device = this.entities?.[this._indexBeingEdited];
+    if (!device) {
+      return;
+    }
+    const { visibility: _old, ...rest } = device;
+    // an empty list is left out, so the device always shows again
+    this._deviceChanged(
+      isConditionList(conditions) && conditions.length > 0
+        ? { ...rest, visibility: conditions }
+        : rest
+    );
+  };
+
+  private _deviceChanged(device: IndividualDeviceType): void {
     if (!this.config || !this.hass) {
       return;
     }
 
     const current = this.config.entities.individual;
     const individualConfig = Array.isArray(current) ? [...current] : [];
-    individualConfig[this._indexBeingEdited] = ev.detail.value;
+    individualConfig[this._indexBeingEdited] = device;
 
     const config = {
       ...this.config,
@@ -154,7 +193,7 @@ export class IndividualRowEditor extends LitElement {
     };
 
     fireEvent(this, "config-changed", { config });
-  };
+  }
 
   protected firstUpdated(): void {
     this._createSortable();
@@ -250,6 +289,7 @@ export class IndividualRowEditor extends LitElement {
   static get styles(): CSSResultGroup {
     return [
       sortableStyles,
+      conditionsPanelStyles,
       css`
         ha-entity-picker {
           margin-top: 8px;

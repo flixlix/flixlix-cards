@@ -18,6 +18,7 @@ import {
 import { getEntityNames } from "@flixlix-cards/shared/states/utils/mutli-entity";
 import { type EnergyFlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { applyCardState } from "@flixlix-cards/shared/utils/apply-card-state";
+import { liveConditionContext } from "@flixlix-cards/shared/utils/condition-context";
 import {
   assertRenderableFlowCardConfig,
   clickableEntitiesWithDefault,
@@ -163,6 +164,7 @@ export class EnergyFlowCardPlus extends LitElement {
         this._fossilEnergyData.fossilEnergyConsumption
       ),
       templates: this._templates.templates(this._config),
+      conditionContext: liveConditionContext,
       width: this._width.width,
       pageHidden: this._pageHidden,
     });

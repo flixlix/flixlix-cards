@@ -1,5 +1,6 @@
 import { type ActionConfig } from "custom-card-helpers";
 import { type TemplateResult } from "lit";
+import { type Condition as VisibilityCondition } from "../card-state/conditions";
 
 export type ActionConfigSet = {
   tap_action?: ActionConfig;
@@ -105,6 +106,8 @@ export type IndividualDeviceType = BaseConfigEntity & {
   show_direction?: boolean;
   accept_negative?: boolean;
   secondary_info?: SummableSecondaryInfoType;
+  /** Shown only while all of these hold, as in a card's visibility tab; always shown without. */
+  visibility?: VisibilityCondition[];
 };
 
 export type EntityType =

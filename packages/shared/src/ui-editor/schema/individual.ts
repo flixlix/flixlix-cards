@@ -121,3 +121,14 @@ export const individualSchema = [
     schema: actionSchema,
   },
 ] as const;
+
+/**
+ * The device's visibility conditions as YAML, should Home Assistant's own conditions editor not
+ * be there: it is defined while a dashboard is being edited, but it is not a public API.
+ */
+export const individualVisibilityAsYaml = {
+  title: localize("editor.advanced"),
+  name: "",
+  type: "expandable",
+  schema: [{ name: "visibility", selector: { object: {} } }],
+} as const;

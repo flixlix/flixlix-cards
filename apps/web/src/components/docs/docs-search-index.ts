@@ -277,6 +277,11 @@ function configOptions(
     ),
     make("unit_white_space", "Whitespace between value and unit.", "grid"),
     make("display_zero", "Show device when state is 0 / unavailable.", "individual"),
+    make(
+      "visibility",
+      "Show an individual device only while conditions hold, e.g. the car is plugged in.",
+      "individual"
+    ),
     make("template", "HA template evaluated reactively (secondary info).", "secondary-info"),
     make(
       "accept_negative",
