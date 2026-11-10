@@ -609,3 +609,36 @@ describe("dot speed", () => {
     expect(short.seconds / long.seconds).toBeCloseTo(Math.sqrt(short.pixels / long.pixels), 1);
   });
 });
+
+const gridDot = '.flow-dot[data-path="grid"]';
+
+const motionOf = (root: ShadowRoot, selector: string) => {
+  const [animation] = root.querySelector(selector)?.getAnimations() ?? [];
+  if (!animation) {
+    throw new Error(`${selector} is not a moving dot`);
+  }
+  return animation;
+};
+
+describe("dot motion across updates", () => {
+  test("an update that leaves a dot's speed alone keeps its motion untouched", async () => {
+    const { root, hass, card, text } = await mountWatched();
+    const before = motionOf(root, gridDot);
+    before.currentTime = 1234;
+    emitTemplate(hass, priceTemplate, "1.25 €");
+    await card.updateComplete;
+    expect(text(".home .secondary-info")).toBe("1.25 €");
+    const after = motionOf(root, gridDot);
+    expect(after).toBe(before);
+    expect(after.currentTime).toBe(1234);
+  });
+
+  test("a new speed carries on from where the dot is, with the same motion", async () => {
+    const { root, hass, setHass } = await mountWatched();
+    const before = motionOf(root, gridDot);
+    const slow = dotLoop(root, gridDot).seconds;
+    await setHass(withStates(hass, { "sensor.grid": "3000" }));
+    expect(motionOf(root, gridDot)).toBe(before);
+    expect(dotLoop(root, gridDot).seconds).toBeLessThan(slow);
+  });
+});
