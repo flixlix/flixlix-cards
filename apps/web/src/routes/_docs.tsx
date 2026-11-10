@@ -3,6 +3,7 @@ import { Github } from "lucide-react";
 
 import { AppSidebar } from "@/components/app-sidebar";
 import { DocsSearch } from "@/components/docs/docs-search";
+import { pageHead } from "@/lib/seo";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -20,6 +21,7 @@ import {
 } from "@flixlix-cards/ui/components/sidebar";
 
 export const Route = createFileRoute("/_docs")({
+  head: ({ matches }) => pageHead(matches.at(-1)?.pathname ?? "/"),
   component: DocsLayout,
 });
 

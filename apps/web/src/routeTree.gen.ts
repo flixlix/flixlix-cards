@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as DocsRouteImport } from './routes/_docs'
 import { Route as LlmsFullDottxtRouteImport } from './routes/llms-full[.]txt'
 import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as DocsIndexRouteImport } from './routes/_docs/index'
 import { Route as DocsContributingRouteImport } from './routes/_docs/contributing'
 import { Route as LlmsSplatRouteImport } from './routes/llms/$'
@@ -56,6 +57,11 @@ const LlmsFullDottxtRoute = LlmsFullDottxtRouteImport.update({
 const LlmsDottxtRoute = LlmsDottxtRouteImport.update({
   id: '/llms.txt',
   path: '/llms.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DocsIndexRoute = DocsIndexRouteImport.update({
@@ -245,6 +251,7 @@ export interface FileRoutesByFullPath {
   '/': typeof DocsIndexRoute
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/contributing': typeof DocsContributingRoute
   '/llms/$': typeof LlmsSplatRoute
   '/energy-breakdown-card/configuration': typeof DocsEnergyBreakdownCardConfigurationRoute
@@ -279,6 +286,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/contributing': typeof DocsContributingRoute
   '/llms/$': typeof LlmsSplatRoute
   '/': typeof DocsIndexRoute
@@ -316,6 +324,7 @@ export interface FileRoutesById {
   '/_docs': typeof DocsRouteWithChildren
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_docs/contributing': typeof DocsContributingRoute
   '/llms/$': typeof LlmsSplatRoute
   '/_docs/': typeof DocsIndexRoute
@@ -354,6 +363,7 @@ export interface FileRouteTypes {
     | '/'
     | '/llms-full.txt'
     | '/llms.txt'
+    | '/sitemap.xml'
     | '/contributing'
     | '/llms/$'
     | '/energy-breakdown-card/configuration'
@@ -388,6 +398,7 @@ export interface FileRouteTypes {
   to:
     | '/llms-full.txt'
     | '/llms.txt'
+    | '/sitemap.xml'
     | '/contributing'
     | '/llms/$'
     | '/'
@@ -424,6 +435,7 @@ export interface FileRouteTypes {
     | '/_docs'
     | '/llms-full.txt'
     | '/llms.txt'
+    | '/sitemap.xml'
     | '/_docs/contributing'
     | '/llms/$'
     | '/_docs/'
@@ -461,6 +473,7 @@ export interface RootRouteChildren {
   DocsRoute: typeof DocsRouteWithChildren
   LlmsFullDottxtRoute: typeof LlmsFullDottxtRoute
   LlmsDottxtRoute: typeof LlmsDottxtRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   LlmsSplatRoute: typeof LlmsSplatRoute
 }
 
@@ -485,6 +498,13 @@ declare module '@tanstack/react-router' {
       path: '/llms.txt'
       fullPath: '/llms.txt'
       preLoaderRoute: typeof LlmsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_docs/': {
@@ -791,6 +811,7 @@ const rootRouteChildren: RootRouteChildren = {
   DocsRoute: DocsRouteWithChildren,
   LlmsFullDottxtRoute: LlmsFullDottxtRoute,
   LlmsDottxtRoute: LlmsDottxtRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   LlmsSplatRoute: LlmsSplatRoute,
 }
 export const routeTree = rootRouteImport

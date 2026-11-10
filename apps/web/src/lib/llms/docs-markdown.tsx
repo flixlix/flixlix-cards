@@ -3,15 +3,14 @@ import { prerender } from "react-dom/static";
 import TurndownService from "turndown";
 import { gfm } from "turndown-plugin-gfm";
 
-import { SEARCH_ENTRIES } from "@/components/docs/docs-search-index";
+import { INDEXABLE_PAGES } from "@/lib/seo";
+import { SITE_URL } from "@/lib/site";
 
-export const SITE_URL = "https://cards.flixlix.com";
+export { SITE_URL };
 
 export type DocsPage = { path: string; title: string; description?: string; section: string };
 
-export const DOCS_PAGES: DocsPage[] = SEARCH_ENTRIES.filter(
-  (entry) => entry.type === "page" && !entry.to.endsWith("/playground")
-).map((entry) => ({
+export const DOCS_PAGES: DocsPage[] = INDEXABLE_PAGES.map((entry) => ({
   path: entry.to,
   title: entry.title,
   description: entry.description,
