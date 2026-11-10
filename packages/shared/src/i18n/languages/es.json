@@ -105,6 +105,7 @@
     "navigation_path": "Ruta de Navegación",
     "no_color": "Sin color",
     "no_labels": "Sin etiquetas",
+    "keep_trailing_zeros": "Mantener ceros finales",
     "override_state": "Sobrescribir Estado",
     "power_outage": "Corte de energía",
     "production": "Producción",

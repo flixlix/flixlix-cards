@@ -105,6 +105,7 @@
     "navigation_path": "путь навигации",
     "no_color": "Без цвета",
     "no_labels": "Без подписей",
+    "keep_trailing_zeros": "Сохранять конечные нули",
     "override_state": "Переопределить состояние",
     "power_outage": "Отключение электричества",
     "production": "Производство",

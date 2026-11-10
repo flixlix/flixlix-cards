@@ -1,7 +1,7 @@
 import { type FlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { defaultValues } from "@flixlix-cards/shared/utils/get-default-config";
 import { isNumberValue, nonEmpty, round } from "@flixlix-cards/shared/utils/utils";
-import { formatNumber } from "@flixlix-cards/shared/utils/format-number";
+import { formatNumber, fractionDigitsFor } from "@flixlix-cards/shared/utils/format-number";
 import { powerUnitFactor } from "@flixlix-cards/shared/states/utils/unit-prefix";
 import { type HomeAssistant } from "custom-card-helpers";
 import { type UnitFamily } from "./types";
@@ -116,7 +116,11 @@ const displayValue = (
   }
 
   const reading = scaledReading(config, family, Number(value), options);
-  const v = formatNumber(accept_negative ? reading.value : Math.abs(reading.value), hass.locale);
+  const v = formatNumber(
+    accept_negative ? reading.value : Math.abs(reading.value),
+    hass.locale,
+    fractionDigitsFor(reading.decimals, config.keep_trailing_zeros === true)
+  );
 
   return `${v}${whiteSpace}${reading.unit}`;
 };

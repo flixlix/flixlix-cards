@@ -421,6 +421,14 @@ describe("power flow ui editor", () => {
 
     expect(ownFieldNames("schema" in form ? form.schema : undefined)).toContain("topology");
   });
+
+  test("the advanced form offers keep_trailing_zeros, which setConfig accepts", async () => {
+    const { form } = await openAdvanced({ keep_trailing_zeros: true });
+
+    expect(ownFieldNames("schema" in form ? form.schema : undefined)).toContain(
+      "keep_trailing_zeros"
+    );
+  });
   // HA's ha-form grid top-aligns its cells, so a toggle next to a taller field sits off-centre.
   test("every row of the advanced grids pairs toggles with toggles and fields with fields", () => {
     const grids = advancedOptionsSchema("show").filter((item) => "column_min_width" in item);

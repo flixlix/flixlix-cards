@@ -105,6 +105,7 @@
     "navigation_path": "Шлях переходу",
     "no_color": "Без кольору",
     "no_labels": "Без підписів",
+    "keep_trailing_zeros": "Зберігати кінцеві нулі",
     "override_state": "Перевизначити стан",
     "power_outage": "Відключення живлення",
     "production": "Виробництво",

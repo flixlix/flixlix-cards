@@ -393,6 +393,12 @@ const ADVANCED_CARD_OPTIONS = (v: Variant): OptionRow[] => [
     description: v.baseDecimalsHelp,
   },
   {
+    name: "keep_trailing_zeros",
+    type: "boolean",
+    default: "false",
+    description: `Always show the decimals a value is rounded to, keeping trailing zeros: 1.0 ${v.unitKilo} instead of 1 ${v.unitKilo}.`,
+  },
+  {
     name: "kilo_threshold",
     type: "number",
     default: "0",

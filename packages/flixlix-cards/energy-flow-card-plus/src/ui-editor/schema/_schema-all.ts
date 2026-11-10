@@ -53,6 +53,7 @@ export const cardConfigStruct = assign(
     style_card_content: optional(any()),
     disable_dots: optional(boolean()),
     no_labels: optional(boolean()),
+    keep_trailing_zeros: optional(boolean()),
     energy_date_selection: optional(boolean()),
     collection_key: optional(string()),
     entities: object({
@@ -181,6 +182,11 @@ const advancedTogglesGrid = () => ({
     {
       name: "no_labels",
       label: localize("editor.no_labels"),
+      selector: { boolean: {} },
+    },
+    {
+      name: "keep_trailing_zeros",
+      label: localize("editor.keep_trailing_zeros"),
       selector: { boolean: {} },
     },
     {

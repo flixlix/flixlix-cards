@@ -291,6 +291,14 @@ describe("energy flow ui editor", () => {
     expect(() => editor.setConfig(editorConfig({ entities: {}, topology }))).not.toThrow();
   });
 
+  test("setConfig accepts keep_trailing_zeros", () => {
+    const editor = new EnergyFlowCardPlusEditor();
+
+    expect(() =>
+      editor.setConfig(editorConfig({ entities: {}, keep_trailing_zeros: true }))
+    ).not.toThrow();
+  });
+
   test("setConfig rejects an unknown topology so HA falls back to YAML", () => {
     const editor = new EnergyFlowCardPlusEditor();
 
