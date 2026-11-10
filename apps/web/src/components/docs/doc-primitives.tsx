@@ -137,7 +137,10 @@ export function CodeBlock({
   return (
     <div className="group relative my-3 overflow-hidden rounded-xl border border-stone-800 bg-stone-950 shadow-sm dark:border-white/10">
       {filename || language ? (
-        <div className="flex items-center justify-between border-b border-white/10 bg-white/5 py-1.5 pr-1.5 pl-3.5 font-mono text-[11px] font-medium text-stone-400">
+        <div
+          data-llms-skip
+          className="flex items-center justify-between border-b border-white/10 bg-white/5 py-1.5 pr-1.5 pl-3.5 font-mono text-[11px] font-medium text-stone-400"
+        >
           <span className="inline-flex items-center gap-2">{filename ?? language}</span>
           {copyButton}
         </div>
@@ -147,7 +150,7 @@ export function CodeBlock({
         </div>
       )}
       <pre className="overflow-x-auto p-4 text-xs leading-relaxed text-stone-200">
-        <code>{code.trim()}</code>
+        <code className={language ? `language-${language}` : undefined}>{code.trim()}</code>
       </pre>
     </div>
   );
