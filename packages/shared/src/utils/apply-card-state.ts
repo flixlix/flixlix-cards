@@ -144,11 +144,28 @@ const animateFlowDots = (root: ShadowRoot): void => {
   }
 };
 
-/** Applies the parts of a card state that live outside the rendered template. */
-export const applyCardState = (host: HTMLElement, state: ReadyCardState): void => {
-  for (const [name, value] of Object.entries(state.cssVars)) {
+/** The CSS variables each host was last given, so ones a later state drops can be removed. */
+const appliedCssVars = new WeakMap<HTMLElement, string[]>();
+
+/**
+ * Sets the state's CSS variables on the host and removes the ones the previous state set and this
+ * one leaves out, such as an idle circle's grey once power returns (#485).
+ */
+const applyCssVars = (host: HTMLElement, cssVars: ReadyCardState["cssVars"]): void => {
+  for (const name of appliedCssVars.get(host) ?? []) {
+    if (!(name in cssVars)) {
+      host.style.removeProperty(name);
+    }
+  }
+  for (const [name, value] of Object.entries(cssVars)) {
     host.style.setProperty(name, value);
   }
+  appliedCssVars.set(host, Object.keys(cssVars));
+};
+
+/** Applies the parts of a card state that live outside the rendered template. */
+export const applyCardState = (host: HTMLElement, state: ReadyCardState): void => {
+  applyCssVars(host, state.cssVars);
   if (host.shadowRoot) {
     animateFlowDots(host.shadowRoot);
   }

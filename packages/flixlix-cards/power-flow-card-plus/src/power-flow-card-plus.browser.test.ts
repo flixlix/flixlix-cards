@@ -579,6 +579,36 @@ describe("updates", () => {
     await setHass(withStates(hass, { "sensor.roof": "400" }));
     expect(text(".solar .solar")).toBe("400 W");
   });
+
+  test("a greyed-out idle circle takes its colour back when power returns", async () => {
+    const hass = fakeHass({ states: { "sensor.grid": "300", "sensor.ev": "0" } });
+    const { root, setHass } = await mountCard(
+      PowerFlowCardPlus,
+      {
+        type: "custom:power-flow-card-plus",
+        display_zero_lines: {
+          mode: "grey_out",
+          grey_color: [200, 200, 200],
+          grey_out_circles: true,
+        },
+        entities: {
+          grid: { entity: "sensor.grid" },
+          individual: [{ entity: "sensor.ev", display_zero: true }],
+        },
+      },
+      hass
+    );
+    const borderColor = () => {
+      const circle = root.querySelector(".individual-top .circle");
+      if (!circle) {
+        throw new Error("individual circle not rendered");
+      }
+      return getComputedStyle(circle).borderTopColor;
+    };
+    expect(borderColor()).toBe("rgb(200, 200, 200)");
+    await setHass(withStates(hass, { "sensor.ev": "106" }));
+    expect(borderColor()).toBe("rgb(208, 204, 91)");
+  });
 });
 
 /** HA's name formatter, composing `area` and `entity` parts; a plain string is kept. */
