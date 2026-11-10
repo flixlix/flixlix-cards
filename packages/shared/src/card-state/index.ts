@@ -9,6 +9,7 @@ export { auxiliaryConnection, flowRateModel, lineDuration, REFERENCE_LINE_LENGTH
 export {
   type CarReading,
   type HeatPumpReading,
+  type HouseFixtures,
   type HouseNode,
   type HouseWire,
   houseWires,

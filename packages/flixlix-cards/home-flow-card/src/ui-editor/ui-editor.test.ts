@@ -163,14 +163,67 @@ describe("editor", () => {
       "disable_dots",
       "min_flow_rate",
       "max_flow_rate",
-      "min_expected_power",
-      "max_expected_power",
+      "min_expected_value",
+      "max_expected_value",
       "base_decimals",
       "kilo_decimals",
       "kilo_threshold",
+      "mega_decimals",
+      "mega_threshold",
       "clickable_entities",
     ]);
     expect(data()).toMatchObject({ animate_numbers: true, clickable_entities: true });
+    editor.remove();
+  });
+
+  test("in energy mode, thresholds and the expected range are in Wh and two-way values can shrink", async () => {
+    const { editor, open, fields, helper } = await mountEditor({ mode: "energy" });
+    await open("advanced");
+
+    expect(fields()).toEqual(expect.arrayContaining(["min_expected_value", "max_expected_value"]));
+    expect(helper("kilo_threshold")).toBe("Default: 1000 Wh");
+    expect(helper("mega_threshold")).toBe("Default: 1000000 Wh");
+    expect(helper("max_expected_value")).toBe("Default: Relative to the period's total");
+    expect(helper("two_way_value_size")).toBe("Default: 1×");
+    editor.remove();
+  });
+
+  test("a config with the older option names shows and saves the ones for both modes", async () => {
+    const { editor, open, data, change, changes } = await mountEditor({
+      min_expected_power: 5,
+      max_expected_power: 3000,
+      battery: { entity: "sensor.battery", state_of_charge_position: "after_power" },
+    });
+    await open("advanced");
+
+    expect(data()).toMatchObject({ min_expected_value: 5, max_expected_value: 3000 });
+    change({ ...(data() as object), wire_width: 2 });
+    expect(changes).toEqual([
+      {
+        type: "custom:home-flow-card",
+        min_expected_value: 5,
+        max_expected_value: 3000,
+        animate_numbers: true,
+        clickable_entities: true,
+        wire_width: 2,
+        battery: { entity: "sensor.battery", state_of_charge_position: "after_value" },
+      },
+    ]);
+    editor.remove();
+  });
+
+  test("in energy mode, the grid has no outage and the car no idle conditions", async () => {
+    const { editor, open, fields } = await mountEditor({
+      mode: "energy",
+      grid: { entity: "sensor.grid" },
+    });
+    await open("grid");
+    expect(fields()).not.toEqual(expect.arrayContaining(["state_alert"]));
+
+    editor.shadowRoot?.querySelector("subpage-header")?.dispatchEvent(new CustomEvent("go-back"));
+    await editor.updateComplete;
+    await open("car");
+    expect(fields()).toEqual(["entity", "state_of_charge", "name", "visibility"]);
     editor.remove();
   });
 
@@ -192,11 +245,11 @@ describe("editor", () => {
     editor.remove();
   });
 
-  test("the state of charge position says it stays under the power by default", async () => {
+  test("the state of charge position says it stays under the value by default", async () => {
     const { editor, open, helper } = await mountEditor({ battery: { entity: "sensor.battery" } });
     await open("battery");
 
-    expect(helper("state_of_charge_position")).toBe("Default: Under the power");
+    expect(helper("state_of_charge_position")).toBe("Default: Under the value");
     editor.remove();
   });
 

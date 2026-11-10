@@ -24,14 +24,9 @@ import {
   conditionsEditorAvailable,
   conditionsPanelStyles,
 } from "@flixlix-cards/shared/ui-editor/components/conditions-panel";
-import { carConditionsHtml } from "./car-conditions";
-import {
-  advancedSchema,
-  CAR_CONDITIONS_AS_YAML,
-  FIELD_DEFAULTS,
-  generalSchema,
-  NODE_SCHEMAS,
-} from "./schema";
+import { carConditionKeys, carConditionsAsYaml, carConditionsHtml } from "./car-conditions";
+import { withGenericOptions } from "../generic-options";
+import { advancedSchema, fieldDefaults, generalSchema, nodeSchemas } from "./schema";
 
 defineEditorElements();
 
@@ -90,8 +85,9 @@ export class HomeFlowCardEditor extends LitElement implements LovelaceCardEditor
   @state() private _config?: HomeFlowCardConfig;
   @state() private _page?: Page;
 
+  /** Shows a config's older option names as the ones that read for both modes, and saves those. */
   public setConfig(config: HomeFlowCardConfig): void {
-    this._config = config;
+    this._config = withGenericOptions(config);
   }
 
   connectedCallback(): void {
@@ -112,7 +108,7 @@ export class HomeFlowCardEditor extends LitElement implements LovelaceCardEditor
             ...this._config,
             clickable_entities: clickableEntitiesWithDefault(this._config.clickable_entities),
           },
-          advancedSchema,
+          advancedSchema(this._config.mode),
           this._valueChanged
         )}
       `;
@@ -128,7 +124,7 @@ export class HomeFlowCardEditor extends LitElement implements LovelaceCardEditor
           : this._config[node];
       return html`
         <subpage-header @go-back=${this._goBack} page=${node}></subpage-header>
-        ${this._form(data, NODE_SCHEMAS[node], (event) => this._nodeChanged(node, event.detail.value))}
+        ${this._form(data, nodeSchemas(this._config.mode)[node], (event) => this._nodeChanged(node, event.detail.value))}
       `;
     }
     return html`
@@ -200,13 +196,15 @@ export class HomeFlowCardEditor extends LitElement implements LovelaceCardEditor
   /** The car's fields, then its visibility and idle conditions in Home Assistant's own editor. */
   private _carPage() {
     const car = this._config?.car;
+    const mode = this._config?.mode;
     const visual = conditionsEditorAvailable();
-    const schema = visual ? NODE_SCHEMAS.car : [...NODE_SCHEMAS.car, ...CAR_CONDITIONS_AS_YAML];
+    const { car: fields } = nodeSchemas(mode);
+    const schema = visual ? fields : [...fields, ...carConditionsAsYaml(mode)];
     const onChange = (value: Record<string, unknown>) => this._nodeChanged("car", value);
     return html`
       <subpage-header @go-back=${this._goBack} page="car"></subpage-header>
       ${this._form(car, schema, (event) => onChange(event.detail.value))}
-      ${visual ? carConditionsHtml(this.hass, car, onChange) : nothing}
+      ${visual ? carConditionsHtml(this.hass, car, carConditionKeys(mode), onChange) : nothing}
     `;
   }
 
@@ -221,7 +219,7 @@ export class HomeFlowCardEditor extends LitElement implements LovelaceCardEditor
   private _computeLabel = (schema: HaFormLabelSchema) => computeEditorLabel(this.hass, schema);
 
   private _computeHelper = (schema: HaFormLabelSchema) => {
-    const fallback = FIELD_DEFAULTS[schema.name];
+    const fallback = fieldDefaults(this._config?.mode)[schema.name];
     return fallback ? `${localize("editor.default")}: ${fallback}` : undefined;
   };
 

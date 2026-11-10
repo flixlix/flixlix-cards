@@ -1,4 +1,4 @@
-import { wattsReader } from "@flixlix-cards/shared/card-state";
+import { energyReader, wattsReader } from "@flixlix-cards/shared/card-state";
 import { type HomeAssistant } from "custom-card-helpers";
 import { describe, expect, test } from "vite-plus/test";
 import { carEntities, carStatus as statusWith } from "./car-node";
@@ -30,7 +30,11 @@ const car: HouseCar = {
 };
 
 const carStatus = (states: HomeAssistant, config: HouseCar) =>
-  statusWith(states, config, wattsReader(states));
+  statusWith(states, config, wattsReader(states), "power");
+
+/** Over a period, read as the energy each entity's statistic grew by. */
+const periodStatus = (states: HomeAssistant, config: HouseCar, growth: Record<string, number>) =>
+  statusWith(states, config, energyReader(states, growth, true), "energy");
 
 describe("car status", () => {
   test("away, the car is hidden whatever it draws", () => {
@@ -52,6 +56,17 @@ describe("car status", () => {
     expect(carStatus(hass({ "sensor.wallbox": "0" }), plain)).toBe("idle");
     expect(carStatus(hass({ "sensor.wallbox": "unavailable" }), plain)).toBe("idle");
   });
+  test("over a period it is idle only while it used nothing, whatever it is doing now", () => {
+    const unplugged = hass({ "device_tracker.car": "home", "binary_sensor.cable": "off" });
+    expect(periodStatus(unplugged, car, { "sensor.wallbox": 12_000 })).toBe("active");
+    expect(periodStatus(unplugged, car, { "sensor.wallbox": 0 })).toBe("idle");
+  });
+
+  test("over a period it still hides while away", () => {
+    const away = hass({ "device_tracker.car": "work" });
+    expect(periodStatus(away, car, { "sensor.wallbox": 12_000 })).toBe("hidden");
+  });
+
   test("the card watches the car's entities and those its conditions read", () => {
     expect(carEntities({ ...car, state_of_charge: "sensor.car_soc" })).toEqual([
       "sensor.wallbox",

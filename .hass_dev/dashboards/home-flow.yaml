@@ -78,7 +78,7 @@ views:
             heading: State of charge position
             icon: mdi:battery-arrow-up-outline
           - type: custom:home-flow-card
-            title: Under the power (default)
+            title: Under the value (default)
             grid:
               entity: sensor.grid_power
             solar:
@@ -86,9 +86,9 @@ views:
             battery:
               entity: sensor.battery_power
               state_of_charge: sensor.battery_soc
-              state_of_charge_position: below_power
+              state_of_charge_position: below_value
           - type: custom:home-flow-card
-            title: Swapped with the power
+            title: Swapped with the value
             grid:
               entity: sensor.grid_power
             solar:
@@ -96,9 +96,34 @@ views:
             battery:
               entity: sensor.battery_power
               state_of_charge: sensor.battery_soc
-              state_of_charge_position: above_power
+              state_of_charge_position: above_value
           - type: custom:home-flow-card
-            title: After the power
+            title: After the value
+            grid:
+              entity: sensor.grid_power
+            solar:
+              entity: sensor.solar_power
+            battery:
+              entity: sensor.battery_power
+              state_of_charge: sensor.battery_soc
+              state_of_charge_position: after_value
+          - type: custom:home-flow-card
+            title: Before the value
+            grid:
+              entity: sensor.grid_power
+            solar:
+              entity: sensor.solar_power
+            battery:
+              entity: sensor.battery_power
+              state_of_charge: sensor.battery_soc
+              state_of_charge_position: before_value
+      - type: grid
+        cards:
+          - type: heading
+            heading: Older option names
+            icon: mdi:history
+          - type: custom:home-flow-card
+            title: "Older names: after_power, expected power"
             grid:
               entity: sensor.grid_power
             solar:
@@ -107,8 +132,10 @@ views:
               entity: sensor.battery_power
               state_of_charge: sensor.battery_soc
               state_of_charge_position: after_power
+            min_expected_power: 0
+            max_expected_power: 1000
           - type: custom:home-flow-card
-            title: Before the power
+            title: "Generic names: after_value, expected value"
             grid:
               entity: sensor.grid_power
             solar:
@@ -116,7 +143,52 @@ views:
             battery:
               entity: sensor.battery_power
               state_of_charge: sensor.battery_soc
-              state_of_charge_position: before_power
+              state_of_charge_position: after_value
+            min_expected_value: 0
+            max_expected_value: 1000
+      - type: grid
+        cards:
+          - type: heading
+            heading: Energy over the period
+            icon: mdi:calendar
+          - type: energy-date-selection
+          - type: custom:home-flow-card
+            title: Energy over the period
+            mode: energy
+            two_way_value_size: 0.8
+            max_expected_value: 20000
+            grid:
+              entity:
+                consumption: sensor.grid_import_energy
+                production: sensor.grid_export_energy
+            solar:
+              entity: sensor.solar_energy
+            battery:
+              entity:
+                consumption: sensor.battery_discharge_energy
+                production: sensor.battery_charge_energy
+              state_of_charge: sensor.battery_soc
+              state_of_charge_position: after_value
+            car:
+              entity: sensor.ev_charger_energy
+            heat_pump:
+              entity: sensor.heat_pump_energy
+          - type: custom:home-flow-card
+            title: "Energy, older names: a range in W does not apply"
+            mode: energy
+            max_expected_power: 20000
+            grid:
+              entity:
+                consumption: sensor.grid_import_energy
+                production: sensor.grid_export_energy
+            solar:
+              entity: sensor.solar_energy
+            battery:
+              entity:
+                consumption: sensor.battery_discharge_energy
+                production: sensor.battery_charge_energy
+              state_of_charge: sensor.battery_soc
+              state_of_charge_position: after_power
       - type: grid
         cards:
           - type: heading

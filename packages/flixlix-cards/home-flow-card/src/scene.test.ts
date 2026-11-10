@@ -5,7 +5,6 @@ import {
   type Face,
   fixtures,
   INVERTER,
-  labelAnchor,
   type Point,
   project,
   type SceneGroup,
@@ -14,6 +13,7 @@ import {
   WIRE_ROUTES,
   wireRoute,
 } from "./scene";
+import { labelAnchor } from "./label-anchors";
 
 const nodesOf = (groups: SceneGroup[]) => groups.map((group) => group.node);
 

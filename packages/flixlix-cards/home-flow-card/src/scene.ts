@@ -1,9 +1,7 @@
 import { type HouseNode } from "@flixlix-cards/shared/card-state";
 import { type ChargeLevel } from "@flixlix-cards/shared/utils/severity";
 import { mdiFan, mdiFlash, mdiGeneratorStationary, mdiHome } from "@mdi/js";
-import { CAR_LABEL_AT } from "./car-shape";
-
-import { box, face, type Face, type Point, project, type Shape } from "./geometry";
+import { box, face, type Face, type Point, type Shape } from "./geometry";
 
 export {
   type Face,
@@ -22,7 +20,7 @@ export type SceneGroup = { node: HouseNode | "inverter" | "outlet"; shapes: Shap
 export const roofHeight = (y: number): number => 8.6 - Math.abs(y - 4) * 0.85;
 
 /** The house is 11 long, 8 deep and 5.2 to the eaves; the front wall faces y = 8. */
-const FRONT = 8;
+export const FRONT = 8;
 const LENGTH = 11;
 const EAVES = 5.2;
 const EAVE_Y = 8.6;
@@ -83,7 +81,7 @@ const outlet = (): Shape[] => [
 
 /** The panel array: 6 columns along the ridge, 2 rows down the front roof. */
 export const PANELS = { x0: 1, x1: 9.8, y0: 4.4, y1: 8.25, columns: 6, rows: 2 } as const;
-const onRoof = (x: number, y: number): Point => [x, y, roofHeight(y) + 0.05];
+export const onRoof = (x: number, y: number): Point => [x, y, roofHeight(y) + 0.05];
 
 const panels = (): Shape[] => {
   const { x0, x1, y0, y1 } = PANELS;
@@ -108,7 +106,11 @@ export const panelSeams = (): [Point, Point][] => {
 const BATTERY_FACE_X = LENGTH + 0.46;
 const SOC_STRIP = { y0: 2.25, y1: 2.47, z0: 0.8, z1: 3 } as const;
 
-const onBattery = (y: number, z: number, offset = 0): Point => [BATTERY_FACE_X + offset, y, z];
+export const onBattery = (y: number, z: number, offset = 0): Point => [
+  BATTERY_FACE_X + offset,
+  y,
+  z,
+];
 
 /** How the battery looks: its icon's path and its charge bar. */
 export type BatteryLook = {
@@ -150,7 +152,7 @@ const socFill = (top: number, level: ChargeLevel | undefined): Face =>
 
 /** Where every wire meets, on the gable wall. */
 export const INVERTER = { y0: 4.5, y1: 5.6, z0: 2.3, z1: 3.4 } as const;
-const INVERTER_Y = (INVERTER.y0 + INVERTER.y1) / 2;
+export const INVERTER_Y = (INVERTER.y0 + INVERTER.y1) / 2;
 const INVERTER_Z = (INVERTER.z0 + INVERTER.z1) / 2;
 
 const inverter = (): Shape[] => [
@@ -168,9 +170,9 @@ const inverter = (): Shape[] => [
 ];
 
 /** A generator on the ground well off the gable, behind the grid cable and clear of it. */
-const GENERATOR = { x0: 16, x1: 17.8, y0: 1.9, y1: 3.1, height: 1.3 } as const;
-const GENERATOR_X = (GENERATOR.x0 + GENERATOR.x1) / 2;
-const GENERATOR_Y = (GENERATOR.y0 + GENERATOR.y1) / 2;
+export const GENERATOR = { x0: 16, x1: 17.8, y0: 1.9, y1: 3.1, height: 1.3 } as const;
+export const GENERATOR_X = (GENERATOR.x0 + GENERATOR.x1) / 2;
+export const GENERATOR_Y = (GENERATOR.y0 + GENERATOR.y1) / 2;
 
 const generator = (): Shape[] => [
   ...box(
@@ -190,18 +192,25 @@ const generator = (): Shape[] => [
  * What else is configured that moves things on the house. Only the config decides, never whether
  * the car is home, so nothing moves as the car comes and goes.
  */
-export type SceneLayout = { car: boolean };
+export type SceneLayout = {
+  car: boolean;
+  /**
+   * An energy card's generator runs beside the grid rather than in its place, so their labels
+   * show together and the grid's hangs under its cable instead.
+   */
+  generatorBesideGrid?: boolean;
+};
 
 /**
  * The heat pump hangs on the front wall. With a car configured it sits at the wall's far left,
  * just above the car's roof; without one it comes down near the ground, further along the wall,
  * where the car would park.
  */
-const HEAT_PUMP = { width: 2.2, depth: 0.65, height: 1.4 } as const;
-const heatPumpLeft = ({ car }: SceneLayout) => (car ? 0.3 : 2.4);
-const heatPumpBottom = ({ car }: SceneLayout) => (car ? 1.95 : 0.35);
+export const HEAT_PUMP = { width: 2.2, depth: 0.65, height: 1.4 } as const;
+export const heatPumpLeft = ({ car }: SceneLayout) => (car ? 0.3 : 2.4);
+export const heatPumpBottom = ({ car }: SceneLayout) => (car ? 1.95 : 0.35);
 const heatPumpRight = (layout: SceneLayout) => heatPumpLeft(layout) + HEAT_PUMP.width;
-const HEAT_PUMP_FRONT = FRONT + HEAT_PUMP.depth;
+export const HEAT_PUMP_FRONT = FRONT + HEAT_PUMP.depth;
 
 const heatPump = (layout: SceneLayout, running: boolean): Shape[] => {
   const [x0, z0] = [heatPumpLeft(layout), heatPumpBottom(layout)];
@@ -249,7 +258,7 @@ export const fixtures = ({
 ];
 
 /** Where the grid's label points at its cable: out past the generator, under its label's place. */
-const GRID_LABEL_X = 19.5;
+export const GRID_LABEL_X = 19.5;
 
 /** The grid cable runs on past the card's edge, fading out from GRID_FADE_FROM onwards. */
 const GRID_CABLE_END = 40;
@@ -351,47 +360,6 @@ export const DRAW_ORDER: readonly ({ wire: HouseNode } | { part: SceneGroup["nod
   { wire: "solar" }, // onto the inverter's top, from under the panels
   { part: "solar" },
 ];
-
-/**
- * Where each node's label hangs: the leader line starts at `at` and runs `leader` screen units up
- * (negative) or down, with the label's text running right from it. The anchors keep leaders and
- * labels clear of the wires, the panels and each other.
- */
-export type LabelledNode = HouseNode;
-
-/** `side: "left"`: the label hangs left of its leader, its text still starting on the left. */
-export type LabelAnchor = { at: Point; leader: number; side?: "left" };
-
-export const LABEL_ANCHORS: Record<Exclude<LabelledNode, "heat_pump">, LabelAnchor> = {
-  solar: { at: onRoof(4.2, PANELS.y0), leader: -40 },
-  home: { at: [8.1, FRONT + 0.13, 2.35], leader: 44 },
-  battery: { at: onBattery(1.8, 3.3), leader: -50 },
-  // on the cable before it fades, its label where the generator's goes: the two never show together
-  grid: { at: [GRID_LABEL_X, INVERTER_Y, 0], leader: -32 },
-  // above the generator, right of the battery and below its label
-  generator: { at: [GENERATOR_X, GENERATOR_Y, GENERATOR.height], leader: -22 },
-  // down from the car's tail, left of the home's label
-  car: { at: CAR_LABEL_AT, leader: 24 },
-};
-
-/**
- * The heat pump's label hangs left of its leader. With a car it rises from the unit's top to the
- * roof's height; without one, a label up there would cover the panels, so it hangs down from the
- * unit's foot into the ground the car would take, left of the home's label.
- */
-const heatPumpAnchor = (layout: SceneLayout): LabelAnchor => {
-  const x = heatPumpLeft(layout);
-  const bottom = heatPumpBottom(layout);
-  if (!layout.car) {
-    return { at: [x, HEAT_PUMP_FRONT, bottom], leader: 26, side: "left" };
-  }
-  const at: Point = [x, HEAT_PUMP_FRONT, bottom + HEAT_PUMP.height];
-  // its leader ends left of the house at the roof's height, clear of the roof and the solar label
-  return { at, leader: -40 - project(at)[1], side: "left" };
-};
-
-export const labelAnchor = (node: LabelledNode, layout: SceneLayout): LabelAnchor =>
-  node === "heat_pump" ? heatPumpAnchor(layout) : LABEL_ANCHORS[node];
 
 /** The house's leftmost and rightmost points: its front eave and its gable's back corner. */
 export const HOUSE_SPAN: readonly [Point, Point] = [

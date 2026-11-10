@@ -142,10 +142,11 @@ export const houseScene = ({
     solar: nodes.solar.has,
     generator: hasGenerator,
     battery: batteryLook(cardState, severity),
-    // the fan turns while it draws power, unless the card's pulses are off
+    // the fan turns while it draws power, unless the card's pulses are off; over a period it
+    // would say it is running now
     heatPump: heatPumpWire && {
       layout,
-      running: heatPumpWire.power > 0 && cardState.animate,
+      running: heatPumpWire.power > 0 && cardState.animate && cardState.family === "power",
     },
   });
   const include = (extent: Extent) => {

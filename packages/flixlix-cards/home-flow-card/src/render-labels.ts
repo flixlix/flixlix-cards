@@ -5,7 +5,8 @@ import { type HomeAssistant, numberFormatToLocale } from "custom-card-helpers";
 import { html, nothing, svg } from "lit";
 import { type Box, type Extent } from "./extent";
 import { type Figure, type Label, type LabelStatus } from "./labels";
-import { labelAnchor, type LabelledNode, project, type SceneLayout } from "./scene";
+import { labelAnchor, type LabelledNode } from "./label-anchors";
+import { project, type SceneLayout } from "./scene";
 
 /** Rough size of a label in screen units, so the viewBox leaves room for it. */
 const LABEL_WIDTH = 92;
@@ -33,14 +34,20 @@ export const includeLabel = (
   extent: Extent,
   node: LabelledNode,
   lines: number,
-  { aside = false, scale = 1, layout }: { aside?: boolean; scale?: number; layout: SceneLayout }
+  {
+    aside = false,
+    valueSize = 1,
+    scale = 1,
+    layout,
+  }: { aside?: boolean; valueSize?: number; scale?: number; layout: SceneLayout }
 ) => {
   const anchor = labelAnchor(node, layout);
   const [x, y] = project(anchor.at);
   const end = y + anchor.leader;
   const height = (LABEL_HEIGHT + lines * LINE_HEIGHT) * scale;
   extent.include([x, end + Math.sign(anchor.leader) * height], 4);
-  const width = (LABEL_WIDTH + (aside ? ASIDE_WIDTH : 0)) * scale;
+  const valueWidth = (LABEL_WIDTH + (aside ? ASIDE_WIDTH : 0)) * valueSize;
+  const width = Math.max(LABEL_WIDTH, valueWidth) * scale;
   // a label starts LABEL_INDENT left of its leader, as its CSS moves it, or ends LABEL_INDENT
   // right of it when it hangs left; the house's centring leaves room for that on a wide card, but
   // not on a narrow one
@@ -56,6 +63,7 @@ export const includeLabel = (
 export const includeLabelOf = (extent: Extent, label: Label, scale: number, layout: SceneLayout) =>
   includeLabel(extent, label.node, [label.status, label.alert].filter(Boolean).length, {
     aside: Boolean(label.aside) || (label.lanes?.length ?? 0) > 1,
+    valueSize: label.valueSize,
     scale,
     layout,
   });
@@ -171,7 +179,12 @@ const labelHtml = (label: Label, position: string, context: LabelContext) => {
       }
     }}
   >
-    <div class="value">${valueLineHtml(label, context)}</div>
+    <div
+      class="value"
+      style=${label.valueSize === undefined ? nothing : `--value-size: ${label.valueSize}`}
+    >
+      ${valueLineHtml(label, context)}
+    </div>
     ${label.status ? html`<div class="status">${statusHtml(label.status, context)}</div>` : nothing}
     <div class="name">${label.name}</div>
     ${label.alert ? html`<div class="name outage">${label.alert}</div>` : nothing}

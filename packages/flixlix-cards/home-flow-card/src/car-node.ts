@@ -3,6 +3,7 @@ import {
   conditionEntities,
   conditionsMet,
   type EntityReader,
+  type UnitFamily,
 } from "@flixlix-cards/shared/card-state";
 import { getEntityState } from "@flixlix-cards/shared/states/utils/get-entity-state";
 import { liveConditionContext } from "@flixlix-cards/shared/utils/condition-context";
@@ -23,13 +24,19 @@ const carCharge = (hass: HomeAssistant, car: HouseCar): number | null =>
 
 /**
  * Hidden unless its `visibility` conditions hold; then idle while its `idle` conditions hold, or
- * without any, while it draws no power: in energy mode, while it used none over the period.
+ * without any, while it draws no power. Over an energy period it may have charged while unplugged
+ * now, so it is idle only while it used none over the period, whatever its `idle` conditions.
  */
-export const carStatus = (hass: HomeAssistant, car: HouseCar, read: EntityReader): CarStatus => {
+export const carStatus = (
+  hass: HomeAssistant,
+  car: HouseCar,
+  read: EntityReader,
+  family: UnitFamily
+): CarStatus => {
   if (car.visibility && !conditionsMet(car.visibility, hass, liveConditionContext)) {
     return "hidden";
   }
-  if (car.idle) {
+  if (car.idle && family === "power") {
     return conditionsMet(car.idle, hass, liveConditionContext) ? "idle" : "active";
   }
   return read(car.entity) ? "active" : "idle";

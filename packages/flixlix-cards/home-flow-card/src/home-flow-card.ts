@@ -71,7 +71,7 @@ const isEnergy = (config: FlowConfig) => config.mode === "energy";
 /** Every statistic an energy card reads, the fixtures only this card draws included. */
 const statisticIds = (config: FlowConfig) =>
   energyStatisticIds(config.entities, [
-    config.entities.grid?.power_outage?.entity_generator,
+    config.generator?.entity,
     config.car?.entity,
     config.heat_pump?.entity,
   ]);
@@ -124,9 +124,6 @@ export class HomeFlowCard extends LitElement {
       kilo_decimals: coerceNumber(config.kilo_decimals, defaultValues.kiloDecimals),
       kilo_threshold: coerceNumber(config.kilo_threshold, defaultValues.kiloThreshold),
       mega_threshold: coerceNumber(config.mega_threshold, defaultValues.megaThreshold),
-      max_expected_power: coerceNumber(config.max_expected_power, defaultValues.maxExpectedPower),
-      min_expected_power: coerceNumber(config.min_expected_power, defaultValues.minExpectedPower),
-      ...(isEnergy(config) ? { flow_rate_model: "relative" as const } : {}),
       display_zero_lines: displayZeroLinesWithDefaults(config.display_zero_lines),
       clickable_entities: clickableEntitiesWithDefault(config.clickable_entities),
     };
@@ -219,7 +216,9 @@ export class HomeFlowCard extends LitElement {
   /** Draws the car again only when its state, the theme's colours or the card's size change. */
   private _drawCar() {
     const car = this._config.car;
-    this._carStatus = car ? carStatus(this.hass, car, this._read) : "hidden";
+    this._carStatus = car
+      ? carStatus(this.hass, car, this._read, isEnergy(this._config) ? "energy" : "power")
+      : "hidden";
     const palette =
       this._carStatus !== "hidden" && this.shadowRoot
         ? readCarPalette(this.shadowRoot, this._carStatus === "idle")

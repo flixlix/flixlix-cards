@@ -4,7 +4,7 @@ import { expect, openDashboard, runScript, test } from "../src/fixtures.ts";
 /** How many of each custom card the YAML dashboards in `.hass_dev/dashboards/` contain. */
 const expectedCards: Record<string, Record<string, number>> = {
   [CARD_DASHBOARDS["power-flow-card-plus"]]: { "power-flow-card-plus": 8 },
-  [CARD_DASHBOARDS["home-flow-card"]]: { "home-flow-card": 10 },
+  [CARD_DASHBOARDS["home-flow-card"]]: { "home-flow-card": 25 },
   [CARD_DASHBOARDS["energy-flow-card-plus"]]: {
     "energy-flow-card-plus": 1,
     "energy-breakdown-card": 1,

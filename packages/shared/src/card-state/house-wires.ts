@@ -1,5 +1,5 @@
 import { type BaseConfigEntity, type FlowCardPlusConfig } from "@flixlix-cards/shared/types";
-import { flowRate } from "./flows";
+import { flowRate, flowRateModel } from "./flows";
 import { type ScaledReading, scaledReading } from "./format";
 import { HOME_SOURCE_COLORS } from "./styles";
 import { type ReadyCardState, type UnitFamily } from "./types";
@@ -23,6 +23,17 @@ export type HeatPumpReading = {
   decimals?: number;
 };
 
+/** What the card draws beyond the shared nodes, each read as the nodes are. */
+export type HouseFixtures = {
+  car?: CarReading;
+  heatPump?: HeatPumpReading;
+  /**
+   * The generator's energy over the period, on an energy card: it feeds the inverter beside the
+   * grid whenever it ran. Live, the generator stands in for the grid during an outage instead.
+   */
+  generator?: number | null;
+};
+
 /**
  * The wire between a node and the inverter the house card draws: every node is wired to the
  * inverter, so a wire carries the node's net power instead of one source → sink flow. Over an
@@ -39,8 +50,8 @@ export type HouseWire = {
   durationSeconds: number;
   /**
    * Where the power sits in the card's expected range, in [0, 1]: 0 at `min_expected_power` or
-   * below, 1 at `max_expected_power` or above. On an energy card, its share of the energy
-   * supplied. Pulses grow longer with it.
+   * below, 1 at `max_expected_power` or above. On an energy card without an expected range, its
+   * share of the energy supplied. Pulses grow longer with it.
    */
   intensity: number;
   /** CSS colour of the power on the wire; home takes the colour of its largest source. */
@@ -122,12 +133,26 @@ const gridWires = ({ family, nodes }: ReadyCardState): Wire[] => {
   );
 };
 
+/** On an energy card, what the generator made over the period; nothing live. */
+const periodGenerator = ({ family }: ReadyCardState, generator: number | null | undefined) =>
+  family === "energy" ? Math.max(generator ?? 0, 0) : 0;
+
 /**
- * A generator wired to the inverter, never to the grid: drawn only during an outage, when it
- * carries the generator's power.
+ * A generator wired to the inverter, never to the grid. Live, it is drawn only during an outage,
+ * when it carries the generator's power; over a period, whenever it made any.
  */
-const generatorWire = (config: FlowCardPlusConfig, { nodes }: ReadyCardState): Wire | undefined => {
-  const { grid } = nodes;
+const generatorWire = (
+  config: FlowCardPlusConfig,
+  state: ReadyCardState,
+  generator: number | null | undefined
+): Wire | undefined => {
+  if (state.family === "energy") {
+    const made = periodGenerator(state, generator);
+    return made > 0
+      ? { node: "generator", power: made, intoInverter: true, color: GENERATOR }
+      : undefined;
+  }
+  const { grid } = state.nodes;
   if (
     !grid.has ||
     !grid.powerOutage.isOutage ||
@@ -143,9 +168,10 @@ const generatorWire = (config: FlowCardPlusConfig, { nodes }: ReadyCardState): W
   };
 };
 
-const homeWire = (state: ReadyCardState): Wire => ({
+/** The pipeline balances the home without a generator that ran beside the grid. */
+const homeWire = (state: ReadyCardState, generator: number): Wire => ({
   node: "home",
-  power: state.homeBalance.measured ?? state.homeBalance.balanced,
+  power: state.homeBalance.measured ?? state.homeBalance.balanced + generator,
   intoInverter: false,
   color: HOME_SOURCE_COLORS[state.homeRing.largestSource],
 });
@@ -179,14 +205,17 @@ const isWire = (wire: Wire | undefined): wire is Wire => wire !== undefined;
 const clampedShare = (share: number) =>
   Number.isFinite(share) ? Math.min(Math.max(share, 0), 1) : 0;
 
-/** The expected range is in W, so energy over a period is weighed against what was supplied. */
+/**
+ * Where the power sits in the expected range. Energy over a period without one, as the relative
+ * flow rate model marks it, is weighed against what was supplied.
+ */
 const intensity = (
   config: FlowCardPlusConfig,
   family: UnitFamily,
   power: number,
   supplied: number
 ): number => {
-  if (family === "energy") {
+  if (family === "energy" && flowRateModel(config) === "relative") {
     return supplied > 0 ? clampedShare(power / supplied) : 0;
   }
   const range = config.max_expected_power - config.min_expected_power;
@@ -200,8 +229,7 @@ const intensity = (
 export const houseWires = (
   config: FlowCardPlusConfig,
   state: ReadyCardState,
-  car?: CarReading,
-  heatPump?: HeatPumpReading
+  { car, heatPump, generator }: HouseFixtures = {}
 ): HouseWire[] => {
   const { entities } = config;
   const entityOf: Record<
@@ -220,8 +248,8 @@ export const houseWires = (
     solarWire(state),
     ...batteryWires(state),
     ...gridWires(state),
-    generatorWire(config, state),
-    homeWire(state),
+    generatorWire(config, state, generator),
+    homeWire(state, periodGenerator(state, generator)),
     carWire(state, car),
     heatPumpWire(state, heatPump),
   ].filter(isWire);

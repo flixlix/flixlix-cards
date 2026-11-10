@@ -342,8 +342,10 @@ const CARD_OPTIONS: OptionRow[] = [
         What the sensors measure: <code>power</code> for live power in W, or <code>energy</code> for
         energy in Wh over the period picked on the dashboard&apos;s energy date picker (today
         without one). In energy mode every node, the car and the heat pump read energy sensors, each
-        wire carries its energy over the period and the pulses share out what was supplied. A grid
-        or battery that ran both ways gets a parallel line and a value each way. See{" "}
+        wire carries its energy over the period and, without an expected range in Wh, the pulses
+        share out what was supplied. A grid or battery that ran both ways gets a parallel line and a
+        value each way. What only says what is happening now is left out: the grid&apos;s outage,
+        the car&apos;s <code>idle</code> conditions and the heat pump&apos;s turning fan. See{" "}
         <Link to={`${BASE_PATH}/examples`} hash="energy">
           the energy example
         </Link>
@@ -420,6 +422,13 @@ const CARD_OPTIONS: OptionRow[] = [
       "How many times thicker the wires are drawn, for example 2 for twice as thick. Like the labels' text, wires keep a similar size in px whatever the card's width: they stay visible in a narrow sidebar and do not swell on a wide dashboard.",
   },
   {
+    name: "two_way_value_size",
+    type: "number",
+    default: "1",
+    description:
+      "In energy mode, how large the values of a grid or battery that ran both ways are drawn against the other labels' values, for example 0.8 so their two values take less room.",
+  },
+  {
     name: "clickable_entities",
     type: "boolean",
     default: "true",
@@ -433,13 +442,35 @@ const CARD_OPTIONS: OptionRow[] = [
 ];
 
 const NUMBER_OPTIONS: OptionRow[] = [
-  { name: "base_decimals", type: "number", default: "0", description: "Decimals of values in W." },
-  { name: "kilo_decimals", type: "number", default: "1", description: "Decimals of values in kW." },
+  {
+    name: "base_decimals",
+    type: "number",
+    default: "0",
+    description: "Decimals of values in W, or Wh in energy mode.",
+  },
+  {
+    name: "kilo_decimals",
+    type: "number",
+    default: "1",
+    description: "Decimals of values in kW (kWh).",
+  },
   {
     name: "kilo_threshold",
     type: "number",
     default: "1000",
-    description: "From how many watts a value is shown in kW.",
+    description: "From how many W (Wh) a value is shown in kW (kWh).",
+  },
+  {
+    name: "mega_decimals",
+    type: "number",
+    default: "2",
+    description: "Decimals of values in MW (MWh).",
+  },
+  {
+    name: "mega_threshold",
+    type: "number",
+    default: "1000000",
+    description: "From how many W (Wh) a value is shown in MW (MWh).",
   },
   {
     name: "min_flow_rate / max_flow_rate",
@@ -448,10 +479,18 @@ const NUMBER_OPTIONS: OptionRow[] = [
     description: "Seconds per pulse at the most and the least power.",
   },
   {
-    name: "min_expected_power / max_expected_power",
+    name: "min_expected_value / max_expected_value",
     type: "number",
     default: "0.01 / 2000",
-    description: "The power range the pulse speed follows, in W.",
+    description: (
+      <>
+        The range the pulses follow, in W (Wh in energy mode): slowest and shortest at the min,
+        fastest and longest at the max. In energy mode without them, each wire&apos;s pulses share
+        out what was supplied over the period instead. The older <code>min_expected_power</code> and{" "}
+        <code>max_expected_power</code> still work in power mode; the visual editor saves them under
+        the new names.
+      </>
+    ),
   },
 ];
 
@@ -470,7 +509,7 @@ const valueRows = (node: string): OptionRow[] => [
     name: "display_zero_tolerance",
     type: "number",
     default: "0",
-    description: `Below this power, in W, the ${node} counts as idle.`,
+    description: `Below this, in W (Wh in energy mode), the ${node} counts as idle.`,
   },
   {
     name: "unit_of_measurement",
@@ -527,7 +566,7 @@ const GRID_OPTIONS: OptionRow[] = [
     required: true,
     description: (
       <>
-        A power sensor, positive while importing and negative while exporting; or{" "}
+        A power or energy sensor, positive while importing and negative while exporting; or{" "}
         <code>consumption</code> (import) and <code>production</code> (export), one sensor per
         direction, each positive.
       </>
@@ -538,7 +577,7 @@ const GRID_OPTIONS: OptionRow[] = [
     name: "power_outage.entity",
     type: "string",
     description:
-      "The entity that reports an outage. While the grid is down, its cable goes dead and its label shows a dash and an alert.",
+      "The entity that reports an outage. While the grid is down, its cable goes dead and its label shows a dash and an alert. Live only: energy mode leaves it out.",
   },
   {
     name: "power_outage.state_alert",
@@ -597,7 +636,7 @@ const BATTERY_OPTIONS: OptionRow[] = [
     required: true,
     description: (
       <>
-        A power sensor, positive while discharging and negative while charging; or{" "}
+        A power or energy sensor, positive while discharging and negative while charging; or{" "}
         <code>consumption</code> (discharge) and <code>production</code> (charge), one sensor per
         direction, each positive.
       </>
@@ -611,13 +650,15 @@ const BATTERY_OPTIONS: OptionRow[] = [
   {
     name: "state_of_charge_position",
     type: "string",
-    default: "below_power",
+    default: "below_value",
     description: (
       <>
-        Where the label shows the state of charge: <code>below_power</code>, beside whether it is
-        charging; <code>above_power</code>, swapped with the power as the large value; or on the
-        power&apos;s line, <code>after_power</code> or <code>before_power</code>. Without a state of
-        charge, the label shows the power either way.
+        Where the label shows the state of charge: <code>below_value</code>, beside whether it is
+        charging; <code>above_value</code>, swapped with the value as the large one; or on the
+        value&apos;s line, <code>after_value</code> or <code>before_value</code>. Without a state of
+        charge, the label shows the value either way. The older <code>below_power</code>,{" "}
+        <code>above_power</code>, <code>after_power</code> and <code>before_power</code> still work;
+        the visual editor saves them under the new names.
       </>
     ),
   },
@@ -710,7 +751,12 @@ const HOME_OPTIONS: OptionRow[] = [
 ];
 
 const GENERATOR_OPTIONS: OptionRow[] = [
-  { name: "entity", type: "string", required: true, description: "The generator's power sensor." },
+  {
+    name: "entity",
+    type: "string",
+    required: true,
+    description: "The generator's power or energy sensor.",
+  },
   { name: "name", type: "string", default: "Generator", description: "Label name." },
 ];
 
@@ -720,7 +766,7 @@ const CAR_OPTIONS: OptionRow[] = [
     type: "string",
     required: true,
     description:
-      "Its charging power, positive while it charges and negative while it feeds the home.",
+      "Its charging power or energy, positive while it charges and negative while it feeds the home.",
   },
   {
     name: "state_of_charge",
@@ -746,8 +792,10 @@ const CAR_OPTIONS: OptionRow[] = [
     description: (
       <>
         <a href="#conditions">Conditions</a>: while all of them hold, the car is parked and
-        unplugged. It is drawn faded, without its cable, and its label shows its state of charge.
-        Without conditions the car is idle while it draws no power.
+        unplugged. It is drawn faded, without its cable, and its label shows its state of charge;
+        without one, the car shows on its own, without a label. Without conditions the car is idle
+        while it draws no power. Live only: in energy mode the car is idle while it used nothing
+        over the period.
       </>
     ),
   },
@@ -813,7 +861,7 @@ const CONDITION_ROWS: OptionRow[] = [
 ];
 
 const HEAT_PUMP_OPTIONS: OptionRow[] = [
-  { name: "entity", type: "string", required: true, description: "Its power." },
+  { name: "entity", type: "string", required: true, description: "Its power or energy." },
   {
     name: "climate",
     type: "string",
@@ -897,7 +945,7 @@ export function ConfigurationPage() {
             language: "yaml",
             code: `kilo_threshold: 1000
 kilo_decimals: 2
-max_expected_power: 5000`,
+max_expected_value: 5000`,
           }}
         >
           <OptionList rows={NUMBER_OPTIONS} />
@@ -963,7 +1011,7 @@ max_expected_power: 5000`,
             code: `battery:
   entity: sensor.battery_power
   state_of_charge: sensor.battery_soc
-  state_of_charge_position: after_power
+  state_of_charge_position: after_value
   state_of_charge_severity:
     red: 10
     yellow: 25`,
@@ -1003,7 +1051,8 @@ max_expected_power: 5000`,
               Under <code>generator</code>: a generator the inverter switches to during a grid
               outage. It gets its own wire into the inverter and is never drawn on the grid cable.
               It needs <code>grid.power_outage</code> to know when the grid is down; while it runs,
-              its label takes the grid&apos;s place.
+              its label takes the grid&apos;s place. In energy mode it needs no{" "}
+              <code>power_outage</code>: it shows beside the grid whenever it ran over the period.
             </>
           }
           example={{
@@ -1262,15 +1311,15 @@ battery:
   },
   {
     id: "charge-position",
-    title: "The state of charge beside the power",
-    text: "Put the battery's charge on the power's line, or swap the two.",
+    title: "The state of charge beside the value",
+    text: "Put the battery's charge on the value's line, or swap the two.",
     code: `type: ${CARD_TYPE}
 grid:
   entity: sensor.grid_power
 battery:
   entity: sensor.battery_power
   state_of_charge: sensor.battery_soc
-  state_of_charge_position: after_power`,
+  state_of_charge_position: after_value`,
     states: {
       "sensor.grid_power": "300",
       "sensor.battery_power": "800",

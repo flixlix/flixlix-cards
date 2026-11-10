@@ -244,7 +244,7 @@ export const styles = css`
   }
 
   .value {
-    font-size: calc(var(--label-unit, 1px) * 17);
+    font-size: calc(var(--label-unit, 1px) * 17 * var(--value-size, 1));
     font-weight: 700;
     letter-spacing: -0.02em;
     line-height: 1;
