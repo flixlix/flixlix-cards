@@ -91,6 +91,7 @@
     "icon_alert": "Ikona alertu",
     "individual": "Indywidualne",
     "invert_state": "Odwróć stan",
+    "invert_state_non_fossil": "Encja podaje % energii niskoemisyjnej (odwróć)",
     "inverted_animation": "Odwróć animację",
     "kilo_decimals": "Miejsca po przecinku dla kilo",
     "kilo_threshold": "Próg z podstawy na kilo",

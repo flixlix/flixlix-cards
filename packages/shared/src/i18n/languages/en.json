@@ -91,6 +91,7 @@
     "icon_alert": "Icon for Alert",
     "individual": "Individual",
     "invert_state": "Invert State",
+    "invert_state_non_fossil": "Entity reports the low-carbon % (invert)",
     "inverted_animation": "Invert Animation",
     "kilo_decimals": "Kilo Decimals",
     "kilo_threshold": "Base to Kilo Threshold",

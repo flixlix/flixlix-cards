@@ -91,6 +91,7 @@
     "icon_alert": "Ícone para Alerta",
     "individual": "Individuais",
     "invert_state": "Inverter Estado",
+    "invert_state_non_fossil": "A entidade informa o % de baixo carbono (inverter)",
     "inverted_animation": "Animação Invertida",
     "kilo_decimals": "Casas decimais de quilo",
     "kilo_threshold": "Limiar de base para quilo",

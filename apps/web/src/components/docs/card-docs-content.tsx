@@ -933,6 +933,13 @@ const FOSSIL_OPTIONS: OptionRow[] = [
     description: "power | percentage; what type of value the entity provides.",
   },
   {
+    name: "invert_state",
+    type: "boolean",
+    default: "false",
+    description:
+      "The entity reports the low-carbon (green energy) percentage instead of the fossil one; the card reads it as 100 minus the state.",
+  },
+  {
     name: "unit_white_space",
     type: "boolean",
     default: "true",

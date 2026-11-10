@@ -91,6 +91,7 @@
     "icon_alert": "Icona per l'Allarme",
     "individual": "Individuale",
     "invert_state": "Inverti Stato",
+    "invert_state_non_fossil": "L'entità riporta la % a basse emissioni (inverti)",
     "inverted_animation": "Animazione Invertita",
     "kilo_decimals": "Decimali di chilo",
     "kilo_threshold": "Soglia da base a chilo",

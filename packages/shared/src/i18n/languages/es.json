@@ -91,6 +91,7 @@
     "icon_alert": "Ícono para Alerta",
     "individual": "Individuales",
     "invert_state": "Invertir Estado",
+    "invert_state_non_fossil": "La entidad indica el % bajo en carbono (invertir)",
     "inverted_animation": "Animación Invertida",
     "kilo_decimals": "Decimales de kilo",
     "kilo_threshold": "Umbral de base a kilo",

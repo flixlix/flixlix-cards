@@ -91,6 +91,7 @@
     "icon_alert": "Icona per a Alerta",
     "individual": "Individu",
     "invert_state": "Inverteix l'estat",
+    "invert_state_non_fossil": "L'entitat informa del % baix en carboni (inverteix)",
     "inverted_animation": "Invertir Animació",
     "kilo_decimals": "Decimals de quilo",
     "kilo_threshold": "Llindar de base a quilo",

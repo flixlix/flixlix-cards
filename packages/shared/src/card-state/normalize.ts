@@ -108,8 +108,9 @@ const nonFossilFraction = (input: NormalizeInput, readings: ReadyReadings, gridI
     const share = computeNonFossilFromCollection(readings.fossilEnergyConsumption, gridImport);
     return clampFraction(share.nonFossilPercentage / 100);
   }
-  const entity = input.config.entities.fossil_fuel_percentage?.entity;
-  const fossilPercentage = entity === undefined ? 0 : (getEntityState(input.hass, entity) ?? 0);
+  const fossil = input.config.entities.fossil_fuel_percentage;
+  const percentage = fossil?.entity ? (getEntityState(input.hass, fossil.entity) ?? 0) : 0;
+  const fossilPercentage = fossil?.invert_state ? 100 - percentage : percentage;
   return clampFraction(1 - fossilPercentage / 100);
 };
 

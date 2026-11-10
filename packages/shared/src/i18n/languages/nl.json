@@ -91,6 +91,7 @@
     "icon_alert": "Pictogram voor Alarm",
     "individual": "Individueel",
     "invert_state": "Toestand Omkeren",
+    "invert_state_non_fossil": "Entiteit meldt het koolstofarme % (omkeren)",
     "inverted_animation": "Animatie Omkeren",
     "kilo_decimals": "Decimalen voor kilo",
     "kilo_threshold": "Drempel van basis naar kilo",

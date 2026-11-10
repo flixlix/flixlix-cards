@@ -45,10 +45,13 @@ const measured = (override: boolean) =>
     readings({ home: 420 })
   ).totals.measuredHome;
 
-const fraction = (percentage: string) =>
+const fraction = (percentage: string, invert_state?: boolean) =>
   normalize(
     input(
-      { grid, fossil_fuel_percentage: { entity: "sensor.fossil", secondary_info: {} } },
+      {
+        grid,
+        fossil_fuel_percentage: { entity: "sensor.fossil", invert_state, secondary_info: {} },
+      },
       { "sensor.fossil": percentage, "binary_sensor.outage": "off" }
     ),
     readings({ grid: single(100) })
@@ -189,6 +192,12 @@ describe("tolerance, outage and hidden nodes", () => {
   test("the non-fossil fraction comes from the fossil percentage, clamped to [0, 1]", () => {
     expect(fraction("30")).toBeCloseTo(0.7, 10);
     expect(fraction("140")).toBe(0);
+  });
+
+  test("invert_state reads the entity as the low-carbon percentage", () => {
+    expect(fraction("30", true)).toBeCloseTo(0.3, 10);
+    expect(fraction("140", true)).toBe(1);
+    expect(fraction("-20", true)).toBe(0);
   });
 });
 

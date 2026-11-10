@@ -269,6 +269,12 @@ function configOptions(
     make("override_state", "Use the home entity state directly.", "home"),
     make("state_type", "fossil_fuel_percentage state type, power or percentage.", "fossil-fuel"),
     make(
+      "invert_state",
+      "fossil_fuel_percentage entity reports the green / low-carbon percentage (100 minus the state).",
+      "fossil-fuel",
+      ["green energy", "renewable"]
+    ),
+    make(
       "calculate_flow_rate",
       "Calculated rate by default; false = fixed pace, number = seconds.",
       "fossil-fuel"
