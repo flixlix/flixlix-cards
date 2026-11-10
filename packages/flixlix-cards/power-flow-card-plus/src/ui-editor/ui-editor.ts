@@ -14,6 +14,10 @@ import { nonFossilSchema } from "@flixlix-cards/shared/ui-editor/schema/fossil-f
 import { gridSchema } from "@flixlix-cards/shared/ui-editor/schema/grid";
 import { homeSchema } from "@flixlix-cards/shared/ui-editor/schema/home";
 import { solarSchema } from "@flixlix-cards/shared/ui-editor/schema/solar";
+import {
+  dashboardLinksToButtons,
+  hasDashboardLinks,
+} from "@flixlix-cards/shared/ui-editor/utils/dashboard-links";
 import { dropSpreadEntity } from "@flixlix-cards/shared/ui-editor/utils/drop-spread-entity";
 import { loadHaForm } from "@flixlix-cards/shared/ui-editor/utils/load-ha-form";
 import { defaultValues } from "@flixlix-cards/shared/utils/get-default-config";
@@ -36,11 +40,12 @@ const ENTITY_PAGES = [
 ] as const;
 
 type EntityPage = (typeof ENTITY_PAGES)[number]["page"];
-type MenuPage = EntityPage | "individual" | "advanced";
+type MenuPage = EntityPage | "individual" | "buttons" | "advanced";
 
 const MENU_PAGES: readonly { page: MenuPage; icon: string }[] = [
   ...ENTITY_PAGES,
   { page: "individual", icon: "mdi:dots-horizontal-circle-outline" },
+  { page: "buttons", icon: "mdi:gesture-tap-button" },
   { page: "advanced", icon: "mdi:cog" },
 ];
 
@@ -164,6 +169,38 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
     `;
   }
 
+  private _convertDashboardLinks = (): void => {
+    if (!this._config || !this.hass) {
+      return;
+    }
+    const config = dashboardLinksToButtons(
+      this._config,
+      this.hass.localize(
+        "ui.panel.lovelace.cards.energy.energy_distribution.go_to_energy_dashboard"
+      )
+    );
+    this._config = config;
+    fireEvent(this, "config-changed", { config });
+  };
+
+  private _renderDashboardLinksAlert() {
+    if (!this._config || !hasDashboardLinks(this._config)) {
+      return nothing;
+    }
+    return html`
+      <ha-alert class="legacy-fields-alert dashboard-links-alert" alert-type="info">
+        Dashboard links are no longer edited here. Convert them to buttons to edit them.
+        <button
+          class="legacy-fields-alert-button"
+          slot="action"
+          @click=${this._convertDashboardLinks}
+        >
+          Convert to buttons
+        </button>
+      </ha-alert>
+    `;
+  }
+
   protected render() {
     if (!this.hass || !this._config) {
       return nothing;
@@ -180,7 +217,7 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
         grey_out_circles: this._config.display_zero_lines?.grey_out_circles ?? false,
       },
     };
-    const alerts = html`${this._renderLegacyFieldsAlert()}${this._renderLegacyIndividualFieldsAlert()}`;
+    const alerts = html`${this._renderLegacyFieldsAlert()}${this._renderLegacyIndividualFieldsAlert()}${this._renderDashboardLinksAlert()}`;
     const currentPage = this._currentConfigPage;
 
     if (currentPage === "individual") {
@@ -191,6 +228,14 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
           .hass=${this.hass}
           .config=${this._config}
         ></individual-devices-editor>
+      `;
+    }
+
+    if (currentPage === "buttons") {
+      return html`
+        ${alerts}
+        <subpage-header @go-back=${this._goBack} page=${currentPage}> </subpage-header>
+        <buttons-editor .hass=${this.hass} .config=${this._config}></buttons-editor>
       `;
     }
 
@@ -252,7 +297,7 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
   }
 
   private _menuIcon(page: MenuPage, fallbackIcon: string): string {
-    if (page === "individual" || page === "advanced" || !this._config) {
+    if (page === "individual" || page === "buttons" || page === "advanced" || !this._config) {
       return fallbackIcon;
     }
     return nonEmpty(this._config.entities[page]?.icon) ?? fallbackIcon;
@@ -321,6 +366,11 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
         cursor: pointer;
         font: inherit;
         padding: 4px 8px;
+      }
+
+      .dashboard-links-alert .legacy-fields-alert-button {
+        background: var(--info-color);
+        white-space: nowrap;
       }
 
       .config-header {

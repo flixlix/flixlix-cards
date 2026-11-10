@@ -12,6 +12,9 @@
   },
   "editor": {
     "accept_negative": "Povolit záporné hodnoty",
+    "add_button": "Přidat tlačítko",
+    "button": "Tlačítko",
+    "buttons": "Tlačítka",
     "action": "Akce",
     "advanced": "Pokročilá nastavení",
     "animation": "Animace",

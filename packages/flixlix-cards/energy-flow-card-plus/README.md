@@ -119,10 +119,11 @@ Else, if you prefer the graphical editor, use the menu to add the resource:
 | type                        | `string`  |               **required**               | `custom:energy-flow-card-plus`.                                                                                                                                                                                                                                                                                                                |
 | entities                    | `object`  |               **required**               | One or more sensor entities, see [entities object](#entities-object) for additional entity options.                                                                                                                                                                                                                                            |
 | title                       | `string`  |                                          | Shows a title at the top of the card.                                                                                                                                                                                                                                                                                                          |
-| dashboard_link              | `string`  |                                          | Shows a link to an Energy Dashboard. Should be a url path to location of your choice. If you wanted to link to the built-in dashboard you would enter `/energy` for example.                                                                                                                                                                   |
-| dashboard_link_label        | `string`  | Go To Energy Dashboard (auto-translates) | If set, overrides the default link label to go to a different dashboard.                                                                                                                                                                                                                                                                       |
-| second_dashboard_link       | `string`  |                                          | Shows another link to an Energy Dashboard. Should be a url path to location of your choice. If you wanted to link to the built-in dashboard you would enter `/energy` for example. (Only available in the YAML Editor)                                                                                                                         |
-| second_dashboard_link_label | `string`  | Go To Energy Dashboard (auto-translates) | If set, overrides the second default link label to go to a different dashboard.                                                                                                                                                                                                                                                                |
+| dashboard_link              | `string`  |                                          | Legacy, kept so existing configs still work: use [`buttons`](#buttons) instead. Shows a link to a dashboard, e.g. `/energy`. The visual editor offers to convert it to a button.                                                                                                                                                               |
+| dashboard_link_label        | `string`  | Go To Energy Dashboard (auto-translates) | Legacy: the label of `dashboard_link`.                                                                                                                                                                                                                                                                                                         |
+| second_dashboard_link       | `string`  |                                          | Legacy: a second link like `dashboard_link`.                                                                                                                                                                                                                                                                                                   |
+| second_dashboard_link_label | `string`  | Go To Energy Dashboard (auto-translates) | Legacy: the label of `second_dashboard_link`.                                                                                                                                                                                                                                                                                                  |
+| buttons                     | `list`    |                                          | More buttons at the bottom of the card, after the dashboard links. See [Buttons](#buttons).                                                                                                                                                                                                                                                    |
 | kilo_decimals               | `number`  |                    1                     | Number of decimals rounded to when kilowatt-hours are displayed.                                                                                                                                                                                                                                                                               |
 | base_decimals               | `number`  |                    1                     | Number of decimals rounded to when watt-hours are displayed.                                                                                                                                                                                                                                                                                   |
 | keep_trailing_zeros         | `boolean` |                  false                   | Always show the decimals a value is rounded to, keeping trailing zeros: `1.0 kWh` instead of `1 kWh`.                                                                                                                                                                                                                                          |
@@ -150,6 +151,35 @@ The card supports Home Assistant action configs on entity circles and other clic
 | double_tap_action | `object` | Action triggered on double tap/click. |
 
 If none of these actions are configured for a clickable entity surface, the card falls back to opening more-info unless `clickable_entities: false`.
+
+#### Buttons
+
+`buttons` adds a row of buttons at the bottom of the card. In the visual editor, open **Buttons** to add, remove, reorder and edit them.
+
+`dashboard_link` and `second_dashboard_link` still work and show before the buttons, but they are no longer in the visual editor. When a config still has them, the editor offers **Convert to buttons**, which turns each link into a button with a `navigate` action (or `url` for a full URL), keeping its label and its place in the row.
+
+| Name              | Type     | Description                                                                                     |
+| ----------------- | -------- | ----------------------------------------------------------------------------------------------- |
+| name              | `string` | Text on the button. Leave it out for an icon-only button.                                       |
+| icon              | `string` | Icon shown before the name, e.g. `mdi:solar-power`.                                             |
+| entity            | `string` | Entity for `more-info` and `toggle` actions. Without a name or icon, the button shows its name. |
+| tap_action        | `object` | Action triggered on tap/click. Without any action, a tap opens the entity's more-info.          |
+| hold_action       | `object` | Action triggered on long press.                                                                 |
+| double_tap_action | `object` | Action triggered on double tap/click.                                                           |
+
+```yaml
+buttons:
+  - name: Solar
+    icon: mdi:solar-power
+    tap_action:
+      action: navigate
+      navigation_path: /dashboard-energy/solar
+  - name: Battery
+    icon: mdi:home-battery
+    entity: input_boolean.battery_force_charge
+    tap_action:
+      action: toggle
+```
 
 #### Entities object
 

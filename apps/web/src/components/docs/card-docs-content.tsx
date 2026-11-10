@@ -16,6 +16,7 @@ import {
   MousePointerClick,
   Network,
   Palette,
+  RectangleEllipsis,
   Settings,
   Split,
   Sun,
@@ -371,14 +372,24 @@ const ADVANCED_CARD_OPTIONS = (v: Variant): OptionRow[] => [
     type: "string",
     description: (
       <>
-        URL path to a dashboard (e.g. <code>/energy</code>), shows a button at the bottom.
+        Legacy, kept so existing configs still work: use <a href="#buttons">buttons</a> instead. URL
+        path to a dashboard (e.g. <code>/energy</code>), shown as a link at the bottom.
       </>
     ),
   },
   {
     name: "dashboard_link_label",
     type: "string",
-    description: "Override the default label of the dashboard link.",
+    description: "Legacy: the label of dashboard_link.",
+  },
+  {
+    name: "buttons",
+    type: "list",
+    description: (
+      <>
+        More buttons at the bottom, after the dashboard links. See <a href="#buttons">Buttons</a>.
+      </>
+    ),
   },
   {
     name: "kilo_decimals",
@@ -413,12 +424,12 @@ const ADVANCED_CARD_OPTIONS = (v: Variant): OptionRow[] => [
   {
     name: "second_dashboard_link",
     type: "string",
-    description: "Optional second dashboard link (YAML editor only).",
+    description: "Legacy: a second link like dashboard_link.",
   },
   {
     name: "second_dashboard_link_label",
     type: "string",
-    description: "Override the second dashboard link label.",
+    description: "Legacy: the label of second_dashboard_link.",
   },
   {
     name: "min_flow_rate",
@@ -1048,6 +1059,32 @@ const POWER_OUTAGE_OPTIONS: OptionRow[] = [
   },
 ];
 
+const BUTTON_OPTIONS: OptionRow[] = [
+  {
+    name: "name",
+    type: "string",
+    description: "Text on the button. Leave out for an icon-only button.",
+  },
+  {
+    name: "icon",
+    type: "string",
+    description: "Icon shown before the name, e.g. mdi:solar-power.",
+  },
+  {
+    name: "entity",
+    type: "string",
+    description:
+      "Entity for more-info and toggle actions. Without a name or icon, the button shows the entity's name.",
+  },
+  {
+    name: "tap_action",
+    type: "object",
+    description: "Triggered on tap/click. Without any action, a tap opens the entity's more-info.",
+  },
+  { name: "hold_action", type: "object", description: "Triggered on long press." },
+  { name: "double_tap_action", type: "object", description: "Triggered on double tap." },
+];
+
 const CUSTOM_CSS_SELECTORS: OptionRow[] = [
   {
     name: ".grid .consumption, .grid .return",
@@ -1330,6 +1367,49 @@ entities:
               },
             ]}
           />
+        </CategorySection>
+
+        <CategorySection
+          id="buttons"
+          title="Buttons"
+          icon={RectangleEllipsis}
+          accent="slate"
+          description="A row of buttons at the bottom of the card, each with its own name, icon and actions."
+          intro={
+            <Prose>
+              <p>
+                Add, remove, reorder and edit them in the visual editor under{" "}
+                <strong>Buttons</strong>, or list them under <code>buttons</code>. Each button takes
+                the standard{" "}
+                <a
+                  href="https://www.home-assistant.io/dashboards/actions/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Home Assistant action
+                </a>{" "}
+                objects. The legacy <code>dashboard_link</code> and{" "}
+                <code>second_dashboard_link</code> still show before the buttons; the visual editor
+                no longer offers them and instead converts them to buttons.
+              </p>
+            </Prose>
+          }
+          example={{
+            language: "yaml",
+            code: `buttons:
+  - name: Solar
+    icon: mdi:solar-power
+    tap_action:
+      action: navigate
+      navigation_path: /dashboard-energy/solar
+  - name: Battery
+    icon: mdi:home-battery
+    entity: input_boolean.battery_force_charge
+    tap_action:
+      action: toggle`,
+          }}
+        >
+          <OptionList rows={BUTTON_OPTIONS} />
         </CategorySection>
 
         <CategorySection

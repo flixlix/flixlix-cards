@@ -9,7 +9,7 @@ import { flowElement } from "./flows/index";
 import { gridElement } from "./grid";
 import { homeElement } from "./home";
 import { individualElement } from "./individual-element";
-import { dashboardLinkElement } from "./misc/dashboard-link";
+import { cardButtonsElement } from "./misc/card-buttons";
 import { nonFossilElement } from "./non-fossil";
 import { solarElement } from "./solar";
 import { spacer } from "./spacer";
@@ -89,7 +89,7 @@ const bottomRow = ({ main, config, cardState }: RowContext) => {
   </div>`;
 };
 
-/** The ready flow card: nodes in three rows around the home, the flows between them and dashboard links. */
+/** The ready flow card: nodes in three rows around the home, the flows between them and the buttons under them. */
 export const flowCard = (
   main: CardMainContext,
   config: FlowCardPlusConfig,
@@ -116,7 +116,7 @@ export const flowCard = (
         ${topRow(rows)} ${middleRow(rows)} ${bottomRow(rows)}
         ${flowElement(cardState, config, flowLayout)}
       </div>
-      ${dashboardLinkElement(config, hass)}
+      ${cardButtonsElement(main, config, hass)}
     </ha-card>
   `;
 };

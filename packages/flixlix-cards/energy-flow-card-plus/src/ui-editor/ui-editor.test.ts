@@ -20,7 +20,7 @@ const isToggle = (field: unknown) =>
   field.selector !== null &&
   "boolean" in field.selector;
 
-const hass: Partial<HomeAssistant> = { localize: () => "" };
+const hass: Partial<HomeAssistant> = { localize: () => "", states: {} };
 
 const editorConfig = (options: Record<string, unknown>) =>
   ({ type: "custom:energy-flow-card-plus", ...options }) as PowerFlowCardPlusConfig;
@@ -276,6 +276,42 @@ describe("energy flow ui editor", () => {
     query(editor, "ha-form").dispatchEvent(new CustomEvent("value-changed", { detail: { value } }));
 
     expect(lastConfig()).toEqual(value);
+  });
+
+  test("the buttons page adds a button to the config", async () => {
+    const { editor, lastConfig } = await mountEditor({ entities: {} });
+    query(editor, 'link-subpage[path="buttons"]').dispatchEvent(
+      new CustomEvent("open-sub-element-editor", { detail: { open: true } })
+    );
+    await editor.updateComplete;
+    const list = query(editor, "buttons-editor");
+    if ("updateComplete" in list) {
+      await list.updateComplete;
+    }
+
+    query(list, ".add-button").click();
+
+    expect(lastConfig()).toEqual({
+      type: "custom:energy-flow-card-plus",
+      entities: {},
+      buttons: [{ icon: "mdi:gesture-tap-button" }],
+    });
+  });
+
+  test("converting the dashboard link turns it into the first button", async () => {
+    const { editor, lastConfig } = await mountEditor({
+      entities: {},
+      dashboard_link: "/energy",
+      dashboard_link_label: "Energy",
+    });
+
+    query(editor, ".dashboard-links-alert .legacy-fields-alert-button").click();
+
+    expect(lastConfig()).toEqual({
+      type: "custom:energy-flow-card-plus",
+      entities: {},
+      buttons: [{ name: "Energy", tap_action: { action: "navigate", navigation_path: "/energy" } }],
+    });
   });
 
   test("setConfig rejects unknown options so HA falls back to YAML", () => {

@@ -12,6 +12,9 @@
   },
   "editor": {
     "accept_negative": "Accepter negative værdier",
+    "add_button": "Tilføj knap",
+    "button": "Knap",
+    "buttons": "Knapper",
     "action": "Handling",
     "advanced": "Avancerede indstillinger",
     "animation": "Animation",

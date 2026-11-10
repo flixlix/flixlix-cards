@@ -28,7 +28,7 @@ const isToggle = (field: unknown) =>
   field.selector !== null &&
   "boolean" in field.selector;
 
-const hass: Partial<HomeAssistant> = { localize: () => "" };
+const hass: Partial<HomeAssistant> = { localize: () => "", states: {} };
 
 const editorConfig = (options: Record<string, unknown>) =>
   ({ type: "custom:power-flow-card-plus", ...options }) as PowerFlowCardPlusConfig;
@@ -139,6 +139,26 @@ function fieldDefault(schema: unknown, name: string): unknown {
     }
   }
   return undefined;
+}
+
+/** Opens the buttons page and, like Home Assistant, feeds every config the editor writes back in. */
+async function openButtons(options: Record<string, unknown>) {
+  const mounted = await mountEditor({ entities: {}, ...options });
+  const { editor, lastConfig } = mounted;
+  query(editor, 'link-subpage[path="buttons"]').dispatchEvent(
+    new CustomEvent("open-sub-element-editor", { detail: { open: true } })
+  );
+  await editor.updateComplete;
+  const list = await rendered(editor, "buttons-editor");
+  const roundTrip = async () => {
+    const config = lastConfig();
+    if (config) {
+      editor.setConfig(config);
+    }
+    await editor.updateComplete;
+    await rendered(editor, "buttons-editor");
+  };
+  return { ...mounted, list, roundTrip };
 }
 
 describe("power flow ui editor", () => {
@@ -307,6 +327,126 @@ describe("power flow ui editor", () => {
 
     query(rows, ".remove-icon").click();
     expect(lastConfig()?.entities.individual).toEqual([{ entity: "sensor.b", name: "B" }]);
+  });
+
+  test("adding a button writes it and opens its form, whose edits land on that button", async () => {
+    const { list, lastConfig, roundTrip } = await openButtons({
+      buttons: [{ name: "Solar", tap_action: { action: "navigate", navigation_path: "/solar" } }],
+    });
+
+    query(list, ".add-button").click();
+    await roundTrip();
+    expect(lastConfig()?.buttons).toEqual([
+      { name: "Solar", tap_action: { action: "navigate", navigation_path: "/solar" } },
+      { icon: "mdi:gesture-tap-button" },
+    ]);
+
+    const battery = {
+      name: "Battery",
+      icon: "mdi:battery",
+      tap_action: { action: "navigate", navigation_path: "/battery" },
+    };
+    query(list, "ha-form").dispatchEvent(
+      new CustomEvent("value-changed", { detail: { value: battery } })
+    );
+    expect(lastConfig()?.buttons).toEqual([
+      { name: "Solar", tap_action: { action: "navigate", navigation_path: "/solar" } },
+      battery,
+    ]);
+  });
+
+  test("the button form offers a name, an icon, an entity and the three actions", async () => {
+    const { editor, list } = await openButtons({ buttons: [{ name: "Solar" }] });
+
+    query(list, ".edit-icon").click();
+    const form = query(await rendered(editor, "buttons-editor"), "ha-form");
+
+    expect(ownFieldNames("schema" in form ? form.schema : undefined)).toEqual([
+      "name",
+      "icon",
+      "entity",
+      "tap_action",
+      "hold_action",
+      "double_tap_action",
+    ]);
+  });
+
+  test("removing a button keeps the others in order, and the last one drops buttons from the config", async () => {
+    const { editor, list, lastConfig, roundTrip } = await openButtons({
+      buttons: [{ name: "Solar" }, { name: "Battery" }],
+    });
+
+    query(list, ".remove-icon").click();
+    expect(lastConfig()?.buttons).toEqual([{ name: "Battery" }]);
+    await roundTrip();
+
+    query(await rendered(editor, "buttons-editor"), ".remove-icon").click();
+    expect(lastConfig()).toEqual({ type: "custom:power-flow-card-plus", entities: {} });
+  });
+
+  test("the buttons list shows each button by its name, else its entity", async () => {
+    const { list } = await openButtons({ buttons: [{ name: "Solar" }, { entity: "sensor.grid" }] });
+
+    expect(
+      [...(list.shadowRoot?.querySelectorAll(".button-label") ?? [])].map((label) =>
+        label.textContent?.trim()
+      )
+    ).toEqual(["Solar", "sensor.grid"]);
+  });
+
+  test("setConfig accepts buttons and rejects an unknown button option so HA falls back to YAML", () => {
+    const editor = new PowerFlowCardPlusEditor();
+    const button = { name: "Solar", icon: "mdi:solar-power", entity: "sensor.solar" };
+
+    expect(() => editor.setConfig(editorConfig({ entities: {}, buttons: [button] }))).not.toThrow();
+    expect(() =>
+      editor.setConfig(editorConfig({ entities: {}, buttons: [{ ...button, colour: "red" }] }))
+    ).toThrow(/colour/);
+  });
+
+  test("converting dashboard links puts them in front of the buttons and drops the legacy keys", async () => {
+    const { editor, lastConfig } = await mountEditor({
+      title: "Home",
+      entities: {},
+      dashboard_link: "/energy",
+      second_dashboard_link: "https://example.com/solar",
+      second_dashboard_link_label: "Inverter",
+      buttons: [{ name: "Battery", icon: "mdi:home-battery" }],
+    });
+    editor.hass = { ...hass, localize: () => "Go to the energy dashboard" } as HomeAssistant;
+
+    query(editor, ".dashboard-links-alert .legacy-fields-alert-button").click();
+
+    expect(lastConfig()).toEqual({
+      type: "custom:power-flow-card-plus",
+      title: "Home",
+      entities: {},
+      buttons: [
+        {
+          name: "Go to the energy dashboard",
+          tap_action: { action: "navigate", navigation_path: "/energy" },
+        },
+        { name: "Inverter", tap_action: { action: "url", url_path: "https://example.com/solar" } },
+        { name: "Battery", icon: "mdi:home-battery" },
+      ],
+    });
+    await editor.updateComplete;
+    expect(editor.shadowRoot?.querySelector(".dashboard-links-alert")).toBeNull();
+  });
+
+  test("without dashboard links there is nothing to convert", async () => {
+    const { editor } = await mountEditor({ entities: {}, buttons: [{ name: "Solar" }] });
+
+    expect(editor.shadowRoot?.querySelector(".dashboard-links-alert")).toBeNull();
+  });
+
+  test("the advanced form no longer offers the dashboard link", async () => {
+    const { form } = await openAdvanced({});
+
+    const fields = ownFieldNames("schema" in form ? form.schema : undefined);
+
+    expect(fields).not.toContain("dashboard_link");
+    expect(fields).not.toContain("dashboard_link_label");
   });
 
   test.each(["grid", "solar", "battery"])(

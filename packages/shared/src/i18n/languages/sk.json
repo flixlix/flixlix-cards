@@ -12,6 +12,9 @@
   },
   "editor": {
     "accept_negative": "Povoliť záporné hodnoty",
+    "add_button": "Pridať tlačidlo",
+    "button": "Tlačidlo",
+    "buttons": "Tlačidlá",
     "action": "Akcia",
     "advanced": "Pokročilé nastavenia",
     "animation": "Animácia",

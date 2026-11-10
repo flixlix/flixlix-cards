@@ -12,6 +12,9 @@
   },
   "editor": {
     "accept_negative": "Accepta Negatius",
+    "add_button": "Afegeix un botó",
+    "button": "Botó",
+    "buttons": "Botons",
     "action": "Acció",
     "advanced": "Opcions Avançades",
     "animation": "Animació",

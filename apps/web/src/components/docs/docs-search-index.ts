@@ -195,7 +195,13 @@ function configOptions(
     make("type", "Card type identifier (required)."),
     make("entities", "Entities object (required)."),
     make("title", "Title shown above the card."),
-    make("dashboard_link", "URL to a dashboard, shown as a link."),
+    make("dashboard_link", "Legacy link to a dashboard; use buttons instead."),
+    make(
+      "buttons",
+      "Buttons at the bottom of the card, each with a name, icon and actions.",
+      "buttons",
+      ["button", "link", "navigate", "action"]
+    ),
     make("kilo_decimals", `Decimals shown when ${card === "power" ? "kW" : "kWh"} are displayed.`),
     make("base_decimals", `Decimals shown when ${card === "power" ? "W" : "Wh"} are displayed.`),
     make("keep_trailing_zeros", "Keep trailing zeros, e.g. 1.0 instead of 1."),

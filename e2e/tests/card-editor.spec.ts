@@ -57,3 +57,37 @@ for (const [type, config] of Object.entries(cardConfigs)) {
     await expect(page.locator(type).filter({ hasText: "After" })).toBeVisible();
   });
 }
+
+test("power-flow-card-plus: the buttons editor adds, edits and reorders buttons", async ({
+  page,
+}) => {
+  const type = "power-flow-card-plus";
+  await saveDashboard({
+    type: `custom:${type}`,
+    ...cardConfigs[type],
+    buttons: [{ name: "Solar", icon: "mdi:solar-power" }],
+  });
+  await page.goto(`/${EDITOR_DASHBOARD}/editor?edit=1`);
+  await page.locator("hui-card-options").getByRole("button", { name: "Edit" }).click();
+  const editor = page.locator(`${type}-editor`);
+  await editor.locator('link-subpage[path="buttons"]').click();
+  const buttons = editor.locator("buttons-editor");
+
+  await buttons.locator(".add-button").click();
+  await buttons.getByRole("textbox", { name: "Name" }).fill("Battery");
+  await buttons.locator(".close-icon").click();
+  await expect(buttons.locator(".button-label")).toHaveText(["Solar", "Battery"]);
+
+  await buttons.locator(".handle").nth(1).dragTo(buttons.locator(".handle").nth(0));
+  await expect(buttons.locator(".button-label")).toHaveText(["Battery", "Solar"]);
+
+  await page.locator("hui-dialog-edit-card").getByRole("button", { name: "Save" }).click();
+  await expect.poll(savedCard).toMatchObject({
+    buttons: [
+      { name: "Battery", icon: "mdi:gesture-tap-button" },
+      { name: "Solar", icon: "mdi:solar-power" },
+    ],
+  });
+  await page.goto(`/${EDITOR_DASHBOARD}/editor`);
+  await expect(page.locator(`${type} .card-actions ha-button`)).toHaveText(["Battery", "Solar"]);
+});

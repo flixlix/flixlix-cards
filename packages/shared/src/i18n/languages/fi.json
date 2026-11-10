@@ -12,6 +12,9 @@
   },
   "editor": {
     "accept_negative": "Hyväksy negatiiviset arvot",
+    "add_button": "Lisää painike",
+    "button": "Painike",
+    "buttons": "Painikkeet",
     "action": "Toiminto",
     "advanced": "Lisäasetukset",
     "animation": "Animaatio",

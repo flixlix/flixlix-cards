@@ -12,6 +12,9 @@
   },
   "editor": {
     "accept_negative": "Acceptera negativa värden",
+    "add_button": "Lägg till knapp",
+    "button": "Knapp",
+    "buttons": "Knappar",
     "action": "Åtgärd",
     "advanced": "Avancerade inställningar",
     "animation": "Animering",

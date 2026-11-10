@@ -1,4 +1,5 @@
 import {
+  type ActionConfigSet,
   type BaseConfigEntity,
   type ColorValue,
   type DirectionalColors,
@@ -21,6 +22,14 @@ export type Topology = (typeof TOPOLOGIES)[number];
 export const AUXILIARY_CONNECTIONS = ["grid", "battery", "none"] as const;
 export type AuxiliaryConnection = (typeof AUXILIARY_CONNECTIONS)[number];
 
+/** One of the buttons in the row at the bottom of the card, after the dashboard links. */
+export interface CardButton extends ActionConfigSet {
+  name?: string;
+  icon?: string;
+  /** The entity a `more-info` or `toggle` action works on. */
+  entity?: string;
+}
+
 export type DisplayZeroLinesMode = "show" | "grey_out" | "transparency" | "hide" | "custom";
 
 interface mainConfigOptions {
@@ -28,6 +37,7 @@ interface mainConfigOptions {
   dashboard_link_label?: string;
   second_dashboard_link?: string;
   second_dashboard_link_label?: string;
+  buttons?: CardButton[];
   min_flow_rate: number;
   max_flow_rate: number;
   clickable_entities: boolean;
