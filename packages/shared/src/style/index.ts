@@ -517,4 +517,44 @@ export const styles = css`
   .pointer-events-none {
     pointer-events: none;
   }
+
+  /* With no grid, solar or battery: the home in the middle and every device on rings around it. */
+  .orbit-frame {
+    position: relative;
+    margin: 0 auto;
+    max-width: 100%;
+    direction: ltr;
+  }
+  .orbit {
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform-origin: 0 0;
+  }
+  .orbit-node {
+    position: absolute;
+    width: var(--size-circle-entity);
+  }
+  /* A device is scaled down from the centre of its circle, so its label scales with it. */
+  .orbit-device {
+    transform-origin: 40px 40px;
+  }
+  .orbit-device .circle {
+    border-color: var(--orbit-color);
+    color: var(--orbit-text-color);
+  }
+  .orbit-device ha-icon:not(.small) {
+    color: var(--orbit-icon-color);
+  }
+  .orbit-device span.secondary-info {
+    color: var(--orbit-secondary-color);
+  }
+  .orbit-line path {
+    stroke: var(--orbit-color);
+  }
+  circle.orbit-dot {
+    stroke-width: 4;
+    stroke: var(--orbit-color);
+    fill: var(--orbit-color);
+  }
 `;

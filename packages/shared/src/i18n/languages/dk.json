@@ -103,6 +103,10 @@
     "transparency": "Transparens",
     "unit_of_measurement": "Enhed",
     "unit_white_space": "Enhed tomt mellemrum",
-    "use_metadata": "Brug Metadata"
+    "use_metadata": "Brug Metadata",
+    "device_only_mode": "No grid, solar or battery: the card shows every individual device around the home. The home shows the Home entity's value, or the sum of the devices if it has none.",
+    "disable": "Disable",
+    "source_disabled_hint": "Disabled: this node is hidden. Pick an entity below to show it again.",
+    "source_enabled_hint": "Optional. Disable it to hide this node. With grid, solar and battery all disabled, the card shows every individual device around the home."
   }
 }

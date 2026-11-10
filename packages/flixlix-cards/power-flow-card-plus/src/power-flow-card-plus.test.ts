@@ -341,3 +341,140 @@ describe("entity actions", () => {
     expect(circle.querySelector("ha-ripple")).toHaveProperty("disabled", true);
   });
 });
+
+describe("device-only mode (no grid, solar or battery)", () => {
+  const sensors = Array.from({ length: 11 }, (_, index) => `sensor.device_${index + 1}`);
+  const watts = [111, 40, 0, 1262, 5, 0, 9, 0, 2, 0, 3];
+  const states = {
+    "sensor.total": "1524",
+    ...Object.fromEntries(sensors.map((sensor, index) => [sensor, String(watts[index])])),
+  };
+  const config = {
+    type: "custom:power-flow-card-plus",
+    entities: {
+      home: { entity: "sensor.total" },
+      individual: sensors.map((entity) => ({ entity })),
+    },
+  } as PowerFlowCardPlusConfig;
+
+  test("shows every configured device, not only four", async () => {
+    const { root } = await renderCard(config, makeHass(states));
+
+    expect(root.querySelectorAll(".orbit-device")).toHaveLength(11);
+    expect(root.querySelectorAll(".orbit-line path")).toHaveLength(11);
+  });
+
+  test("has no grid, solar, battery or fixed slots", async () => {
+    const { root } = await renderCard(config, makeHass(states));
+
+    for (const selector of [
+      ".grid",
+      ".solar",
+      ".battery",
+      ".low-carbon",
+      ".row",
+      ".individual-top",
+    ]) {
+      expect(root.querySelector(`.circle-container${selector}, ${selector}.row`)).toBeNull();
+    }
+  });
+
+  test("the home shows the home entity's reading", async () => {
+    const { text } = await renderCard(config, makeHass(states));
+
+    expect(text("#home-circle")).toContain(`1.5${thinSpace}kW`);
+  });
+
+  test("without a home entity the home shows the sum of the devices", async () => {
+    const { text } = await renderCard(
+      {
+        ...config,
+        entities: { individual: sensors.map((entity) => ({ entity })) },
+      },
+      makeHass(states)
+    );
+
+    expect(text("#home-circle")).toContain(`1.4${thinSpace}kW`);
+  });
+
+  test("devices at 0 W are shown unless display_zero is false", async () => {
+    const { root } = await renderCard(
+      {
+        ...config,
+        entities: {
+          home: { entity: "sensor.total" },
+          individual: [
+            { entity: "sensor.device_4" },
+            { entity: "sensor.device_3" },
+            { entity: "sensor.device_6", display_zero: false },
+          ],
+        },
+      },
+      makeHass(states)
+    );
+
+    expect(root.querySelectorAll(".orbit-device")).toHaveLength(2);
+  });
+
+  test("only devices that are drawing power get flow dots", async () => {
+    const { root } = await renderCard(config, makeHass(states));
+
+    // Seven of the eleven devices read above 0 W.
+    expect(root.querySelectorAll("svg.flow-dot")).toHaveLength(7);
+  });
+
+  test("a device keeps its colour as the others sort around it", async () => {
+    const { root } = await renderCard(config, makeHass(states));
+
+    const colours = [...root.querySelectorAll<HTMLElement>(".orbit-device")].map(
+      (node) => /--orbit-color:([^;]+)/.exec(node.getAttribute("style") ?? "")?.[1]
+    );
+    expect(new Set(colours).size).toBeGreaterThan(4);
+    expect(colours.every(Boolean)).toBe(true);
+  });
+
+  test("a config with a source keeps the fixed layout", async () => {
+    const { root } = await renderCard(
+      {
+        ...config,
+        entities: { ...config.entities, grid: { entity: "sensor.total" } },
+      },
+      makeHass(states)
+    );
+
+    expect(root.querySelector(".orbit")).toBeNull();
+    expect(
+      root.querySelectorAll(".circle-container.individual-top, .circle-container.individual-bottom")
+        .length
+    ).toBeLessThanOrEqual(4);
+  });
+
+  test("sources disabled in the editor leave empty entities and still give the orbit", async () => {
+    const { root } = await renderCard(
+      {
+        ...config,
+        entities: {
+          grid: { entity: {}, name: "Rete" },
+          solar: { entity: "" },
+          battery: {},
+          fossil_fuel_percentage: { entity: "", name: "Energia Pulita" },
+          home: { entity: "sensor.total" },
+          individual: sensors.map((entity) => ({ entity })),
+        },
+      } as unknown as PowerFlowCardPlusConfig,
+      makeHass(states)
+    );
+
+    expect(root.querySelectorAll(".orbit-device")).toHaveLength(11);
+    expect(root.querySelector(".circle-container.grid")).toBeNull();
+  });
+
+  test("renders without NaN while entities are unavailable", async () => {
+    const { root } = await renderCard(
+      config,
+      makeHass({ "sensor.total": "unavailable", "sensor.device_1": "unavailable" })
+    );
+
+    expect(root.innerHTML).not.toContain("NaN");
+  });
+});

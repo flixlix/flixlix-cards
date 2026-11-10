@@ -10,6 +10,7 @@ import { homeElement } from "./home";
 import { individualElement } from "./individual-element";
 import { dashboardLinkElement } from "./misc/dashboard-link";
 import { nonFossilElement } from "./non-fossil";
+import { orbitContent } from "./orbit";
 import { solarElement } from "./solar";
 import { spacer } from "./spacer";
 
@@ -96,7 +97,12 @@ export const flowCard = (
         id=${contentId}
         style=${config.style_card_content ?? ""}
       >
-        ${topRow(rows)} ${middleRow(rows)} ${bottomRow(rows)} ${flowElement(cardState, flowLayout)}
+        ${
+          cardState.orbit
+            ? orbitContent(main, config, cardState, cardState.orbit)
+            : html`${topRow(rows)} ${middleRow(rows)} ${bottomRow(rows)}
+              ${flowElement(cardState, flowLayout)}`
+        }
       </div>
       ${dashboardLinkElement(config, hass)}
     </ha-card>

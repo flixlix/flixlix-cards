@@ -13,12 +13,16 @@ import { type IndividualKey, individualSecondarySpan } from "./spans/individual-
 const stateShown = (node: IndividualObject): boolean =>
   node.field?.display_zero_state !== false || (node.state ?? 0) > (node.displayZeroTolerance ?? 0);
 
-const isFlowing = (node: IndividualObject): boolean =>
+export const isFlowing = (node: IndividualObject): boolean =>
   !!node.state && node.state >= (node.displayZeroTolerance ?? 0);
 
+/** A device's circle is shown in one of the four slots, or on the orbit when there is no source. */
+export type CircleKey = IndividualKey | "orbit";
+
 /** Bottom slots point the other way: their lines run up into the home. */
-const directionArrow = (node: IndividualObject, key: IndividualKey) => {
-  if (!node.showDirection) {
+const directionArrow = (node: IndividualObject, key: CircleKey) => {
+  // Around the home a line runs outwards at any angle, so no single arrow could point along it.
+  if (!node.showDirection || key === "orbit") {
     return nothing;
   }
   const pointsUp = key.endsWith("bottom") ? node.invertAnimation : !node.invertAnimation;
@@ -28,14 +32,14 @@ const directionArrow = (node: IndividualObject, key: IndividualKey) => {
   ></ha-icon>`;
 };
 
-const individualCircle = (
+export const individualCircle = (
   main: CardMainContext,
   config: FlowCardPlusConfig,
   node: IndividualObject,
-  key: IndividualKey
+  key: CircleKey
 ) => {
   const disableEntityClick = !config.clickable_entities;
-  const vertical = key.endsWith("top") ? "top" : "bottom";
+  const vertical = key === "orbit" ? "orbit" : key.endsWith("top") ? "top" : "bottom";
   return html`<div
     class="circle ${disableEntityClick ? "pointer-events-none" : ""}"
     tabindex=${disableEntityClick ? nothing : 0}
@@ -65,7 +69,10 @@ const individualCircle = (
     ${individualSecondarySpan(main, node, key)}
     ${
       node.icon !== " "
-        ? html` <ha-icon id="individual-${key}-icon" .icon=${node.icon}></ha-icon>`
+        ? html` <ha-icon
+            id=${key === "orbit" ? nothing : `individual-${key}-icon`}
+            .icon=${node.icon}
+          ></ha-icon>`
         : nothing
     }
     ${

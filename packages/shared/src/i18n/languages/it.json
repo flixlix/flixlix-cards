@@ -103,6 +103,10 @@
     "transparency": "Trasparenza",
     "unit_of_measurement": "Unità",
     "unit_white_space": "Spazio Bianco Unità",
-    "use_metadata": "Utilizza Metadati"
+    "use_metadata": "Utilizza Metadati",
+    "device_only_mode": "Nessuna rete, solare o batteria: la card mostra tutti i dispositivi individuali attorno alla casa. La casa mostra il valore dell'entità Casa, oppure la somma dei dispositivi se non è impostata.",
+    "disable": "Disattiva",
+    "source_disabled_hint": "Disattivato: questo nodo è nascosto. Scegli un'entità qui sotto per mostrarlo di nuovo.",
+    "source_enabled_hint": "Facoltativo. Disattivalo per nascondere questo nodo. Se rete, solare e batteria sono tutti disattivati, la card mostra tutti i dispositivi individuali attorno alla casa."
   }
 }

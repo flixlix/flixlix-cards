@@ -19,6 +19,8 @@ export type FlowDotOptions = {
   radius?: number;
   /** Runs from the end of the path to its start. */
   reverse?: boolean;
+  /** Extra inline style on the dot's `<svg>`, such as custom properties that colour its circle. */
+  style?: string;
 };
 
 /**
@@ -32,10 +34,11 @@ export const flowDot = ({
   durationSeconds,
   radius = 1,
   reverse = false,
+  style = "",
 }: FlowDotOptions) =>
   html`<svg
     class="flow-dot ${hostClass}"
-    style=${DOT_STYLE}
+    style=${style ? `${DOT_STYLE};${style}` : DOT_STYLE}
     data-path=${path}
     data-duration=${durationSeconds}
     data-radius=${radius}

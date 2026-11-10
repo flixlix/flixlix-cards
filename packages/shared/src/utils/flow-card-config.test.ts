@@ -1,6 +1,12 @@
 import { describe, expect, test } from "vite-plus/test";
 import { fakeConfig } from "../testing/fixtures";
-import { assertRenderableFlowCardConfig, displayZeroLinesWithDefaults } from "./flow-card-config";
+import {
+  assertRenderableFlowCardConfig,
+  displayZeroLinesWithDefaults,
+  dropEmptyEntity,
+  isDeviceOnly,
+  withoutEmptyEntities,
+} from "./flow-card-config";
 import { defaultValues } from "./get-default-config";
 
 describe("flow card config", () => {
@@ -55,5 +61,75 @@ describe("flow card config", () => {
       mode: "hide",
       transparency: 40,
     });
+  });
+});
+
+describe("empty entities", () => {
+  test("an empty string, or a pair with neither side filled in, is dropped", () => {
+    expect(dropEmptyEntity({ entity: "", icon: "mdi:a" })).toEqual({ icon: "mdi:a" });
+    expect(dropEmptyEntity({ entity: "  " })).toEqual({});
+    expect(dropEmptyEntity({ entity: {} })).toEqual({});
+    expect(dropEmptyEntity({ entity: { consumption: "", production: undefined } })).toEqual({});
+  });
+
+  test("a filled entity is kept as it is", () => {
+    const node = { entity: "sensor.a", icon: "mdi:a" };
+    expect(dropEmptyEntity(node)).toBe(node);
+  });
+
+  test("a pair keeps only the side that is filled in", () => {
+    expect(dropEmptyEntity({ entity: { consumption: "sensor.in", production: "" } })).toEqual({
+      entity: { consumption: "sensor.in" },
+    });
+  });
+
+  test("a node with no entity key is left alone", () => {
+    const node = { icon: "mdi:a" };
+    expect(dropEmptyEntity(node)).toBe(node);
+  });
+
+  test("clears every node's empty entity and leaves the rest of the config", () => {
+    const config = fakeConfig({
+      entities: {
+        grid: { entity: {} },
+        solar: { entity: "" },
+        battery: { entity: { consumption: "", production: "" } },
+        fossil_fuel_percentage: { entity: "", name: "Clean" },
+        home: { entity: "sensor.home" },
+        individual: [{ entity: "sensor.plug" }],
+      } as never,
+      title: "Home",
+    });
+
+    const cleaned = withoutEmptyEntities(config);
+
+    expect(cleaned.entities).toEqual({
+      grid: {},
+      solar: {},
+      battery: {},
+      fossil_fuel_percentage: { name: "Clean" },
+      home: { entity: "sensor.home" },
+      individual: [{ entity: "sensor.plug" }],
+    });
+    expect(cleaned.title).toBe("Home");
+  });
+
+  test("a config left with only empty source entities is a device-only config", () => {
+    const config = withoutEmptyEntities(
+      fakeConfig({
+        entities: {
+          grid: { entity: {} },
+          solar: { entity: "" },
+          individual: [{ entity: "sensor.plug" }],
+        } as never,
+      })
+    );
+    expect(isDeviceOnly(config.entities)).toBe(true);
+    expect(() => assertRenderableFlowCardConfig(config, { allowDeviceOnly: true })).not.toThrow();
+  });
+
+  test("a config without entities is returned as it is", () => {
+    const config = { type: "custom:power-flow-card-plus" } as never;
+    expect(withoutEmptyEntities(config)).toBe(config);
   });
 });

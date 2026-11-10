@@ -11,6 +11,7 @@ import {
   type TemplatesObj,
 } from "@flixlix-cards/shared/types";
 import { type HomeAssistant } from "custom-card-helpers";
+import { type OrbitGeometry } from "./orbit";
 
 /**
  * What a reading measures. It picks the display units (W or Wh) and which direction a single
@@ -79,6 +80,20 @@ export type Flows = Record<FlowName, Flow> & { individual: Flow[] };
 
 export type IndividualSlot = { node: IndividualObject; flow: Flow };
 
+/** A device on the orbit around the home, with where it sits and the colours it is drawn in. */
+export type OrbitDevice = IndividualSlot & {
+  /** Position in the config's `individual` list: what the device's default colour follows. */
+  index: number;
+  /** Centre of the device's circle in the orbit box, in pixels. */
+  x: number;
+  y: number;
+  /** CSS custom properties that colour the device, its line and its dot. */
+  style: string;
+};
+
+/** The home with every individual device on rings around it, when the card has no source. */
+export type OrbitState = { geometry: OrbitGeometry; devices: OrbitDevice[] };
+
 export type HomeRing = {
   battery: number;
   solar: number;
@@ -108,6 +123,8 @@ export type ReadyCardState = {
     /** Visible individual devices, sorted when configured. */
     individuals: IndividualObject[];
   };
+  /** Set instead of the slots when the card has no grid, solar or battery. */
+  orbit?: OrbitState;
   individualSlots: {
     leftTop?: IndividualSlot;
     leftBottom?: IndividualSlot;

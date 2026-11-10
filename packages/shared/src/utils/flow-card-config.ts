@@ -9,6 +9,51 @@ const hasBatteryEntity = (battery: Entities["battery"]): boolean => {
   return typeof entity === "object" ? !!(entity.consumption || entity.production) : !!entity;
 };
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+const isFilled = (value: unknown): boolean => typeof value === "string" && value.trim() !== "";
+
+/** Whether a node has anything selected in its `entity`, however the pickers left it. */
+export const hasEntity = (node: { entity?: unknown } | undefined): boolean => {
+  const entity = node?.entity;
+  return isRecord(entity) ? Object.values(entity).some(isFilled) : isFilled(entity);
+};
+
+/**
+ * Drops a node's `entity` when nothing is selected in it: an empty string, or a consumption /
+ * production pair with neither filled in. Clearing an entity picker leaves these behind, and a
+ * node whose entity is `{}` would otherwise still count as configured. Other settings are kept.
+ */
+export const dropEmptyEntity = (node: Record<string, unknown>): Record<string, unknown> => {
+  const { entity, ...rest } = node;
+  if (entity === undefined) {
+    return node;
+  }
+  if (isRecord(entity)) {
+    const filled = Object.fromEntries(Object.entries(entity).filter(([, part]) => isFilled(part)));
+    return Object.keys(filled).length > 0 ? { ...rest, entity: filled } : rest;
+  }
+  return isFilled(entity) ? node : rest;
+};
+
+const ENTITY_NODES = ["grid", "solar", "battery", "fossil_fuel_percentage", "home"] as const;
+
+/** The config with every node's empty `entity` removed, so "not selected" reads the same everywhere. */
+export const withoutEmptyEntities = (config: FlowCardPlusConfig): FlowCardPlusConfig => {
+  const { entities } = config;
+  if (!entities) {
+    return config;
+  }
+  const cleaned = Object.fromEntries(
+    ENTITY_NODES.flatMap((name) => {
+      const node = entities[name];
+      return isRecord(node) ? [[name, dropEmptyEntity(node)]] : [];
+    })
+  );
+  return { ...config, entities: { ...entities, ...cleaned } };
+};
+
 /** Whether the config has a grid, solar or battery entity: a node the home is supplied from. */
 export const hasSourceEntity = (entities: Entities | undefined): boolean =>
   !!entities &&

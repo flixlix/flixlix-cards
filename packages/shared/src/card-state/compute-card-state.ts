@@ -1,10 +1,12 @@
 import { translate } from "@flixlix-cards/shared/i18n";
+import { isDeviceOnly } from "@flixlix-cards/shared/utils/flow-card-config";
 import { computeFlows } from "./flows";
 import { formatter } from "./format";
 import { computeHomeRing } from "./home-ring";
 import { individualNodes, placeIndividuals } from "./individuals";
 import { batteryNode, gridNode, homeNode, nonFossilNode, solarNode } from "./nodes";
 import { normalize } from "./normalize";
+import { computeOrbit } from "./orbit-state";
 import { solve } from "./solve";
 import { computeCssVars } from "./styles";
 import { type CardState, type CardStateInput, type Flow } from "./types";
@@ -39,7 +41,8 @@ export function computeCardState(input: CardStateInput): CardState {
     node,
     flow: flows.individual[index] ?? HIDDEN_FLOW,
   }));
-  const placement = placeIndividuals(input, devices);
+  const deviceOnly = isDeviceOnly(config.entities);
+  const placement = placeIndividuals(input, devices, { orbit: deviceOnly });
   const visible = placement.visible.map((device) => device.node);
   const homeRing = computeHomeRing(input, balance, individuals, format);
   const animate = !config.disable_dots && !input.pageHidden;
@@ -48,6 +51,7 @@ export function computeCardState(input: CardStateInput): CardState {
   return {
     status: "ready",
     nodes: { ...nodes, individuals: visible },
+    orbit: deviceOnly ? computeOrbit(input.width, placement.visible, individuals) : undefined,
     individualSlots: placement.slots,
     homeRing,
     homeBalance: {

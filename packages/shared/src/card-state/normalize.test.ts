@@ -101,8 +101,8 @@ describe("signs and invert_state", () => {
 
   test("individual devices count as absolute values", () => {
     const { totals, presence } = normalize(
-      input({ individual: [{ entity: "sensor.device" }, { entity: "sensor.off" }] }),
-      readings({ individuals: [-50, null] })
+      input({ grid, individual: [{ entity: "sensor.device" }, { entity: "sensor.off" }] }),
+      readings({ grid: single(300), individuals: [-50, null] })
     );
 
     expect(totals.individuals).toEqual([50, 0]);
@@ -338,6 +338,24 @@ describe("device-only mode (no grid, solar or battery)", () => {
       readings({ grid: single(300), home: 420 })
     ).totals;
     expect(withGrid.measuredHome).toBeUndefined();
+  });
+
+  test("devices at 0 W stay shown by default: there are no slots to save", () => {
+    const { presence } = normalize(
+      input({ individual: [{ entity: "sensor.on" }, { entity: "sensor.off" }] }),
+      readings({ individuals: [50, 0] })
+    );
+    expect(presence.individuals).toEqual([true, true]);
+  });
+
+  test("display_zero: false still hides a device at 0 W", () => {
+    const { presence } = normalize(
+      input({
+        individual: [{ entity: "sensor.on" }, { entity: "sensor.off", display_zero: false }],
+      }),
+      readings({ individuals: [50, 0] })
+    );
+    expect(presence.individuals).toEqual([true, false]);
   });
 
   test("nothing flows from sources, so balanced home is 0", () => {

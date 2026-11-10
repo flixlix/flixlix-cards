@@ -11,6 +11,7 @@ import { type PowerFlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { applyCardState } from "@flixlix-cards/shared/utils/apply-card-state";
 import {
   assertRenderableFlowCardConfig,
+  withoutEmptyEntities,
   displayZeroLinesWithDefaults,
 } from "@flixlix-cards/shared/utils/flow-card-config";
 import { EntityActions } from "@flixlix-cards/shared/utils/entity-actions";
@@ -57,7 +58,9 @@ export class PowerFlowCardPlus extends LitElement {
     this._pageHidden = isPageHidden();
   };
 
-  setConfig(config: PowerFlowCardPlusConfig): void {
+  setConfig(rawConfig: PowerFlowCardPlusConfig): void {
+    // A cleared entity picker leaves an empty entity behind: read it as "not selected".
+    const config = withoutEmptyEntities(rawConfig);
     assertRenderableFlowCardConfig(config, { allowDeviceOnly: true });
     this._config = {
       ...config,

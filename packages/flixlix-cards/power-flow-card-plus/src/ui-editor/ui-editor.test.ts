@@ -43,6 +43,15 @@ async function openAdvanced(options: Record<string, unknown>) {
   return { ...mounted, form: query(mounted.editor, "ha-form") };
 }
 
+async function openEntityPage(page: string, entities: Record<string, unknown>) {
+  const mounted = await mountEditor({ entities });
+  query(mounted.editor, `link-subpage[path="${page}"]`).dispatchEvent(
+    new CustomEvent("open-sub-element-editor", { detail: { open: true } })
+  );
+  await mounted.editor.updateComplete;
+  return mounted;
+}
+
 function query(root: Element, selector: string): HTMLElement {
   const element = root.shadowRoot?.querySelector<HTMLElement>(selector);
   if (!element) {
@@ -254,6 +263,106 @@ describe("power flow ui editor", () => {
     );
 
     expect(lastConfig()?.entities.grid).toEqual({ entity: { consumption: "sensor.grid_import" } });
+  });
+
+  describe("disabling grid, solar, battery and fossil fuel", () => {
+    test.each(["grid", "solar", "battery", "fossil_fuel_percentage"])(
+      "the %s page offers a Disable button while an entity is selected",
+      async (page) => {
+        const { editor } = await openEntityPage(page, { [page]: { entity: "sensor.x" } });
+
+        expect(query(editor, ".source-hint")).toBeTruthy();
+        expect(query(editor, ".source-disable")).toBeTruthy();
+      }
+    );
+
+    test("the Disable button hides the node and keeps its other settings", async () => {
+      const { editor, lastConfig } = await openEntityPage("grid", {
+        grid: { entity: "sensor.grid", icon: "mdi:flash", name: "Rete" },
+        solar: { entity: "sensor.solar" },
+      });
+
+      query(editor, ".source-disable").click();
+      await editor.updateComplete;
+
+      expect(lastConfig()?.entities).toEqual({
+        grid: { icon: "mdi:flash", name: "Rete" },
+        solar: { entity: "sensor.solar" },
+      });
+      // The page now says the node is disabled and no longer offers to disable it.
+      expect(editor.shadowRoot?.querySelector(".source-disable")).toBeNull();
+      expect(editor.shadowRoot?.querySelector(".source-hint")).not.toBeNull();
+    });
+
+    test("a node with no entity says it is disabled, with no button", async () => {
+      const { editor } = await openEntityPage("solar", {
+        grid: { entity: "sensor.grid" },
+        solar: {},
+      });
+
+      expect(query(editor, ".source-hint")).toBeTruthy();
+      expect(editor.shadowRoot?.querySelector(".source-disable")).toBeNull();
+    });
+
+    test("clearing the combined entity picker removes the entity", async () => {
+      const { editor, lastConfig } = await openEntityPage("grid", {
+        grid: { entity: "sensor.grid", icon: "mdi:flash" },
+      });
+
+      query(editor, "ha-form").dispatchEvent(
+        new CustomEvent("value-changed", { detail: { value: { entity: "", icon: "mdi:flash" } } })
+      );
+
+      expect(lastConfig()?.entities.grid).toEqual({ icon: "mdi:flash" });
+    });
+
+    test("clearing both separated entity pickers removes the entity", async () => {
+      const { editor, lastConfig } = await openEntityPage("battery", {
+        battery: { entity: { consumption: "sensor.in", production: "sensor.out" } },
+      });
+
+      query(editor, "ha-form").dispatchEvent(
+        new CustomEvent("value-changed", {
+          detail: { value: { entity: { consumption: "", production: undefined } } },
+        })
+      );
+
+      expect(lastConfig()?.entities.battery).toEqual({});
+    });
+
+    test("clearing one separated entity keeps the other", async () => {
+      const { editor, lastConfig } = await openEntityPage("battery", {
+        battery: { entity: { consumption: "sensor.in", production: "sensor.out" } },
+      });
+
+      query(editor, "ha-form").dispatchEvent(
+        new CustomEvent("value-changed", {
+          detail: { value: { entity: { consumption: "sensor.in", production: "" } } },
+        })
+      );
+
+      expect(lastConfig()?.entities.battery).toEqual({ entity: { consumption: "sensor.in" } });
+    });
+
+    test("the home page has no Disable button", async () => {
+      const { editor } = await openEntityPage("home", { home: { entity: "sensor.home" } });
+
+      expect(editor.shadowRoot?.querySelector(".source-hint")).toBeNull();
+    });
+
+    test("the main page explains device-only mode when no source is set", async () => {
+      const { editor } = await mountEditor({
+        entities: { individual: [{ entity: "sensor.a" }] },
+      });
+
+      expect(query(editor, ".device-only-alert")).toBeTruthy();
+    });
+
+    test("the main page says nothing when a source is set", async () => {
+      const { editor } = await mountEditor({ entities: { grid: { entity: "sensor.grid" } } });
+
+      expect(editor.shadowRoot?.querySelector(".device-only-alert")).toBeNull();
+    });
   });
 
   test("individual devices page edits and removes rows by their position", async () => {

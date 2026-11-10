@@ -103,6 +103,10 @@
     "transparency": "Прозрачность",
     "unit_of_measurement": "Единица измерения",
     "unit_white_space": "Пробел единицы измерения",
-    "use_metadata": "Использовать метаданные"
+    "use_metadata": "Использовать метаданные",
+    "device_only_mode": "No grid, solar or battery: the card shows every individual device around the home. The home shows the Home entity's value, or the sum of the devices if it has none.",
+    "disable": "Disable",
+    "source_disabled_hint": "Disabled: this node is hidden. Pick an entity below to show it again.",
+    "source_enabled_hint": "Optional. Disable it to hide this node. With grid, solar and battery all disabled, the card shows every individual device around the home."
   }
 }

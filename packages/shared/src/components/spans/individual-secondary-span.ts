@@ -7,7 +7,7 @@ export type IndividualKey = `left-top` | `left-bottom` | `right-top` | `right-bo
 export const individualSecondarySpan = (
   main: CardMainContext,
   individual: IndividualObject,
-  key: IndividualKey
+  key: IndividualKey | "orbit"
 ): TemplateResult | typeof nothing => {
   const { secondary } = individual;
   if (!secondary.show) {

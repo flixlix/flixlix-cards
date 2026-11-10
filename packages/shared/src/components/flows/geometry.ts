@@ -232,7 +232,7 @@ const elbowLine = (
 };
 
 /** A straight line from `from` into `to`, cut at both rings. */
-const straightLine = (from: Ring, to: Ring, at: Partial<Point>) =>
+export const straightLine = (from: Ring, to: Ring, at: Partial<Point> = {}) =>
   flowLine(between(straight(from, to, at), from, to));
 
 type Lines = Omit<FlowPaths, "scale">;

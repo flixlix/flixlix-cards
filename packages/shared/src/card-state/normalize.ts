@@ -153,7 +153,9 @@ const presenceOf = (
     battery: hasBatteryEntity(entities.battery) && shownWithTotals(entities.battery, nodes.battery),
     individuals: individuals.map((total, index) => {
       const field = entities.individual?.[index];
-      return !!field?.entity && (field.display_zero === true || total > 0);
+      // With no source there are no slots to save, so a device is shown at 0 W unless hidden.
+      const showsZero = field?.display_zero ?? isDeviceOnly(entities);
+      return !!field?.entity && (showsZero || total > 0);
     }),
   };
 };
