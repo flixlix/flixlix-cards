@@ -12,6 +12,9 @@
     "@flixlix-cards/typescript-config": "workspace:*",
     "@playwright/test": "catalog:packages",
     "@types/node": "catalog:",
+    "@types/pngjs": "^6.0.5",
+    "pixelmatch": "^8.0.0",
+    "pngjs": "^7.0.0",
     "typescript": "catalog:",
     "vite-plus": "catalog:packages"
   },

@@ -1,3 +1,4 @@
+import { minifyCardTemplates } from "@flixlix-cards/bundler";
 import { devtools } from "@tanstack/devtools-vite";
 import { defineConfig, lazyPlugins } from "vite-plus";
 import tsconfigPaths from "vite-tsconfig-paths";
@@ -20,6 +21,9 @@ const config = defineConfig({
     nitro({ preset: "vercel" }),
     devtools(),
     tsconfigPaths({ projects: ["./tsconfig.json"] }),
+    minifyCardTemplates({
+      include: /\/packages\/(flixlix-cards\/[^/]+\/src|shared\/src\/(?!preview\/)).+\.ts$/,
+    }),
     tailwindcss(),
     tanstackStart(),
     viteReact(),

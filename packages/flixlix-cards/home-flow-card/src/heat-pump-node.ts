@@ -1,16 +1,8 @@
-import { type HeatPumpReading } from "@flixlix-cards/shared/card-state";
-import { getEntityState } from "@flixlix-cards/shared/states/utils/get-entity-state";
-import { getEntityStateWatts } from "@flixlix-cards/shared/states/utils/get-entity-state-watts";
+import { type EntityReader, type HeatPumpReading } from "@flixlix-cards/shared/card-state";
 import { type HomeAssistant } from "custom-card-helpers";
 import { type HassEntity } from "home-assistant-js-websocket";
 import { type Figure, type HeatPumpConfig, type LabelStatus } from "./labels";
 import { type HouseHeatPump } from "./types";
-
-/** The heat pump's power in W, or null while its entity is unavailable. */
-const heatPumpPower = (hass: HomeAssistant, heatPump: HouseHeatPump): number | null =>
-  getEntityState(hass, heatPump.entity) === null
-    ? null
-    : getEntityStateWatts(hass, heatPump.entity);
 
 /** The entities the heat pump reads, so the card redraws when they change. */
 export const heatPumpEntities = (heatPump: HouseHeatPump | undefined): string[] =>
@@ -75,9 +67,10 @@ const heatPumpStatus = (hass: HomeAssistant, heatPump: HouseHeatPump): LabelStat
 /** What the wires and the label need from a configured heat pump. */
 export const heatPumpScene = (
   hass: HomeAssistant,
-  heatPump: HouseHeatPump | undefined
+  heatPump: HouseHeatPump | undefined,
+  read: EntityReader
 ): { reading: HeatPumpReading | undefined; label: HeatPumpConfig } => ({
-  reading: heatPump && { power: heatPumpPower(hass, heatPump) },
+  reading: heatPump && { power: read(heatPump.entity) },
   label: heatPump && {
     name: heatPump.name,
     entity: heatPump.climate ?? heatPump.entity,

@@ -9,12 +9,13 @@ export { auxiliaryConnection, flowRateModel, lineDuration, REFERENCE_LINE_LENGTH
 export {
   type CarReading,
   type HeatPumpReading,
+  type HouseFixtures,
   type HouseNode,
   type HouseWire,
   houseWires,
 } from "./house-wires";
 export { type ScaledReading } from "./format";
-export { energyReadings } from "./readings/energy";
-export { powerReadings } from "./readings/power";
+export { energyReader, energyReadings } from "./readings/energy";
+export { powerReadings, wattsReader } from "./readings/power";
 export type * from "./types";
 export { watchedEntities } from "./watched-entities";

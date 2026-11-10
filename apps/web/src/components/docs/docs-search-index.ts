@@ -930,6 +930,27 @@ function houseEntries(): SearchEntry[] {
       houseEntry(`${HOUSE_BASE}/configuration#${id}`, configuration, "section", title, description)
     ),
     option("wire_width", "Draw the wires thicker.", "card-options", ["lines", "thickness"]),
+    option(
+      "two_way_value_size",
+      "Shrink the two values of a grid or battery that ran both ways.",
+      "card-options",
+      ["energy", "font", "text size", "smaller"]
+    ),
+    option("mode", "Live power, or energy over the dashboard's period.", "card-options", [
+      "energy",
+      "kWh",
+      "period",
+      "date picker",
+    ]),
+    option("collection_key", "The energy date picker to follow.", "card-options", ["energy"]),
+    option("min_expected_value", "Where the pulses run their slowest.", "numbers", [
+      "min_expected_power",
+      "pulse speed",
+    ]),
+    option("max_expected_value", "Where the pulses run their fastest.", "numbers", [
+      "max_expected_power",
+      "pulse speed",
+    ]),
     option("power_outage", "The grid's outage sensor and alert.", "grid", ["outage", "blackout"]),
     option("override_state", "Show the home sensor's own reading.", "home"),
     option("visibility", "When the car is drawn.", "car", ["car", "conditions", "home"]),
@@ -950,8 +971,10 @@ function houseEntries(): SearchEntry[] {
       "swap",
       "percent",
     ]),
-    option("kilo_threshold", "From how many watts values are in kW.", "numbers"),
-    option("kilo_decimals", "Decimals of values in kW.", "numbers"),
+    option("kilo_threshold", "From how many W (Wh) values are in kW (kWh).", "numbers"),
+    option("kilo_decimals", "Decimals of values in kW (kWh).", "numbers"),
+    option("mega_threshold", "From how many W (Wh) values are in MW (MWh).", "numbers", ["MWh"]),
+    option("mega_decimals", "Decimals of values in MW (MWh).", "numbers", ["MWh"]),
     example("solar-battery", "Solar and a battery", "The full house."),
     example(
       "split",
@@ -965,9 +988,10 @@ function houseEntries(): SearchEntry[] {
     ),
     example(
       "charge-position",
-      "The state of charge beside the power",
-      "state_of_charge_position after_power."
+      "The state of charge beside the value",
+      "state_of_charge_position after_value."
     ),
+    example("energy", "Energy over the day", "mode energy with energy sensors."),
     example("grid-only", "Grid only", "No solar or battery."),
     example("wire-width", "Thicker wires", "wire_width 2."),
     example("still", "Still numbers and wires", "animate_numbers and disable_dots off."),

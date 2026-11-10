@@ -8,19 +8,13 @@ import {
 import { flowCard } from "@flixlix-cards/shared/components/flow-card";
 import { styles } from "@flixlix-cards/shared/style";
 import {
-  fetchEnergyPeriodGrowth,
-  fetchFossilEnergyConsumption,
-  getGlobalEnergyPeriodWindow,
-  subscribeEnergyCollectionData,
-  watchGlobalEnergyPeriodChanges,
-  type EnergyCollectionFossilData,
-  type EnergyPeriodWindow,
-  type FossilEnergyConsumption,
-} from "@flixlix-cards/shared/states/utils/energy-period";
-import { getEntityNames } from "@flixlix-cards/shared/states/utils/mutli-entity";
+  energyStatisticIds,
+  gridImportIds,
+} from "@flixlix-cards/shared/states/utils/statistic-ids";
 import { type EnergyFlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { applyCardState } from "@flixlix-cards/shared/utils/apply-card-state";
 import { liveConditionContext } from "@flixlix-cards/shared/utils/condition-context";
+import { EnergyPeriodController } from "@flixlix-cards/shared/utils/energy-period-controller";
 import {
   assertRenderableFlowCardConfig,
   clickableEntitiesWithDefault,
@@ -55,17 +49,12 @@ export class EnergyFlowCardPlus extends LitElement {
   @state() private _config!: EnergyFlowCardPlusConfig;
   private readonly _width = new WidthController(this, "#energy-flow-card-plus");
   @state() private _pageHidden = isPageHidden();
-  @state() private _energyWindow: EnergyPeriodWindow | null = null;
-  @state() private _energyGrowthMap: Record<string, number> = {};
-  @state() private _energyDataLoaded = false;
-  @state() private _fossilEnergyData: EnergyCollectionFossilData = {};
-  @state() private _fetchedFossilConsumption?: FossilEnergyConsumption;
-  private _unsubEnergyPeriodListener?: () => void;
-  private _unsubFossilData?: () => void;
-  private _energyRefreshInFlight?: Promise<void>;
-  private _energyRefreshGeneration = 0;
-  private _energyRefreshPending = false;
-  private _energyCollectionKey?: string;
+  private readonly _energy = new EnergyPeriodController(this, () => ({
+    hass: this.hass,
+    collectionKey: this._config?.collection_key,
+    statisticIds: energyStatisticIds(this._config?.entities),
+    fossil: this._fossilSource(),
+  }));
   private _cardState?: CardState;
   private _appliedCardState?: CardState;
   private readonly _actions = new EntityActions(this, () => ({
@@ -97,14 +86,6 @@ export class EnergyFlowCardPlus extends LitElement {
       display_zero_lines: displayZeroLinesWithDefaults(config.display_zero_lines),
       clickable_entities: clickableEntitiesWithDefault(config.clickable_entities),
     };
-    const previousCollectionKey = this._energyCollectionKey;
-    this._energyCollectionKey = config.collection_key;
-    if (previousCollectionKey !== this._energyCollectionKey) {
-      this._unsubEnergyPeriodListener?.();
-      this._unsubEnergyPeriodListener = undefined;
-      this._unsubFossilData?.();
-      this._unsubFossilData = undefined;
-    }
   }
 
   public connectedCallback() {
@@ -112,19 +93,12 @@ export class EnergyFlowCardPlus extends LitElement {
     if (typeof document !== "undefined") {
       document.addEventListener("visibilitychange", this._handleVisibilityChange);
     }
-    this._ensureEnergyPeriodListener();
-    this._ensureFossilDataSubscription();
-    void this._refreshEnergyData();
   }
 
   public disconnectedCallback() {
     if (typeof document !== "undefined") {
       document.removeEventListener("visibilitychange", this._handleVisibilityChange);
     }
-    this._unsubEnergyPeriodListener?.();
-    this._unsubEnergyPeriodListener = undefined;
-    this._unsubFossilData?.();
-    this._unsubFossilData = undefined;
     super.disconnectedCallback();
   }
 
@@ -144,8 +118,7 @@ export class EnergyFlowCardPlus extends LitElement {
     if (!this._config) {
       return true;
     }
-    this._ensureEnergyPeriodListener();
-    this._ensureFossilDataSubscription();
+    this._energy.subscribe();
     return cardShouldUpdate(changedProps, this.hass, watchedEntities(this._config));
   }
 
@@ -155,7 +128,7 @@ export class EnergyFlowCardPlus extends LitElement {
       return;
     }
     if (changedProps.has("_config")) {
-      void this._refreshEnergyData();
+      void this._energy.refresh();
     }
     this._cardState = computeCardState({
       config: this._config,
@@ -163,8 +136,8 @@ export class EnergyFlowCardPlus extends LitElement {
       readings: energyReadings(
         this.hass,
         this._config,
-        this._energyDataLoaded ? this._energyGrowthMap : undefined,
-        this._fossilEnergyData.fossilEnergyConsumption ?? this._fetchedFossilConsumption
+        this._energy.growthMap,
+        this._energy.fossilConsumption
       ),
       templates: this._templates.templates(this._config),
       conditionContext: liveConditionContext,
@@ -178,11 +151,11 @@ export class EnergyFlowCardPlus extends LitElement {
     if (!this._config || !this.hass) {
       return nothing;
     }
-    if (!this._energyWindow || cardState?.status !== "ready") {
+    if (!this._energy.window || cardState?.status !== "ready") {
       return html`<ha-card .header=${this._config.title}>
         <div class="card-content">
           ${
-            this._energyWindow
+            this._energy.window
               ? this.hass.localize("ui.panel.lovelace.cards.energy.loading")
               : this.hass.localize("ui.panel.lovelace.cards.energy.no_data")
           }
@@ -211,167 +184,17 @@ export class EnergyFlowCardPlus extends LitElement {
     }
   }
 
-  private _collectStatisticIds(): string[] {
-    const ids = new Set<string>();
-    const pushEntity = (entity?: string) => {
-      if (!entity) {
-        return;
-      }
-      getEntityNames(entity).forEach((id) => {
-        if (id) {
-          ids.add(id);
-        }
-      });
-    };
-    const { entities } = this._config;
-    if (!entities) {
-      return [];
-    }
-    if (typeof entities.grid?.entity === "string") {
-      pushEntity(entities.grid.entity);
-    } else {
-      pushEntity(entities.grid?.entity?.consumption);
-      pushEntity(entities.grid?.entity?.production);
-    }
-    if (typeof entities.battery?.entity === "string") {
-      pushEntity(entities.battery.entity);
-    } else {
-      pushEntity(entities.battery?.entity?.consumption);
-      pushEntity(entities.battery?.entity?.production);
-    }
-    pushEntity(entities.solar?.entity);
-    pushEntity(entities.home?.entity);
-    pushEntity(entities.fossil_fuel_percentage?.entity);
-    [...(entities.individual ?? []), entities.auxiliary].forEach((device) => {
-      pushEntity(device?.entity);
-      if (device?.secondary_info?.sum_total) {
-        pushEntity(device.secondary_info.entity);
-      }
-    });
-    return [...ids];
-  }
-
-  private _scheduleRefreshEnergyData(): void {
-    if (this._energyRefreshPending) {
-      return;
-    }
-    this._energyRefreshPending = true;
-    queueMicrotask(() => {
-      this._energyRefreshPending = false;
-      void this._refreshEnergyData();
-    });
-  }
-
-  private async _refreshEnergyData(): Promise<void> {
-    const generation = ++this._energyRefreshGeneration;
-
-    if (this._energyRefreshInFlight) {
-      try {
-        await this._energyRefreshInFlight;
-      } catch {
-        /* swallow – we are about to retry */
-      }
-    }
-
-    if (generation !== this._energyRefreshGeneration) {
-      return;
-    }
-
-    this._energyRefreshInFlight = this._doRefreshEnergyData();
-    try {
-      await this._energyRefreshInFlight;
-    } finally {
-      this._energyRefreshInFlight = undefined;
-    }
-  }
-
-  private async _doRefreshEnergyData(): Promise<void> {
-    if (!this.hass || !this._config?.entities) {
-      return;
-    }
-    const window = getGlobalEnergyPeriodWindow(this.hass, this._energyCollectionKey);
-    this._energyWindow = window;
-    const statisticIds = this._collectStatisticIds();
-    const zeroGrowthMap = Object.fromEntries(statisticIds.map((id) => [id, 0]));
-
-    if (!window) {
-      this._energyGrowthMap = zeroGrowthMap;
-      this._fetchedFossilConsumption = undefined;
-      this._energyDataLoaded = true;
-      return;
-    }
-
-    const [growth, fossil] = await Promise.allSettled([
-      fetchEnergyPeriodGrowth(this.hass, statisticIds, window),
-      this._fetchFossilConsumption(window),
-    ]);
-    this._energyGrowthMap =
-      growth.status === "fulfilled" ? { ...zeroGrowthMap, ...growth.value } : zeroGrowthMap;
-    this._fetchedFossilConsumption = fossil.status === "fulfilled" ? fossil.value : undefined;
-    this._energyDataLoaded = true;
-  }
-
   /**
    * HA's energy collection only carries the period's fossil consumption when one of HA's own
    * energy cards is rendered on the page (a hidden date selector is not). Without it the card
    * would scale the whole period by the fossil sensor's live state.
    */
-  private async _fetchFossilConsumption(
-    window: EnergyPeriodWindow
-  ): Promise<FossilEnergyConsumption | undefined> {
-    const { entities, energy_date_selection } = this._config;
-    const fossilEntity = entities.fossil_fuel_percentage?.entity;
-    if (
-      energy_date_selection === false ||
-      !fossilEntity ||
-      this._fossilEnergyData.fossilEnergyConsumption
-    ) {
+  private _fossilSource() {
+    const entity = this._config?.entities.fossil_fuel_percentage?.entity;
+    if (this._config?.energy_date_selection === false || !entity) {
       return undefined;
     }
-    return fetchFossilEnergyConsumption(this.hass, this._gridImportIds(), fossilEntity, window);
-  }
-
-  private _gridImportIds(): string[] {
-    const grid = this._config.entities.grid;
-    // An inverted single grid entity counts export up, so it is no import meter to weigh.
-    if (typeof grid?.entity === "string" && grid.invert_state) {
-      return [];
-    }
-    const importEntity = typeof grid?.entity === "string" ? grid.entity : grid?.entity?.consumption;
-    return importEntity ? getEntityNames(importEntity).filter(Boolean) : [];
-  }
-
-  private _ensureEnergyPeriodListener() {
-    if (this._unsubEnergyPeriodListener || !this.hass) {
-      return;
-    }
-    const unsub = watchGlobalEnergyPeriodChanges(
-      this.hass,
-      () => {
-        this._scheduleRefreshEnergyData();
-      },
-      this._energyCollectionKey
-    );
-    if (unsub) {
-      this._unsubEnergyPeriodListener = unsub;
-      void this._refreshEnergyData();
-    }
-  }
-
-  private _ensureFossilDataSubscription(): void {
-    if (this._unsubFossilData || !this.hass) {
-      return;
-    }
-    const unsub = subscribeEnergyCollectionData(
-      this.hass,
-      (data) => {
-        this._fossilEnergyData = data;
-      },
-      this._energyCollectionKey
-    );
-    if (unsub) {
-      this._unsubFossilData = unsub;
-    }
+    return { entity, gridImportIds: gridImportIds(this._config.entities.grid) };
   }
 
   static styles = styles;

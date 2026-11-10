@@ -1,3 +1,4 @@
+import { type Page } from "@playwright/test";
 import { type CardType, EDITOR_DASHBOARD } from "../src/dashboards.ts";
 import { expect, test } from "../src/fixtures.ts";
 import { HassSocket, isObject, type JsonObject, loginWithPassword } from "../src/hass.ts";
@@ -57,6 +58,60 @@ for (const [type, config] of Object.entries(cardConfigs)) {
     await expect(page.locator(type).filter({ hasText: "After" })).toBeVisible();
   });
 }
+
+const openEditor = async (page: Page, type: CardType) => {
+  await page.goto(`/${EDITOR_DASHBOARD}/editor?edit=1`);
+  await page.locator("hui-card-options").getByRole("button", { name: "Edit" }).click();
+  return page.locator(`${type}-editor`);
+};
+
+const saveCard = (page: Page) =>
+  page.locator("hui-dialog-edit-card").getByRole("button", { name: "Save" }).click();
+
+test("home-flow-card: a change saves the older option names as the generic ones", async ({
+  page,
+}) => {
+  await saveDashboard({
+    type: "custom:home-flow-card",
+    title: "Before",
+    grid: { entity: "sensor.grid_power" },
+    battery: { entity: "sensor.battery_power", state_of_charge_position: "after_power" },
+    min_expected_power: 0,
+    max_expected_power: 1000,
+  });
+  const editor = await openEditor(page, "home-flow-card");
+  await editor.getByRole("textbox", { name: "Title" }).fill("After");
+  await saveCard(page);
+
+  await expect.poll(savedCard).toEqual({
+    type: "custom:home-flow-card",
+    title: "After",
+    grid: { entity: "sensor.grid_power" },
+    battery: { entity: "sensor.battery_power", state_of_charge_position: "after_value" },
+    min_expected_value: 0,
+    max_expected_value: 1000,
+  });
+});
+
+test("home-flow-card: in energy mode the expected range is in Wh and saves as generic", async ({
+  page,
+}) => {
+  await saveDashboard({
+    type: "custom:home-flow-card",
+    mode: "energy",
+    grid: { entity: "sensor.grid_import_energy" },
+  });
+  const editor = await openEditor(page, "home-flow-card");
+  await editor.locator('link-subpage[path="advanced"]').click();
+  await editor.getByText("Animation", { exact: true }).click();
+  const max = editor.getByRole("spinbutton", { name: "Max Expected Value" });
+  await expect(max).toBeVisible();
+  await expect(editor.getByText("Default: Relative to the period's total")).toHaveCount(2);
+  await max.fill("20000");
+  await saveCard(page);
+
+  await expect.poll(savedCard).toMatchObject({ mode: "energy", max_expected_value: 20000 });
+});
 
 test("power-flow-card-plus: the buttons editor adds, edits and reorders buttons", async ({
   page,

@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vite-plus/test";
 import { userEvent } from "vite-plus/test/browser/context";
 import {
+  energyCollection,
   fakeHass,
   sensor,
   type StateFixtures,
@@ -98,6 +99,13 @@ const batteryLine = (root: ShadowRoot, node = "battery") => {
   const direction = line?.querySelector(".direction");
   return [percent, direction ? wordOf(direction) : undefined].filter(Boolean).join(" · ");
 };
+
+/** The animation and dash of a node's pulse, which follow its wire's flow rate and intensity. */
+const pulseStyle = (root: ShadowRoot, node: string) =>
+  root.querySelector(`.power.${node} .pulse`)?.getAttribute("style");
+
+const housePulse = async (options: Partial<HomeFlowCardConfig>) =>
+  pulseStyle((await mountHouse(options)).root, "battery");
 
 /** A label's value line as it reads: each number with its unit, in order. */
 const valueLine = (root: ShadowRoot, node = "battery") =>
@@ -235,6 +243,17 @@ describe("a car", () => {
 
     expect(root.querySelector(".track.car")).toBeNull();
     expect(reading(root, "car")).toBe("64 %");
+  });
+
+  test("idle without a state of charge, it is only the car: no label, no leader", async () => {
+    const { root } = await mountHouse(
+      { car: { entity: "sensor.car_power" } },
+      { ...carCharging, "sensor.car_power": "0" }
+    );
+
+    expect(root.querySelector("image.car")).not.toBeNull();
+    expect(root.querySelector(".label.car")).toBeNull();
+    expect(root.querySelectorAll(".leader")).toHaveLength(root.querySelectorAll(".label").length);
   });
 
   test("leaves the house exactly where it is without a car", async () => {
@@ -523,6 +542,20 @@ describe("home flow card", () => {
     expect(size()).toBeGreaterThan(atFull * 1.2);
   });
 
+  test("min_expected_value and max_expected_value set the pulses, as min_expected_power and max_expected_power still do", async () => {
+    const generic = await housePulse({ min_expected_value: 0, max_expected_value: 1800 });
+
+    expect(generic).not.toBe(await housePulse({}));
+    expect(await housePulse({ min_expected_power: 0, max_expected_power: 1800 })).toBe(generic);
+    expect(
+      await housePulse({
+        min_expected_value: 0,
+        max_expected_value: 1800,
+        max_expected_power: 9000,
+      })
+    ).toBe(generic);
+  });
+
   test("a pulse keeps its place in its cycle when its speed changes", async () => {
     const { root, card } = await mountHouse();
     // The test browser asks for reduced motion, which hides pulses; this test is about their motion.
@@ -578,6 +611,10 @@ describe("home flow card", () => {
 
   test.each([
     [undefined, "1.8 kW", "22 % · Discharging"],
+    ["below_value", "1.8 kW", "22 % · Discharging"],
+    ["above_value", "22 %", "1.8 kW · Discharging"],
+    ["after_value", "1.8 kW · 22 %", "Discharging"],
+    ["before_value", "22 % · 1.8 kW", "Discharging"],
     ["below_power", "1.8 kW", "22 % · Discharging"],
     ["above_power", "22 %", "1.8 kW · Discharging"],
     ["after_power", "1.8 kW · 22 %", "Discharging"],
@@ -601,7 +638,7 @@ describe("home flow card", () => {
         battery: {
           ...allNodes.battery,
           entity: "sensor.battery",
-          state_of_charge_position: "after_power",
+          state_of_charge_position: "after_value",
         },
       },
       { ...evening, "sensor.battery": "0" }
@@ -613,7 +650,7 @@ describe("home flow card", () => {
 
   test("without a state of charge, every position shows the power as its value", async () => {
     const { root } = await mountHouse({
-      battery: { entity: "sensor.battery", state_of_charge_position: "above_power" },
+      battery: { entity: "sensor.battery", state_of_charge_position: "above_value" },
     });
 
     expect(valueLine(root)).toBe("1.8 kW");
@@ -811,7 +848,7 @@ describe("home flow card", () => {
           battery: {
             ...allNodes.battery,
             entity: "sensor.battery",
-            state_of_charge_position: "after_power",
+            state_of_charge_position: "after_value",
           },
           ...car,
         },
@@ -878,5 +915,264 @@ describe("home flow card", () => {
     await resize(300);
 
     expect(size()).toBeLessThan(wide);
+  });
+});
+
+const day = (date: number) => ({
+  start: new Date(2026, 0, date, 0, 0, 0),
+  end: new Date(2026, 0, date, 23, 59, 59),
+});
+
+describe("energy mode", () => {
+  const energyNodes: Partial<HomeFlowCardConfig> = {
+    mode: "energy",
+    grid: { entity: { consumption: "sensor.grid_import", production: "sensor.grid_export" } },
+    solar: { entity: "sensor.solar" },
+    battery: {
+      entity: { consumption: "sensor.battery_out", production: "sensor.battery_in" },
+      state_of_charge: "sensor.battery_soc",
+    },
+  };
+  /** A day: 3 kWh of solar, 2 kWh into the battery and 0.5 kWh back, 1.2 kWh bought. */
+  const aDay = {
+    "sensor.grid_import": 1200,
+    "sensor.grid_export": 0,
+    "sensor.solar": 3000,
+    "sensor.battery_in": 2000,
+    "sensor.battery_out": 500,
+  };
+  const mountEnergy = (
+    options: Partial<HomeFlowCardConfig> = {},
+    hass = fakeHass({
+      states: { "sensor.battery_soc": sensor("64", { unit: "%" }) },
+      statistics: aDay,
+      energyCollection: energyCollection(day(1).start, day(1).end),
+    })
+  ) => mountCard(HomeFlowCard, { type: "custom:home-flow-card", ...energyNodes, ...options }, hass);
+
+  test("each node shows its energy over the dashboard's period", async () => {
+    const { root } = await mountEnergy();
+
+    expect(reading(root, "solar")).toBe("3 kWh");
+    expect(reading(root, "grid")).toBe("1.2 kWh");
+    expect(reading(root, "home")).toBe("2.7 kWh");
+  });
+
+  test("a node that ran both ways gets a parallel line and a value each way", async () => {
+    const { root } = await mountEnergy(
+      {},
+      fakeHass({
+        states: { "sensor.battery_soc": sensor("64", { unit: "%" }) },
+        statistics: { ...aDay, "sensor.grid_export": 400 },
+        energyCollection: energyCollection(day(1).start, day(1).end),
+      })
+    );
+
+    expect(valueLine(root, "battery")).toBe("500 Wh · 2 kWh");
+    expect(valueLine(root, "grid")).toBe("1.2 kWh · 400 Wh");
+    for (const node of ["battery", "grid"]) {
+      const lines = [...root.querySelectorAll(`.power.${node} .flow`)].map(
+        (path) => path.getAttribute("d") ?? ""
+      );
+      expect(lines).toHaveLength(2);
+      expect(startOf(lines[0] ?? "")).not.toBe(endOf(lines[1] ?? ""));
+    }
+  });
+
+  test("two_way_value_size shrinks only the values of a node that ran both ways", async () => {
+    const { root } = await mountEnergy(
+      { two_way_value_size: 0.75 },
+      fakeHass({
+        states: { "sensor.battery_soc": sensor("64", { unit: "%" }) },
+        statistics: { ...aDay, "sensor.grid_export": 400 },
+        energyCollection: energyCollection(day(1).start, day(1).end),
+      })
+    );
+    const sizeOf = (node: string) =>
+      Number.parseFloat(getComputedStyle(root.querySelector(`.label.${node} .value`)!).fontSize);
+
+    expect(sizeOf("grid")).toBeCloseTo(sizeOf("solar") * 0.75);
+    expect(sizeOf("battery")).toBeCloseTo(sizeOf("solar") * 0.75);
+    expect(sizeOf("home")).toBe(sizeOf("solar"));
+  });
+
+  const energyPulse = async (options: Partial<HomeFlowCardConfig>) =>
+    pulseStyle((await mountEnergy(options)).root, "solar");
+
+  test("an expected range in Wh sets the pulses; the older one in W does not", async () => {
+    const sharedOut = await energyPulse({});
+
+    expect(await energyPulse({ max_expected_value: 6000 })).not.toBe(sharedOut);
+    expect(await energyPulse({ max_expected_power: 6000 })).toBe(sharedOut);
+  });
+
+  test("a node that ran one way keeps a single line", async () => {
+    const { root } = await mountEnergy();
+
+    expect(root.querySelectorAll(".power.grid")).toHaveLength(1);
+    expect(valueLine(root, "grid")).toBe("1.2 kWh");
+  });
+
+  test("the battery shows its state of charge, but not what it is doing now", async () => {
+    const { root } = await mountEnergy();
+
+    expect(batteryLine(root)).toBe("64 %");
+    expect(root.querySelector(".power.battery .pulse")).not.toBeNull();
+  });
+
+  test("shows loading until the period's statistics arrive", async () => {
+    let deliver: ((growth: Record<string, number>) => void) | undefined;
+    const statistics = new Promise<Record<string, number>>((resolve) => {
+      deliver = resolve;
+    });
+    const { settle, root, text } = await mountEnergy(
+      {},
+      fakeHass({
+        statistics: () => statistics,
+        energyCollection: energyCollection(day(1).start, day(1).end),
+      })
+    );
+    expect(text(".card-content")).toBe("Loading…");
+
+    deliver?.(aDay);
+    await settle();
+    expect(reading(root, "solar")).toBe("3 kWh");
+  });
+
+  test("changing the dashboard's period shows that period", async () => {
+    const collection = energyCollection(day(1).start, day(1).end);
+    const { settle, root } = await mountEnergy(
+      {},
+      fakeHass({
+        statistics: (window) => (window.start.getDate() === 1 ? aDay : { "sensor.solar": 500 }),
+        energyCollection: collection,
+      })
+    );
+    collection.setPeriod(day(2).start, day(2).end);
+    await settle();
+
+    expect(reading(root, "solar")).toBe("500 Wh");
+  });
+
+  test("with collection_key, follows that dashboard's date picker", async () => {
+    const { root } = await mountEnergy(
+      { collection_key: "energy_garage" },
+      fakeHass({
+        statistics: (window) => (window.start.getDate() === 2 ? aDay : {}),
+        energyCollection: energyCollection(day(1).start, day(1).end),
+        energyCollections: { energy_garage: energyCollection(day(2).start, day(2).end) },
+      })
+    );
+
+    expect(reading(root, "solar")).toBe("3 kWh");
+  });
+
+  test("the car and the heat pump show their energy over the period", async () => {
+    const { root } = await mountEnergy(
+      { car: { entity: "sensor.car_energy" }, heat_pump: { entity: "sensor.heat_pump_energy" } },
+      fakeHass({
+        statistics: { ...aDay, "sensor.car_energy": 7400, "sensor.heat_pump_energy": 1400 },
+        energyCollection: energyCollection(day(1).start, day(1).end),
+      })
+    );
+
+    expect(reading(root, "car")).toBe("7.4 kWh");
+    expect(reading(root, "heat_pump")).toBe("1.4 kWh");
+  });
+
+  test("a live outage leaves the period's grid energy alone", async () => {
+    const { root } = await mountEnergy(
+      {
+        grid: {
+          entity: { consumption: "sensor.grid_import", production: "sensor.grid_export" },
+          power_outage: { entity: "binary_sensor.outage" },
+        },
+      },
+      fakeHass({
+        states: { "binary_sensor.outage": sensor("on", { unit: undefined }) },
+        statistics: aDay,
+        energyCollection: energyCollection(day(1).start, day(1).end),
+      })
+    );
+
+    expect(reading(root, "grid")).toBe("1.2 kWh");
+    expect(labelOf(root, "grid").querySelector(".outage")).toBeNull();
+  });
+
+  test("a generator that ran is drawn beside the grid, and the home gets its energy", async () => {
+    const generator = { generator: { entity: "sensor.generator_energy" } };
+    const ran = await mountEnergy(
+      generator,
+      fakeHass({
+        statistics: { ...aDay, "sensor.generator_energy": 800 },
+        energyCollection: energyCollection(day(1).start, day(1).end),
+      })
+    );
+    const idle = await mountEnergy(
+      generator,
+      fakeHass({
+        statistics: { ...aDay, "sensor.generator_energy": 0 },
+        energyCollection: energyCollection(day(1).start, day(1).end),
+      })
+    );
+
+    expect(reading(ran.root, "generator")).toBe("800 Wh");
+    expect(reading(ran.root, "grid")).toBe("1.2 kWh");
+    expect(reading(ran.root, "home")).toBe("3.5 kWh");
+    expect(
+      intersects(
+        labelOf(ran.root, "grid").getBoundingClientRect(),
+        labelOf(ran.root, "generator").getBoundingClientRect()
+      )
+    ).toBe(false);
+    expect(idle.root.querySelector(".node.generator")).toBeNull();
+  });
+
+  test("a car that charged over the period is wired, even if unplugged now", async () => {
+    const { root } = await mountEnergy(
+      {
+        car: {
+          entity: "sensor.car_energy",
+          idle: [{ condition: "state", entity: "binary_sensor.cable", state: "off" }],
+        },
+      },
+      fakeHass({
+        states: { "binary_sensor.cable": sensor("off", { unit: undefined }) },
+        statistics: { ...aDay, "sensor.car_energy": 7400 },
+        energyCollection: energyCollection(day(1).start, day(1).end),
+      })
+    );
+
+    expect(reading(root, "car")).toBe("7.4 kWh");
+    expect(root.querySelector(".power.car")).not.toBeNull();
+  });
+
+  test("the heat pump's fan stands still, since it would say it is running now", async () => {
+    const { root } = await mountEnergy(
+      { heat_pump: { entity: "sensor.heat_pump_energy" } },
+      fakeHass({
+        statistics: { ...aDay, "sensor.heat_pump_energy": 1400 },
+        energyCollection: energyCollection(day(1).start, day(1).end),
+      })
+    );
+
+    expect(root.querySelector(".power.heat_pump")).not.toBeNull();
+    expect(root.querySelector(".node.heat_pump .spin")).toBeNull();
+  });
+
+  test("without a date picker on the dashboard, still shows a period's energy", async () => {
+    const { root } = await mountEnergy({}, fakeHass({ statistics: aDay }));
+
+    expect(reading(root, "solar")).toBe("3 kWh");
+  });
+
+  test("in power mode, the card fetches no statistics", async () => {
+    const hass = fakeHass({
+      states: evening,
+      energyCollection: energyCollection(day(1).start, day(1).end),
+    });
+    await mountCard(HomeFlowCard, { type: "custom:home-flow-card", ...allNodes }, hass);
+
+    expect(hass.callWS).not.toHaveBeenCalled();
   });
 });

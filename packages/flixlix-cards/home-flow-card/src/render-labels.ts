@@ -5,7 +5,8 @@ import { type HomeAssistant, numberFormatToLocale } from "custom-card-helpers";
 import { html, nothing, svg } from "lit";
 import { type Box, type Extent } from "./extent";
 import { type Figure, type Label, type LabelStatus } from "./labels";
-import { labelAnchor, type LabelledNode, project, type SceneLayout } from "./scene";
+import { labelAnchor, type LabelledNode } from "./label-anchors";
+import { project, type SceneLayout } from "./scene";
 
 /** Rough size of a label in screen units, so the viewBox leaves room for it. */
 const LABEL_WIDTH = 92;
@@ -33,14 +34,20 @@ export const includeLabel = (
   extent: Extent,
   node: LabelledNode,
   lines: number,
-  { aside = false, scale = 1, layout }: { aside?: boolean; scale?: number; layout: SceneLayout }
+  {
+    aside = false,
+    valueSize = 1,
+    scale = 1,
+    layout,
+  }: { aside?: boolean; valueSize?: number; scale?: number; layout: SceneLayout }
 ) => {
   const anchor = labelAnchor(node, layout);
   const [x, y] = project(anchor.at);
   const end = y + anchor.leader;
   const height = (LABEL_HEIGHT + lines * LINE_HEIGHT) * scale;
   extent.include([x, end + Math.sign(anchor.leader) * height], 4);
-  const width = (LABEL_WIDTH + (aside ? ASIDE_WIDTH : 0)) * scale;
+  const valueWidth = (LABEL_WIDTH + (aside ? ASIDE_WIDTH : 0)) * valueSize;
+  const width = Math.max(LABEL_WIDTH, valueWidth) * scale;
   // a label starts LABEL_INDENT left of its leader, as its CSS moves it, or ends LABEL_INDENT
   // right of it when it hangs left; the house's centring leaves room for that on a wide card, but
   // not on a narrow one
@@ -55,7 +62,8 @@ export const includeLabel = (
 /** Makes room in the viewBox for a drawn label, at `scale` against the scene. */
 export const includeLabelOf = (extent: Extent, label: Label, scale: number, layout: SceneLayout) =>
   includeLabel(extent, label.node, [label.status, label.alert].filter(Boolean).length, {
-    aside: Boolean(label.aside),
+    aside: Boolean(label.aside) || (label.lanes?.length ?? 0) > 1,
+    valueSize: label.valueSize,
     scale,
     layout,
   });
@@ -71,25 +79,41 @@ export const leaderSvg = (label: Label, layout: SceneLayout) => {
 };
 
 /** A number that rolls to its new value with number-flow, or plain text when it should not. */
-const numberHtml = (value: number, decimals: number, context: LabelContext, suffix = "") =>
+const numberHtml = (
+  value: number,
+  decimals: number,
+  context: LabelContext,
+  suffix = "",
+  style: string | typeof nothing = nothing
+) =>
   context.animateNumbers
     ? html`<number-flow
         class="number"
+        style=${style}
         data-value=${value}
         .format=${{ maximumFractionDigits: decimals }}
         .numberSuffix=${suffix}
         .locales=${context.locale ? numberFormatToLocale(context.locale) : undefined}
       ></number-flow>`
-    : html`<span class="number">${formatNumber(value, context.locale)}${suffix}</span>`;
+    : html`<span class="number" style=${style}
+        >${formatNumber(value, context.locale)}${suffix}</span
+      >`;
 
-/** The unit and the direction word are left empty for `morphWord` to fill. */
-const valueHtml = (reading: ScaledReading | null, context: LabelContext) =>
-  reading === null
-    ? "—"
-    : html`${numberHtml(reading.value, reading.decimals, context)}<span
-          class="unit"
-          data-word=${reading.unit}
-        ></span>`;
+/**
+ * The unit and the direction word are left empty for `morphWord` to fill. A lane's value takes
+ * its lane's colour, number and unit apart, so they stay flat in the line.
+ */
+const valueHtml = (reading: ScaledReading | null, context: LabelContext, color?: string) => {
+  if (reading === null) {
+    return "—";
+  }
+  const style = color ? `color: ${color}` : nothing;
+  return html`${numberHtml(reading.value, reading.decimals, context, "", style)}<span
+      class="unit"
+      style=${style}
+      data-word=${reading.unit}
+    ></span>`;
+};
 
 const figureHtml = ({ value, decimals, suffix }: Figure, context: LabelContext) =>
   numberHtml(value, decimals, context, suffix);
@@ -98,13 +122,19 @@ const figureHtml = ({ value, decimals, suffix }: Figure, context: LabelContext) 
  * The value, with its aside before or after it. Both stay flat in the line, so whatever follows a
  * unit slides along with it as its number rolls.
  */
-const valueLineHtml = ({ reading, aside }: Label, context: LabelContext) => {
+const valueLineHtml = ({ reading, aside, lanes }: Label, context: LabelContext) => {
+  const separator = html`<span class="separator">·</span>`;
+  if (lanes) {
+    return lanes.map(
+      (lane, index) =>
+        html`${index > 0 ? separator : nothing}${valueHtml(lane.reading, context, lane.color)}`
+    );
+  }
   const value = valueHtml(reading, context);
   if (!aside) {
     return value;
   }
   const second = valueHtml(aside.reading, context);
-  const separator = html`<span class="separator">·</span>`;
   return aside.first ? html`${second}${separator}${value}` : html`${value}${separator}${second}`;
 };
 
@@ -149,7 +179,12 @@ const labelHtml = (label: Label, position: string, context: LabelContext) => {
       }
     }}
   >
-    <div class="value">${valueLineHtml(label, context)}</div>
+    <div
+      class="value"
+      style=${label.valueSize === undefined ? nothing : `--value-size: ${label.valueSize}`}
+    >
+      ${valueLineHtml(label, context)}
+    </div>
     ${label.status ? html`<div class="status">${statusHtml(label.status, context)}</div>` : nothing}
     <div class="name">${label.name}</div>
     ${label.alert ? html`<div class="name outage">${label.alert}</div>` : nothing}

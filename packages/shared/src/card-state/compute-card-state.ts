@@ -77,6 +77,7 @@ export function computeCardState(input: CardStateInput): CardState {
     Number(!config.entities.home?.hide) + Number(!!leftTop) + Number(!!leftBottom);
   return {
     status: "ready",
+    family: readings.family,
     nodes: { ...nodes, individuals: visible, auxiliary },
     individualSlots: placement.slots,
     homeRing,

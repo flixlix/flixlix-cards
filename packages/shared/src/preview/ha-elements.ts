@@ -152,7 +152,74 @@ class HaButton extends LitElement {
 }
 
 class HaRipple extends LitElement {
-  @property({ type: Boolean }) disabled = false;
+  @property({ type: Boolean, reflect: true }) disabled = false;
+
+  connectedCallback() {
+    super.connectedCallback();
+    this.setAttribute("aria-hidden", "true");
+  }
+
+  render() {
+    return html`<div class="surface">
+      <div class="hover"></div>
+      <div class="press"></div>
+    </div>`;
+  }
+
+  static styles = css`
+    :host {
+      pointer-events: none;
+      margin: auto;
+      display: flex;
+    }
+    :host([disabled]) {
+      display: none;
+    }
+    @media (forced-colors: active) {
+      :host {
+        display: none;
+      }
+    }
+    :host,
+    .surface {
+      border-radius: inherit;
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+    .surface {
+      -webkit-tap-highlight-color: transparent;
+    }
+    .hover,
+    .press {
+      opacity: 0;
+      position: absolute;
+    }
+    .hover {
+      background-color: var(
+        --ha-ripple-hover-color,
+        var(--ha-ripple-color, var(--secondary-text-color))
+      );
+      transition:
+        opacity 15ms linear,
+        background-color 15ms linear;
+      inset: 0;
+    }
+    .press {
+      transform-origin: center center;
+      background: radial-gradient(
+        closest-side,
+        var(--ha-ripple-pressed-color, var(--ha-ripple-color, var(--secondary-text-color)))
+          max(100% - 70px, 65%),
+        transparent 100%
+      );
+      transition-property: opacity, transform;
+      transition-duration: 0.375s, 0.45s;
+      transition-timing-function: linear, cubic-bezier(0.2, 0, 0, 1);
+      top: 0;
+      left: 0;
+    }
+  `;
 }
 
 const elements: [tag: string, element: CustomElementConstructor][] = [
@@ -165,8 +232,8 @@ const elements: [tag: string, element: CustomElementConstructor][] = [
 ];
 
 /**
- * The Home Assistant frontend elements the cards render: `ha-card` and the icons look as in
- * Home Assistant; buttons and the ripple are bare stand-ins.
+ * The Home Assistant frontend elements the cards render: `ha-card`, the icons and the ripple at
+ * rest look as in Home Assistant; buttons are bare stand-ins and the ripple never reacts.
  */
 export const defineHaElements = (): void => {
   for (const [tag, element] of elements) {

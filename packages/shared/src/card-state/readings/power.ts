@@ -2,25 +2,27 @@ import { getEntityState } from "@flixlix-cards/shared/states/utils/get-entity-st
 import { getEntityStateWatts } from "@flixlix-cards/shared/states/utils/get-entity-state-watts";
 import { type ComboEntity, type FlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { type HomeAssistant } from "custom-card-helpers";
-import { type ReadyReadings, type TwoWayReading } from "../types";
+import { type EntityReader, type ReadyReadings, type TwoWayReading } from "../types";
 import { individualReading } from "./individual";
 
-/** Reading in W, or null while the entity is unavailable or not numeric. */
-const watts = (hass: HomeAssistant, entity: string | undefined): number | null =>
-  getEntityState(hass, entity) === null ? null : getEntityStateWatts(hass, entity);
+/** Live readings in W, null while the entity is unavailable or not numeric. */
+export const wattsReader =
+  (hass: HomeAssistant): EntityReader =>
+  (entity) =>
+    getEntityState(hass, entity) === null ? null : getEntityStateWatts(hass, entity);
 
-const twoWay = (hass: HomeAssistant, entity: string | ComboEntity | undefined): TwoWayReading => {
+const twoWay = (read: EntityReader, entity: string | ComboEntity | undefined): TwoWayReading => {
   if (typeof entity === "string") {
-    return { kind: "single", value: watts(hass, entity) };
+    return { kind: "single", value: read(entity) };
   }
   return {
     kind: "split",
-    into: watts(hass, entity?.production),
-    outOf: watts(hass, entity?.consumption),
+    into: read(entity?.production),
+    outOf: read(entity?.consumption),
   };
 };
 
-const solarReading = (hass: HomeAssistant, config: FlowCardPlusConfig) => {
+const solarReading = (hass: HomeAssistant, config: FlowCardPlusConfig, read: EntityReader) => {
   const solar = config.entities.solar;
   if (!solar?.entity) {
     return { total: null, secondary: 0 };
@@ -30,7 +32,7 @@ const solarReading = (hass: HomeAssistant, config: FlowCardPlusConfig) => {
     solar.secondary_info?.sum_total && secondaryEntity
       ? Math.max(getEntityStateWatts(hass, secondaryEntity), 0)
       : 0;
-  const production = watts(hass, solar.entity);
+  const production = read(solar.entity);
   return {
     total: production === null && !secondary ? null : (production ?? 0) + secondary,
     secondary,
@@ -40,21 +42,19 @@ const solarReading = (hass: HomeAssistant, config: FlowCardPlusConfig) => {
 /** Live power readings in W from `hass.states`. */
 export function powerReadings(hass: HomeAssistant, config: FlowCardPlusConfig): ReadyReadings {
   const { entities } = config;
+  const read = wattsReader(hass);
   const generator = entities.grid?.power_outage?.entity_generator;
   return {
     status: "ready",
     family: "power",
-    grid: twoWay(hass, entities.grid?.entity),
-    solar: solarReading(hass, config),
-    battery: twoWay(hass, entities.battery?.entity),
-    home:
-      entities.home?.override_state && entities.home.entity
-        ? watts(hass, entities.home.entity)
-        : null,
-    generator: generator ? watts(hass, generator) : null,
+    grid: twoWay(read, entities.grid?.entity),
+    solar: solarReading(hass, config, read),
+    battery: twoWay(read, entities.battery?.entity),
+    home: entities.home?.override_state && entities.home.entity ? read(entities.home.entity) : null,
+    generator: generator ? read(generator) : null,
     individuals: (entities.individual ?? []).map((individual) =>
-      individualReading(individual, (entity) => watts(hass, entity))
+      individualReading(individual, read)
     ),
-    auxiliary: individualReading(entities.auxiliary, (entity) => watts(hass, entity)),
+    auxiliary: individualReading(entities.auxiliary, read),
   };
 }

@@ -46,6 +46,32 @@ export const roundedPath = (points: readonly ScreenPoint[], radius: number): str
   return `M${pointText(first)}${bends.join("")}${last ? `L${pointText(last)}` : ""}`;
 };
 
+/** The unit normal to the left of the segment from `from` to `to`, on screen. */
+const leftNormal = (from: ScreenPoint, to: ScreenPoint): ScreenPoint => {
+  const length = Math.hypot(to[0] - from[0], to[1] - from[1]) || 1;
+  return [(to[1] - from[1]) / length, -(to[0] - from[0]) / length];
+};
+
+/**
+ * `points` moved `distance` to the left of their direction, negative to the right, as a parallel
+ * line: each bend moves along its mitre, so both segments keep the same distance.
+ */
+export const offsetLine = (points: readonly ScreenPoint[], distance: number): ScreenPoint[] =>
+  points.map((point, index) => {
+    const before = points[index - 1];
+    const after = points[index + 1];
+    const incoming = before ? leftNormal(before, point) : undefined;
+    const outgoing = after ? leftNormal(point, after) : undefined;
+    const [first, second] = [incoming ?? outgoing, outgoing ?? incoming];
+    if (!first || !second) {
+      return point;
+    }
+    const mitre: ScreenPoint = [first[0] + second[0], first[1] + second[1]];
+    const along = mitre[0] * first[0] + mitre[1] * first[1];
+    const scale = Math.abs(along) > 1e-6 ? distance / along : 0;
+    return [point[0] + mitre[0] * scale, point[1] + mitre[1] * scale];
+  });
+
 /** Maps a face's own 2D coordinates (along the face, down) onto the screen, for icons. */
 export const faceTransform = (face: "front" | "gable", at: Point): string => {
   const [e, f] = project(at);

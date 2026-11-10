@@ -4,12 +4,10 @@ import { getEntityState } from "@flixlix-cards/shared/states/utils/get-entity-st
 import { getEntityStateWh } from "@flixlix-cards/shared/states/utils/get-entity-state-wh";
 import { getEntityNames } from "@flixlix-cards/shared/states/utils/mutli-entity";
 import { type HomeAssistant } from "custom-card-helpers";
-import { type Readings, type TwoWayReading } from "../types";
+import { type EntityReader, type Readings, type TwoWayReading } from "../types";
 import { individualReading } from "./individual";
 
-type Read = (entity?: string) => number | null;
-
-const twoWay = (read: Read, entity: string | ComboEntity | undefined): TwoWayReading =>
+const twoWay = (read: EntityReader, entity: string | ComboEntity | undefined): TwoWayReading =>
   typeof entity === "string"
     ? { kind: "single", value: read(entity) }
     : { kind: "split", into: read(entity?.production), outOf: read(entity?.consumption) };
@@ -26,6 +24,20 @@ const periodGrowth = (growthMap: Record<string, number>, entity: string | undefi
 };
 
 /**
+ * Readings in Wh: each entity's growth over the selected energy period, or without
+ * `followPeriod` its own state.
+ */
+export const energyReader = (
+  hass: HomeAssistant,
+  growthMap: Record<string, number>,
+  followPeriod: boolean
+): EntityReader =>
+  followPeriod
+    ? (entity) => periodGrowth(growthMap, entity)
+    : (entity) =>
+        entity && getEntityState(hass, entity) !== null ? getEntityStateWh(hass, entity) : null;
+
+/**
  * Energy readings in Wh over the selected energy period, from the period's statistics growth.
  * Without a growth map the card is still loading.
  */
@@ -38,11 +50,7 @@ export function energyReadings(
   if (!growthMap) {
     return { status: "loading" };
   }
-  const read: Read =
-    config.energy_date_selection === false
-      ? (entity) =>
-          entity && getEntityState(hass, entity) !== null ? getEntityStateWh(hass, entity) : null
-      : (entity) => periodGrowth(growthMap, entity);
+  const read = energyReader(hass, growthMap, config.energy_date_selection !== false);
   const { entities } = config;
   const generator = entities.grid?.power_outage?.entity_generator;
   return {

@@ -104,6 +104,17 @@ const minifyTemplates =
   typeof minifyHTMLLiterals === "function" ? minifyHTMLLiterals : minifyHTMLLiterals.default;
 
 /**
+ * Minifies the cards' lit templates as their bundles ship them. Whitespace between elements in a
+ * template renders as a space, so anything that renders the cards from source, like the docs
+ * site, needs it too to look as the cards do on a dashboard.
+ *
+ * @param {{ include?: RegExp }} [options] which modules to minify, matched against their absolute
+ * path; all without
+ * @returns {import("vite-plus").Plugin}
+ */
+export const minifyCardTemplates = (options) => minifyTemplates(options);
+
+/**
  * The Vite+ config that bundles a card into one ES module, `<outDir>/<name>.js`, that Home
  * Assistant loads as a dashboard resource.
  *
@@ -113,7 +124,7 @@ const minifyTemplates =
 export function createCardConfig({ entry, name, outDir = "dist", port = 5001 }) {
   return {
     define: { __FLIXLIX_BUILD__: JSON.stringify(buildStamp()) },
-    plugins: [minifyTemplates(), legacySyntaxGuard(), serveWhileWatching(outDir, port)],
+    plugins: [minifyCardTemplates(), legacySyntaxGuard(), serveWhileWatching(outDir, port)],
     build: {
       outDir,
       target: browserTargets,

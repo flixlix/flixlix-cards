@@ -1,6 +1,7 @@
 import { type HouseWire } from "@flixlix-cards/shared/card-state";
 import { nothing, svg } from "lit";
 import { type Box } from "./extent";
+import { offsetLine } from "./geometry";
 import {
   GRID_CABLE_START,
   GRID_FADE_FROM,
@@ -23,15 +24,21 @@ const PULSE = { shortest: 6, longest: 36, period: 70 } as const;
 /** Pulses travel this many times slower than the flow rate's seconds per dot. */
 const PULSE_SLOWDOWN = 2.5;
 
-// reduceRight: toReversed needs Chrome 110 and reverse mutates.
-const reversed = (points: readonly Point[]): Point[] =>
-  points.reduceRight<Point[]>((list, point) => list.concat([point]), []);
+/** Screen units between the middles of a node's two lanes, at a wire scale of 1. */
+const LANE_GAP = 3;
 
-/** A wire's path in the direction its power flows. */
-const route = (wire: HouseWire, layout: SceneLayout) => {
-  const fromNode = wireRoute(wire.node, layout);
-  const points = wire.intoInverter ? fromNode : reversed(fromNode);
-  return roundedPath(points.map(project), BEND_RADIUS);
+// reduceRight: toReversed needs Chrome 110 and reverse mutates.
+const reversed = <T>(points: readonly T[]): T[] =>
+  points.reduceRight<T[]>((list, point) => list.concat([point]), []);
+
+/**
+ * A wire's path in the direction its power flows, beside the node's other lane when it has one.
+ * Lanes keep apart by `wireScale` times `LANE_GAP`, so thicker wires never touch.
+ */
+const route = (wire: HouseWire, layout: SceneLayout, wireScale: number) => {
+  const fromNode = wireRoute(wire.node, layout).map((point: Point) => project(point));
+  const laned = wire.lane ? offsetLine(fromNode, (wire.lane * LANE_GAP * wireScale) / 2) : fromNode;
+  return roundedPath(wire.intoInverter ? laned : reversed(laned), BEND_RADIUS);
 };
 
 /** The grid cable fades out towards the card's edge. */
@@ -63,8 +70,8 @@ export const gridFade = (box: Box) => {
   </defs>`;
 };
 
-const powerSvg = (wire: HouseWire, animate: boolean, layout: SceneLayout) => {
-  const d = route(wire, layout);
+const powerSvg = (wire: HouseWire, animate: boolean, layout: SceneLayout, wireScale: number) => {
+  const d = route(wire, layout, wireScale);
   const dash = PULSE.shortest + (PULSE.longest - PULSE.shortest) * wire.intensity;
   const style = `animation-duration: ${wire.durationSeconds * PULSE_SLOWDOWN}s; stroke-dasharray: ${dash} ${PULSE.period - dash}`;
   return svg`<g class="power ${wire.node}" style=${`--wire-color: ${wire.color}`} mask=${fadeOf(wire)}>
@@ -77,9 +84,14 @@ const powerSvg = (wire: HouseWire, animate: boolean, layout: SceneLayout) => {
  * Every wire as a neutral track; one carrying power also gets its colour and moving pulses.
  * Wires are not part of the extent: the grid cable runs on past the card's edge.
  */
-export const wiresSvg = (wires: HouseWire[], animate: boolean, layout: SceneLayout) => svg`
-  ${wires.map((wire) => svg`<path class="track ${wire.node}" d=${route(wire, layout)} mask=${fadeOf(wire)}></path>`)}
-  ${wires.filter((wire) => wire.power > 0).map((wire) => powerSvg(wire, animate, layout))}
+export const wiresSvg = (
+  wires: HouseWire[],
+  animate: boolean,
+  layout: SceneLayout,
+  wireScale: number
+) => svg`
+  ${wires.map((wire) => svg`<path class="track ${wire.node}" d=${route(wire, layout, wireScale)} mask=${fadeOf(wire)}></path>`)}
+  ${wires.filter((wire) => wire.power > 0).map((wire) => powerSvg(wire, animate, layout, wireScale))}
 `;
 
 /**
