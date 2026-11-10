@@ -1,5 +1,15 @@
 # @flixlix-cards/web
 
+## 1.2.0
+
+### Minor Changes
+
+- **New:** The docs are available to AI assistants at cards.flixlix.com/llms.txt, with every page as markdown and the full reference in llms-full.txt, so ChatGPT, Claude and others write configs with real options. ([#488](https://github.com/flixlix/flixlix-cards/pull/488))
+
+### Patch Changes
+
+- **Fix:** Every docs page now has its own title, description and canonical URL, plus link previews and a sitemap, so search engines list each page instead of treating them all as one. ([#496](https://github.com/flixlix/flixlix-cards/pull/496))
+
 ## 1.1.5
 
 ## 1.1.4

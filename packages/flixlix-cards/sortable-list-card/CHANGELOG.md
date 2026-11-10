@@ -1,5 +1,11 @@
 # sortable-list-card
 
+## 0.1.4
+
+### Patch Changes
+
+- **Fix:** The help button in the card editor opens the card's configuration page on cards.flixlix.com instead of an old GitHub README. ([#488](https://github.com/flixlix/flixlix-cards/pull/488))
+
 ## 0.1.3
 
 ### Patch Changes
