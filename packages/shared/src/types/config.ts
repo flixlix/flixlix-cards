@@ -41,6 +41,8 @@ interface mainConfigOptions {
   kilo_threshold: number;
   mega_decimals: number;
   mega_threshold: number;
+  /** Pad values with zeros to the decimals they are rounded to, e.g. `1.0 kW` instead of `1 kW`. */
+  keep_trailing_zeros?: boolean;
   full_size?: boolean;
   style_ha_card?: string;
   style_card_content?: string;

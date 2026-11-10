@@ -164,6 +164,10 @@ const solarText = (total: number) =>
   ready(compute({ readings: readings({ family: "energy", solar: { total } }) })).nodes.solar
     .display;
 
+const powerSolarText = (total: number, overrides: Partial<FlowCardPlusConfig>, hass = hassWith()) =>
+  ready(compute({ config: config(overrides), hass, readings: readings({ solar: { total } }) }))
+    .nodes.solar.display;
+
 const idleLine = (mode: NonNullable<FlowCardPlusConfig["display_zero_lines"]>["mode"]) =>
   ready(compute({ config: config({ display_zero_lines: { mode, transparency: 30 } }) })).flows
     .gridToHome;
@@ -789,6 +793,55 @@ describe("display units", () => {
     );
 
     expect(nodes.grid.secondary.text).toBe(`12.5${thinSpace}kWh`);
+  });
+
+  test("show every configured decimal, also beyond two", () => {
+    const watts = { kilo_threshold: 0, kilo_decimals: 3 };
+
+    expect(powerSolarText(2356, watts)).toBe(`2.356${thinSpace}kW`);
+    expect(powerSolarText(1560, watts)).toBe(`1.56${thinSpace}kW`);
+  });
+});
+
+describe("keep_trailing_zeros", () => {
+  const keep = { keep_trailing_zeros: true };
+
+  test("pads a value with zeros to the decimals of its scale", () => {
+    expect(powerSolarText(1000, keep)).toBe(`1.0${thinSpace}kW`);
+    expect(powerSolarText(300, { ...keep, base_decimals: 2 })).toBe(`300.00${thinSpace}W`);
+    expect(powerSolarText(2_000_000, { ...keep, mega_decimals: 2 })).toBe(`2.00${thinSpace}MW`);
+  });
+
+  test("shows watt-level precision in kW from zero up", () => {
+    const watts = { ...keep, kilo_threshold: 0, kilo_decimals: 3 };
+
+    expect(powerSolarText(0, watts)).toBe(`0.000${thinSpace}kW`);
+    expect(powerSolarText(392, watts)).toBe(`0.392${thinSpace}kW`);
+    expect(powerSolarText(1560, watts)).toBe(`1.560${thinSpace}kW`);
+  });
+
+  test("pads to a node's own decimals", () => {
+    const solarWithDecimals = { entities: { solar: { entity: "sensor.solar", decimals: 2 } } };
+
+    expect(powerSolarText(1500, { ...keep, ...solarWithDecimals })).toBe(`1.50${thinSpace}kW`);
+  });
+
+  test("keeps the locale's decimal separator", () => {
+    const hass = hassWith();
+    hass.locale = { ...hass.locale, number_format: NumberFormat.decimal_comma };
+
+    expect(powerSolarText(1000, keep, hass)).toBe(`1,0${thinSpace}kW`);
+  });
+
+  test("pads without a number format", () => {
+    const hass = hassWith();
+    hass.locale = { ...hass.locale, number_format: NumberFormat.none };
+
+    expect(powerSolarText(1000, { ...keep, kilo_decimals: 2 }, hass)).toBe(`1.00${thinSpace}kW`);
+  });
+
+  test("drops trailing zeros when off", () => {
+    expect(powerSolarText(1000, {})).toBe(`1${thinSpace}kW`);
   });
 });
 

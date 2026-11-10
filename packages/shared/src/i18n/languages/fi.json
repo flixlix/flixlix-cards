@@ -105,6 +105,7 @@
     "navigation_path": "Navigointipolku",
     "no_color": "Ei väriä",
     "no_labels": "Ei nimiöitä",
+    "keep_trailing_zeros": "Säilytä loppunollat",
     "override_state": "Korvaa tila",
     "power_outage": "Sähkökatkos",
     "production": "Tuotanto",

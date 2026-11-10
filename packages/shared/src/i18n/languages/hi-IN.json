@@ -105,6 +105,7 @@
     "navigation_path": "नेविगेशन पथ",
     "no_color": "कोई रंग नहीं",
     "no_labels": "कोई लेबल नहीं",
+    "keep_trailing_zeros": "अंत के शून्य बनाए रखें",
     "override_state": "स्थिति ओवरराइड करें",
     "power_outage": "बिजली गुल",
     "production": "उत्पादन",

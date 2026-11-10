@@ -105,6 +105,7 @@
     "navigation_path": "Ruta de Navegació",
     "no_color": "Sense color",
     "no_labels": "Sense etiquetes",
+    "keep_trailing_zeros": "Mantenir els zeros finals",
     "override_state": "Sobrescriu l'Estat",
     "power_outage": "Pèrdua de Potència",
     "production": "Producció",

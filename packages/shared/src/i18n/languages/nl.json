@@ -105,6 +105,7 @@
     "navigation_path": "Navigatiepad",
     "no_color": "Geen kleur",
     "no_labels": "Geen labels",
+    "keep_trailing_zeros": "Nullen achter de komma behouden",
     "override_state": "Toestand Overschrijven",
     "power_outage": "Stroomuitval",
     "production": "Productie",

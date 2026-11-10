@@ -180,6 +180,21 @@ export const flowScenarios: FlowScenario[] = [
     },
   },
   {
+    name: "keep_trailing_zeros",
+    entities: combinedEntities,
+    options: { keep_trailing_zeros: true, kilo_threshold: 0, kilo_decimals: 3 },
+    states: {
+      "sensor.grid": "0",
+      "sensor.solar": "1560",
+      "sensor.battery": "0",
+      "sensor.battery_soc": "0",
+    },
+    energy: true,
+    expect: {
+      text: { ".grid .consumption": "0.000 kW", ".solar .solar": "1.560 kW" },
+    },
+  },
+  {
     name: "solar exporting",
     visual: true,
     entities: combinedEntities,

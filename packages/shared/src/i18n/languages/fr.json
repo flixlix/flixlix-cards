@@ -105,6 +105,7 @@
     "navigation_path": "Chemin de navigation",
     "no_color": "Aucune couleur",
     "no_labels": "Sans libellés",
+    "keep_trailing_zeros": "Conserver les zéros de fin",
     "override_state": "Remplacer l'état",
     "power_outage": "Panne de courant",
     "production": "Production",

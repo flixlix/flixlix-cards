@@ -105,6 +105,7 @@
     "navigation_path": "Navigačná cesta",
     "no_color": "Bez farby",
     "no_labels": "Bez popisov",
+    "keep_trailing_zeros": "Zachovať koncové nuly",
     "override_state": "Prepísať stav",
     "power_outage": "Výpadok",
     "production": "Výroba",
