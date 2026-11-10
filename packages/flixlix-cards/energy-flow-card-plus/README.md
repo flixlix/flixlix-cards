@@ -394,6 +394,26 @@ Same readings with each topology (solar charging the battery, the grid topping u
 | -------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | ![standard](https://raw.githubusercontent.com/flixlix/flixlix-cards/main/packages/flixlix-cards/power-flow-card-plus/assets/topology-standard.png) | ![battery_hub](https://raw.githubusercontent.com/flixlix/flixlix-cards/main/packages/flixlix-cards/power-flow-card-plus/assets/topology-battery-hub.png) | ![isolated_battery](https://raw.githubusercontent.com/flixlix/flixlix-cards/main/packages/flixlix-cards/power-flow-card-plus/assets/topology-isolated-battery.png) |
 
+#### Custom CSS
+
+With [card-mod](https://github.com/thomasloven/lovelace-card-mod) you can style each part of a circle. Every node's value has its own element, so it can be moved or recoloured without touching the icon or the secondary info:
+
+| Node    | Value                                           | Icon            | Secondary info             |
+| ------- | ----------------------------------------------- | --------------- | -------------------------- |
+| Grid    | `.grid .consumption`, `.grid .return`           | `#grid-icon`    | `.grid .secondary-info`    |
+| Solar   | `.solar span.solar:not(.secondary-info)`        | `#solar-icon`   | `.solar .secondary-info`   |
+| Battery | `.battery .battery-in`, `.battery .battery-out` | `#battery-icon` | `.battery .secondary-info` |
+| Home    | `.home span.home:not(.secondary-info)`          | `#home-icon`    | `.home .secondary-info`    |
+
+```yaml
+card_mod:
+  style: |
+    .home span.home:not(.secondary-info) {
+      color: red;
+      transform: translateY(-17px);
+    }
+```
+
 ### Minimal Configuration
 
 > Don't forget to change the entity ids
