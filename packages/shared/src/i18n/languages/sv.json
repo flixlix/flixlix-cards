@@ -46,6 +46,7 @@
     "color_dynamically": "Färg dynamiskt",
     "color_icon": "Ikonfärg",
     "color_idle": "Färg vid inaktivitet",
+    "color_alert": "Varningsfärg",
     "color_state_of_charge_value": "Färg",
     "color_value": "Färg på värde",
     "combined": "Sammansatt entitet (en entitet med postitiva och negativa värden)",

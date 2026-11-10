@@ -46,6 +46,7 @@
     "color_dynamically": "Väri dynaamisesti",
     "color_icon": "Ikonin väri",
     "color_idle": "Väri joutokäynnillä",
+    "color_alert": "Hälytyksen väri",
     "color_state_of_charge_value": "Väri",
     "color_value": "Arvon väri",
     "combined": "Yhdistetty kokonaisuus (yksi kokonaisuus positiivisilla ja negatiivisilla arvoilla)",

@@ -611,6 +611,53 @@ describe("updates", () => {
   });
 });
 
+const colorOf = (root: ParentNode, selector: string) => {
+  const element = root.querySelector(selector);
+  if (!element) {
+    throw new Error(`${selector} not rendered`);
+  }
+  return getComputedStyle(element).color;
+};
+
+describe("power outage", () => {
+  const outageHass = fakeHass({
+    states: { "sensor.grid": "300", "binary_sensor.grid_down": "on" },
+  });
+  const mountOutage = (powerOutage: object) =>
+    mountCard(
+      PowerFlowCardPlus,
+      {
+        type: "custom:power-flow-card-plus",
+        entities: {
+          grid: {
+            entity: "sensor.grid",
+            power_outage: { entity: "binary_sensor.grid_down", ...powerOutage },
+          },
+        },
+      },
+      outageHass
+    );
+
+  test("color_alert colours the outage icon and label", async () => {
+    const { root } = await mountOutage({ color_alert: [255, 0, 0] });
+    expect(colorOf(root, "#grid-icon")).toBe("rgb(255, 0, 0)");
+    expect(colorOf(root, ".power-outage")).toBe("rgb(255, 0, 0)");
+  });
+
+  test("without color_alert the outage looks as before", async () => {
+    const { root } = await mountOutage({});
+    const primaryText = colorOf(root, ".card-content");
+    expect(colorOf(root, "#grid-icon")).toBe(primaryText);
+    expect(colorOf(root, ".power-outage")).toBe(primaryText);
+  });
+
+  test("the icon takes its usual colour back when the power returns", async () => {
+    const { root, setHass } = await mountOutage({ color_alert: "#ff0000" });
+    await setHass(withStates(outageHass, { "binary_sensor.grid_down": "off" }));
+    expect(colorOf(root, "#grid-icon")).toBe(colorOf(root, ".card-content"));
+  });
+});
+
 /** HA's name formatter, composing `area` and `entity` parts; a plain string is kept. */
 const nameFormatter = (area: string) => (_stateObj: unknown, name: unknown) => {
   if (typeof name === "string") {
@@ -741,16 +788,9 @@ describe("custom CSS", () => {
     const custom = new CSSStyleSheet();
     custom.replaceSync(`${homeValue} { color: rgb(255, 0, 0); }`);
     root.adoptedStyleSheets = [...root.adoptedStyleSheets, custom];
-    const colorOf = (selector: string) => {
-      const element = root.querySelector(selector);
-      if (!element) {
-        throw new Error(`${selector} not rendered`);
-      }
-      return getComputedStyle(element).color;
-    };
     expect(text(homeValue)).toBe("400 W");
-    expect(colorOf(homeValue)).toBe("rgb(255, 0, 0)");
-    expect(colorOf(".home .secondary-info")).not.toBe("rgb(255, 0, 0)");
-    expect(colorOf("#home-icon")).not.toBe("rgb(255, 0, 0)");
+    expect(colorOf(root, homeValue)).toBe("rgb(255, 0, 0)");
+    expect(colorOf(root, ".home .secondary-info")).not.toBe("rgb(255, 0, 0)");
+    expect(colorOf(root, "#home-icon")).not.toBe("rgb(255, 0, 0)");
   });
 });

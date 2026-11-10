@@ -434,6 +434,9 @@ export const styles = css`
   .grid ha-icon:not(.small) {
     color: var(--icon-grid-color);
   }
+  .grid span.power-outage {
+    color: var(--text-grid-outage-color);
+  }
   .home .circle {
     border-width: 0;
     border-color: var(--primary-color);

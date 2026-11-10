@@ -1023,6 +1023,12 @@ const POWER_OUTAGE_OPTIONS: OptionRow[] = [
     description: "Icon shown during the outage.",
   },
   {
+    name: "color_alert",
+    type: "string | number[]",
+    description:
+      "HEX or RGB color for the outage icon and label. Unset keeps the usual grid icon color.",
+  },
+  {
     name: "label_alert",
     type: "string",
     description: "Text shown below the icon during the outage.",
@@ -1638,6 +1644,7 @@ entities:
       entity: binary_sensor.grid_status
       state_alert: "off"
       icon_alert: mdi:flash-off
+      color_alert: "#db4437"
       label_alert: Outage`,
           }}
         >

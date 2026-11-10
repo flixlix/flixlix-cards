@@ -46,6 +46,7 @@
     "color_dynamically": "Cor dinâmica",
     "color_icon": "Cor do Ícone",
     "color_idle": "Cor em repouso",
+    "color_alert": "Cor para Alerta",
     "color_state_of_charge_value": "Cor",
     "color_value": "Cor do Valor",
     "combined": "Entidade combinada (uma entidade com valores positivos e negativos)",

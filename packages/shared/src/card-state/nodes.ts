@@ -103,6 +103,7 @@ const gridPowerOutage = (grid: GridConfig, outage: boolean): GridObject["powerOu
     isOutage: outage,
     icon: powerOutage?.icon_alert?.length ? powerOutage.icon_alert : "mdi:transmission-tower-off",
     name: powerOutage?.label_alert ?? html`Power<br />Outage`,
+    color: powerOutage?.color_alert,
     entityGenerator: powerOutage?.entity_generator,
   };
 };

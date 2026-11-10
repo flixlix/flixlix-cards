@@ -403,6 +403,40 @@ describe("power flow ui editor", () => {
       /not_an_option/
     );
   });
+  test("the grid page edits the outage colour", async () => {
+    const { editor, lastConfig } = await mountEditor({
+      entities: { grid: { entity: "sensor.grid", power_outage: { entity: "binary_sensor.down" } } },
+    });
+
+    query(editor, 'link-subpage[path="grid"]').dispatchEvent(
+      new CustomEvent("open-sub-element-editor", { detail: { open: true } })
+    );
+    await editor.updateComplete;
+    const form = query(editor, "ha-form");
+    const sections: unknown[] = "schema" in form && Array.isArray(form.schema) ? form.schema : [];
+    const outage = sections.find(
+      (item): item is { schema: unknown } =>
+        typeof item === "object" && item !== null && "name" in item && item.name === "power_outage"
+    );
+    const outageFields = ownFieldNames(outage?.schema);
+    form.dispatchEvent(
+      new CustomEvent("value-changed", {
+        detail: {
+          value: {
+            entity: "sensor.grid",
+            power_outage: { entity: "binary_sensor.down", color_alert: [255, 0, 0] },
+          },
+        },
+      })
+    );
+
+    expect(outageFields).toContain("color_alert");
+    expect(computeEditorLabel(hass as HomeAssistant, { name: "color_alert" })).toBe(
+      "Color for Alert"
+    );
+    expect(lastConfig()?.entities.grid?.power_outage?.color_alert).toEqual([255, 0, 0]);
+  });
+
   test.each(TOPOLOGIES)("setConfig accepts topology %s", (topology) => {
     const editor = new PowerFlowCardPlusEditor();
 

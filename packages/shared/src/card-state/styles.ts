@@ -120,7 +120,14 @@ const gridVars = ({ grid }: StyledNodes, entities: ConfigEntities, greyIdle: boo
     ),
     "--text-grid-consumption-color": colorValue ? GRID_IN : PRIMARY_TEXT,
     "--text-grid-return-color": colorValue ? GRID_OUT : PRIMARY_TEXT,
+    ...outageVars(grid),
   };
+};
+
+const outageVars = ({ powerOutage }: GridObject): CssVars => {
+  const color =
+    powerOutage.isOutage && powerOutage.color !== undefined ? cssColor(powerOutage.color, "") : "";
+  return color === "" ? {} : { "--icon-grid-color": color, "--text-grid-outage-color": color };
 };
 
 const solarVars = (entities: ConfigEntities): CssVars => {

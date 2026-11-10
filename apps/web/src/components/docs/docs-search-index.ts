@@ -260,6 +260,7 @@ function configOptions(
     make("color_value", "Coloring of the value text.", "grid"),
     make("display_zero_tolerance", "Treat states below this number as zero.", "grid"),
     make("power_outage", "Configure outage detection.", "power-outage"),
+    make("color_alert", "Color of the outage icon and label.", "power-outage", ["outage", "red"]),
     make("invert_state", "Invert the production/consumption sign convention.", "grid"),
     make("state_of_charge", "Battery state of charge sensor (required).", "battery"),
     make("state_of_charge_unit", "Unit for the SoC.", "battery"),
