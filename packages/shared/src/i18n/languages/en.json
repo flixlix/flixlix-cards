@@ -8,6 +8,15 @@
       "car": "Car",
       "heat_pump": "Heat pump",
       "motorbike": "Motorbike"
+    },
+    "view": {
+      "name": "Period",
+      "live": "Live",
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "week": "Week",
+      "month": "Month",
+      "year": "Year"
     }
   },
   "editor": {
@@ -149,6 +158,8 @@
     "connect_to": "Connect to",
     "connect_to_grid": "Grid (line up to the grid)",
     "connect_to_battery": "Battery (line across to the battery)",
-    "connect_to_none": "None (no line)"
+    "connect_to_none": "None (no line)",
+    "energy_entities": "Live / period selector",
+    "periods": "Periods"
   }
 }

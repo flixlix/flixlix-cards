@@ -33,6 +33,19 @@ const topLevel = (schema: unknown): string[] =>
       })
     : [];
 
+const selectorFields = [
+  "periods",
+  "consumption",
+  "production",
+  "solar",
+  "consumption",
+  "production",
+  "home",
+  "generator",
+  "car",
+  "heat_pump",
+];
+
 const mountEditor = async (config: Record<string, unknown> = {}, states: StateFixtures = {}) => {
   const editor = new HomeFlowCardEditor();
   editor.hass = fakeHass({ states });
@@ -74,14 +87,26 @@ describe("editor", () => {
   test("in energy mode, the main page also asks which date picker to follow", async () => {
     const { fields, helper } = await mountEditor({ mode: "energy" });
 
-    expect(fields()).toEqual(["title", "mode", "collection_key"]);
+    expect(fields()).toEqual(["title", "mode", "collection_key", ...selectorFields]);
     expect(helper("mode")).toBe("Default: Power");
+  });
+
+  test("the selector's periods sit at the top level, its sensors under energy_entities", async () => {
+    const { schema, helper } = await mountEditor();
+    const fields = schema();
+    const selector = Array.isArray(fields) ? fields.at(-1) : undefined;
+
+    expect(topLevel(isGroup(selector) ? selector.schema : [])).toEqual([
+      "periods",
+      "energy_entities",
+    ]);
+    expect(helper("periods")).toBe("Default: Today");
   });
 
   test("the main page holds the title and a link per node, then advanced", async () => {
     const { editor, fields, links } = await mountEditor();
 
-    expect(fields()).toEqual(["title", "mode"]);
+    expect(fields()).toEqual(["title", "mode", ...selectorFields]);
     expect(links().map((link) => link.getAttribute("path"))).toEqual([
       "grid",
       "solar",

@@ -365,6 +365,37 @@ const CARD_OPTIONS: OptionRow[] = [
     ),
   },
   {
+    name: "energy_entities",
+    type: "object",
+    description: (
+      <>
+        Each node&apos;s energy sensor, by node: <code>grid</code>, <code>solar</code>,{" "}
+        <code>battery</code>, <code>home</code>, <code>generator</code>, <code>car</code> and{" "}
+        <code>heat_pump</code>, each written like the node&apos;s <code>entity</code>. With them,
+        the card gets a selector in its top right corner between live power and <code>periods</code>
+        , and reads each period itself instead of following a date picker. A node without an energy
+        sensor is left out of the periods; the home without one shows what flowed into it.{" "}
+        <code>mode: energy</code> opens the card on the first period. See{" "}
+        <Link to={`${BASE_PATH}/examples`} hash="live-or-today">
+          the example
+        </Link>
+        .
+      </>
+    ),
+  },
+  {
+    name: "periods",
+    type: "list",
+    default: "[today]",
+    description: (
+      <>
+        With <code>energy_entities</code>, the periods the selector offers after live power, in
+        order: <code>today</code>, <code>yesterday</code>, <code>week</code>, <code>month</code> and{" "}
+        <code>year</code>. Week, month and year run up to today.
+      </>
+    ),
+  },
+  {
     name: "grid / solar / battery / home",
     type: "object",
     description: (
@@ -1289,6 +1320,42 @@ battery:
       "sensor.battery_discharge_energy": sensor("2.4", { unit: "kWh" }),
       "sensor.battery_charge_energy": sensor("3.8", { unit: "kWh" }),
       "sensor.battery_soc": sensor("58", { unit: "%" }),
+    },
+    energy: true,
+  },
+  {
+    id: "live-or-today",
+    title: "Live power or the day so far",
+    text: "Give the nodes their energy sensors too and the card gets a selector in its corner: live power, or energy over each period, picked on the card itself rather than on a date picker.",
+    code: `type: ${CARD_TYPE}
+grid:
+  entity: sensor.grid_power
+solar:
+  entity: sensor.solar_power
+battery:
+  entity: sensor.battery_power
+  state_of_charge: sensor.battery_soc
+energy_entities:
+  grid:
+    consumption: sensor.grid_import_energy
+    production: sensor.grid_export_energy
+  solar: sensor.solar_energy
+  battery:
+    consumption: sensor.battery_discharge_energy
+    production: sensor.battery_charge_energy
+periods:
+  - today
+  - week`,
+    states: {
+      "sensor.grid_power": "2600",
+      "sensor.solar_power": "0",
+      "sensor.battery_power": "-1700",
+      "sensor.battery_soc": sensor("28", { unit: "%" }),
+      "sensor.grid_import_energy": sensor("6.8", { unit: "kWh" }),
+      "sensor.grid_export_energy": sensor("2.1", { unit: "kWh" }),
+      "sensor.solar_energy": sensor("11.2", { unit: "kWh" }),
+      "sensor.battery_discharge_energy": sensor("3.4", { unit: "kWh" }),
+      "sensor.battery_charge_energy": sensor("4.1", { unit: "kWh" }),
     },
     energy: true,
   },

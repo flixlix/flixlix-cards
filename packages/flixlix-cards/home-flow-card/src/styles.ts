@@ -40,6 +40,10 @@ export const styles = css`
     --house-car-rail: #9c9ea2;
     --house-car-tyre: #8a8c90;
     --house-car-ground: var(--house-ground);
+    --house-view-track: #e5e6ea;
+    --house-view-indicator: #ffffff;
+    --house-ease-in-out: cubic-bezier(0.645, 0.045, 0.355, 1);
+    --house-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
     display: block;
   }
 
@@ -82,6 +86,8 @@ export const styles = css`
       --house-car-glass-shade: color-mix(in srgb, #000 46%, var(--house-surface));
       --house-car-rail: color-mix(in srgb, #000 30%, var(--house-surface));
       --house-car-tyre: color-mix(in srgb, #000 45%, var(--house-surface));
+      --house-view-track: var(--house-surface);
+      --house-view-indicator: var(--card-background-color, #fff);
     }
 
     /* A dark card needs a stronger tint for the walls to stand off it. */
@@ -99,6 +105,8 @@ export const styles = css`
       --house-car-glass: color-mix(in srgb, #fff 4%, var(--house-surface));
       --house-car-glass-shade: color-mix(in srgb, #000 18%, var(--house-surface));
       --house-car-tyre: color-mix(in srgb, #000 14%, var(--house-surface));
+      --house-view-track: color-mix(in srgb, #000 25%, var(--house-surface));
+      --house-view-indicator: color-mix(in srgb, #fff 10%, var(--house-surface));
     }
   }
 

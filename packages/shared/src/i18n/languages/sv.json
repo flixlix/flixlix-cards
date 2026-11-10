@@ -8,6 +8,15 @@
       "car": "Bil",
       "heat_pump": "Värmepump",
       "motorbike": "Motorcykel"
+    },
+    "view": {
+      "name": "Period",
+      "live": "Live",
+      "today": "Idag",
+      "yesterday": "Igår",
+      "week": "Vecka",
+      "month": "Månad",
+      "year": "År"
     }
   },
   "editor": {
@@ -149,6 +158,8 @@
     "connect_to": "Anslut till",
     "connect_to_grid": "Elnät (linje upp till nätet)",
     "connect_to_battery": "Batteri (linje till batteriet)",
-    "connect_to_none": "Ingen (ingen linje)"
+    "connect_to_none": "Ingen (ingen linje)",
+    "energy_entities": "Väljare live / period",
+    "periods": "Perioder"
   }
 }

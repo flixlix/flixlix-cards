@@ -8,6 +8,15 @@
       "car": "Auto",
       "heat_pump": "Tepelné čerpadlo",
       "motorbike": "Motorka"
+    },
+    "view": {
+      "name": "Období",
+      "live": "Živě",
+      "today": "Dnes",
+      "yesterday": "Včera",
+      "week": "Týden",
+      "month": "Měsíc",
+      "year": "Rok"
     }
   },
   "editor": {
@@ -149,6 +158,8 @@
     "connect_to": "Připojit k",
     "connect_to_grid": "Síť (čára nahoru k síti)",
     "connect_to_battery": "Baterie (čára k baterii)",
-    "connect_to_none": "Žádné (bez čáry)"
+    "connect_to_none": "Žádné (bez čáry)",
+    "energy_entities": "Přepínač živě / období",
+    "periods": "Období"
   }
 }

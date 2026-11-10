@@ -12,6 +12,7 @@ import {
   MODES,
   STATE_OF_CHARGE_POSITIONS,
 } from "../types";
+import { energyEntities } from "./energy-schema";
 
 const percent = { number: { mode: "box", min: 0, max: 100, step: 1, unit_of_measurement: "%" } };
 const decimals = { number: { mode: "box", min: 0, max: 5, step: 1 } };
@@ -188,6 +189,7 @@ export const generalSchema = (mode: HomeFlowMode | undefined) =>
     { name: "title", selector: { text: {} } },
     modeField,
     ...(mode === "energy" ? [{ name: "collection_key", selector: { text: {} } }] : []),
+    energyEntities,
   ] as const;
 
 /** Only energy mode has a grid or battery with a value each way. */
@@ -313,4 +315,5 @@ export const fieldDefaults = (mode: HomeFlowMode | undefined): Record<string, st
   state_of_charge_position: localize("editor.state_of_charge_position_below_value"),
   status: localize("editor.heat_pump_status_state"),
   mode: localize("editor.mode_power"),
+  periods: localize("card.view.today"),
 });

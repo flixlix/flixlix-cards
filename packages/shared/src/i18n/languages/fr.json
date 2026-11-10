@@ -8,6 +8,15 @@
       "car": "Voiture",
       "heat_pump": "Pompe à chaleur",
       "motorbike": "Moto"
+    },
+    "view": {
+      "name": "Période",
+      "live": "En direct",
+      "today": "Aujourd'hui",
+      "yesterday": "Hier",
+      "week": "Semaine",
+      "month": "Mois",
+      "year": "Année"
     }
   },
   "editor": {
@@ -149,6 +158,8 @@
     "connect_to": "Relier à",
     "connect_to_grid": "Réseau (ligne vers le réseau)",
     "connect_to_battery": "Batterie (ligne vers la batterie)",
-    "connect_to_none": "Aucun (sans ligne)"
+    "connect_to_none": "Aucun (sans ligne)",
+    "energy_entities": "Sélecteur direct / période",
+    "periods": "Périodes"
   }
 }

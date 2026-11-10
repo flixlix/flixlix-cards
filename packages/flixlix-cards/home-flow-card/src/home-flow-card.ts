@@ -14,16 +14,10 @@ import { EntityActions } from "@flixlix-cards/shared/utils/entity-actions";
 import { applyCardState } from "@flixlix-cards/shared/utils/apply-card-state";
 import { liveConditionContext } from "@flixlix-cards/shared/utils/condition-context";
 import { EnergyPeriodController } from "@flixlix-cards/shared/utils/energy-period-controller";
-import {
-  assertRenderableFlowCardConfig,
-  clickableEntitiesWithDefault,
-  displayZeroLinesWithDefaults,
-} from "@flixlix-cards/shared/utils/flow-card-config";
-import { defaultValues, getDefaultConfig } from "@flixlix-cards/shared/utils/get-default-config";
+import { getDefaultConfig } from "@flixlix-cards/shared/utils/get-default-config";
 import { registerCustomCard } from "@flixlix-cards/shared/utils/register-custom-card";
 import { cardShouldUpdate } from "@flixlix-cards/shared/utils/relevant-change";
 import { SecondaryTemplates } from "@flixlix-cards/shared/utils/secondary-templates";
-import { coerceNumber } from "@flixlix-cards/shared/utils/utils";
 import { WidthController } from "@flixlix-cards/shared/utils/width-controller";
 import { type HomeAssistant, type LovelaceCardEditor } from "custom-card-helpers";
 import { html, LitElement, nothing, type PropertyValues, type TemplateResult } from "lit";
@@ -34,13 +28,22 @@ import { HomeFlowCardEditor } from "./ui-editor/ui-editor";
 import { carImage, type CarImage, carResolution, readCarPalette } from "./car-image";
 import { carEntities, carScene, type CarStatus, carStatus } from "./car-node";
 import { drawHouse } from "./draw-house";
+import { withDefaults } from "./flow-defaults";
 import { heatPumpEntities } from "./heat-pump-node";
 import { fitLabels, wireScale } from "./label-size";
 import { labelsHtml } from "./render-labels";
 import { gridFade, keepPulsePhase } from "./render-wires";
 import { styles } from "./styles";
-import { type FlowConfig, fromEntities, type HomeFlowCardConfig, toFlowConfig } from "./types";
+import {
+  type FlowConfig,
+  fromEntities,
+  type HomeFlowCardConfig,
+  toFlowConfig,
+  toFlowViews,
+} from "./types";
 import { unitSlide } from "./unit-slide";
+import { ViewController } from "./view-controller";
+import { viewSelectorStyles } from "./view-selector";
 import { morphWord } from "./word-morph";
 
 registerCustomCard({
@@ -81,16 +84,23 @@ export class HomeFlowCard extends LitElement {
   @property({ attribute: false }) public hass!: HomeAssistant;
   /** The config in the `entities` shape the shared pipeline reads, with defaults filled in. */
   @state() private _config!: FlowConfig;
+  private readonly _views = new ViewController(this, (config) => {
+    this._config = config;
+    void this._energy.refresh();
+  });
   private readonly _width = new WidthController(this, ".stage > svg");
-  private readonly _energy = new EnergyPeriodController(this, () =>
-    this._config && isEnergy(this._config)
+  private readonly _energy = new EnergyPeriodController(this, () => {
+    const config =
+      this._views.views?.period ?? (this._config && isEnergy(this._config) && this._config);
+    return config
       ? {
           hass: this.hass,
-          collectionKey: this._config.collection_key,
-          statisticIds: statisticIds(this._config),
+          collectionKey: config.collection_key,
+          period: this._views.period,
+          statisticIds: statisticIds(config),
         }
-      : null
-  );
+      : null;
+  });
   @state() private _pageHidden = isPageHidden();
   private _cardState?: CardState;
   /** Reads the fixtures' entities as the nodes' are read: in W, or in Wh over the period. */
@@ -114,19 +124,11 @@ export class HomeFlowCard extends LitElement {
   };
 
   setConfig(cardConfig: HomeFlowCardConfig): void {
-    const config = toFlowConfig(cardConfig);
-    assertRenderableFlowCardConfig(config);
-    this._config = {
-      ...config,
-      min_flow_rate: coerceNumber(config.min_flow_rate, defaultValues.minFlowRate),
-      max_flow_rate: coerceNumber(config.max_flow_rate, defaultValues.maxFlowRate),
-      base_decimals: coerceNumber(config.base_decimals, defaultValues.baseDecimals),
-      kilo_decimals: coerceNumber(config.kilo_decimals, defaultValues.kiloDecimals),
-      kilo_threshold: coerceNumber(config.kilo_threshold, defaultValues.kiloThreshold),
-      mega_threshold: coerceNumber(config.mega_threshold, defaultValues.megaThreshold),
-      display_zero_lines: displayZeroLinesWithDefaults(config.display_zero_lines),
-      clickable_entities: clickableEntitiesWithDefault(config.clickable_entities),
-    };
+    const views = toFlowViews(cardConfig);
+    this._views.configure(
+      views && { ...views, live: withDefaults(views.live), period: withDefaults(views.period) }
+    );
+    this._config = this._views.config ?? withDefaults(toFlowConfig(cardConfig));
   }
 
   public connectedCallback() {
@@ -269,7 +271,7 @@ export class HomeFlowCard extends LitElement {
           >
             ${gridFade(box)} ${scene(scaleOfWires)} ${leaders}
           </svg>
-          ${labelsHtml(labels, box, context)}
+          ${labelsHtml(labels, box, context)} ${this._views.render(this._language())}
         </div>
       </ha-card>
     `;
@@ -279,8 +281,15 @@ export class HomeFlowCard extends LitElement {
   private _energyPlaceholder(): TemplateResult {
     const key = this._energy.window ? "loading" : "no_data";
     return html`<ha-card .header=${this._config.title}>
-      <div class="card-content">${this.hass.localize(`ui.panel.lovelace.cards.energy.${key}`)}</div>
+      <div class="card-content ${this._views.views ? "with-views" : ""}">
+        ${this.hass.localize(`ui.panel.lovelace.cards.energy.${key}`)}
+        ${this._views.render(this._language())}
+      </div>
     </ha-card>`;
+  }
+
+  private _language() {
+    return this.hass.locale?.language ?? "en";
   }
 
   protected updated(changedProps: PropertyValues): void {
@@ -310,7 +319,7 @@ export class HomeFlowCard extends LitElement {
     return this._config.animate_numbers !== false && canAnimate;
   }
 
-  static styles = styles;
+  static styles = [styles, viewSelectorStyles];
 }
 
 declare global {

@@ -1,6 +1,8 @@
 import {
   type EnergyCollectionFossilData,
+  type EnergyPeriodKey,
   type EnergyPeriodWindow,
+  energyPeriodWindow,
   fetchEnergyPeriodGrowth,
   fetchFossilEnergyConsumption,
   type FossilEnergyConsumption,
@@ -16,6 +18,7 @@ export type EnergyPeriodSource = {
   hass: HomeAssistant | undefined;
   /** The energy collection, i.e. the dashboard's date picker, to follow. */
   collectionKey: string | undefined;
+  period?: EnergyPeriodKey;
   statisticIds: string[];
   /**
    * The low-carbon sensor and the grid import statistics its share is weighed by, fetched while
@@ -74,7 +77,7 @@ export class EnergyPeriodController implements ReactiveController {
    */
   subscribe(): void {
     const source = this._source();
-    if (!source) {
+    if (!source || source.period) {
       this._unsubscribe();
       return;
     }
@@ -132,8 +135,10 @@ export class EnergyPeriodController implements ReactiveController {
     if (!source?.hass) {
       return;
     }
-    const { hass, collectionKey, statisticIds, fossil } = source;
-    const window = getGlobalEnergyPeriodWindow(hass, collectionKey);
+    const { hass, collectionKey, period, statisticIds, fossil } = source;
+    const window = period
+      ? energyPeriodWindow(period)
+      : getGlobalEnergyPeriodWindow(hass, collectionKey);
     const zeroGrowthMap = Object.fromEntries(statisticIds.map((id) => [id, 0]));
     this.window = window;
     this._host.requestUpdate();
