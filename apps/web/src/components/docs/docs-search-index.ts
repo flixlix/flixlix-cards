@@ -127,7 +127,14 @@ function configSections(
     ),
     make("solar", "Solar configuration", "Solar entity, name, icon, color options."),
     make("battery", "Battery configuration", "Battery entity, state_of_charge, color options."),
-    make("individual", "Individual devices", "Up to 4 extra circles (car, EV, etc)."),
+    make(
+      "individual",
+      "Individual devices",
+      card === "power"
+        ? "Extra circles (car, EV, etc). Up to 4 around a source, all of them with no grid, solar or battery."
+        : "Up to 4 extra circles (car, EV, etc).",
+      card === "power" ? ["device-only", "no grid", "no solar", "no battery", "ring"] : undefined
+    ),
     make("home", "Home configuration", "Home entity, subtract_individual, override_state."),
     make("fossil-fuel", "Fossil fuel / low-carbon", "Fossil fuel percentage circle config."),
     make("color-object", "Color object", "Production / consumption HEX colors."),
