@@ -64,3 +64,6 @@ custom-elements.json
 
 # Claude Code worktrees: separate checkouts, never part of this repo
 .claude/worktrees/
+
+# bundle size CI output
+.bundle-size/

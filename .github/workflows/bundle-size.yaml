@@ -1,0 +1,81 @@
+name: Bundle size
+
+on:
+  pull_request:
+    paths: &paths
+      - "packages/**"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - ".github/workflows/bundle-size.yaml"
+  # Runs on main only to cache the sizes PRs compare against.
+  push:
+    branches: [main]
+    paths: *paths
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  bundle-size:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      # Only the cards and what they build with: skips the docs site and e2e.
+      - name: Install card dependencies
+        run: pnpm install --frozen-lockfile --filter "{./packages/flixlix-cards/**}..."
+
+      - name: Build cards
+        run: pnpm --filter "./packages/flixlix-cards/**" --parallel build
+
+      # Caches saved on main are readable from every PR. Falls back to the newest main
+      # measurement when the PR's base commit did not touch packages. Restore and save use the
+      # same path, because actions/cache only matches entries saved from the same path.
+      - name: Restore main sizes
+        if: github.event_name == 'pull_request'
+        uses: actions/cache/restore@v4
+        with:
+          path: .bundle-size/main/bundle-sizes.json
+          key: bundle-sizes-${{ github.event.pull_request.base.sha }}
+          restore-keys: bundle-sizes-
+
+      - name: Measure
+        env:
+          OUTPUT: ${{ github.event_name == 'push' && '.bundle-size/main' || '.bundle-size' }}
+        run: |
+          mkdir -p "$OUTPUT"
+          status=0
+          node packages/tooling/bundle-size/cli.js packages/flixlix-cards "$OUTPUT" .bundle-size/main/bundle-sizes.json || status=$?
+          cat "$OUTPUT/bundle-size.md" >> "$GITHUB_STEP_SUMMARY"
+          exit $status
+
+      - name: Save main sizes
+        if: ${{ !cancelled() && github.event_name == 'push' && hashFiles('.bundle-size/main/bundle-sizes.json') != '' }}
+        uses: actions/cache/save@v4
+        with:
+          path: .bundle-size/main/bundle-sizes.json
+          key: bundle-sizes-${{ github.sha }}
+
+      # Fork PRs get a read-only token: they still see the table in the job summary.
+      - name: Comment on PR
+        if: ${{ !cancelled() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && hashFiles('.bundle-size/bundle-size.md') != '' }}
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: bundle-size
+          path: .bundle-size/bundle-size.md
