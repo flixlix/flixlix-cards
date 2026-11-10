@@ -389,6 +389,51 @@ describe("power flow ui editor", () => {
     ).toThrow(/colour/);
   });
 
+  test("converting dashboard links puts them in front of the buttons and drops the legacy keys", async () => {
+    const { editor, lastConfig } = await mountEditor({
+      title: "Home",
+      entities: {},
+      dashboard_link: "/energy",
+      second_dashboard_link: "https://example.com/solar",
+      second_dashboard_link_label: "Inverter",
+      buttons: [{ name: "Battery", icon: "mdi:home-battery" }],
+    });
+    editor.hass = { ...hass, localize: () => "Go to the energy dashboard" } as HomeAssistant;
+
+    query(editor, ".dashboard-links-alert .legacy-fields-alert-button").click();
+
+    expect(lastConfig()).toEqual({
+      type: "custom:power-flow-card-plus",
+      title: "Home",
+      entities: {},
+      buttons: [
+        {
+          name: "Go to the energy dashboard",
+          tap_action: { action: "navigate", navigation_path: "/energy" },
+        },
+        { name: "Inverter", tap_action: { action: "url", url_path: "https://example.com/solar" } },
+        { name: "Battery", icon: "mdi:home-battery" },
+      ],
+    });
+    await editor.updateComplete;
+    expect(editor.shadowRoot?.querySelector(".dashboard-links-alert")).toBeNull();
+  });
+
+  test("without dashboard links there is nothing to convert", async () => {
+    const { editor } = await mountEditor({ entities: {}, buttons: [{ name: "Solar" }] });
+
+    expect(editor.shadowRoot?.querySelector(".dashboard-links-alert")).toBeNull();
+  });
+
+  test("the advanced form no longer offers the dashboard link", async () => {
+    const { form } = await openAdvanced({});
+
+    const fields = ownFieldNames("schema" in form ? form.schema : undefined);
+
+    expect(fields).not.toContain("dashboard_link");
+    expect(fields).not.toContain("dashboard_link_label");
+  });
+
   test.each(["grid", "solar", "battery"])(
     "the %s page edits its own unit, unit white space and decimals",
     async (page) => {

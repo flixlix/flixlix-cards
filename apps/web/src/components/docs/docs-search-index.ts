@@ -195,7 +195,7 @@ function configOptions(
     make("type", "Card type identifier (required)."),
     make("entities", "Entities object (required)."),
     make("title", "Title shown above the card."),
-    make("dashboard_link", "URL to a dashboard, shown as a link."),
+    make("dashboard_link", "Legacy link to a dashboard; use buttons instead."),
     make(
       "buttons",
       "Buttons at the bottom of the card, each with a name, icon and actions.",

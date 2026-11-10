@@ -29,6 +29,7 @@ export const cardConfigStruct = assign(
   object({
     title: optional(string()),
     theme: optional(string()),
+    // Legacy: no longer in the editor, which offers to convert them to `buttons`.
     dashboard_link: optional(string()),
     dashboard_link_label: optional(string()),
     second_dashboard_link: optional(string()),
@@ -104,16 +105,6 @@ const advancedFieldsGrid = () => ({
   type: "grid",
   column_min_width: "200px",
   schema: [
-    {
-      name: "dashboard_link",
-      label: "Dashboard Link",
-      selector: { navigation: {} },
-    },
-    {
-      name: "dashboard_link_label",
-      label: "Dashboard Link Label",
-      selector: { text: {} },
-    },
     {
       name: "collection_key",
       label: "Energy Collection Key",

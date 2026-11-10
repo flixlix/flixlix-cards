@@ -279,7 +279,7 @@ describe("energy flow ui editor", () => {
   });
 
   test("the buttons page adds a button to the config", async () => {
-    const { editor, lastConfig } = await mountEditor({ entities: {}, dashboard_link: "/energy" });
+    const { editor, lastConfig } = await mountEditor({ entities: {} });
     query(editor, 'link-subpage[path="buttons"]').dispatchEvent(
       new CustomEvent("open-sub-element-editor", { detail: { open: true } })
     );
@@ -294,8 +294,23 @@ describe("energy flow ui editor", () => {
     expect(lastConfig()).toEqual({
       type: "custom:energy-flow-card-plus",
       entities: {},
-      dashboard_link: "/energy",
       buttons: [{ icon: "mdi:gesture-tap-button" }],
+    });
+  });
+
+  test("converting the dashboard link turns it into the first button", async () => {
+    const { editor, lastConfig } = await mountEditor({
+      entities: {},
+      dashboard_link: "/energy",
+      dashboard_link_label: "Energy",
+    });
+
+    query(editor, ".dashboard-links-alert .legacy-fields-alert-button").click();
+
+    expect(lastConfig()).toEqual({
+      type: "custom:energy-flow-card-plus",
+      entities: {},
+      buttons: [{ name: "Energy", tap_action: { action: "navigate", navigation_path: "/energy" } }],
     });
   });
 

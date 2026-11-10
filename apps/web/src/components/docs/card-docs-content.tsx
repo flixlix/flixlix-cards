@@ -372,14 +372,15 @@ const ADVANCED_CARD_OPTIONS = (v: Variant): OptionRow[] => [
     type: "string",
     description: (
       <>
-        URL path to a dashboard (e.g. <code>/energy</code>), shows a button at the bottom.
+        Legacy, kept so existing configs still work: use <a href="#buttons">buttons</a> instead. URL
+        path to a dashboard (e.g. <code>/energy</code>), shown as a link at the bottom.
       </>
     ),
   },
   {
     name: "dashboard_link_label",
     type: "string",
-    description: "Override the default label of the dashboard link.",
+    description: "Legacy: the label of dashboard_link.",
   },
   {
     name: "buttons",
@@ -417,12 +418,12 @@ const ADVANCED_CARD_OPTIONS = (v: Variant): OptionRow[] => [
   {
     name: "second_dashboard_link",
     type: "string",
-    description: "Optional second dashboard link (YAML editor only).",
+    description: "Legacy: a second link like dashboard_link.",
   },
   {
     name: "second_dashboard_link_label",
     type: "string",
-    description: "Override the second dashboard link label.",
+    description: "Legacy: the label of second_dashboard_link.",
   },
   {
     name: "min_flow_rate",
@@ -1362,8 +1363,9 @@ entities:
                 >
                   Home Assistant action
                 </a>{" "}
-                objects. They sit after <code>dashboard_link</code> and{" "}
-                <code>second_dashboard_link</code>, which keep working as before.
+                objects. The legacy <code>dashboard_link</code> and{" "}
+                <code>second_dashboard_link</code> still show before the buttons; the visual editor
+                no longer offers them and instead converts them to buttons.
               </p>
             </Prose>
           }
