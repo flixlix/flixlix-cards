@@ -12,6 +12,9 @@
   },
   "editor": {
     "accept_negative": "नकारात्मक स्वीकार करें",
+    "add_button": "बटन जोड़ें",
+    "button": "बटन",
+    "buttons": "बटन",
     "action": "क्रिया",
     "advanced": "उन्नत विकल्प",
     "animation": "एनिमेशन",

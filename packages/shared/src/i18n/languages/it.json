@@ -12,6 +12,9 @@
   },
   "editor": {
     "accept_negative": "Accetta Valori Negativi",
+    "add_button": "Aggiungi pulsante",
+    "button": "Pulsante",
+    "buttons": "Pulsanti",
     "action": "Azione",
     "advanced": "Opzioni Avanzate",
     "animation": "Animazione",

@@ -36,11 +36,12 @@ const ENTITY_PAGES = [
 ] as const;
 
 type EntityPage = (typeof ENTITY_PAGES)[number]["page"];
-type MenuPage = EntityPage | "individual" | "advanced";
+type MenuPage = EntityPage | "individual" | "buttons" | "advanced";
 
 const MENU_PAGES: readonly { page: MenuPage; icon: string }[] = [
   ...ENTITY_PAGES,
   { page: "individual", icon: "mdi:dots-horizontal-circle-outline" },
+  { page: "buttons", icon: "mdi:gesture-tap-button" },
   { page: "advanced", icon: "mdi:cog" },
 ];
 
@@ -194,6 +195,14 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
       `;
     }
 
+    if (currentPage === "buttons") {
+      return html`
+        ${alerts}
+        <subpage-header @go-back=${this._goBack} page=${currentPage}> </subpage-header>
+        <buttons-editor .hass=${this.hass} .config=${this._config}></buttons-editor>
+      `;
+    }
+
     if (currentPage === "advanced") {
       return html`
         ${alerts}
@@ -252,7 +261,7 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
   }
 
   private _menuIcon(page: MenuPage, fallbackIcon: string): string {
-    if (page === "individual" || page === "advanced" || !this._config) {
+    if (page === "individual" || page === "buttons" || page === "advanced" || !this._config) {
       return fallbackIcon;
     }
     return nonEmpty(this._config.entities[page]?.icon) ?? fallbackIcon;

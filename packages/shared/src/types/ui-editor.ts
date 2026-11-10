@@ -1,7 +1,7 @@
 import { type ConfigEntities } from "@flixlix-cards/shared/types";
 import { type ActionConfig, type HomeAssistant } from "custom-card-helpers";
 
-export type ConfigPage = keyof ConfigEntities | "advanced" | null;
+export type ConfigPage = keyof ConfigEntities | "buttons" | "advanced" | null;
 
 export interface EntityConfig {
   entity: string;

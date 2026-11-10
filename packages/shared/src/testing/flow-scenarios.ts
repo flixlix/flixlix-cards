@@ -90,6 +90,29 @@ const individualStates = (count: number): StateFixtures =>
 
 export const flowScenarios: FlowScenario[] = [
   {
+    name: "dashboard link and buttons wrap on a narrow card",
+    visual: true,
+    width: 360,
+    options: {
+      dashboard_link: "/energy",
+      buttons: [
+        { name: "Solar", icon: "mdi:solar-power" },
+        { name: "Battery", icon: "mdi:home-battery", entity: "sensor.battery" },
+        { icon: "mdi:cog", entity: "sensor.grid" },
+      ],
+    },
+    entities: combinedEntities,
+    states: {
+      "sensor.grid": "800",
+      "sensor.solar": "1200",
+      "sensor.battery": "-300",
+      "sensor.battery_soc": "60",
+    },
+    expect: {
+      shown: [".card-actions"],
+    },
+  },
+  {
     name: "auxiliary feeding the grid",
     visual: true,
     energy: true,

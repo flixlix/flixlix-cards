@@ -97,7 +97,7 @@ describe("energy period", () => {
   });
 });
 
-const mountLive = async () => {
+const mountLive = async (options: object = {}) => {
   const hass = fakeHass({
     states: {
       "sensor.grid": sensor("1000", { unit: "Wh" }),
@@ -110,6 +110,7 @@ const mountLive = async () => {
     type: "custom:energy-flow-card-plus",
     energy_date_selection: false,
     entities: { grid: { entity: "sensor.grid" }, solar: { entity: "sensor.solar" } },
+    ...options,
   };
   return { hass, ...(await mountCard(EnergyFlowCardPlus, config, hass)) };
 };
@@ -142,6 +143,34 @@ describe("node actions", () => {
     }
     await userEvent.click(circle);
     expect(opened).toHaveLength(1);
+  });
+});
+
+describe("buttons", () => {
+  test("the buttons follow the dashboard link and hand their tap action to Home Assistant", async () => {
+    const { card, root } = await mountLive({
+      dashboard_link: "/energy",
+      buttons: [{ name: "Solar", tap_action: { action: "navigate", navigation_path: "/solar" } }],
+    });
+    const actions: unknown[] = [];
+    card.addEventListener("hass-action", (event) => {
+      actions.push(event instanceof CustomEvent ? event.detail : undefined);
+    });
+    const buttons = [...root.querySelectorAll<HTMLElement>(".card-actions ha-button")];
+    expect(buttons.map((button) => button.getAttribute("href"))).toEqual(["/energy", null]);
+    const [, solar] = buttons;
+    if (!solar) {
+      throw new Error("button not rendered");
+    }
+    await userEvent.click(solar);
+    expect(actions).toEqual([
+      expect.objectContaining({
+        action: "tap",
+        config: expect.objectContaining({
+          tap_action: { action: "navigate", navigation_path: "/solar" },
+        }),
+      }),
+    ]);
   });
 });
 

@@ -124,6 +124,7 @@ Else, if you prefer the graphical editor, use the menu to add the resource:
 | dashboard_link_label        | `string`  | Go To Energy Dashboard (auto-translates) | If set, overrides the default link label to go to a different dashboard.                                                                                                                                                 |
 | second_dashboard_link       | `string`  |                                          | Shows another link to an Energy Dashboard. Should be a url path to location of your choice. If you wanted to link to the built-in dashboard you would enter `/energy` for example. (Only available in the YAML Editor)   |
 | second_dashboard_link_label | `string`  | Go To Energy Dashboard (auto-translates) | If set, overrides the second default link label to go to a different dashboard.                                                                                                                                          |
+| buttons                     | `list`    |                                          | More buttons at the bottom of the card, after the dashboard links. See [Buttons](#buttons).                                                                                                                              |
 | kilo_decimals               | `number`  |                    1                     | Number of decimals rounded to when kilowatts are displayed.                                                                                                                                                              |
 | base_decimals               | `number`  |                    1                     | Number of decimals rounded to when watts are displayed.                                                                                                                                                                  |
 | min_flow_rate               | `number`  |                   .75                    | Seconds the quickest dot takes along a 175px line; shorter lines take less, longer lines more. See [Flow Formula](#flow-formula).                                                                                        |
@@ -153,6 +154,34 @@ The card supports Home Assistant action configs on entity circles and other clic
 | double_tap_action | `object` | Action triggered on double tap/click. |
 
 If none of these actions are configured for a clickable entity surface, the card falls back to opening more-info unless `clickable_entities: false`.
+
+#### Buttons
+
+`buttons` adds a row of buttons at the bottom of the card, after `dashboard_link` and `second_dashboard_link`. In the visual editor, open **Buttons** to add, remove, reorder and edit them.
+
+| Name              | Type     | Description                                                                                     |
+| ----------------- | -------- | ----------------------------------------------------------------------------------------------- |
+| name              | `string` | Text on the button. Leave it out for an icon-only button.                                       |
+| icon              | `string` | Icon shown before the name, e.g. `mdi:solar-power`.                                             |
+| entity            | `string` | Entity for `more-info` and `toggle` actions. Without a name or icon, the button shows its name. |
+| tap_action        | `object` | Action triggered on tap/click. Without any action, a tap opens the entity's more-info.          |
+| hold_action       | `object` | Action triggered on long press.                                                                 |
+| double_tap_action | `object` | Action triggered on double tap/click.                                                           |
+
+```yaml
+dashboard_link: /energy
+buttons:
+  - name: Solar
+    icon: mdi:solar-power
+    tap_action:
+      action: navigate
+      navigation_path: /dashboard-energy/solar
+  - name: Battery
+    icon: mdi:home-battery
+    entity: input_boolean.battery_force_charge
+    tap_action:
+      action: toggle
+```
 
 #### Entities object
 

@@ -1,9 +1,11 @@
+import { ButtonsEditor } from "./buttons-editor";
 import { IndividualDevicesEditor } from "./individual-devices-editor";
 import { IndividualRowEditor } from "./individual-row-editor";
 import { LinkSubpage } from "./link-subpage";
 import { SubpageHeader } from "./subpage-header";
 
 const editorElements: Record<string, CustomElementConstructor> = {
+  "buttons-editor": ButtonsEditor,
   "individual-devices-editor": IndividualDevicesEditor,
   "individual-row-editor": IndividualRowEditor,
   "link-subpage": LinkSubpage,

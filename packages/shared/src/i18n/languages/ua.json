@@ -12,6 +12,9 @@
   },
   "editor": {
     "accept_negative": "Дозволити від’ємні значення",
+    "add_button": "Додати кнопку",
+    "button": "Кнопка",
+    "buttons": "Кнопки",
     "action": "Дія",
     "advanced": "Розширені параметри",
     "animation": "Анімація",

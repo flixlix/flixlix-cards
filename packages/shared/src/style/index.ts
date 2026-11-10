@@ -535,6 +535,8 @@ export const styles = css`
 
   .card-actions {
     display: flex;
+    flex-wrap: wrap;
+    gap: var(--ha-space-2, 8px);
     justify-content: space-between;
     align-items: center;
   }

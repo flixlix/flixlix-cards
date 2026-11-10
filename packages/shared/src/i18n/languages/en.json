@@ -12,6 +12,9 @@
   },
   "editor": {
     "accept_negative": "Accept Negative",
+    "add_button": "Add button",
+    "button": "Button",
+    "buttons": "Buttons",
     "action": "Action",
     "advanced": "Advanced Options",
     "animation": "Animation",

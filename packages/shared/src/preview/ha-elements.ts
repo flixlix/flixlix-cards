@@ -147,7 +147,7 @@ class HaButton extends LitElement {
   @property() href?: string;
 
   render() {
-    return html`<a href=${this.href ?? nothing}><slot></slot></a>`;
+    return html`<a href=${this.href ?? nothing}><slot name="start"></slot><slot></slot></a>`;
   }
 }
 

@@ -4,6 +4,7 @@ import { FLOW_RATE_MODELS, TOPOLOGIES } from "@flixlix-cards/shared/types";
 import memoizeOne from "memoize-one";
 import {
   any,
+  array,
   assign,
   boolean,
   enums,
@@ -32,6 +33,18 @@ export const cardConfigStruct = assign(
     dashboard_link_label: optional(string()),
     second_dashboard_link: optional(string()),
     second_dashboard_link_label: optional(string()),
+    buttons: optional(
+      array(
+        object({
+          name: optional(string()),
+          icon: optional(string()),
+          entity: optional(string()),
+          tap_action: optional(any()),
+          hold_action: optional(any()),
+          double_tap_action: optional(any()),
+        })
+      )
+    ),
     inverted_entities: optional(any()),
     base_decimals: optional(integer()),
     kilo_decimals: optional(integer()),

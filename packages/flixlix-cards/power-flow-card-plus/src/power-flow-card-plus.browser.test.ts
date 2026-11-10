@@ -162,6 +162,125 @@ describe("node actions", () => {
   });
 });
 
+const mountButtons = async (options: object) => {
+  const mounted = await mountCard(
+    PowerFlowCardPlus,
+    {
+      type: "custom:power-flow-card-plus",
+      ...options,
+      entities: { grid: { entity: "sensor.grid" } },
+    },
+    fakeHass({ states: { "sensor.grid": sensor("300", { name: "Grid meter" }) } })
+  );
+  const row = mounted.root.querySelector(".card-actions");
+  return {
+    ...mounted,
+    events: recordHaEvents(mounted.card),
+    buttons: () => [...(row?.querySelectorAll<HTMLElement>("ha-button") ?? [])],
+  };
+};
+
+describe("buttons", () => {
+  test("without dashboard links or buttons, the card has no button row", async () => {
+    const { root } = await mountButtons({});
+    expect(root.querySelector(".card-actions")).toBeNull();
+  });
+
+  test("the dashboard links keep their place before the buttons and still link by href", async () => {
+    const { buttons } = await mountButtons({
+      dashboard_link: "/energy",
+      dashboard_link_label: "Energy",
+      second_dashboard_link: "/battery",
+      buttons: [{ name: "Solar", tap_action: { action: "navigate", navigation_path: "/solar" } }],
+    });
+    expect(
+      buttons().map((button) => [button.textContent?.trim(), button.getAttribute("href")])
+    ).toEqual([
+      ["Energy", "/energy"],
+      ["Go to the energy dashboard", "/battery"],
+      ["Solar", null],
+    ]);
+  });
+
+  test("tapping a button hands its tap action to Home Assistant", async () => {
+    const { buttons, events } = await mountButtons({
+      buttons: [
+        { name: "Solar", tap_action: { action: "navigate", navigation_path: "/solar" } },
+        { name: "Battery", tap_action: { action: "navigate", navigation_path: "/battery" } },
+      ],
+    });
+    const battery = buttons()[1];
+    if (!battery) {
+      throw new Error("second button not rendered");
+    }
+    await userEvent.click(battery);
+    expect(events).toEqual([
+      {
+        type: "hass-action",
+        detail: expect.objectContaining({
+          action: "tap",
+          config: expect.objectContaining({
+            tap_action: { action: "navigate", navigation_path: "/battery" },
+          }),
+        }),
+      },
+    ]);
+  });
+
+  test("holding a button runs its hold action", async () => {
+    const { buttons, events } = await mountButtons({
+      buttons: [
+        {
+          entity: "sensor.grid",
+          tap_action: { action: "none" },
+          hold_action: { action: "toggle" },
+        },
+      ],
+    });
+    const [button] = buttons();
+    if (!button) {
+      throw new Error("button not rendered");
+    }
+    await holdFor(button, 600);
+    expect(events.map((event) => event.detail)).toEqual([
+      expect.objectContaining({
+        action: "hold",
+        config: expect.objectContaining({ entity: "sensor.grid" }),
+      }),
+    ]);
+  });
+
+  test("a button with an entity and no action opens the entity's more-info, named after it", async () => {
+    const { buttons, events } = await mountButtons({ buttons: [{ entity: "sensor.grid" }] });
+    const [button] = buttons();
+    if (!button) {
+      throw new Error("button not rendered");
+    }
+    expect(button.textContent?.trim()).toBe("Grid meter");
+    await userEvent.click(button);
+    expect(events.map((event) => event.detail)).toEqual([
+      expect.objectContaining({
+        action: "tap",
+        config: expect.objectContaining({
+          entity: "sensor.grid",
+          tap_action: { action: "more-info" },
+        }),
+      }),
+    ]);
+  });
+
+  test("an icon-only button shows the icon and keeps a name for screen readers", async () => {
+    const { buttons } = await mountButtons({
+      buttons: [{ entity: "sensor.grid", icon: "mdi:transmission-tower" }],
+    });
+    const [button] = buttons();
+    const icon = button?.querySelector("ha-icon");
+    expect(icon && "icon" in icon ? icon.icon : undefined).toBe("mdi:transmission-tower");
+    expect(button?.textContent?.trim()).toBe("");
+    expect(button?.getAttribute("aria-label")).toBe("Grid meter");
+  });
+});
+
 /** Where the nodes and lines sit inside the card when the page has the given direction. */
 const nodePositions = async (dir: "ltr" | "rtl") => {
   document.documentElement.dir = dir;

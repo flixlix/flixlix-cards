@@ -12,6 +12,9 @@
   },
   "editor": {
     "accept_negative": "Negatieve waarden accepteren",
+    "add_button": "Knop toevoegen",
+    "button": "Knop",
+    "buttons": "Knoppen",
     "action": "Actie",
     "advanced": "Geavanceerde Opties",
     "animation": "Animatie",

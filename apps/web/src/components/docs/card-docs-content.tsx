@@ -16,6 +16,7 @@ import {
   MousePointerClick,
   Network,
   Palette,
+  RectangleEllipsis,
   Settings,
   Split,
   Sun,
@@ -379,6 +380,15 @@ const ADVANCED_CARD_OPTIONS = (v: Variant): OptionRow[] => [
     name: "dashboard_link_label",
     type: "string",
     description: "Override the default label of the dashboard link.",
+  },
+  {
+    name: "buttons",
+    type: "list",
+    description: (
+      <>
+        More buttons at the bottom, after the dashboard links. See <a href="#buttons">Buttons</a>.
+      </>
+    ),
   },
   {
     name: "kilo_decimals",
@@ -1023,6 +1033,32 @@ const POWER_OUTAGE_OPTIONS: OptionRow[] = [
   },
 ];
 
+const BUTTON_OPTIONS: OptionRow[] = [
+  {
+    name: "name",
+    type: "string",
+    description: "Text on the button. Leave out for an icon-only button.",
+  },
+  {
+    name: "icon",
+    type: "string",
+    description: "Icon shown before the name, e.g. mdi:solar-power.",
+  },
+  {
+    name: "entity",
+    type: "string",
+    description:
+      "Entity for more-info and toggle actions. Without a name or icon, the button shows the entity's name.",
+  },
+  {
+    name: "tap_action",
+    type: "object",
+    description: "Triggered on tap/click. Without any action, a tap opens the entity's more-info.",
+  },
+  { name: "hold_action", type: "object", description: "Triggered on long press." },
+  { name: "double_tap_action", type: "object", description: "Triggered on double tap." },
+];
+
 const TOPOLOGY_OPTIONS: OptionRow[] = [
   {
     name: "standard",
@@ -1270,6 +1306,48 @@ entities:
               },
             ]}
           />
+        </CategorySection>
+
+        <CategorySection
+          id="buttons"
+          title="Buttons"
+          icon={RectangleEllipsis}
+          accent="slate"
+          description="A row of buttons at the bottom of the card, each with its own name, icon and actions."
+          intro={
+            <Prose>
+              <p>
+                Add, remove, reorder and edit them in the visual editor under{" "}
+                <strong>Buttons</strong>, or list them under <code>buttons</code>. Each button takes
+                the standard{" "}
+                <a
+                  href="https://www.home-assistant.io/dashboards/actions/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Home Assistant action
+                </a>{" "}
+                objects. They sit after <code>dashboard_link</code> and{" "}
+                <code>second_dashboard_link</code>, which keep working as before.
+              </p>
+            </Prose>
+          }
+          example={{
+            language: "yaml",
+            code: `buttons:
+  - name: Solar
+    icon: mdi:solar-power
+    tap_action:
+      action: navigate
+      navigation_path: /dashboard-energy/solar
+  - name: Battery
+    icon: mdi:home-battery
+    entity: input_boolean.battery_force_charge
+    tap_action:
+      action: toggle`,
+          }}
+        >
+          <OptionList rows={BUTTON_OPTIONS} />
         </CategorySection>
 
         <CategorySection
