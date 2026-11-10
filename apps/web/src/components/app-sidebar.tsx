@@ -4,6 +4,7 @@ import {
   CalendarRange,
   ChartPie,
   ChevronRight,
+  Coffee,
   Github,
   HeartHandshake,
   House,
@@ -125,6 +126,11 @@ const SECTIONS: DocSection[] = [
   },
 ];
 
+// Collapsed, the group labels slide away; without their padding too, the gap between groups
+// would stay far wider than the gap between icons within one.
+const COLLAPSING_GROUP =
+  "transition-[padding] duration-200 ease-linear group-data-[collapsible=icon]:py-0";
+
 const GROUPS: DocSection["group"][] = ["Live power", "Energy over time", "Beyond energy"];
 
 function isSectionActive(pathname: string, sectionTo: string): boolean {
@@ -191,8 +197,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
 
-      <SidebarContent className="overflow-x-hidden">
-        <SidebarGroup>
+      <SidebarContent className="overflow-x-hidden transition-[gap] duration-200 ease-linear group-data-[collapsible=icon]:gap-1">
+        <SidebarGroup className={COLLAPSING_GROUP}>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
@@ -208,7 +214,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarGroup>
 
         {GROUPS.map((group) => (
-          <SidebarGroup key={group}>
+          <SidebarGroup key={group} className={COLLAPSING_GROUP}>
             <SidebarGroupLabel>{group}</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
@@ -240,7 +246,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         </SidebarMenuAction>
                       </CollapsibleTrigger>
                       <CollapsibleContent className="data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down overflow-hidden duration-200 ease-(--ease-out-strong) motion-reduce:animate-none">
-                        <SidebarMenuSub className="mr-0 ml-[1.0625rem] py-1 pr-0">
+                        <SidebarMenuSub className="mr-0 ml-[1.0625rem] py-1 pr-1">
                           {section.items.map((item) => (
                             <SidebarMenuSubItem key={item.to}>
                               <SidebarMenuSubButton
@@ -264,7 +270,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarGroup>
         ))}
 
-        <SidebarGroup>
+        <SidebarGroup className={COLLAPSING_GROUP}>
           <SidebarGroupLabel>Project</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -303,10 +309,26 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t group-data-[collapsible=icon]:border-t-0">
-        <div className="flex items-center justify-between gap-2 px-1 group-data-[collapsible=icon]:hidden">
-          <span className="text-muted-foreground truncate text-xs">Theme</span>
-          <ThemeToggle />
+      <SidebarFooter className="border-t">
+        <div className="relative overflow-x-clip [overflow-clip-margin:4px]">
+          {/* As wide as its link, so the hover stops short of the theme toggle beside it. */}
+          <SidebarMenu className="w-fit">
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                tooltip="Buy me a coffee"
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <a href="https://ko-fi.com/flixlix" target="_blank" rel="noopener noreferrer">
+                  <Coffee className="text-solar-ink" />
+                  <span>Buy me a coffee</span>
+                </a>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+          {/* Pinned to the expanded edge, so the collapsing sidebar closes over it instead of
+              pushing it onto the coffee icon. */}
+          <ThemeToggle className="absolute top-1/2 left-[calc(var(--sidebar-width)-1rem-2px)] -translate-x-full -translate-y-1/2 transition-opacity duration-200 ease-linear group-data-[collapsible=icon]:pointer-events-none group-data-[collapsible=icon]:opacity-0" />
         </div>
       </SidebarFooter>
       <SidebarRail />

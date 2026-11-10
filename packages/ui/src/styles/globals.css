@@ -143,7 +143,7 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
   body {
     @apply bg-background text-foreground;
@@ -155,9 +155,26 @@
     font-feature-settings: "ss01";
     text-wrap: balance;
   }
-  :focus-visible {
-    outline-color: var(--ring);
+  /* Bare links would get a square ring; anything with its own rounded-* class keeps that. */
+  a:focus-visible {
+    border-radius: 0.25rem;
   }
+}
+
+/*
+ * The one keyboard focus indicator, shadcn's: `border-ring ring-3 ring-ring/50`. Components don't
+ * draw their own. Unlayered so it wins over a component's border colour, and it fills Tailwind's
+ * shadow slots so an element keeps its own shadow under the ring. Elements that opt out with
+ * outline-none / outline-hidden (menu items, dialog panels, the search field) mark focus their own
+ * way, lists with their highlight.
+ */
+:focus-visible:not(.outline-none, .outline-hidden) {
+  outline: none;
+  border-color: var(--ring);
+  --tw-ring-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 50%, transparent);
+  box-shadow:
+    var(--tw-inset-shadow, 0 0 #0000), var(--tw-inset-ring-shadow, 0 0 #0000),
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
 }
 
 @utility press {

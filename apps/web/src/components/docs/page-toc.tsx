@@ -66,7 +66,7 @@ export function PageTOC({ items, className }: { items: TocItem[]; className?: st
   }
 
   return (
-    <nav aria-label="On this page" className={cn("text-sm", className)}>
+    <nav aria-label="On this page" className={cn("px-1 text-sm", className)}>
       <div className="mb-3 text-sm font-medium">On this page</div>
       <ul className="border-l">
         {items.map((item) => {
