@@ -24,6 +24,7 @@ import { InstallFromLink } from "./install-from-link";
 import { LiveExample } from "./live-example";
 import { OptionList } from "./option-list";
 import { PageTOC, type TocItem } from "./page-toc";
+import { SupportLinks } from "./support-links";
 
 const TITLE = "Energy Period Selector Plus";
 const PKG = "energy-period-selector-plus";
@@ -471,6 +472,7 @@ compare_button_label: Compare`,
           <OptionList rows={COMPARE_OPTIONS} />
         </CategorySection>
 
+        <SupportLinks card="Energy Period Selector Plus" />
         <NextPageNav
           prev={{ label: "Installation", to: `${BASE_PATH}/installation` }}
           next={{ label: "Examples", to: `${BASE_PATH}/examples` }}
@@ -581,6 +583,7 @@ cards:
         </Callout>
       </Section>
 
+      <SupportLinks card="Energy Period Selector Plus" />
       <NextPageNav prev={{ label: "Configuration", to: `${BASE_PATH}/configuration` }} />
     </>
   );

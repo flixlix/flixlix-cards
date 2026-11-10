@@ -25,6 +25,7 @@ import {
 import * as React from "react";
 
 import { trackEvent } from "#/lib/analytics";
+import type { IssueCard } from "#/lib/issues";
 import { Button } from "@flixlix-cards/ui/components/button";
 
 import { CardDemo } from "@/components/card-demo";
@@ -45,6 +46,7 @@ import { InstallFromCatalog } from "./install-from-catalog";
 import { LiveExample } from "./live-example";
 import { OptionList } from "./option-list";
 import { PageTOC, type TocItem } from "./page-toc";
+import { SupportLinks } from "./support-links";
 import { TopologyDemo } from "./topology-demo";
 
 export type CardKey = "power" | "energy";
@@ -54,7 +56,7 @@ type Variant = {
   cardSlug: string;
   cardType: "custom:power-flow-card-plus" | "custom:energy-flow-card-plus";
   pkgName: string;
-  title: string;
+  title: IssueCard;
   tagline: string;
   unit: string;
   unitLong: string;
@@ -1933,6 +1935,7 @@ return 1 / speed;`}
           </div>
         </CategorySection>
 
+        <SupportLinks card={v.title} />
         <NextPageNav
           prev={{ label: "Installation", to: `${v.basePath}/installation` }}
           next={{ label: "Examples", to: `${v.basePath}/examples` }}
@@ -2147,6 +2150,7 @@ entities:
         </Section>
       ) : null}
 
+      <SupportLinks card={v.title} />
       <NextPageNav prev={{ label: "Configuration", to: `${v.basePath}/configuration` }} />
     </>
   );
