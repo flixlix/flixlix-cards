@@ -1,3 +1,4 @@
+import { fakeConditionContext } from "@flixlix-cards/shared/testing/fixtures";
 import { type FlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { type HomeAssistant, NumberFormat, TimeFormat } from "custom-card-helpers";
 import { describe, expect, test } from "vite-plus/test";
@@ -89,6 +90,7 @@ const wiresFor = (
       auxiliarySecondary: undefined,
       individual: [],
     },
+    conditionContext: fakeConditionContext,
     width: 400,
   });
   if (state.status !== "ready") {

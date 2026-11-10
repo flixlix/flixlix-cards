@@ -1,11 +1,16 @@
 import { computeNonFossilFromCollection } from "@flixlix-cards/shared/states/utils/energy-period";
 import { getEntityState } from "@flixlix-cards/shared/states/utils/get-entity-state";
-import { type ComboEntity, type ConfigEntities } from "@flixlix-cards/shared/types";
+import {
+  type ComboEntity,
+  type ConfigEntities,
+  type IndividualDeviceType,
+} from "@flixlix-cards/shared/types";
 import { type HomeAssistant } from "custom-card-helpers";
+import { conditionsMet } from "./conditions";
 import { adjustZeroTolerance } from "./tolerance";
 import { type CardStateInput, type ReadyReadings, type TwoWayReading } from "./types";
 
-type NormalizeInput = Pick<CardStateInput, "config" | "hass">;
+type NormalizeInput = Pick<CardStateInput, "config" | "hass" | "conditionContext">;
 
 /** What each node puts in or takes out, after signs, tolerance, outage and display_zero. */
 export type NodeTotals = Readonly<{
@@ -153,6 +158,14 @@ const individualTotals = (input: NormalizeInput, readings: ReadyReadings) =>
     deviceTotal(field, readings.individuals[index])
   );
 
+const individualShown = (
+  input: NormalizeInput,
+  field: IndividualDeviceType | undefined,
+  total: number
+): boolean =>
+  deviceShown(field, total) &&
+  conditionsMet(field?.visibility ?? [], input.hass, input.conditionContext);
+
 const feedingIndividuals = (input: NormalizeInput, readings: ReadyReadings) =>
   (input.config.entities.individual ?? []).map((field, index) =>
     isFeeding(field, readings.individuals[index])
@@ -170,7 +183,7 @@ const presenceOf = (
     solar: hasEntity(entities.solar) && (entities.solar?.display_zero !== false || nodes.solar > 0),
     battery: hasEntity(entities.battery) && shownWithTotals(entities.battery, nodes.battery),
     individuals: individuals.map((total, index) =>
-      deviceShown(entities.individual?.[index], total)
+      individualShown(input, entities.individual?.[index], total)
     ),
     auxiliary: deviceShown(entities.auxiliary, auxiliary),
   };
@@ -229,7 +242,9 @@ export const normalize = (input: NormalizeInput, readings: ReadyReadings): Norma
       batteryCharge: shown(presence.battery, nodes.battery.into),
       batteryDischarge: shown(presence.battery, nodes.battery.outOf),
       measuredHome: measuredHome(input, readings),
-      individuals,
+      individuals: individuals.map((total, index) =>
+        shown(presence.individuals[index] ?? false, total)
+      ),
       nonFossilFraction: shown(presence.nonFossil, fraction),
     },
     presence,

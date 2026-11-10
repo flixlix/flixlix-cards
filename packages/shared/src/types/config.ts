@@ -149,7 +149,9 @@ interface FossilFuelPercentage extends BaseConfigEntity {
  * A display-only node under the grid and left of the battery. Its reading never enters the
  * solver or home consumption.
  */
-export type Auxiliary = IndividualDeviceType & { connect_to?: AuxiliaryConnection };
+export type Auxiliary = Omit<IndividualDeviceType, "visibility"> & {
+  connect_to?: AuxiliaryConnection;
+};
 
 export type ConfigEntities = {
   battery?: Battery;

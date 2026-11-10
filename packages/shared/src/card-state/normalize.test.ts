@@ -1,6 +1,6 @@
 import * as fc from "fast-check";
 import { describe, expect, test } from "vite-plus/test";
-import { fakeConfig, fakeEntity, fakeHass } from "../testing/fixtures";
+import { fakeConditionContext, fakeConfig, fakeEntity, fakeHass } from "../testing/fixtures";
 import { type FlowCardPlusConfig } from "../types";
 import { normalize } from "./normalize";
 import { solve } from "./solve";
@@ -27,6 +27,7 @@ const grid = { entity: "sensor.grid", power_outage: { entity: "binary_sensor.out
 
 const input = (entities: FlowCardPlusConfig["entities"], states: Record<string, string> = {}) => ({
   config: fakeConfig({ entities }),
+  conditionContext: fakeConditionContext,
   hass: fakeHass({
     states: Object.fromEntries(
       Object.entries(states).map(([id, state]) => [id, fakeEntity(id, state)])

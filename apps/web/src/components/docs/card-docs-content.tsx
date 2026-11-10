@@ -885,6 +885,12 @@ const INDIVIDUAL_OPTIONS: OptionRow[] = [
     description: "Match value text to circle color.",
   },
   { name: "decimals", type: "number", default: "0", description: "Decimals shown in the value." },
+  {
+    name: "visibility",
+    type: "list",
+    description:
+      "Show the device only while all of these conditions hold, in the format of a card's visibility tab. While hidden it counts as zero. The UI editor has them under Advanced Options.",
+  },
 ];
 
 const FOSSIL_OPTIONS: OptionRow[] = [
@@ -1469,6 +1475,11 @@ entities:
       icon: mdi:car-electric
       color: "#80b8ff"
       color_icon: true
+      display_zero: true
+      visibility:
+        - condition: state
+          entity: binary_sensor.car_plugged_in
+          state: "on"
     - entity: sensor.heatpump_${sensorSuffix}
       name: Heat pump
       icon: mdi:heat-pump
@@ -1488,10 +1499,11 @@ entities:
             <Prose>
               <p>
                 It is <strong>display-only</strong>: its reading never changes the other flows, the
-                home consumption or the home circle. It takes every option of an individual device,
-                plus <code>connect_to</code>. A positive reading flows into it; set{" "}
-                <code>inverted_animation: true</code> for something that feeds the grid or battery,
-                or <code>accept_negative: true</code> when the entity reads negative while feeding.
+                home consumption or the home circle. It takes every option of an individual device
+                but <code>visibility</code>, plus <code>connect_to</code>. A positive reading flows
+                into it; set <code>inverted_animation: true</code> for something that feeds the grid
+                or battery, or <code>accept_negative: true</code> when the entity reads negative
+                while feeding.
               </p>
             </Prose>
           }
@@ -1506,7 +1518,12 @@ entities:
     inverted_animation: true`,
           }}
         >
-          <OptionList rows={[AUXILIARY_CONNECT_TO, ...INDIVIDUAL_OPTIONS]} />
+          <OptionList
+            rows={[
+              AUXILIARY_CONNECT_TO,
+              ...INDIVIDUAL_OPTIONS.filter((row) => row.name !== "visibility"),
+            ]}
+          />
         </CategorySection>
 
         <CategorySection

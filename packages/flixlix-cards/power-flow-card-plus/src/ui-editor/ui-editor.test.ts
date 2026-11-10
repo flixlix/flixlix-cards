@@ -59,6 +59,20 @@ async function openAdvanced(options: Record<string, unknown>) {
   return { ...mounted, form: query(mounted.editor, "ha-form") };
 }
 
+/** Opens the individual devices page and the first device's form. */
+async function editDevice(device: Record<string, unknown>) {
+  const mounted = await mountEditor({ entities: { individual: [device] } });
+  query(mounted.editor, 'link-subpage[path="individual"]').dispatchEvent(
+    new CustomEvent("open-sub-element-editor", { detail: { open: true } })
+  );
+  await mounted.editor.updateComplete;
+  const devices = await rendered(mounted.editor, "individual-devices-editor");
+  const rows = await rendered(devices, "individual-row-editor");
+  query(rows, ".edit-icon").click();
+  await rendered(devices, "individual-row-editor");
+  return { ...mounted, rows };
+}
+
 function query(root: Element, selector: string): HTMLElement {
   const element = root.shadowRoot?.querySelector<HTMLElement>(selector);
   if (!element) {
@@ -335,6 +349,53 @@ describe("power flow ui editor", () => {
     await rendered(devices, "individual-row-editor");
 
     expect(shownBoolean(query(rows, "ha-form"), "display_zero")).toBe(false);
+  });
+
+  describe("an individual device's visibility conditions (#332)", () => {
+    const pluggedIn = { condition: "state", entity: "binary_sensor.ev_plugged", state: "on" };
+
+    // runs first: the next test defines Home Assistant's editor for the rest of the file
+    test("without Home Assistant's conditions editor, they are a YAML field under Advanced", async () => {
+      const { rows } = await editDevice({ entity: "sensor.ev" });
+      const form = query(rows, "ha-form");
+      const schema = "schema" in form && Array.isArray(form.schema) ? form.schema : [];
+
+      expect(schema.at(-1)).toMatchObject({
+        type: "expandable",
+        schema: [{ name: "visibility", selector: { object: {} } }],
+      });
+      expect(rows.shadowRoot?.querySelector("ha-card-conditions-editor")).toBeNull();
+    });
+
+    test("with Home Assistant's conditions editor, they need no YAML", async () => {
+      // stands in for Home Assistant's own, defined while a dashboard is being edited
+      customElements.define(
+        "ha-card-conditions-editor",
+        class extends HTMLElement {
+          conditions: unknown[] = [];
+        }
+      );
+      const { rows, lastConfig } = await editDevice({
+        entity: "sensor.ev",
+        visibility: [pluggedIn],
+      });
+      const form = query(rows, "ha-form");
+      const conditions = query(rows, "ha-card-conditions-editor");
+
+      expect(ownFieldNames("schema" in form ? form.schema : undefined)).not.toContain("visibility");
+      expect(Reflect.get(conditions, "conditions")).toEqual([pluggedIn]);
+
+      const home = { condition: "state", entity: "device_tracker.ev", state: "home" };
+      conditions.dispatchEvent(
+        new CustomEvent("value-changed", { detail: { value: [pluggedIn, home] } })
+      );
+      expect(lastConfig()?.entities.individual).toEqual([
+        { entity: "sensor.ev", visibility: [pluggedIn, home] },
+      ]);
+
+      conditions.dispatchEvent(new CustomEvent("value-changed", { detail: { value: [] } }));
+      expect(lastConfig()?.entities.individual).toEqual([{ entity: "sensor.ev" }]);
+    });
   });
 
   test("the non-fossil page without display_zero shows the toggle off, as the card hides it at zero", async () => {

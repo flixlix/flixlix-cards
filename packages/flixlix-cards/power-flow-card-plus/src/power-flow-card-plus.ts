@@ -9,6 +9,7 @@ import { flowCard } from "@flixlix-cards/shared/components/flow-card";
 import { styles } from "@flixlix-cards/shared/style";
 import { type PowerFlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { applyCardState } from "@flixlix-cards/shared/utils/apply-card-state";
+import { liveConditionContext } from "@flixlix-cards/shared/utils/condition-context";
 import {
   assertRenderableFlowCardConfig,
   clickableEntitiesWithDefault,
@@ -118,6 +119,7 @@ export class PowerFlowCardPlus extends LitElement {
       hass: this.hass,
       readings: powerReadings(this.hass, this._config),
       templates: this._templates.templates(this._config),
+      conditionContext: liveConditionContext,
       width: this._width.width,
       pageHidden: this._pageHidden,
     });

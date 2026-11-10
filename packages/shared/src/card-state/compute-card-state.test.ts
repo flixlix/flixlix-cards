@@ -1,3 +1,4 @@
+import { fakeConditionContext } from "@flixlix-cards/shared/testing/fixtures";
 import { CIRCLE_CIRCUMFERENCE } from "@flixlix-cards/shared/const/circle";
 import {
   type FlowCardPlusConfig,
@@ -111,6 +112,7 @@ const compute = (
     hass: hassWith(),
     readings: readings(),
     templates: noTemplates,
+    conditionContext: fakeConditionContext,
     width: 400,
     ...input,
   });
@@ -121,6 +123,9 @@ const ready = (state: CardState): ReadyCardState => {
   }
   return state;
 };
+
+const car = (state: ReadyCardState) =>
+  state.nodes.individuals.find((individual) => individual.entity === "sensor.car");
 
 const fossilHass = (percentage: string) =>
   hassWith({ "sensor.fossil": percentage, "binary_sensor.outage": "off" });
@@ -455,6 +460,58 @@ describe("zero tolerance and display_zero", () => {
       "sensor.large",
       "sensor.idle",
     ]);
+  });
+
+  describe("an individual device with visibility conditions (#332)", () => {
+    const carConfig = config({
+      entities: {
+        home: { entity: "sensor.home", subtract_individual: true },
+        individual: [
+          {
+            entity: "sensor.car",
+            display_zero: true,
+            visibility: [{ condition: "state", entity: "binary_sensor.car_plugged", state: "on" }],
+          },
+          { entity: "sensor.heater" },
+        ],
+      },
+    });
+    const carState = (plugged: string, carPower: number) =>
+      ready(
+        compute({
+          config: carConfig,
+          hass: hassWith({ "binary_sensor.car_plugged": plugged }),
+          readings: readings({ grid: { fromGrid: 1000 }, individuals: [carPower, 200] }),
+        })
+      );
+
+    test("is hidden while they fail: no circle, no flow, nothing subtracted from home", () => {
+      const state = carState("off", 300);
+
+      expect(car(state)).toBeUndefined();
+      expect(Object.values(state.individualSlots).map((slot) => slot?.node.entity)).toEqual([
+        "sensor.heater",
+        undefined,
+        undefined,
+        undefined,
+      ]);
+      expect(state.flows.individual.map((flow) => flow.value)).toEqual([0, 200]);
+      expect(state.homeRing.usageText).toBe(`800${thinSpace}W`);
+    });
+
+    test("shows while they hold, even drawing nothing, as display_zero still applies", () => {
+      expect(car(carState("on", 300))).toMatchObject({ has: true, state: 300 });
+      expect(carState("on", 300).homeRing.usageText).toBe(`500${thinSpace}W`);
+      expect(car(carState("on", 0))).toMatchObject({ has: true, state: 0 });
+    });
+
+    test("is hidden while the condition's entity is missing", () => {
+      const state = ready(
+        compute({ config: carConfig, readings: readings({ individuals: [300] }) })
+      );
+
+      expect(car(state)).toBeUndefined();
+    });
   });
 });
 

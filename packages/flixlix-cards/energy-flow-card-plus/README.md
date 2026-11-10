@@ -230,29 +230,47 @@ At least one of _grid_, _battery_, or _solar_ is required. All entites (except _
 
 The Individual fields must be an array of objects. Each object must follow the following structure:
 
-| Name                   | Type              | Default                                        | Description                                                                                                                                                                          |
-| ---------------------- | ----------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| entity                 | `string`          | `undefined` required                           | Entity ID providing a state with the value of an individual consumption.                                                                                                             |
-| name                   | `string` / `list` | `Car` or `Motorcycle`                          | Label for the individual device option. If you don't populate this option, the label will continue to update based on the language selected.                                         |
-| icon                   | `string`          | `mdi:car-electric` or `mdi:motorbike-electric` | Icon path for the icon inside the Individual Device Circle.                                                                                                                          |
-| color                  | `string`          | `#d0cc5b` or `#964cb5`                         | HEX value of the color for circles labels and lines of the individual device.                                                                                                        |
-| color_idle             | `string`          |                                                | HEX value of the circle color while the device draws nothing (below `display_zero_tolerance`). Unset keeps `color`.                                                                  |
-| color_icon             | `boolean`         | `false`                                        | If set to `true`, icon color will match the circle's color. If set to `false`, icon color will match the text's color.                                                               |
-| unit_of_measurement    | `string`          | `Wh`or `kWh` (dynamic)                         | Sets the unit of measurement to show in the corresponding circle                                                                                                                     |
-| inverted_animation     | `boolean`         | `false`                                        | If set to true, the small dots will flow in the opposite direction.                                                                                                                  |
-| accept_negative        | `boolean`         | `false`                                        | If set to `true`, a negative reading means the device feeds power to the home: the value keeps its minus sign and the dots and direction arrow flip. Otherwise the sign is dropped.  |
-| secondary_info         | `object`          | `undefined`                                    | Check [Secondary Info Object](#secondary-info-configuration). The `secondary_info` entity can provide a number or a string (eg: EV State `charging` and `discharging`).              |
-| display_zero           | `boolean`         | `false`                                        | If set to `true`, the device will be displayed even if the entity state is `0` or not a number (eg: `unavailable`). Otherwise, the non-fossil section will be hidden.                |
-| display_zero_tolerance | `number`          | `0`                                            | If set, the device will be displayed if the state is greater than the tolerance set (This is also available for the secondary info). No need to set `display_zero` property to true. |
-| display_zero_state     | `boolean`         | `true`                                         | If set to `true`, the state will be shown even if it is `0`. If set to `false`, the state will be hidden if it is `0`.                                                               |
-| color_value            | `boolean`         | `false`                                        | If set to `true`, state text color will match the circle's color. If set to `false`, state text color will be the primary text color.                                                |
-| decimals               | `number`          | `0`                                            | Number of decimals to show in the corresponding state.                                                                                                                               |
+| Name                   | Type              | Default                                        | Description                                                                                                                                                                                                                        |
+| ---------------------- | ----------------- | ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| entity                 | `string`          | `undefined` required                           | Entity ID providing a state with the value of an individual consumption.                                                                                                                                                           |
+| name                   | `string` / `list` | `Car` or `Motorcycle`                          | Label for the individual device option. If you don't populate this option, the label will continue to update based on the language selected.                                                                                       |
+| icon                   | `string`          | `mdi:car-electric` or `mdi:motorbike-electric` | Icon path for the icon inside the Individual Device Circle.                                                                                                                                                                        |
+| color                  | `string`          | `#d0cc5b` or `#964cb5`                         | HEX value of the color for circles labels and lines of the individual device.                                                                                                                                                      |
+| color_idle             | `string`          |                                                | HEX value of the circle color while the device draws nothing (below `display_zero_tolerance`). Unset keeps `color`.                                                                                                                |
+| color_icon             | `boolean`         | `false`                                        | If set to `true`, icon color will match the circle's color. If set to `false`, icon color will match the text's color.                                                                                                             |
+| unit_of_measurement    | `string`          | `Wh`or `kWh` (dynamic)                         | Sets the unit of measurement to show in the corresponding circle                                                                                                                                                                   |
+| inverted_animation     | `boolean`         | `false`                                        | If set to true, the small dots will flow in the opposite direction.                                                                                                                                                                |
+| accept_negative        | `boolean`         | `false`                                        | If set to `true`, a negative reading means the device feeds power to the home: the value keeps its minus sign and the dots and direction arrow flip. Otherwise the sign is dropped.                                                |
+| secondary_info         | `object`          | `undefined`                                    | Check [Secondary Info Object](#secondary-info-configuration). The `secondary_info` entity can provide a number or a string (eg: EV State `charging` and `discharging`).                                                            |
+| display_zero           | `boolean`         | `false`                                        | If set to `true`, the device will be displayed even if the entity state is `0` or not a number (eg: `unavailable`). Otherwise, the non-fossil section will be hidden.                                                              |
+| display_zero_tolerance | `number`          | `0`                                            | If set, the device will be displayed if the state is greater than the tolerance set (This is also available for the secondary info). No need to set `display_zero` property to true.                                               |
+| display_zero_state     | `boolean`         | `true`                                         | If set to `true`, the state will be shown even if it is `0`. If set to `false`, the state will be hidden if it is `0`.                                                                                                             |
+| color_value            | `boolean`         | `false`                                        | If set to `true`, state text color will match the circle's color. If set to `false`, state text color will be the primary text color.                                                                                              |
+| decimals               | `number`          | `0`                                            | Number of decimals to show in the corresponding state.                                                                                                                                                                             |
+| visibility             | `list`            | `undefined`                                    | Shows the device only while all of these conditions hold, in the format of a card's visibility tab (`state`, `numeric_state`, `screen`, `user`, `time`, `location`, `and`, `or`, `not`). See [Visibility](#individual-visibility). |
+
+##### Individual visibility
+
+Show a device only while some conditions hold, for example the car charger only while the car is plugged in. A hidden device counts as zero: no circle, no line, and it is not subtracted from the home with `subtract_individual`. While the conditions hold, `display_zero` and `display_zero_tolerance` still apply, so add `display_zero: true` to keep it shown at zero.
+
+```yaml
+individual:
+  - entity: sensor.wallbox_power
+    name: Car
+    display_zero: true
+    visibility:
+      - condition: state
+        entity: binary_sensor.car_plugged_in
+        state: "on"
+```
+
+The conditions use the format of a card's visibility tab; the UI editor edits them under **Advanced Options** of the device with Home Assistant's own conditions editor. Template, sun, zone and device conditions need Home Assistant itself and are ignored.
 
 #### Auxiliary Configuration
 
 One extra node under the grid and left of the battery, for a reading that is not part of your home's consumption: a share in a wind farm, a virtual battery at your provider, a gas meter or solar panels wired to the battery's DC side. It is display-only: its reading never changes the other flows, the home consumption or the home circle.
 
-It takes every option of an [individual device](#individual-configuration), plus `connect_to`:
+It takes every option of an [individual device](#individual-configuration) but `visibility`, plus `connect_to`:
 
 | Name       | Type                          | Default | Description                                                                                                                                                                                              |
 | ---------- | ----------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

@@ -1,11 +1,11 @@
 import {
   type CarReading,
   conditionEntities,
-  type ConditionContext,
   conditionsMet,
 } from "@flixlix-cards/shared/card-state";
 import { getEntityState } from "@flixlix-cards/shared/states/utils/get-entity-state";
 import { getEntityStateWatts } from "@flixlix-cards/shared/states/utils/get-entity-state-watts";
+import { liveConditionContext } from "@flixlix-cards/shared/utils/condition-context";
 import { type HomeAssistant } from "custom-card-helpers";
 import { type CarImage } from "./car-image";
 import { type CarConfig } from "./labels";
@@ -25,21 +25,16 @@ const carPower = (hass: HomeAssistant, car: HouseCar): number | null =>
 const carCharge = (hass: HomeAssistant, car: HouseCar): number | null =>
   car.state_of_charge ? getEntityState(hass, car.state_of_charge) : null;
 
-const screen: ConditionContext = {
-  matchesMedia: (query) => matchMedia(query).matches,
-  now: () => new Date(),
-};
-
 /**
  * Hidden unless its `visibility` conditions hold; then idle while its `idle` conditions hold, or
  * without any, while it draws no power.
  */
 export const carStatus = (hass: HomeAssistant, car: HouseCar): CarStatus => {
-  if (car.visibility && !conditionsMet(car.visibility, hass, screen)) {
+  if (car.visibility && !conditionsMet(car.visibility, hass, liveConditionContext)) {
     return "hidden";
   }
   if (car.idle) {
-    return conditionsMet(car.idle, hass, screen) ? "idle" : "active";
+    return conditionsMet(car.idle, hass, liveConditionContext) ? "idle" : "active";
   }
   return carPower(hass, car) ? "active" : "idle";
 };
