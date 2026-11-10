@@ -9,11 +9,13 @@ import { flowCard } from "@flixlix-cards/shared/components/flow-card";
 import { styles } from "@flixlix-cards/shared/style";
 import {
   fetchEnergyPeriodGrowth,
+  fetchFossilEnergyConsumption,
   getGlobalEnergyPeriodWindow,
   subscribeEnergyCollectionData,
   watchGlobalEnergyPeriodChanges,
   type EnergyCollectionFossilData,
   type EnergyPeriodWindow,
+  type FossilEnergyConsumption,
 } from "@flixlix-cards/shared/states/utils/energy-period";
 import { getEntityNames } from "@flixlix-cards/shared/states/utils/mutli-entity";
 import { type EnergyFlowCardPlusConfig } from "@flixlix-cards/shared/types";
@@ -57,6 +59,7 @@ export class EnergyFlowCardPlus extends LitElement {
   @state() private _energyGrowthMap: Record<string, number> = {};
   @state() private _energyDataLoaded = false;
   @state() private _fossilEnergyData: EnergyCollectionFossilData = {};
+  @state() private _fetchedFossilConsumption?: FossilEnergyConsumption;
   private _unsubEnergyPeriodListener?: () => void;
   private _unsubFossilData?: () => void;
   private _energyRefreshInFlight?: Promise<void>;
@@ -161,7 +164,7 @@ export class EnergyFlowCardPlus extends LitElement {
         this.hass,
         this._config,
         this._energyDataLoaded ? this._energyGrowthMap : undefined,
-        this._fossilEnergyData.fossilEnergyConsumption
+        this._fossilEnergyData.fossilEnergyConsumption ?? this._fetchedFossilConsumption
       ),
       templates: this._templates.templates(this._config),
       conditionContext: liveConditionContext,
@@ -293,18 +296,49 @@ export class EnergyFlowCardPlus extends LitElement {
 
     if (!window) {
       this._energyGrowthMap = zeroGrowthMap;
+      this._fetchedFossilConsumption = undefined;
       this._energyDataLoaded = true;
       return;
     }
 
-    try {
-      const growth = await fetchEnergyPeriodGrowth(this.hass, statisticIds, window);
-      this._energyGrowthMap = { ...zeroGrowthMap, ...growth };
-      this._energyDataLoaded = true;
-    } catch {
-      this._energyGrowthMap = zeroGrowthMap;
-      this._energyDataLoaded = true;
+    const [growth, fossil] = await Promise.allSettled([
+      fetchEnergyPeriodGrowth(this.hass, statisticIds, window),
+      this._fetchFossilConsumption(window),
+    ]);
+    this._energyGrowthMap =
+      growth.status === "fulfilled" ? { ...zeroGrowthMap, ...growth.value } : zeroGrowthMap;
+    this._fetchedFossilConsumption = fossil.status === "fulfilled" ? fossil.value : undefined;
+    this._energyDataLoaded = true;
+  }
+
+  /**
+   * HA's energy collection only carries the period's fossil consumption when one of HA's own
+   * energy cards is rendered on the page (a hidden date selector is not). Without it the card
+   * would scale the whole period by the fossil sensor's live state.
+   */
+  private async _fetchFossilConsumption(
+    window: EnergyPeriodWindow
+  ): Promise<FossilEnergyConsumption | undefined> {
+    const { entities, energy_date_selection } = this._config;
+    const fossilEntity = entities.fossil_fuel_percentage?.entity;
+    if (
+      energy_date_selection === false ||
+      !fossilEntity ||
+      this._fossilEnergyData.fossilEnergyConsumption
+    ) {
+      return undefined;
     }
+    return fetchFossilEnergyConsumption(this.hass, this._gridImportIds(), fossilEntity, window);
+  }
+
+  private _gridImportIds(): string[] {
+    const grid = this._config.entities.grid;
+    // An inverted single grid entity counts export up, so it is no import meter to weigh.
+    if (typeof grid?.entity === "string" && grid.invert_state) {
+      return [];
+    }
+    const importEntity = typeof grid?.entity === "string" ? grid.entity : grid?.entity?.consumption;
+    return importEntity ? getEntityNames(importEntity).filter(Boolean) : [];
   }
 
   private _ensureEnergyPeriodListener() {
