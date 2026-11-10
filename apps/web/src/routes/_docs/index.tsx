@@ -186,6 +186,34 @@ function SortableListSketch() {
   );
 }
 
+/**
+ * The hero card as it first renders, the afternoon, captured from the card itself: shown until the
+ * live card has loaded after hydration, so the swap only starts the pulses. Images, not a second
+ * card: the cards cannot render on the server. Recapture when the card or the first moment changes.
+ */
+function HouseSnapshot() {
+  return (
+    <>
+      <img
+        src="/previews/house-afternoon-light.webp"
+        alt=""
+        width={460}
+        height={357}
+        fetchPriority="high"
+        className="h-auto w-full dark:hidden"
+      />
+      <img
+        src="/previews/house-afternoon-dark.webp"
+        alt=""
+        width={460}
+        height={357}
+        fetchPriority="high"
+        className="hidden h-auto w-full dark:block"
+      />
+    </>
+  );
+}
+
 const MOMENT_LABELS = ["Afternoon", "Evening", "Night", "Outage"];
 
 const MOMENTS = houseDay.moments.map((moment, index) => ({
@@ -205,12 +233,22 @@ function HeroHouse() {
 
   return (
     <figure className="flex min-w-0 flex-col items-center">
-      <CardPreview
-        configs={HERO_CONFIGS}
-        states={moment.states}
-        width={460}
-        className="w-fit max-w-full rounded-2xl"
-      />
+      {/* The card's own ground glow is wider than the card and gets clipped into a box; it is
+          turned off and redrawn here, at the same place and size, where nothing clips it. */}
+      <div className="relative w-fit max-w-full [&_home-flow-card]:[--house-ground:transparent]">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute top-[21%] left-[-38%] h-[108%] w-[144%] bg-[radial-gradient(closest-side,var(--hero-ground),color-mix(in_oklab,var(--hero-ground)_60%,transparent)_70%,transparent)] [--hero-ground:color-mix(in_oklab,var(--foreground)_7%,var(--background))] dark:[--hero-ground:color-mix(in_oklab,var(--foreground)_16%,var(--background))]"
+        />
+        <CardPreview
+          configs={HERO_CONFIGS}
+          states={moment.states}
+          width={460}
+          bare
+          fallback={<HouseSnapshot />}
+          className="relative max-w-full"
+        />
+      </div>
       <SegmentedControl
         legend="Time of day"
         options={MOMENTS}

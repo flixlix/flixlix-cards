@@ -110,7 +110,7 @@ function DocsLayout() {
             </Button>
           </div>
         </header>
-        <main className="flex-1 px-4 py-6 md:px-8 lg:px-12">
+        <main className="flex-1 overflow-x-clip px-4 py-6 md:px-8 lg:px-12">
           <div className="mx-auto w-full max-w-5xl xl:max-w-7xl">
             <Outlet />
           </div>

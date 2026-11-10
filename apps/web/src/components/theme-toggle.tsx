@@ -11,7 +11,7 @@ import {
 import { cn } from "cn";
 
 const ITEM_BASE =
-  "size-6 cursor-pointer rounded-full p-1.5 transition-colors has-focus-visible:ring-2 has-focus-visible:ring-ring";
+  "size-6 cursor-pointer rounded-full p-1.5 transition-colors has-focus-visible:ring-3 has-focus-visible:ring-ring/50";
 const ITEM_ACTIVE = "bg-accent text-accent-foreground";
 const ITEM_INACTIVE = "text-muted-foreground hover:text-foreground";
 

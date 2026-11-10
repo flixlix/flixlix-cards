@@ -5,6 +5,11 @@ import { cn } from "cn";
 type Option = { value: string; label: string };
 
 const ITEM = "rounded-full px-3.5 py-1.5 font-medium whitespace-nowrap";
+const PILL = "dark:bg-[oklch(0.37_0.01_250)]";
+const SELECTED = cn(
+  "bg-card text-foreground shadow-[0_1px_1.5px_rgb(0_0_0/0.12)] dark:shadow-none",
+  PILL
+);
 
 /**
  * Pick one of a few options. The selected look is a copy of the row clipped to the selected
@@ -67,7 +72,10 @@ export function SegmentedControl({
   return (
     <fieldset
       ref={row}
-      className={cn("bg-muted relative inline-flex rounded-full p-1 text-sm", className)}
+      className={cn(
+        "bg-foreground/[0.05] ring-foreground/[0.07] relative inline-flex rounded-full p-1 text-sm ring-1 backdrop-blur-sm ring-inset",
+        className
+      )}
     >
       <legend className="sr-only">{legend}</legend>
       {options.map((option) => (
@@ -85,7 +93,9 @@ export function SegmentedControl({
           onClick={() => onChange(option.value)}
           className={cn(
             ITEM,
-            "text-muted-foreground hover:text-foreground focus-visible:ring-ring/60 outline-none transition-colors duration-150 focus-visible:ring-2"
+            "text-muted-foreground hover:text-foreground transition-colors duration-150",
+            // Until the clip is measured, after hydration, the selected option is its own pill.
+            !clip && option.value === value && SELECTED
           )}
         >
           {option.label}
@@ -98,7 +108,8 @@ export function SegmentedControl({
         <div
           style={{ clipPath: clip }}
           className={cn(
-            "bg-card flex h-full rounded-full p-1 dark:bg-[oklch(0.33_0.009_250)]",
+            "bg-card flex h-full rounded-full p-1",
+            PILL,
             clip ? "opacity-100" : "opacity-0",
             placed &&
               "transition-[clip-path] duration-300 ease-(--ease-out-strong) motion-reduce:duration-0"
