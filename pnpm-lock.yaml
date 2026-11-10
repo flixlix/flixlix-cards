@@ -207,6 +207,9 @@ importers:
       react-dom:
         specifier: 'catalog:'
         version: 19.2.5(react@19.2.5)
+      sortable-list-card:
+        specifier: workspace:*
+        version: link:../../packages/flixlix-cards/sortable-list-card
       tailwindcss:
         specifier: 'catalog:'
         version: 4.2.4

@@ -36,6 +36,7 @@
     "power-flow-card-plus": "workspace:*",
     "react": "catalog:",
     "react-dom": "catalog:",
+    "sortable-list-card": "workspace:*",
     "tailwindcss": "catalog:",
     "turndown": "^7.2.5",
     "turndown-plugin-gfm": "^1.0.2",

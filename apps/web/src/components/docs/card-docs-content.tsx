@@ -28,6 +28,7 @@ import { trackEvent } from "#/lib/analytics";
 import { Button } from "@flixlix-cards/ui/components/button";
 
 import { CardDemo } from "@/components/card-demo";
+import { sensor, type StateFixtures } from "@flixlix-cards/shared/preview/fake-hass";
 
 import { CategorySection } from "./category-section";
 import {
@@ -41,6 +42,7 @@ import {
   Section,
 } from "./doc-primitives";
 import { InstallFromCatalog } from "./install-from-catalog";
+import { LiveExample } from "./live-example";
 import { OptionList } from "./option-list";
 import { PageTOC, type TocItem } from "./page-toc";
 import { TopologyDemo } from "./topology-demo";
@@ -1948,16 +1950,55 @@ return 1 / speed;`}
 
 // ---------- Examples ----------
 
+const percent = (state: string) => sensor(state, { unit: "%" });
+
+const SHARED_EXAMPLE_STATES: StateFixtures = {
+  "sensor.power_outage": sensor("off", { unit: undefined }),
+  "sensor.battery_state_of_charge": percent("68"),
+  "sensor.battery_soc": percent("68"),
+  "sensor.fossil_fuel_percentage": percent("34"),
+};
+
+/** A sunny afternoon in W for the power card, an average day in kWh for the energy card. */
+const EXAMPLE_STATES: Record<CardKey, StateFixtures> = {
+  power: {
+    ...SHARED_EXAMPLE_STATES,
+    "sensor.grid_power": "860",
+    "sensor.grid_consumption": "0",
+    "sensor.grid_production": "1150",
+    "sensor.solar_production": "4200",
+    "sensor.battery_consumption": "0",
+    "sensor.battery_production": "1600",
+    "sensor.home_consumption": "1450",
+    "sensor.car_power": "1100",
+    "sensor.motorbike_power": "0",
+  },
+  energy: {
+    ...SHARED_EXAMPLE_STATES,
+    "sensor.grid_energy": sensor("9.4", { unit: "kWh" }),
+    "sensor.grid_consumption": sensor("5.2", { unit: "kWh" }),
+    "sensor.grid_production": sensor("3.8", { unit: "kWh" }),
+    "sensor.solar_energy": sensor("21.4", { unit: "kWh" }),
+    "sensor.battery_consumption": sensor("4.6", { unit: "kWh" }),
+    "sensor.battery_production": sensor("5.1", { unit: "kWh" }),
+    "sensor.home_consumption": sensor("21.3", { unit: "kWh" }),
+    "sensor.car_energy": sensor("8.8", { unit: "kWh" }),
+    "sensor.motorbike_energy": sensor("0", { unit: "kWh" }),
+  },
+};
+
 export function ExamplesPage({ cardKey }: { cardKey: CardKey }) {
   const v = variant(cardKey);
   const sensorSuffix = cardKey === "power" ? "power" : "energy";
+  const states = EXAMPLE_STATES[cardKey];
+  const energy = cardKey === "energy";
 
   return (
     <>
       <PageHeader
         eyebrow={v.title}
         title="Examples"
-        description="Copy-pastable configs for the most common setups."
+        description="Copy-pastable configs for the most common setups, each next to the card it draws."
       />
 
       <Callout variant="info" title="Don't forget!">
@@ -1965,8 +2006,9 @@ export function ExamplesPage({ cardKey }: { cardKey: CardKey }) {
         <b>Always replace the entity ids with your own.</b>
       </Callout>
       <Section id="only-grid" title="Only grid">
-        <CodeBlock
-          language="yaml"
+        <LiveExample
+          states={states}
+          energy={energy}
           code={`type: ${v.cardType}
 entities:
   grid:
@@ -1980,8 +2022,9 @@ kilo_threshold: 10000`}
       </Section>
 
       <Section id="grid-solar" title="Grid + solar">
-        <CodeBlock
-          language="yaml"
+        <LiveExample
+          states={states}
+          energy={energy}
           code={`type: ${v.cardType}
 entities:
   grid:
@@ -1996,8 +2039,9 @@ entities:
       </Section>
 
       <Section id="grid-solar-battery" title="Grid + solar + battery">
-        <CodeBlock
-          language="yaml"
+        <LiveExample
+          states={states}
+          energy={energy}
           code={`type: ${v.cardType}
 entities:
   grid:
@@ -2028,8 +2072,9 @@ kilo_threshold: 10000`}
             is here as a reference of what is possible.
           </p>
         </Prose>
-        <CodeBlock
-          language="yaml"
+        <LiveExample
+          states={states}
+          energy={energy}
           code={`type: ${v.cardType}
 entities:
   home:
@@ -2088,8 +2133,9 @@ title: ${v.title}`}
               <code>energy_&lt;dashboard_url&gt;</code>.
             </p>
           </Prose>
-          <CodeBlock
-            language="yaml"
+          <LiveExample
+            states={states}
+            energy={energy}
             code={`type: ${v.cardType}
 collection_key: energy_living_room
 entities:
