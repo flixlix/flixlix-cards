@@ -130,6 +130,11 @@
     "transparency": "Przezroczystość",
     "unit_of_measurement": "Jednostka",
     "unit_white_space": "Spacja jednostki",
-    "use_metadata": "Użyj metadanych"
+    "use_metadata": "Użyj metadanych",
+    "auxiliary": "Dodatkowy",
+    "connect_to": "Połącz z",
+    "connect_to_grid": "Sieć (linia w górę do sieci)",
+    "connect_to_battery": "Bateria (linia do baterii)",
+    "connect_to_none": "Brak (bez linii)"
   }
 }

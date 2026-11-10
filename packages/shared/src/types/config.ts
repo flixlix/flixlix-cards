@@ -17,6 +17,10 @@ export type FlowRateModel = (typeof FLOW_RATE_MODELS)[number];
 export const TOPOLOGIES = ["standard", "battery_hub", "isolated_battery"] as const;
 export type Topology = (typeof TOPOLOGIES)[number];
 
+/** Which node the auxiliary bubble's line runs to; `none` draws no line. */
+export const AUXILIARY_CONNECTIONS = ["grid", "battery", "none"] as const;
+export type AuxiliaryConnection = (typeof AUXILIARY_CONNECTIONS)[number];
+
 export type DisplayZeroLinesMode = "show" | "grey_out" | "transparency" | "hide" | "custom";
 
 interface mainConfigOptions {
@@ -137,6 +141,12 @@ interface FossilFuelPercentage extends BaseConfigEntity {
   secondary_info: SecondaryInfoType;
 }
 
+/**
+ * A display-only node under the grid and left of the battery. Its reading never enters the
+ * solver or home consumption.
+ */
+export type Auxiliary = IndividualDeviceType & { connect_to?: AuxiliaryConnection };
+
 export type ConfigEntities = {
   battery?: Battery;
   grid?: Grid;
@@ -144,6 +154,7 @@ export type ConfigEntities = {
   home?: Home;
   fossil_fuel_percentage?: FossilFuelPercentage;
   individual?: IndividualField;
+  auxiliary?: Auxiliary;
   individual1?: IndividualField;
   individual2?: IndividualField;
 };

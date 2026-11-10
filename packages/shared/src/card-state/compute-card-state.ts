@@ -1,8 +1,8 @@
 import { translate } from "@flixlix-cards/shared/i18n";
-import { computeFlows } from "./flows";
+import { auxiliaryConnection, computeFlows } from "./flows";
 import { formatter } from "./format";
 import { computeHomeRing } from "./home-ring";
-import { individualNodes, placeIndividuals } from "./individuals";
+import { auxiliaryNode, individualNodes, placeIndividuals } from "./individuals";
 import { batteryNode, gridNode, homeNode, nonFossilNode, solarNode } from "./nodes";
 import { hasEntity, type Normalized, normalize } from "./normalize";
 import { solve } from "./solve";
@@ -51,10 +51,12 @@ export function computeCardState(input: CardStateInput): CardState {
     nonFossil: nonFossilNode(context),
   };
   const individuals = individualNodes(input, balance, format);
+  const auxiliary = auxiliaryNode(input, balance, format);
   const flows = computeFlows({
     config,
     balance,
     individuals,
+    auxiliary,
     hasReturnToGrid: nodes.grid.hasReturnToGrid,
   });
   const devices = individuals.map((node, index) => ({
@@ -66,8 +68,8 @@ export function computeCardState(input: CardStateInput): CardState {
   const homeRing = computeHomeRing(input, balance, individuals, format);
   const animate = !config.disable_dots && !input.pageHidden;
   const { leftTop, leftBottom, rightTop, rightBottom } = placement.slots;
-  const showBottomRow = nodes.battery.has || !!leftBottom || !!rightBottom;
-  const hasGridColumn = hasEntity(config.entities.grid);
+  const showBottomRow = nodes.battery.has || auxiliary.has || !!leftBottom || !!rightBottom;
+  const hasGridColumn = hasEntity(config.entities.grid) || hasEntity(config.entities.auxiliary);
   const hasRightIndividual = !!rightTop || !!rightBottom;
   const twoColumns = !hasGridColumn && !hasRightIndividual;
   const hubCircles = Number(nodes.solar.has) + Number(nodes.battery.has);
@@ -75,7 +77,7 @@ export function computeCardState(input: CardStateInput): CardState {
     Number(!config.entities.home?.hide) + Number(!!leftTop) + Number(!!leftBottom);
   return {
     status: "ready",
-    nodes: { ...nodes, individuals: visible },
+    nodes: { ...nodes, individuals: visible, auxiliary },
     individualSlots: placement.slots,
     homeRing,
     homeBalance: {
@@ -85,7 +87,12 @@ export function computeCardState(input: CardStateInput): CardState {
     },
     flows,
     animate,
-    cssVars: computeCssVars(config, nodes, homeRing.largestSource, placement.sorted),
+    cssVars: computeCssVars(
+      config,
+      { ...nodes, auxiliary },
+      homeRing.largestSource,
+      placement.sorted
+    ),
     layout: {
       hasGridColumn,
       opticalShift: twoColumns ? opticalShift(hubCircles, homeCircles) : 0,
@@ -93,6 +100,7 @@ export function computeCardState(input: CardStateInput): CardState {
       showBottomRow,
       hasRightIndividual,
       showHomeLabel: visible.length <= 1,
+      showGridLabel: !(flows.auxiliary.visible && auxiliaryConnection(config) === "grid"),
     },
   };
 }

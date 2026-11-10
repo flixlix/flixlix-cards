@@ -55,5 +55,6 @@ export function powerReadings(hass: HomeAssistant, config: FlowCardPlusConfig): 
     individuals: (entities.individual ?? []).map((individual) =>
       individualReading(individual, (entity) => watts(hass, entity))
     ),
+    auxiliary: individualReading(entities.auxiliary, (entity) => watts(hass, entity)),
   };
 }

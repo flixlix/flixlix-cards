@@ -2,6 +2,7 @@ import { type CardLayout, type ReadyCardState } from "@flixlix-cards/shared/card
 import { type CardMainContext, type FlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { type HomeAssistant } from "custom-card-helpers";
 import { html, nothing, type TemplateResult } from "lit";
+import { auxiliaryElement } from "./auxiliary";
 import { batteryElement } from "./battery";
 import { type FlowLayout } from "./flows/geometry";
 import { flowElement } from "./flows/index";
@@ -52,7 +53,8 @@ const topRow = ({ main, config, cardState }: RowContext) => {
 const middleRow = ({ main, config, cardState }: RowContext) => {
   const { nodes, layout } = cardState;
   return html`<div class="row middle">
-    ${gridColumn(layout, nodes.grid.has ? gridElement(main, config, nodes.grid) : spacer)} ${hub}
+    ${gridColumn(layout, nodes.grid.has ? gridElement(main, config, nodes.grid, layout.showGridLabel) : spacer)}
+    ${hub}
     ${
       !config.entities.home?.hide
         ? homeElement(main, config, {
@@ -66,14 +68,14 @@ const middleRow = ({ main, config, cardState }: RowContext) => {
   </div>`;
 };
 
-/** The battery and the bottom individual slots. */
+/** The auxiliary node, the battery and the bottom individual slots. */
 const bottomRow = ({ main, config, cardState }: RowContext) => {
   const { nodes, individualSlots, layout, animate } = cardState;
   if (!layout.showBottomRow) {
     return spacer;
   }
   return html`<div class="row">
-    ${gridColumn(layout, spacer)}
+    ${gridColumn(layout, auxiliaryElement(main, config, nodes.auxiliary))}
     ${nodes.battery.has ? batteryElement(main, config, nodes.battery) : spacer}
     ${individualElement(main, config, "left-bottom", { slot: individualSlots.leftBottom, animate })}
     ${
@@ -111,7 +113,8 @@ export const flowCard = (
         id=${contentId}
         style="--optical-shift: ${cardState.layout.opticalShift}; ${config.style_card_content ?? ""}"
       >
-        ${topRow(rows)} ${middleRow(rows)} ${bottomRow(rows)} ${flowElement(cardState, flowLayout)}
+        ${topRow(rows)} ${middleRow(rows)} ${bottomRow(rows)}
+        ${flowElement(cardState, config, flowLayout)}
       </div>
       ${dashboardLinkElement(config, hass)}
     </ha-card>

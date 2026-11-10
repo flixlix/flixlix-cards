@@ -16,5 +16,6 @@
 - **Display zero lines**: how lines with nothing flowing are drawn: shown, hidden, greyed out or faded.
 - **Secondary info**: a small extra value or rendered template shown inside a node, e.g. a price or a state of charge.
 - **Individual device**: a consumer the user tracks separately (EV charger, heat pump), shown in one of up to four **slots** around the home.
+- **Auxiliary node**: one display-only node under the grid and left of the battery (`entities.auxiliary`), for a reading outside home consumption. It never enters the node totals or the solver; `connect_to` draws its line to the grid, the battery or nowhere.
 - **Home ring**: the circle around the home node, split by how much of home consumption each source supplies.
 - **Non-fossil**: the share of grid import from low-carbon sources, from a fossil-percentage entity or the energy dashboard's CO2 data.

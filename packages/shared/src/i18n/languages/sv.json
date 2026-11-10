@@ -130,6 +130,11 @@
     "transparency": "Transparens",
     "unit_of_measurement": "Enhet",
     "unit_white_space": "Mellanrum före enhet",
-    "use_metadata": "Använd metadata"
+    "use_metadata": "Använd metadata",
+    "auxiliary": "Extra",
+    "connect_to": "Anslut till",
+    "connect_to_grid": "Elnät (linje upp till nätet)",
+    "connect_to_battery": "Batteri (linje till batteriet)",
+    "connect_to_none": "Ingen (ingen linje)"
   }
 }

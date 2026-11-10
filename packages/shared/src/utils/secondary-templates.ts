@@ -16,6 +16,7 @@ const configuredTemplates = (config: FlowCardPlusConfig): [topic: string, templa
     ["solarSecondary", entities.solar?.secondary_info?.template],
     ["homeSecondary", entities.home?.secondary_info?.template],
     ["nonFossilFuelSecondary", entities.fossil_fuel_percentage?.secondary_info?.template],
+    ["auxiliarySecondary", entities.auxiliary?.secondary_info?.template],
     ...(entities.individual ?? []).map((individual, index): [string, string | undefined] => [
       individualTopic(index),
       individual.secondary_info?.template,
@@ -43,6 +44,7 @@ export class SecondaryTemplates implements ReactiveController {
       solarSecondary: result("solarSecondary"),
       homeSecondary: result("homeSecondary"),
       nonFossilFuelSecondary: result("nonFossilFuelSecondary"),
+      auxiliarySecondary: result("auxiliarySecondary"),
       individual: (config.entities.individual ?? []).map((_, index) =>
         result(individualTopic(index))
       ),

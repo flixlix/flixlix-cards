@@ -90,6 +90,79 @@ const individualStates = (count: number): StateFixtures =>
 
 export const flowScenarios: FlowScenario[] = [
   {
+    name: "auxiliary feeding the grid",
+    visual: true,
+    energy: true,
+    entities: {
+      ...combinedEntities,
+      auxiliary: {
+        entity: "sensor.wind_stake",
+        name: "Wind stake",
+        icon: "mdi:wind-turbine",
+        inverted_animation: true,
+      },
+    },
+    states: {
+      "sensor.grid": "800",
+      "sensor.solar": "1200",
+      "sensor.battery": "-300",
+      "sensor.battery_soc": "60",
+      "sensor.wind_stake": "350",
+    },
+    expect: {
+      text: { "span.auxiliary": "350 W", ".circle-container.auxiliary .label": "Wind stake" },
+      shown: [
+        ".circle-container.auxiliary",
+        "#auxiliary-flow",
+        '.flow-dot[data-path="auxiliary-line"] circle',
+      ],
+    },
+  },
+  {
+    name: "auxiliary connected to the battery",
+    visual: true,
+    entities: {
+      ...combinedEntities,
+      auxiliary: { entity: "sensor.dc_solar", name: "DC solar", connect_to: "battery" },
+    },
+    states: {
+      "sensor.grid": "200",
+      "sensor.solar": "900",
+      "sensor.battery": "-500",
+      "sensor.battery_soc": "45",
+      "sensor.dc_solar": "400",
+    },
+    expect: {
+      shown: [".circle-container.auxiliary", "#auxiliary-flow"],
+    },
+  },
+  {
+    name: "auxiliary without a line and without a battery",
+    visual: true,
+    entities: {
+      grid: { entity: "sensor.grid" },
+      solar: { entity: "sensor.solar" },
+      auxiliary: {
+        entity: "sensor.gas",
+        name: "Gas",
+        icon: "mdi:fire",
+        connect_to: "none",
+        unit_of_measurement: "m³",
+        decimals: 2,
+      },
+    },
+    states: {
+      "sensor.grid": "300",
+      "sensor.solar": "500",
+      "sensor.gas": sensor("1.25", { unit: "m³" }),
+    },
+    expect: {
+      text: { "span.auxiliary": "1.25 m³" },
+      shown: [".circle-container.auxiliary"],
+      hidden: ["#auxiliary-flow"],
+    },
+  },
+  {
     name: "all zero",
     visual: true,
     entities: combinedEntities,

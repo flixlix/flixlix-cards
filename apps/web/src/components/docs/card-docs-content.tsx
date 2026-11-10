@@ -5,6 +5,7 @@ import {
   BookOpen,
   Calculator,
   Check,
+  CircleDot,
   Cpu,
   EyeOff,
   Github,
@@ -804,6 +805,14 @@ const HOME_OPTIONS: OptionRow[] = [
   },
 ];
 
+const AUXILIARY_CONNECT_TO: OptionRow = {
+  name: "connect_to",
+  type: "grid | battery | none",
+  default: "grid",
+  description:
+    "Where its line runs: up to the grid, across to the battery, or no line at all. The line is drawn only while that node is shown; while it runs up into the grid, the grid's label is hidden to make room.",
+};
+
 const INDIVIDUAL_OPTIONS: OptionRow[] = [
   {
     name: "entity",
@@ -1106,6 +1115,7 @@ export function ConfigurationPage({ cardKey }: { cardKey: CardKey }) {
     { id: "solar", label: "Solar", depth: 2 },
     { id: "battery", label: "Battery", depth: 2 },
     { id: "individual", label: "Individual devices", depth: 2 },
+    { id: "auxiliary", label: "Auxiliary", depth: 2 },
     { id: "home", label: "Home", depth: 2 },
     { id: "fossil-fuel", label: "Fossil fuel", depth: 2 },
     { id: "shared-objects", label: "Shared objects" },
@@ -1297,6 +1307,11 @@ entities:
                 type: "array",
                 description: "Up to 4 individual device objects.",
               },
+              {
+                name: "auxiliary",
+                type: "object",
+                description: "One display-only circle under the grid. See Auxiliary below.",
+              },
               { name: "home", type: "object", description: "See Home below." },
               {
                 name: "fossil_fuel_percentage",
@@ -1407,6 +1422,37 @@ entities:
           }}
         >
           <OptionList rows={INDIVIDUAL_OPTIONS} />
+        </CategorySection>
+
+        <CategorySection
+          id="auxiliary"
+          title="Auxiliary"
+          icon={CircleDot}
+          accent="slate"
+          description="One extra circle under the grid and left of the battery, for a reading outside your home's consumption: a wind farm share, a virtual battery, a gas meter, DC solar behind the battery."
+          intro={
+            <Prose>
+              <p>
+                It is <strong>display-only</strong>: its reading never changes the other flows, the
+                home consumption or the home circle. It takes every option of an individual device,
+                plus <code>connect_to</code>. A positive reading flows into it; set{" "}
+                <code>inverted_animation: true</code> for something that feeds the grid or battery,
+                or <code>accept_negative: true</code> when the entity reads negative while feeding.
+              </p>
+            </Prose>
+          }
+          example={{
+            language: "yaml",
+            code: `entities:
+  auxiliary:
+    entity: sensor.wind_stake_${sensorSuffix}
+    name: Wind stake
+    icon: mdi:wind-turbine
+    connect_to: grid
+    inverted_animation: true`,
+          }}
+        >
+          <OptionList rows={[AUXILIARY_CONNECT_TO, ...INDIVIDUAL_OPTIONS]} />
         </CategorySection>
 
         <CategorySection

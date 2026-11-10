@@ -130,6 +130,11 @@
     "transparency": "Прозрачность",
     "unit_of_measurement": "Единица измерения",
     "unit_white_space": "Пробел единицы измерения",
-    "use_metadata": "Использовать метаданные"
+    "use_metadata": "Использовать метаданные",
+    "auxiliary": "Дополнительный",
+    "connect_to": "Подключить к",
+    "connect_to_grid": "Сеть (линия вверх к сети)",
+    "connect_to_battery": "Батарея (линия к батарее)",
+    "connect_to_none": "Нет (без линии)"
   }
 }

@@ -130,6 +130,11 @@
     "transparency": "पारदर्शिता",
     "unit_of_measurement": "माप की इकाई",
     "unit_white_space": "यूनिट स्पेस",
-    "use_metadata": "मेटाडेटा का उपयोग करें"
+    "use_metadata": "मेटाडेटा का उपयोग करें",
+    "auxiliary": "सहायक",
+    "connect_to": "इससे जोड़ें",
+    "connect_to_grid": "ग्रिड (ग्रिड तक ऊपर लाइन)",
+    "connect_to_battery": "बैटरी (बैटरी तक लाइन)",
+    "connect_to_none": "कोई नहीं (कोई लाइन नहीं)"
   }
 }

@@ -1,6 +1,12 @@
-import { type ReadyCardState } from "@flixlix-cards/shared/card-state";
-import { type BatteryObject, type GridObject, type SolarObject } from "@flixlix-cards/shared/types";
+import { auxiliaryConnection, type ReadyCardState } from "@flixlix-cards/shared/card-state";
+import {
+  type BatteryObject,
+  type FlowCardPlusConfig,
+  type GridObject,
+  type SolarObject,
+} from "@flixlix-cards/shared/types";
 import { html } from "lit";
+import { auxiliaryFlow } from "../auxiliary";
 import { rightIndividualFlow } from "../individual-element";
 import { flowBatteryToGrid } from "./battery-to-grid";
 import { flowBatteryToHome } from "./battery-to-home";
@@ -28,8 +34,12 @@ const NOMINAL_WIDTH = 400;
  * Every flow line, drawn in overlays over the card content in the content's pixels, ending on
  * the node circles measured in `layout`.
  */
-export const flowElement = (state: ReadyCardState, layout: FlowLayout | undefined) => {
-  const { battery, grid, solar } = state.nodes;
+export const flowElement = (
+  state: ReadyCardState,
+  config: FlowCardPlusConfig,
+  layout: FlowLayout | undefined
+) => {
+  const { battery, grid, solar, auxiliary } = state.nodes;
   const { rightTop, rightBottom } = state.individualSlots;
   const shown =
     layout ??
@@ -38,8 +48,12 @@ export const flowElement = (state: ReadyCardState, layout: FlowLayout | undefine
       solar: solar.has,
       battery: battery.has,
       right: state.layout.hasRightIndividual,
+      auxiliary: auxiliary.has,
     });
-  const paths = flowPaths(shown, { hasBottomRow: state.layout.showBottomRow });
+  const paths = flowPaths(shown, {
+    hasBottomRow: state.layout.showBottomRow,
+    auxiliaryConnection: auxiliaryConnection(config),
+  });
   const viewBox = `0 0 ${shown.width} ${shown.height}`;
   const flows: Flows = {
     battery,
@@ -56,5 +70,6 @@ export const flowElement = (state: ReadyCardState, layout: FlowLayout | undefine
     ${flowGridToHome(flows)} ${flowBatteryToHome(flows)} ${flowBatteryToGrid(flows)}
     ${rightIndividualFlow(rightTop, "right-top", paths.rightTopToHome, right)}
     ${rightIndividualFlow(rightBottom, "right-bottom", paths.rightBottomToHome, right)}
+    ${auxiliaryFlow(auxiliary, state.flows.auxiliary, paths.auxiliary, right)}
   </div>`;
 };

@@ -452,6 +452,66 @@ describe("individual direction", () => {
   });
 });
 
+const mountAuxiliary = async (auxiliary: object, reading = "450") =>
+  mountCard(
+    PowerFlowCardPlus,
+    {
+      type: "custom:power-flow-card-plus",
+      entities: {
+        grid: { entity: "sensor.grid" },
+        battery: { entity: "sensor.battery" },
+        auxiliary: { entity: "sensor.auxiliary", name: "Gas", ...auxiliary },
+      },
+    },
+    fakeHass({
+      states: { "sensor.grid": "1000", "sensor.battery": "200", "sensor.auxiliary": reading },
+    }),
+    { width: 500 }
+  );
+
+const auxiliaryDot = '.flow-dot[data-path="auxiliary-line"]';
+
+describe("auxiliary node", () => {
+  test("sits under the grid, left of the battery", async () => {
+    const { root, text } = await mountAuxiliary({});
+    const auxiliary = centerOf(root.querySelector(".auxiliary .circle"));
+    const grid = centerOf(root.querySelector(".grid .circle"));
+    const battery = centerOf(root.querySelector(".battery .circle"));
+    expect(auxiliary.x).toBeCloseTo(grid.x, 0);
+    expect(auxiliary.y).toBeCloseTo(battery.y, 0);
+    expect(text(".circle-container.auxiliary .label")).toBe("Gas");
+    expect(text("span.auxiliary")).toBe("450 W");
+  });
+
+  test("its dot runs from the grid, or from the battery with connect_to: battery", async () => {
+    const grid = await mountAuxiliary({});
+    expect(runsTowards(grid.root, auxiliaryDot, ".auxiliary .circle")).toBe(true);
+    expect(runsTowards(grid.root, auxiliaryDot, ".grid .circle")).toBe(false);
+
+    const battery = await mountAuxiliary({ connect_to: "battery" });
+    expect(runsTowards(battery.root, auxiliaryDot, ".auxiliary .circle")).toBe(true);
+    expect(runsTowards(battery.root, auxiliaryDot, ".battery .circle")).toBe(false);
+  });
+
+  test("with accept_negative, a negative reading flows into the node it connects to", async () => {
+    const { root } = await mountAuxiliary({ accept_negative: true }, "-450");
+    expect(runsTowards(root, auxiliaryDot, ".grid .circle")).toBe(true);
+  });
+
+  test("the grid keeps its label slot but drops its name while the line runs up into it", async () => {
+    const toGrid = await mountAuxiliary({});
+    expect(toGrid.text(".circle-container.grid > .label")).toBe("");
+    const toBattery = await mountAuxiliary({ connect_to: "battery" });
+    expect(toBattery.text(".circle-container.grid > .label")).toBe("Grid");
+  });
+
+  test("connect_to: none draws no line", async () => {
+    const { root } = await mountAuxiliary({ connect_to: "none" });
+    expect(root.querySelector(".auxiliary .circle")).not.toBeNull();
+    expect(root.querySelector("#auxiliary-line")).toBeNull();
+  });
+});
+
 const priceTemplate = "{{ states('sensor.cost') }}";
 
 const watchedConfig = {

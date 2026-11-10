@@ -291,6 +291,32 @@ export const styles = css`
     stroke: var(--individual-right-bottom-color);
   }
 
+  .circle-container.auxiliary {
+    height: 110px;
+    justify-content: flex-end;
+  }
+  .auxiliary .circle {
+    border-color: var(--circle-auxiliary-color, var(--auxiliary-color));
+    color: var(--text-auxiliary-color);
+  }
+  #auxiliary-icon {
+    color: var(--icon-auxiliary-color);
+  }
+  span.auxiliary {
+    color: var(--text-auxiliary-color);
+  }
+  span.secondary-info.auxiliary {
+    color: var(--secondary-text-auxiliary-color);
+  }
+  .auxiliary path,
+  circle.auxiliary {
+    stroke: var(--auxiliary-color);
+  }
+  circle.auxiliary {
+    stroke-width: 4;
+    fill: var(--auxiliary-color);
+  }
+
   .circle-container.low-carbon {
     height: 130px;
   }

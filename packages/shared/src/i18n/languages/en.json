@@ -130,6 +130,11 @@
     "transparency": "Transparency",
     "unit_of_measurement": "Unit",
     "unit_white_space": "Unit White Space",
-    "use_metadata": "Use Metadata"
+    "use_metadata": "Use Metadata",
+    "auxiliary": "Auxiliary",
+    "connect_to": "Connect to",
+    "connect_to_grid": "Grid (line up to the grid)",
+    "connect_to_battery": "Battery (line across to the battery)",
+    "connect_to_none": "None (no line)"
   }
 }

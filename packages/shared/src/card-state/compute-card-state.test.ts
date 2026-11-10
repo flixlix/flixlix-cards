@@ -49,6 +49,7 @@ const noTemplates: TemplatesObj = {
   solarSecondary: undefined,
   homeSecondary: undefined,
   nonFossilFuelSecondary: undefined,
+  auxiliarySecondary: undefined,
   individual: [],
 };
 
@@ -75,6 +76,7 @@ const readings = (overrides: ReadingsOverrides = {}): ReadyReadings => ({
   home: overrides.home ?? null,
   generator: overrides.generator ?? null,
   individuals: overrides.individuals ?? [],
+  auxiliary: overrides.auxiliary ?? null,
   fossilEnergyConsumption: overrides.fossilEnergyConsumption,
 });
 
@@ -1161,5 +1163,105 @@ describe("an individual with secondary_info.sum_total", () => {
 
   test("without sum_total, a device at 0 W is hidden", () => {
     expect(chargerState(false).individualSlots.leftTop).toBeUndefined();
+  });
+});
+
+const withAuxiliary = (
+  auxiliary: NonNullable<FlowCardPlusConfig["entities"]["auxiliary"]>,
+  entities: Partial<FlowCardPlusConfig["entities"]> = {}
+) => config({ entities: { auxiliary, ...entities } });
+const flowing = readings({
+  grid: { fromGrid: 600 },
+  solar: { total: 1000 },
+  battery: { toBattery: 300 },
+  auxiliary: 450,
+});
+const auxiliaryState = (cardConfig: FlowCardPlusConfig, cardReadings = flowing) =>
+  ready(compute({ config: cardConfig, readings: cardReadings }));
+
+const auxiliaryLine = (connect_to?: "grid" | "battery" | "none") =>
+  auxiliaryState(withAuxiliary({ entity: "sensor.gas", connect_to })).flows.auxiliary.visible;
+
+describe("the auxiliary node", () => {
+  test("is display-only: flows, home and home ring do not change with it", () => {
+    const without = auxiliaryState(config());
+    const withIt = auxiliaryState(withAuxiliary({ entity: "sensor.gas" }));
+
+    expect(withIt.nodes.auxiliary.displayState).toBe(`450${thinSpace}W`);
+    expect(withIt.homeBalance).toEqual(without.homeBalance);
+    expect(withIt.homeRing).toEqual(without.homeRing);
+    expect({ ...withIt.flows, auxiliary: undefined }).toEqual({
+      ...without.flows,
+      auxiliary: undefined,
+    });
+  });
+
+  test("connects to the grid unless connect_to picks the battery or no line", () => {
+    expect(auxiliaryLine()).toBe(true);
+    expect(auxiliaryLine("grid")).toBe(true);
+    expect(auxiliaryLine("battery")).toBe(true);
+    expect(auxiliaryLine("none")).toBe(false);
+  });
+
+  test("hides the grid's label while its line runs up into the grid", () => {
+    const gridLabel = (connect_to?: "grid" | "battery" | "none") =>
+      auxiliaryState(withAuxiliary({ entity: "sensor.gas", connect_to })).layout.showGridLabel;
+
+    expect(gridLabel()).toBe(false);
+    expect(gridLabel("battery")).toBe(true);
+    expect(gridLabel("none")).toBe(true);
+    expect(auxiliaryState(config()).layout.showGridLabel).toBe(true);
+  });
+
+  test("draws no line while the node it connects to is hidden", () => {
+    const state = auxiliaryState(
+      withAuxiliary({ entity: "sensor.gas", connect_to: "battery" }, { battery: undefined })
+    );
+
+    expect(state.nodes.auxiliary.has).toBe(true);
+    expect(state.flows.auxiliary.visible).toBe(false);
+  });
+
+  test("keeps the left column and the bottom row without a grid or battery", () => {
+    const { layout } = auxiliaryState(
+      withAuxiliary(
+        { entity: "sensor.gas", connect_to: "none" },
+        { grid: undefined, battery: undefined }
+      )
+    );
+
+    expect(layout.hasGridColumn).toBe(true);
+    expect(layout.showBottomRow).toBe(true);
+  });
+
+  test("a negative reading with accept_negative flows towards the node it connects to", () => {
+    const state = auxiliaryState(
+      withAuxiliary({ entity: "sensor.virtual_battery", accept_negative: true }),
+      readings({ grid: { fromGrid: 600 }, auxiliary: -450 })
+    );
+
+    expect(state.nodes.auxiliary.invertAnimation).toBe(true);
+    expect(state.nodes.auxiliary.displayState).toBe(`-450${thinSpace}W`);
+    expect(state.flows.auxiliary.value).toBe(450);
+  });
+
+  test("below its tolerance it is hidden unless display_zero is set", () => {
+    const idle = readings({ grid: { fromGrid: 600 }, auxiliary: 4 });
+    const field = { entity: "sensor.gas", display_zero_tolerance: 5 };
+
+    expect(auxiliaryState(withAuxiliary(field), idle).nodes.auxiliary.has).toBe(false);
+    expect(
+      auxiliaryState(withAuxiliary({ ...field, display_zero: true }), idle).nodes.auxiliary.has
+    ).toBe(true);
+  });
+
+  test("reads its entity's power", () => {
+    const hass = hassWith({ "sensor.gas": "1200", "binary_sensor.outage": "off" });
+    const cardConfig = withAuxiliary({ entity: "sensor.gas" });
+    const state = ready(
+      compute({ config: cardConfig, hass, readings: powerReadings(hass, cardConfig) })
+    );
+
+    expect(state.nodes.auxiliary.displayState).toBe(`1.2${thinSpace}kW`);
   });
 });

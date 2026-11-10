@@ -8,6 +8,7 @@ import {
   type HaFormLabelSchema,
   type ValueChangedEvent,
 } from "@flixlix-cards/shared/ui-editor/ha-form";
+import { auxiliarySchema } from "@flixlix-cards/shared/ui-editor/schema/auxiliary";
 import { batterySchema } from "@flixlix-cards/shared/ui-editor/schema/battery";
 import { nonFossilSchema } from "@flixlix-cards/shared/ui-editor/schema/fossil-fuel-percentage";
 import { gridSchema } from "@flixlix-cards/shared/ui-editor/schema/grid";
@@ -31,6 +32,7 @@ const ENTITY_PAGES = [
   { page: "battery", icon: "mdi:battery-high", schema: batterySchema },
   { page: "fossil_fuel_percentage", icon: "mdi:leaf", schema: nonFossilSchema },
   { page: "home", icon: "mdi:home", schema: homeSchema },
+  { page: "auxiliary", icon: "mdi:circle-multiple-outline", schema: auxiliarySchema },
 ] as const;
 
 type EntityPage = (typeof ENTITY_PAGES)[number]["page"];

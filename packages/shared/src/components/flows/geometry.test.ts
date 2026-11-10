@@ -1,3 +1,4 @@
+import { AUXILIARY_CONNECTIONS, type AuxiliaryConnection } from "@flixlix-cards/shared/types";
 import * as fc from "fast-check";
 import { describe, expect, test } from "vite-plus/test";
 import {
@@ -48,8 +49,8 @@ const distance = (point: Point, { cx, cy }: Ring) => Math.hypot(point.x - cx, po
 /** Rounding the path data to hundredths moves an end by at most this much. */
 const ROUNDING = 0.01;
 
-const ends = (layout: FlowLayout) => {
-  const { home, grid, solar, battery, rightTop, rightBottom } = layout;
+const ends = (layout: FlowLayout, connection: AuxiliaryConnection = "grid") => {
+  const { home, grid, solar, battery, rightTop, rightBottom, auxiliary } = layout;
   return {
     solarToHome: [solar, home],
     solarToGrid: [solar, grid],
@@ -59,6 +60,7 @@ const ends = (layout: FlowLayout) => {
     batteryToGrid: [battery, grid],
     rightTopToHome: [rightTop, home],
     rightBottomToHome: [rightBottom, home],
+    auxiliary: [auxiliary, connection === "battery" ? battery : grid],
   } as const;
 };
 
@@ -67,7 +69,10 @@ const nodeSets = fc.record({
   solar: fc.boolean(),
   battery: fc.boolean(),
   right: fc.boolean(),
+  auxiliary: fc.boolean(),
 });
+
+const connections = fc.constantFrom(...AUXILIARY_CONNECTIONS);
 
 /** How far the grid line runs from the home's axis. */
 const axisOf = (nodes: { solar: boolean; battery: boolean }) => {
@@ -81,61 +86,77 @@ const startX = (line: { d: string } | undefined) => sample(line?.d ?? "")[0]?.x 
 describe("flow paths", () => {
   test("every line starts and ends on the border of its rings, at every width", () => {
     fc.assert(
-      fc.property(fc.integer({ min: 240, max: 640 }), nodeSets, (width, nodes) => {
-        const layout = nominalLayout(width, nodes);
-        const paths = flowPaths(layout, { hasBottomRow: nodes.battery || nodes.right });
-        for (const [flow, [from, to]] of Object.entries(ends(layout))) {
-          const line = paths[flow as keyof typeof paths];
-          const d = typeof line === "object" ? line.d : undefined;
-          if (!d || !from || !to) {
-            continue;
+      fc.property(
+        fc.integer({ min: 240, max: 640 }),
+        nodeSets,
+        connections,
+        (width, nodes, connection) => {
+          const layout = nominalLayout(width, nodes);
+          const paths = flowPaths(layout, {
+            hasBottomRow: nodes.battery || nodes.right || nodes.auxiliary,
+            auxiliaryConnection: connection,
+          });
+          for (const [flow, [from, to]] of Object.entries(ends(layout, connection))) {
+            const line = paths[flow as keyof typeof paths];
+            const d = typeof line === "object" ? line.d : undefined;
+            if (!d || !from || !to) {
+              continue;
+            }
+            const points = sample(d);
+            const first = points[0];
+            const last = points[points.length - 1];
+            if (!first || !last) {
+              throw new Error(`${flow}: empty path`);
+            }
+            expect(Math.abs(distance(first, from) - (from.r - ringInset(from)))).toBeLessThan(
+              ROUNDING
+            );
+            expect(Math.abs(distance(last, to) - (to.r - ringInset(to)))).toBeLessThan(ROUNDING);
           }
-          const points = sample(d);
-          const first = points[0];
-          const last = points[points.length - 1];
-          if (!first || !last) {
-            throw new Error(`${flow}: empty path`);
-          }
-          expect(Math.abs(distance(first, from) - (from.r - ringInset(from)))).toBeLessThan(
-            ROUNDING
-          );
-          expect(Math.abs(distance(last, to) - (to.r - ringInset(to)))).toBeLessThan(ROUNDING);
         }
-      })
+      )
     );
   });
 
   test("no line runs into the inside of any circle", () => {
     fc.assert(
-      fc.property(fc.integer({ min: 240, max: 640 }), nodeSets, (width, nodes) => {
-        const layout = nominalLayout(width, nodes);
-        const paths = flowPaths(layout, { hasBottomRow: nodes.battery || nodes.right });
-        const rings = Object.values(ends(layout))
-          .flat()
-          .filter((candidate) => candidate !== undefined);
-        for (const flow of Object.keys(ends(layout))) {
-          const line = paths[flow as keyof typeof paths];
-          const d = typeof line === "object" ? line.d : undefined;
-          if (!d) {
-            continue;
-          }
-          // one expect per flow, not per point: an expect per sample made this the suite's
-          // slowest test, past its timeout under CI's coverage
-          let deepest = { by: -Infinity, point: { x: 0, y: 0 }, circle: rings[0] };
-          for (const point of sample(d)) {
-            for (const circle of rings) {
-              const by = circle.r - ringInset(circle) - ROUNDING - distance(point, circle);
-              if (by > deepest.by) {
-                deepest = { by, point, circle };
+      fc.property(
+        fc.integer({ min: 240, max: 640 }),
+        nodeSets,
+        connections,
+        (width, nodes, connection) => {
+          const layout = nominalLayout(width, nodes);
+          const paths = flowPaths(layout, {
+            hasBottomRow: nodes.battery || nodes.right || nodes.auxiliary,
+            auxiliaryConnection: connection,
+          });
+          const rings = Object.values(ends(layout, connection))
+            .flat()
+            .filter((candidate) => candidate !== undefined);
+          for (const flow of Object.keys(ends(layout, connection))) {
+            const line = paths[flow as keyof typeof paths];
+            const d = typeof line === "object" ? line.d : undefined;
+            if (!d) {
+              continue;
+            }
+            // one expect per flow, not per point: an expect per sample made this the suite's
+            // slowest test, past its timeout under CI's coverage
+            let deepest = { by: -Infinity, point: { x: 0, y: 0 }, circle: rings[0] };
+            for (const point of sample(d)) {
+              for (const circle of rings) {
+                const by = circle.r - ringInset(circle) - ROUNDING - distance(point, circle);
+                if (by > deepest.by) {
+                  deepest = { by, point, circle };
+                }
               }
             }
+            expect({ flow, intrudes: deepest.by >= 0, ...deepest }).toMatchObject({
+              flow,
+              intrudes: false,
+            });
           }
-          expect({ flow, intrudes: deepest.by >= 0, ...deepest }).toMatchObject({
-            flow,
-            intrudes: false,
-          });
         }
-      })
+      )
     );
   });
 
@@ -170,6 +191,37 @@ describe("flow paths", () => {
         expect(mirrored?.y).toBeCloseTo(point.y, 1);
       }
     }
+  });
+
+  test("the auxiliary line runs straight up into the grid or across into the battery", () => {
+    const nodes = { grid: true, solar: true, battery: true, right: false, auxiliary: true };
+    const layout = nominalLayout(400, nodes);
+    const line = (auxiliaryConnection: AuxiliaryConnection) =>
+      sample(flowPaths(layout, { hasBottomRow: true, auxiliaryConnection }).auxiliary?.d ?? "");
+    const auxiliary = layout.auxiliary;
+
+    expect(line("grid").every((point) => Math.abs(point.x - (auxiliary?.cx ?? 0)) < ROUNDING)).toBe(
+      true
+    );
+    expect(
+      line("battery").every((point) => Math.abs(point.y - (auxiliary?.cy ?? 0)) < ROUNDING)
+    ).toBe(true);
+    expect(line("none")).toEqual([]);
+  });
+
+  test("the auxiliary line waits for the node it connects to", () => {
+    const layout = nominalLayout(400, {
+      grid: false,
+      solar: true,
+      battery: false,
+      right: false,
+      auxiliary: true,
+    });
+
+    expect(flowPaths(layout, { hasBottomRow: true }).auxiliary).toBeUndefined();
+    expect(
+      flowPaths(layout, { hasBottomRow: true, auxiliaryConnection: "battery" }).auxiliary
+    ).toBeUndefined();
   });
 
   test("keeps the proportions of a wide card", () => {

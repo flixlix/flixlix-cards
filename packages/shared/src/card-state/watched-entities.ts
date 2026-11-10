@@ -21,7 +21,8 @@ const fieldEntities = (field: EntityField | undefined): (string | undefined)[] =
 
 /** Every entity id a flow card reads from `hass.states`; a change to any other entity cannot change the card. */
 export function watchedEntities(config: FlowCardPlusConfig): string[] {
-  const { battery, grid, solar, home, fossil_fuel_percentage, individual } = config.entities;
+  const { battery, grid, solar, home, fossil_fuel_percentage, individual, auxiliary } =
+    config.entities;
   const fields: (EntityField | undefined)[] = [
     battery,
     grid,
@@ -29,6 +30,7 @@ export function watchedEntities(config: FlowCardPlusConfig): string[] {
     home,
     fossil_fuel_percentage,
     ...(individual ?? []),
+    auxiliary,
   ];
   const ids = fields
     .flatMap(fieldEntities)

@@ -130,6 +130,11 @@
     "transparency": "Transparens",
     "unit_of_measurement": "Enhed",
     "unit_white_space": "Enhed tomt mellemrum",
-    "use_metadata": "Brug Metadata"
+    "use_metadata": "Brug Metadata",
+    "auxiliary": "Ekstra",
+    "connect_to": "Forbind til",
+    "connect_to_grid": "Net (linje op til nettet)",
+    "connect_to_battery": "Batteri (linje over til batteriet)",
+    "connect_to_none": "Ingen (ingen linje)"
   }
 }

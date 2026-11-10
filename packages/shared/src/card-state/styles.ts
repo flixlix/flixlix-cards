@@ -19,6 +19,7 @@ type StyledNodes = {
   solar: SolarObject;
   battery: BatteryObject;
   nonFossil: NonFossilObject;
+  auxiliary: IndividualObject;
 };
 
 const PRIMARY_TEXT = "var(--primary-text-color)";
@@ -268,6 +269,22 @@ const individualVars = (individuals: IndividualObject[], greyIdle: boolean): Css
   return { ...colorVars, ...idleIndividualCircleVars(shown, greyIdle) };
 };
 
+const AUXILIARY_COLOR = "#a1887f";
+
+const auxiliaryVars = ({ auxiliary }: StyledNodes, greyIdle: boolean): CssVars => {
+  const field: Partial<IndividualDeviceType> = auxiliary.field ?? {};
+  const color = "var(--auxiliary-color)";
+  const idle = isIdle(auxiliary.state) ? idleCircleColor(field.color_idle, greyIdle) : undefined;
+  return {
+    "--auxiliary-color":
+      field.color === undefined ? AUXILIARY_COLOR : cssColor(field.color, AUXILIARY_COLOR),
+    "--icon-auxiliary-color": field.color_icon !== false ? color : PRIMARY_TEXT,
+    "--text-auxiliary-color": field.color_value ? color : PRIMARY_TEXT,
+    "--secondary-text-auxiliary-color": field.secondary_info?.color_value ? color : PRIMARY_TEXT,
+    ...(idle === undefined ? {} : { "--circle-auxiliary-color": idle }),
+  };
+};
+
 /** CSS custom properties the card sets on its host for colours and line geometry. */
 export const computeCssVars = (
   config: FlowCardPlusConfig,
@@ -285,5 +302,6 @@ export const computeCssVars = (
     ...nonFossilAndHomeVars(nodes, entities, largestHomeSource),
     ...lineVars(nodes, config),
     ...individualVars(individuals, greyIdle),
+    ...auxiliaryVars(nodes, greyIdle),
   };
 };
