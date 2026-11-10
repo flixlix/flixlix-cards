@@ -4,6 +4,8 @@ import type * as React from "react";
 
 import { trackEvent } from "#/lib/analytics";
 import { CardDemo } from "@/components/card-demo";
+import { energyStates } from "@/components/demos";
+import { sensor, type StateFixtures } from "@flixlix-cards/shared/preview/fake-hass";
 import { Button } from "@flixlix-cards/ui/components/button";
 import { Checkbox } from "@flixlix-cards/ui/components/checkbox";
 
@@ -19,6 +21,7 @@ import {
   Section,
 } from "./doc-primitives";
 import { InstallFromLink } from "./install-from-link";
+import { LiveExample } from "./live-example";
 import { OptionList } from "./option-list";
 import { PageTOC, type TocItem } from "./page-toc";
 
@@ -485,21 +488,28 @@ compare_button_label: Compare`,
 
 // ---------- Examples ----------
 
+const EXAMPLE_STATES: StateFixtures = {
+  ...energyStates,
+  "sensor.grid_consumption": sensor("5.2", { unit: "kWh" }),
+  "sensor.grid_production": sensor("3.8", { unit: "kWh" }),
+};
+
 export function ExamplesPage() {
   return (
     <>
       <PageHeader
         eyebrow={TITLE}
         title="Examples"
-        description="Copy-pastable configs for the most common setups."
+        description="Copy-pastable configs for the most common setups, each next to the card it draws."
       />
 
       <Section id="minimal" title="On a card">
         <Prose>
           <p>The default buttons, on a card background.</p>
         </Prose>
-        <CodeBlock
-          language="yaml"
+        <LiveExample
+          states={EXAMPLE_STATES}
+          energy
           code={`type: ${CARD_TYPE}
 card_background: true`}
         />
@@ -511,8 +521,9 @@ card_background: true`}
             A title, icon buttons for today and compare, and only month, year and custom ranges.
           </p>
         </Prose>
-        <CodeBlock
-          language="yaml"
+        <LiveExample
+          states={EXAMPLE_STATES}
+          energy
           code={`type: ${CARD_TYPE}
 card_background: true
 title: Energy period
@@ -529,8 +540,9 @@ period_buttons: [month, year, custom]`}
             period, not only in <code>custom</code>.
           </p>
         </Prose>
-        <CodeBlock
-          language="yaml"
+        <LiveExample
+          states={EXAMPLE_STATES}
+          energy
           code={`type: ${CARD_TYPE}
 card_background: true
 date_picker: true
@@ -545,8 +557,9 @@ period_buttons: [day, week, month, year, custom]`}
             follows the picked period with <code>energy_date_selection: true</code>.
           </p>
         </Prose>
-        <CodeBlock
-          language="yaml"
+        <LiveExample
+          states={EXAMPLE_STATES}
+          energy
           code={`type: vertical-stack
 cards:
   - type: ${CARD_TYPE}

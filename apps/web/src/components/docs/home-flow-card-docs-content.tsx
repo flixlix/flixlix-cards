@@ -18,11 +18,11 @@ import {
   UtilityPole,
 } from "lucide-react";
 import type * as React from "react";
-import { parse, stringify } from "yaml";
+import { stringify } from "yaml";
 
 import { trackEvent } from "#/lib/analytics";
 import { CardDemo } from "@/components/card-demo";
-import { type CardConfig, CardPreview } from "@/components/card-preview";
+import { CardPreview } from "@/components/card-preview";
 import { type HouseMoment, houseMoments } from "@/components/demos";
 import { sensor, type StateFixtures } from "@flixlix-cards/shared/preview/fake-hass";
 import { Button } from "@flixlix-cards/ui/components/button";
@@ -39,6 +39,7 @@ import {
   Section,
 } from "./doc-primitives";
 import { InstallFromCatalog } from "./install-from-catalog";
+import { LiveExample } from "./live-example";
 import { OptionList } from "./option-list";
 import { PageTOC, type TocItem } from "./page-toc";
 
@@ -1251,26 +1252,6 @@ solar:
     states: AFTERNOON,
   },
 ];
-
-const isConfig = (value: unknown): value is CardConfig =>
-  typeof value === "object" && value !== null && "type" in value && typeof value.type === "string";
-
-function LiveExample({ code, states }: { code: string; states: StateFixtures }) {
-  const config: unknown = parse(code);
-  return (
-    <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-      <CodeBlock language="yaml" code={code} />
-      {isConfig(config) ? (
-        <CardPreview
-          configs={[config]}
-          states={states}
-          width={400}
-          className="mx-auto w-fit max-w-full rounded-2xl"
-        />
-      ) : null}
-    </div>
-  );
-}
 
 export function ExamplesPage() {
   return (

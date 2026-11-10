@@ -19,6 +19,7 @@ const loadPreview = () =>
     import("energy-flow-card-plus/source"),
     import("energy-breakdown-card/source"),
     import("energy-period-selector-plus/source"),
+    import("sortable-list-card/source"),
   ]).then(([elements, hass, picker]) => {
     elements.defineHaElements();
     picker.defineDateRangePicker();

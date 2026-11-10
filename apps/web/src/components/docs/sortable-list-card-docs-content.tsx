@@ -5,6 +5,7 @@ import type * as React from "react";
 import { trackEvent } from "#/lib/analytics";
 import { Button } from "@flixlix-cards/ui/components/button";
 import { Checkbox } from "@flixlix-cards/ui/components/checkbox";
+import { sensor, type StateFixtures } from "@flixlix-cards/shared/preview/fake-hass";
 
 import { CategorySection } from "./category-section";
 import {
@@ -18,6 +19,7 @@ import {
   Section,
 } from "./doc-primitives";
 import { InstallFromLink } from "./install-from-link";
+import { LiveExample } from "./live-example";
 import { OptionList } from "./option-list";
 import { PageTOC, type TocItem } from "./page-toc";
 
@@ -641,13 +643,24 @@ save_action:
 
 // ---------- Examples ----------
 
+const text = (state: string, name?: string) => sensor(state, { unit: undefined, name });
+
+const EXAMPLE_STATES: StateFixtures = {
+  "input_text.my_order": text("beta,alpha,gamma"),
+  "input_text.hems_priority": text("battery,ev,heating,water_heater"),
+  "input_text.room_order": text('["light.living_room","light.kitchen","light.bedroom"]'),
+  "light.kitchen": text("on", "Kitchen"),
+  "light.living_room": text("off", "Living room"),
+  "light.bedroom": text("on", "Bedroom"),
+};
+
 export function ExamplesPage() {
   return (
     <>
       <PageHeader
         eyebrow={TITLE}
         title="Examples"
-        description="Copy-pastable configs for the most common setups."
+        description="Copy-pastable configs for the most common setups, each next to the card it draws."
       />
 
       <Callout variant="info" title="Don't forget!">
@@ -663,8 +676,8 @@ export function ExamplesPage() {
             <code>input_text</code> helper.
           </p>
         </Prose>
-        <CodeBlock
-          language="yaml"
+        <LiveExample
+          states={EXAMPLE_STATES}
           code={`type: ${CARD_TYPE}
 title: My order
 entity: input_text.my_order
@@ -686,8 +699,8 @@ items:
             to decide who gets surplus solar.
           </p>
         </Prose>
-        <CodeBlock
-          language="yaml"
+        <LiveExample
+          states={EXAMPLE_STATES}
           code={`type: ${CARD_TYPE}
 title: Load priority
 entity: input_text.hems_priority
@@ -725,8 +738,8 @@ items:
             stored as JSON and handed to a script as a real list.
           </p>
         </Prose>
-        <CodeBlock
-          language="yaml"
+        <LiveExample
+          states={EXAMPLE_STATES}
           code={`type: ${CARD_TYPE}
 title: Rooms
 show_state: true
@@ -750,8 +763,8 @@ items:
             and just fire a service on each reorder.
           </p>
         </Prose>
-        <CodeBlock
-          language="yaml"
+        <LiveExample
+          states={EXAMPLE_STATES}
           code={`type: ${CARD_TYPE}
 title: Notification order
 save_action:
@@ -775,8 +788,8 @@ items:
         <Prose>
           <p>Hide the chrome for a cleaner, drag-only list.</p>
         </Prose>
-        <CodeBlock
-          language="yaml"
+        <LiveExample
+          states={EXAMPLE_STATES}
           code={`type: ${CARD_TYPE}
 entity: input_text.my_order
 show_handle: false

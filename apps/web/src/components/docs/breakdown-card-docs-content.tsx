@@ -17,6 +17,7 @@ import { Button } from "@flixlix-cards/ui/components/button";
 import { Checkbox } from "@flixlix-cards/ui/components/checkbox";
 
 import { CardDemo } from "@/components/card-demo";
+import { sensor, type StateFixtures } from "@flixlix-cards/shared/preview/fake-hass";
 
 import { CategorySection } from "./category-section";
 import {
@@ -30,6 +31,7 @@ import {
   Section,
 } from "./doc-primitives";
 import { InstallFromLink } from "./install-from-link";
+import { LiveExample } from "./live-example";
 import { OptionList } from "./option-list";
 import { PageTOC, type TocItem } from "./page-toc";
 
@@ -797,13 +799,29 @@ entities:
 
 // ---------- Examples ----------
 
+const kilowattHours = (state: string, name: string) => sensor(state, { unit: "kWh", name });
+
+/** An average day: today's sensors hold the day so far, the others their daily usage. */
+const EXAMPLE_STATES: StateFixtures = {
+  "sensor.solar_energy_today": kilowattHours("14.2", "Solar"),
+  "sensor.grid_energy_today": kilowattHours("6.8", "Grid"),
+  "sensor.battery_energy_today": kilowattHours("3.4", "Battery"),
+  "sensor.car_energy_today": kilowattHours("8.8", "Car"),
+  "sensor.heatpump_energy_today": kilowattHours("6.2", "Heat pump"),
+  "sensor.dishwasher_energy_today": kilowattHours("1.1", "Dishwasher"),
+  "sensor.dryer_energy_today": kilowattHours("0.9", "Dryer"),
+  "sensor.solar_energy": kilowattHours("21.4", "Solar"),
+  "sensor.grid_energy": kilowattHours("5.2", "Grid"),
+  "sensor.battery_energy": kilowattHours("4.6", "Battery"),
+};
+
 export function ExamplesPage() {
   return (
     <>
       <PageHeader
         eyebrow={TITLE}
         title="Examples"
-        description="Copy-pastable configs for the most common setups."
+        description="Copy-pastable configs for the most common setups, each next to the card it draws."
       />
 
       <Callout variant="info" title="Don't forget!">
@@ -816,8 +834,9 @@ export function ExamplesPage() {
             The smallest possible config — just a list of entities, defaulting to a stacked bar.
           </p>
         </Prose>
-        <CodeBlock
-          language="yaml"
+        <LiveExample
+          states={EXAMPLE_STATES}
+          energy
           code={`type: ${CARD_TYPE}
 entities:
   - entity: sensor.solar_energy_today
@@ -827,8 +846,9 @@ entities:
       </Section>
 
       <Section id="donut" title="Donut with right legend">
-        <CodeBlock
-          language="yaml"
+        <LiveExample
+          states={EXAMPLE_STATES}
+          energy
           code={`type: ${CARD_TYPE}
 title: Energy Breakdown
 chart_type: donut
@@ -855,8 +875,9 @@ entities:
             you have many low-magnitude sources.
           </p>
         </Prose>
-        <CodeBlock
-          language="yaml"
+        <LiveExample
+          states={EXAMPLE_STATES}
+          energy
           code={`type: ${CARD_TYPE}
 chart_type: donut
 sort: true
@@ -880,8 +901,9 @@ entities:
             energy dashboard (today, week, custom range, …) using statistics growth.
           </p>
         </Prose>
-        <CodeBlock
-          language="yaml"
+        <LiveExample
+          states={EXAMPLE_STATES}
+          energy
           code={`type: ${CARD_TYPE}
 chart_type: bar
 energy_date_selection: true
@@ -900,8 +922,9 @@ entities:
             <code>energy_&lt;dashboard_url&gt;</code>.
           </p>
         </Prose>
-        <CodeBlock
-          language="yaml"
+        <LiveExample
+          states={EXAMPLE_STATES}
+          energy
           code={`type: ${CARD_TYPE}
 energy_date_selection: true
 collection_key: energy_living_room
@@ -919,8 +942,9 @@ entities:
             is a reference of what is possible.
           </p>
         </Prose>
-        <CodeBlock
-          language="yaml"
+        <LiveExample
+          states={EXAMPLE_STATES}
+          energy
           code={`type: ${CARD_TYPE}
 title: Energy Breakdown
 chart_type: bar

@@ -18,7 +18,8 @@
   ],
   "main": "./dist/sortable-list-card.js",
   "exports": {
-    ".": "./dist/sortable-list-card.js"
+    ".": "./dist/sortable-list-card.js",
+    "./source": "./src/sortable-list-card.ts"
   },
   "repository": {
     "type": "git",
