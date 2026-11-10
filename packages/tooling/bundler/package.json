@@ -5,7 +5,10 @@
   "license": "MIT",
   "type": "module",
   "exports": {
-    ".": "./index.js"
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    }
   },
   "scripts": {
     "clean": "rimraf dist node_modules",
