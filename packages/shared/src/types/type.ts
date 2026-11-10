@@ -121,6 +121,7 @@ export type TemplatesObj = {
   solarSecondary: string | undefined;
   homeSecondary: string | undefined;
   individual: (string | undefined)[];
+  auxiliarySecondary: string | undefined;
   nonFossilFuelSecondary: string | undefined;
 };
 

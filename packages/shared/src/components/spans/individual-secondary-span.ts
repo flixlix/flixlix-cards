@@ -7,7 +7,7 @@ export type IndividualKey = `left-top` | `left-bottom` | `right-top` | `right-bo
 export const individualSecondarySpan = (
   main: CardMainContext,
   individual: IndividualObject,
-  key: IndividualKey
+  className: string
 ): TemplateResult | typeof nothing => {
   const { secondary } = individual;
   if (!secondary.show) {
@@ -15,7 +15,7 @@ export const individualSecondarySpan = (
   }
   return baseSecondarySpan({
     main,
-    className: key,
+    className,
     entityId: secondary.entity,
     icon: secondary.icon,
     value: secondary.text,

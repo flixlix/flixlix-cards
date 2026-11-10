@@ -130,6 +130,11 @@
     "transparency": "Transparence",
     "unit_of_measurement": "Unité",
     "unit_white_space": "Espace blanc de l'unité",
-    "use_metadata": "Utiliser les métadonnées"
+    "use_metadata": "Utiliser les métadonnées",
+    "auxiliary": "Auxiliaire",
+    "connect_to": "Relier à",
+    "connect_to_grid": "Réseau (ligne vers le réseau)",
+    "connect_to_battery": "Batterie (ligne vers la batterie)",
+    "connect_to_none": "Aucun (sans ligne)"
   }
 }

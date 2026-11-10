@@ -130,6 +130,11 @@
     "transparency": "Transparentnosť",
     "unit_of_measurement": "Jednotka",
     "unit_white_space": "Jednotka bielej plochy",
-    "use_metadata": "Použiť Metadata"
+    "use_metadata": "Použiť Metadata",
+    "auxiliary": "Doplnkový",
+    "connect_to": "Pripojiť k",
+    "connect_to_grid": "Sieť (čiara hore k sieti)",
+    "connect_to_battery": "Batéria (čiara k batérii)",
+    "connect_to_none": "Žiadne (bez čiary)"
   }
 }

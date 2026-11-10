@@ -130,6 +130,11 @@
     "transparency": "Läpinäkyvyys",
     "unit_of_measurement": "Yksikkö",
     "unit_white_space": "Yksikön välilyönti",
-    "use_metadata": "Käytä metatietoja"
+    "use_metadata": "Käytä metatietoja",
+    "auxiliary": "Lisälaite",
+    "connect_to": "Yhdistä",
+    "connect_to_grid": "Sähköverkko (viiva ylös verkkoon)",
+    "connect_to_battery": "Akku (viiva akkuun)",
+    "connect_to_none": "Ei mitään (ei viivaa)"
   }
 }

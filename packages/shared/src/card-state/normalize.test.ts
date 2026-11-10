@@ -18,6 +18,7 @@ const readings = (overrides: Partial<ReadyReadings> = {}): ReadyReadings => ({
   battery: none,
   home: null,
   generator: null,
+  auxiliary: null,
   individuals: [],
   ...overrides,
 });

@@ -130,6 +130,11 @@
     "transparency": "Transparència",
     "unit_of_measurement": "Unitat",
     "unit_white_space": "Unitat Espai en Blanc",
-    "use_metadata": "Empra Metadades"
+    "use_metadata": "Empra Metadades",
+    "auxiliary": "Auxiliar",
+    "connect_to": "Connecta a",
+    "connect_to_grid": "Xarxa (línia cap amunt a la xarxa)",
+    "connect_to_battery": "Bateria (línia cap a la bateria)",
+    "connect_to_none": "Cap (sense línia)"
   }
 }

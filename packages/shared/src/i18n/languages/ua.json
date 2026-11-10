@@ -130,6 +130,11 @@
     "transparency": "Прозорість",
     "unit_of_measurement": "Одиниця виміру",
     "unit_white_space": "Пробіл між числом і одиницею",
-    "use_metadata": "Використовувати метадані"
+    "use_metadata": "Використовувати метадані",
+    "auxiliary": "Додатковий",
+    "connect_to": "Під'єднати до",
+    "connect_to_grid": "Мережа (лінія вгору до мережі)",
+    "connect_to_battery": "Батарея (лінія до батареї)",
+    "connect_to_none": "Немає (без лінії)"
   }
 }

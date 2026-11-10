@@ -10,6 +10,7 @@ const noTemplates: TemplatesObj = {
   solarSecondary: undefined,
   homeSecondary: undefined,
   nonFossilFuelSecondary: undefined,
+  auxiliarySecondary: undefined,
   individual: [],
 };
 

@@ -28,6 +28,7 @@ export type Presence = Readonly<{
   battery: boolean;
   nonFossil: boolean;
   individuals: ReadonlyArray<boolean>;
+  auxiliary: boolean;
 }>;
 
 export type Normalized = Readonly<{
@@ -36,6 +37,11 @@ export type Normalized = Readonly<{
   outage: boolean;
   /** Per individual device: it reads negative with `accept_negative`, so it feeds the home. */
   feedingIndividuals: ReadonlyArray<boolean>;
+  /**
+   * The display-only auxiliary node, kept out of the totals the solver reads: 0 while hidden, and
+   * feeding when it reads negative with `accept_negative`.
+   */
+  auxiliary: Readonly<{ total: number; feeding: boolean }>;
 }>;
 
 type Directions = Readonly<{ into: number; outOf: number }>;
@@ -128,30 +134,44 @@ const nodeReadings = (input: NormalizeInput, readings: ReadyReadings): NodeReadi
   };
 };
 
+type DeviceField = { display_zero_tolerance?: number; accept_negative?: boolean } | undefined;
+
+const deviceTotal = (field: DeviceField, reading: number | null | undefined) =>
+  adjustZeroTolerance(magnitude(reading), field?.display_zero_tolerance);
+
+const isFeeding = (field: DeviceField, reading: number | null | undefined) =>
+  field?.accept_negative === true && (reading ?? 0) < 0;
+
+const deviceShown = (
+  field: { entity?: string; display_zero?: boolean } | undefined,
+  total: number
+): boolean => !!field?.entity && (field.display_zero === true || total > 0);
+
 const individualTotals = (input: NormalizeInput, readings: ReadyReadings) =>
   (input.config.entities.individual ?? []).map((field, index) =>
-    adjustZeroTolerance(magnitude(readings.individuals[index]), field?.display_zero_tolerance)
+    deviceTotal(field, readings.individuals[index])
   );
 
 const feedingIndividuals = (input: NormalizeInput, readings: ReadyReadings) =>
-  (input.config.entities.individual ?? []).map(
-    (field, index) => field?.accept_negative === true && (readings.individuals[index] ?? 0) < 0
+  (input.config.entities.individual ?? []).map((field, index) =>
+    isFeeding(field, readings.individuals[index])
   );
 
 const presenceOf = (
   input: NormalizeInput,
   nodes: NodeReadings,
-  individuals: ReadonlyArray<number>
+  individuals: ReadonlyArray<number>,
+  auxiliary: number
 ): Omit<Presence, "nonFossil"> => {
   const { entities } = input.config;
   return {
     grid: hasEntity(entities.grid) && shownWithTotals(entities.grid, nodes.toleratedGrid),
     solar: hasEntity(entities.solar) && (entities.solar?.display_zero !== false || nodes.solar > 0),
     battery: hasEntity(entities.battery) && shownWithTotals(entities.battery, nodes.battery),
-    individuals: individuals.map((total, index) => {
-      const field = entities.individual?.[index];
-      return !!field?.entity && (field.display_zero === true || total > 0);
-    }),
+    individuals: individuals.map((total, index) =>
+      deviceShown(entities.individual?.[index], total)
+    ),
+    auxiliary: deviceShown(entities.auxiliary, auxiliary),
   };
 };
 
@@ -191,9 +211,10 @@ const shown = (isShown: boolean, value: number): number => (isShown ? value : 0)
 export const normalize = (input: NormalizeInput, readings: ReadyReadings): Normalized => {
   const nodes = nodeReadings(input, readings);
   const individuals = individualTotals(input, readings);
+  const auxiliary = deviceTotal(input.config.entities.auxiliary, readings.auxiliary);
   const outage = isOutage(input.hass, input.config.entities);
   const fraction = nonFossilFraction(input, readings, nodes.toleratedGrid.outOf);
-  const visible = presenceOf(input, nodes, individuals);
+  const visible = presenceOf(input, nodes, individuals, auxiliary);
   const presence = {
     ...visible,
     nonFossil: nonFossilShown(input, visible.grid, outage, nodes.toleratedGrid.outOf * fraction),
@@ -213,5 +234,9 @@ export const normalize = (input: NormalizeInput, readings: ReadyReadings): Norma
     presence,
     outage,
     feedingIndividuals: feedingIndividuals(input, readings),
+    auxiliary: {
+      total: shown(presence.auxiliary, auxiliary),
+      feeding: isFeeding(input.config.entities.auxiliary, readings.auxiliary),
+    },
   };
 };

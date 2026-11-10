@@ -13,29 +13,39 @@ import { type IndividualKey, individualSecondarySpan } from "./spans/individual-
 const stateShown = (node: IndividualObject): boolean =>
   node.field?.display_zero_state !== false || (node.state ?? 0) > (node.displayZeroTolerance ?? 0);
 
-const isFlowing = (node: IndividualObject): boolean =>
+export const isFlowing = (node: IndividualObject): boolean =>
   !!node.state && node.state >= (node.displayZeroTolerance ?? 0);
 
-/** Bottom slots point the other way: their lines run up into the home. */
-const directionArrow = (node: IndividualObject, key: IndividualKey) => {
+/** Icons for a dot running towards the device and away from it. */
+export type DirectionArrows = { inflow: string; outflow: string };
+
+const directionArrow = (node: IndividualObject, arrows: DirectionArrows) => {
   if (!node.showDirection) {
     return nothing;
   }
-  const pointsUp = key.endsWith("bottom") ? node.invertAnimation : !node.invertAnimation;
   return html`<ha-icon
     class="small"
-    .icon=${pointsUp ? "mdi:arrow-up" : "mdi:arrow-down"}
+    .icon=${node.invertAnimation ? arrows.outflow : arrows.inflow}
   ></ha-icon>`;
 };
 
-const individualCircle = (
+export type DeviceCircleOptions = {
+  iconId: string;
+  /** Classes of the value span, which pick its colour. */
+  valueClass: string;
+  /** Class of the secondary info span, which picks its colour. */
+  secondaryClass: string;
+  arrows: DirectionArrows;
+};
+
+/** An individual device's circle: secondary info, icon and value, opening its entity on click. */
+export const deviceCircle = (
   main: CardMainContext,
   config: FlowCardPlusConfig,
   node: IndividualObject,
-  key: IndividualKey
+  { iconId, valueClass, secondaryClass, arrows }: DeviceCircleOptions
 ) => {
   const disableEntityClick = !config.clickable_entities;
-  const vertical = key.endsWith("top") ? "top" : "bottom";
   return html`<div
     class="circle ${disableEntityClick ? "pointer-events-none" : ""}"
     tabindex=${disableEntityClick ? nothing : 0}
@@ -62,20 +72,35 @@ const individualCircle = (
     }}
   >
     <ha-ripple .disabled=${disableEntityClick}></ha-ripple>
-    ${individualSecondarySpan(main, node, key)}
-    ${
-      node.icon !== " "
-        ? html` <ha-icon id="individual-${key}-icon" .icon=${node.icon}></ha-icon>`
-        : nothing
-    }
+    ${individualSecondarySpan(main, node, secondaryClass)}
+    ${node.icon !== " " ? html` <ha-icon id=${iconId} .icon=${node.icon}></ha-icon>` : nothing}
     ${
       stateShown(node)
-        ? html` <span class="individual-${vertical} individual-${key}">
-            ${directionArrow(node, key)}${node.displayState}
+        ? html` <span class=${valueClass}>
+            ${directionArrow(node, arrows)}${node.displayState}
           </span>`
         : nothing
     }
   </div>`;
+};
+
+const INFLOW_UP: DirectionArrows = { inflow: "mdi:arrow-up", outflow: "mdi:arrow-down" };
+const INFLOW_DOWN: DirectionArrows = { inflow: "mdi:arrow-down", outflow: "mdi:arrow-up" };
+
+/** Lines into the home run down from the top slots and up from the bottom slots. */
+const individualCircle = (
+  main: CardMainContext,
+  config: FlowCardPlusConfig,
+  node: IndividualObject,
+  key: IndividualKey
+) => {
+  const vertical = key.endsWith("top") ? "top" : "bottom";
+  return deviceCircle(main, config, node, {
+    iconId: `individual-${key}-icon`,
+    valueClass: `individual-${vertical} individual-${key}`,
+    secondaryClass: key,
+    arrows: vertical === "top" ? INFLOW_UP : INFLOW_DOWN,
+  });
 };
 
 type LeftKey = "left-top" | "left-bottom";

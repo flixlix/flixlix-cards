@@ -56,6 +56,7 @@ export function energyReadings(
     individuals: (entities.individual ?? []).map((individual) =>
       individualReading(individual, read)
     ),
+    auxiliary: individualReading(entities.auxiliary, read),
     fossilEnergyConsumption,
   };
 }

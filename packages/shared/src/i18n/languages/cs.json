@@ -130,6 +130,11 @@
     "transparency": "Průhlednost",
     "unit_of_measurement": "Jednotka",
     "unit_white_space": "Mezera u jednotky",
-    "use_metadata": "Použít Metadata"
+    "use_metadata": "Použít Metadata",
+    "auxiliary": "Doplňkový",
+    "connect_to": "Připojit k",
+    "connect_to_grid": "Síť (čára nahoru k síti)",
+    "connect_to_battery": "Baterie (čára k baterii)",
+    "connect_to_none": "Žádné (bez čáry)"
   }
 }

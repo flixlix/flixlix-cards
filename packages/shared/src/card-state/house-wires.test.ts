@@ -68,6 +68,7 @@ const readings = (power: Power): ReadyReadings => ({
   home: null,
   generator: power.generator ?? null,
   individuals: [],
+  auxiliary: null,
 });
 
 const wiresFor = (
@@ -85,6 +86,7 @@ const wiresFor = (
       solarSecondary: undefined,
       homeSecondary: undefined,
       nonFossilFuelSecondary: undefined,
+      auxiliarySecondary: undefined,
       individual: [],
     },
     width: 400,

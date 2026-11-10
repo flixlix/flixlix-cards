@@ -118,7 +118,7 @@ function configSections(
     make(
       "entities",
       "Entities object",
-      "Grid, solar, battery, individual, home, fossil_fuel_percentage."
+      "Grid, solar, battery, individual, auxiliary, home, fossil_fuel_percentage."
     ),
     make(
       "grid",
@@ -128,6 +128,11 @@ function configSections(
     make("solar", "Solar configuration", "Solar entity, name, icon, color options."),
     make("battery", "Battery configuration", "Battery entity, state_of_charge, color options."),
     make("individual", "Individual devices", "Up to 4 extra circles (car, EV, etc)."),
+    make(
+      "auxiliary",
+      "Auxiliary",
+      "Display-only circle under the grid: wind share, gas, virtual battery."
+    ),
     make("home", "Home configuration", "Home entity, subtract_individual, override_state."),
     make("fossil-fuel", "Fossil fuel / low-carbon", "Fossil fuel percentage circle config."),
     make("color-object", "Color object", "Production / consumption / idle HEX colors."),
@@ -263,6 +268,7 @@ function configOptions(
       "fossil-fuel"
     ),
     make("inverted_animation", "Reverse dot direction for an individual device.", "individual"),
+    make("connect_to", "Auxiliary line to the grid, the battery or none.", "auxiliary"),
     make("decimals", "Decimals for a grid, solar, battery or individual device value.", "grid"),
     make(
       "unit_of_measurement",

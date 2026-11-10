@@ -1,4 +1,5 @@
 import {
+  type AuxiliaryConnection,
   FLOW_RATE_MODELS,
   type FlowCardPlusConfig,
   type FlowRateModel,
@@ -131,6 +132,7 @@ export type FlowContext = {
   config: FlowCardPlusConfig;
   balance: Balance;
   individuals: IndividualObject[];
+  auxiliary: IndividualObject;
   hasReturnToGrid: boolean;
 };
 
@@ -138,6 +140,7 @@ export const computeFlows = ({
   config,
   balance,
   individuals,
+  auxiliary,
   hasReturnToGrid,
 }: FlowContext): Flows => {
   const { presence: has, flows, topology } = balance;
@@ -190,7 +193,31 @@ export const computeFlows = ({
         ),
       });
     }),
+    auxiliary: auxiliaryLine(config, balance, auxiliary, total),
   };
+};
+
+export const auxiliaryConnection = (config: FlowCardPlusConfig): AuxiliaryConnection =>
+  config.entities.auxiliary?.connect_to ?? "grid";
+
+/** Drawn only while the node it connects to is shown; its value never counts towards `total`. */
+const auxiliaryLine = (
+  config: FlowCardPlusConfig,
+  { presence }: Balance,
+  auxiliary: IndividualObject,
+  total: number
+): Flow => {
+  const connectTo = auxiliaryConnection(config);
+  const connected =
+    (connectTo === "grid" && presence.grid) || (connectTo === "battery" && presence.battery);
+  const value = auxiliary.state ?? 0;
+  return line(config, value, Math.max(total, value), {
+    visible: auxiliary.has && connected,
+    duration: configuredDuration(
+      auxiliary.field?.calculate_flow_rate,
+      flowRate(config, value, Math.max(total, value))
+    ),
+  });
 };
 
 /** The grid line is drawn while importing, but styled by what reaches home. */

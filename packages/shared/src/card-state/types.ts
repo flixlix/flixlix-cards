@@ -42,6 +42,7 @@ export type ReadyReadings = {
   generator: number | null;
   /** Reading of each configured individual device, in config order. */
   individuals: (number | null)[];
+  auxiliary: number | null;
   fossilEnergyConsumption?: FossilEnergyConsumption;
 };
 
@@ -76,7 +77,7 @@ export type Flow = {
   lineClass: string;
 };
 
-export type Flows = Record<FlowName, Flow> & { individual: Flow[] };
+export type Flows = Record<FlowName, Flow> & { individual: Flow[]; auxiliary: Flow };
 
 export type IndividualSlot = { node: IndividualObject; flow: Flow };
 
@@ -90,7 +91,10 @@ export type HomeRing = {
 };
 
 export type CardLayout = {
-  /** Off only without a grid entity, so a grid hidden at zero keeps its column and nothing shifts. */
+  /**
+   * Off only without a grid and an auxiliary entity, so a node hidden at zero keeps its column and
+   * nothing shifts.
+   */
   hasGridColumn: boolean;
   /**
    * How far the columns move right, in distances between columns, so the group looks centred:
@@ -101,6 +105,8 @@ export type CardLayout = {
   showBottomRow: boolean;
   hasRightIndividual: boolean;
   showHomeLabel: boolean;
+  /** Off while the auxiliary line runs up into the grid, through where its label sits. */
+  showGridLabel: boolean;
 };
 
 export type ReadyCardState = {
@@ -113,6 +119,7 @@ export type ReadyCardState = {
     nonFossil: NonFossilObject;
     /** Visible individual devices, sorted when configured. */
     individuals: IndividualObject[];
+    auxiliary: IndividualObject;
   };
   individualSlots: {
     leftTop?: IndividualSlot;

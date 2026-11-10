@@ -130,6 +130,11 @@
     "transparency": "Transparantie",
     "unit_of_measurement": "Eenheid",
     "unit_white_space": "Eenheid Spaties",
-    "use_metadata": "Metadata Gebruiken"
+    "use_metadata": "Metadata Gebruiken",
+    "auxiliary": "Extra",
+    "connect_to": "Verbinden met",
+    "connect_to_grid": "Net (lijn omhoog naar het net)",
+    "connect_to_battery": "Batterij (lijn naar de batterij)",
+    "connect_to_none": "Geen (geen lijn)"
   }
 }
