@@ -167,6 +167,57 @@ describe("view selector", () => {
     expect(overlaps()).toEqual([]);
   });
 
+  test("the card and the house keep their size from one view to the next", async () => {
+    const { root, settle } = await mountCard(
+      HomeFlowCard,
+      {
+        type: "custom:home-flow-card",
+        ...card,
+        grid: { entity: { consumption: "sensor.grid_in", production: "sensor.grid_out" } },
+        car: { entity: "sensor.car_power", state_of_charge: "sensor.car_soc" },
+        heat_pump: { entity: "sensor.heat_pump_power" },
+        energy_entities: {
+          ...card.energy_entities,
+          battery: { consumption: "sensor.battery_out", production: "sensor.battery_in" },
+          heat_pump: "sensor.heat_pump_energy",
+        },
+      },
+      fakeHass({
+        states: {
+          ...states,
+          "sensor.grid_in": "200",
+          "sensor.grid_out": "0",
+          "sensor.car_power": "1500",
+          "sensor.car_soc": sensor("60", { unit: "%" }),
+          "sensor.heat_pump_power": "600",
+        },
+        statistics: {
+          "sensor.solar_energy": 12700,
+          "sensor.grid_import": 7700,
+          "sensor.grid_export": 2400,
+          "sensor.battery_out": 3800,
+          "sensor.battery_in": 4600,
+          "sensor.heat_pump_energy": 2100,
+        },
+      }),
+      { width: 400 }
+    );
+    const size = () => {
+      const haCard = root.querySelector("ha-card")?.getBoundingClientRect();
+      const house = root.querySelector(".node.home")?.getBoundingClientRect();
+      return {
+        card: Math.round(haCard?.height ?? 0),
+        house: [Math.round(house?.width ?? 0), Math.round(house?.height ?? 0)],
+      };
+    };
+    const live = size();
+
+    await userEvent.click(segment(root, "Today"));
+    await settle();
+    expect(root.querySelector(".label.grid")?.textContent).toContain("·");
+    expect(size()).toEqual(live);
+  });
+
   test("without energy_entities, the card shows no selector", async () => {
     const { energy_entities: _energy, ...live } = card;
     const { root } = await mountCard(

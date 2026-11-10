@@ -22,6 +22,10 @@ export class ViewController implements ReactiveController {
     return this.view === "live" ? this.views?.live : this.views?.period;
   }
 
+  get configs(): FlowConfig[] {
+    return this.views ? [this.views.live, this.views.period] : [];
+  }
+
   configure(views: HomeFlowViews | null): void {
     const reconfigured = this.views !== null;
     this.views = views;

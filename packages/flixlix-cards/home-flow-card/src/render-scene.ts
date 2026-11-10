@@ -23,6 +23,7 @@ import {
   project,
   type SceneGroup,
   type SceneLayout,
+  type ScenePresence,
   SHADOW,
   type Shape,
 } from "./scene";
@@ -65,11 +66,7 @@ export type SceneInput = {
   cardState: ReadyCardState;
   wires: HouseWire[];
   severity: ChargeSeverity;
-  /**
-   * A configured generator shows only during an outage but always keeps its place, so the house
-   * does not grow and shrink as the grid goes down and comes back.
-   */
-  reserveGenerator: boolean;
+  reserve: ScenePresence & { car?: boolean };
   /** A configured car: its image, once drawn for the theme; `null` until then. */
   car?: CarImage | null;
   layout: SceneLayout;
@@ -127,14 +124,7 @@ const groupSvg = (part: SceneGroup) =>
  * wires, which run past the card's edge; `draw` layers it back to front, the wires at
  * `wireScale`, which the labels' fit decides.
  */
-export const houseScene = ({
-  cardState,
-  wires,
-  severity,
-  reserveGenerator,
-  car,
-  layout,
-}: SceneInput) => {
+export const houseScene = ({ cardState, wires, severity, reserve, car, layout }: SceneInput) => {
   const { nodes } = cardState;
   const hasGenerator = wires.some((wire) => wire.node === "generator");
   const heatPumpWire = wires.find((wire) => wire.node === "heat_pump");
@@ -150,15 +140,10 @@ export const houseScene = ({
     },
   });
   const include = (extent: Extent) => {
-    [houseShell(), ...parts].forEach((part) => includeFaces(extent, part));
+    [houseShell(), ...parts, ...fixtures(reserve)].forEach((part) => includeFaces(extent, part));
     SHADOW.forEach((point) => extent.include(project(point)));
-    if (car !== undefined) {
+    if (car !== undefined || reserve.car) {
       CAR_SHADOW.forEach((point) => extent.include(project(point)));
-    }
-    if (reserveGenerator && !hasGenerator) {
-      fixtures({ solar: false, generator: true })
-        .filter((part) => part.node === "generator")
-        .forEach((part) => includeFaces(extent, part));
     }
   };
   const [groundX, groundY] = project([4, 6, 0]);

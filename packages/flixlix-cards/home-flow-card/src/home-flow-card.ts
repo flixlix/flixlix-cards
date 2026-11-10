@@ -246,7 +246,8 @@ export class HomeFlowCard extends LitElement {
       cardState,
       this.hass,
       carScene(this.hass, this._config.car, this._carStatus, this._carImage, this._read),
-      this._read
+      this._read,
+      this._views.configs
     );
     const fit = fitLabels(this._width.width, boxFor);
     const { box, labelUnit } = fit;
