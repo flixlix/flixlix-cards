@@ -22,6 +22,7 @@ import { InstallFromLink } from "./install-from-link";
 import { LiveExample } from "./live-example";
 import { OptionList } from "./option-list";
 import { PageTOC, type TocItem } from "./page-toc";
+import { SupportLinks } from "./support-links";
 
 const TITLE = "Sortable List Card";
 const PKG = "sortable-list-card";
@@ -626,6 +627,7 @@ save_action:
           <OptionList rows={ITEM_OPTIONS} />
         </CategorySection>
 
+        <SupportLinks card="Sortable List Card" />
         <NextPageNav
           prev={{ label: "Installation", to: `${BASE_PATH}/installation` }}
           next={{ label: "Examples", to: `${BASE_PATH}/examples` }}
@@ -803,6 +805,7 @@ items:
         />
       </Section>
 
+      <SupportLinks card="Sortable List Card" />
       <NextPageNav prev={{ label: "Configuration", to: `${BASE_PATH}/configuration` }} />
     </>
   );

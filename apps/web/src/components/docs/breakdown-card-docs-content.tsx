@@ -34,6 +34,7 @@ import { InstallFromLink } from "./install-from-link";
 import { LiveExample } from "./live-example";
 import { OptionList } from "./option-list";
 import { PageTOC, type TocItem } from "./page-toc";
+import { SupportLinks } from "./support-links";
 
 const TITLE = "Energy Breakdown Card";
 const PKG = "energy-breakdown-card";
@@ -782,6 +783,7 @@ entities:
           />
         </CategorySection>
 
+        <SupportLinks card="Energy Breakdown Card" />
         <NextPageNav
           prev={{ label: "Installation", to: `${BASE_PATH}/installation` }}
           next={{ label: "Examples", to: `${BASE_PATH}/examples` }}
@@ -985,6 +987,7 @@ entities:
         />
       </Section>
 
+      <SupportLinks card="Energy Breakdown Card" />
       <NextPageNav prev={{ label: "Configuration", to: `${BASE_PATH}/configuration` }} />
     </>
   );

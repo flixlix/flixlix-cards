@@ -42,6 +42,7 @@ import { InstallFromCatalog } from "./install-from-catalog";
 import { LiveExample } from "./live-example";
 import { OptionList } from "./option-list";
 import { PageTOC, type TocItem } from "./page-toc";
+import { SupportLinks } from "./support-links";
 
 const TITLE = "Home Flow Card";
 const PKG = "home-flow-card";
@@ -1069,6 +1070,7 @@ generator:
           </Prose>
         </Section>
 
+        <SupportLinks card="Home Flow Card" />
         <NextPageNav
           prev={{ label: "Installation", to: `${BASE_PATH}/installation` }}
           next={{ label: "Examples", to: `${BASE_PATH}/examples` }}
@@ -1276,6 +1278,7 @@ export function ExamplesPage() {
         the sensors to see every state of your house.
       </Callout>
 
+      <SupportLinks card="Home Flow Card" />
       <NextPageNav
         prev={{ label: "Configuration", to: `${BASE_PATH}/configuration` }}
         next={{ label: "Playground", to: `${BASE_PATH}/playground` }}
