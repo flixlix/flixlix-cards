@@ -930,6 +930,13 @@ function houseEntries(): SearchEntry[] {
       houseEntry(`${HOUSE_BASE}/configuration#${id}`, configuration, "section", title, description)
     ),
     option("wire_width", "Draw the wires thicker.", "card-options", ["lines", "thickness"]),
+    option("mode", "Live power, or energy over the dashboard's period.", "card-options", [
+      "energy",
+      "kWh",
+      "period",
+      "date picker",
+    ]),
+    option("collection_key", "The energy date picker to follow.", "card-options", ["energy"]),
     option("power_outage", "The grid's outage sensor and alert.", "grid", ["outage", "blackout"]),
     option("override_state", "Show the home sensor's own reading.", "home"),
     option("visibility", "When the car is drawn.", "car", ["car", "conditions", "home"]),
@@ -968,6 +975,7 @@ function houseEntries(): SearchEntry[] {
       "The state of charge beside the power",
       "state_of_charge_position after_power."
     ),
+    example("energy", "Energy over the day", "mode energy with energy sensors."),
     example("grid-only", "Grid only", "No solar or battery."),
     example("wire-width", "Thicker wires", "wire_width 2."),
     example("still", "Still numbers and wires", "animate_numbers and disable_dots off."),

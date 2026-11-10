@@ -334,6 +334,34 @@ const CARD_OPTIONS: OptionRow[] = [
   { name: "type", type: "string", required: true, description: <code>{CARD_TYPE}</code> },
   { name: "title", type: "string", description: "Card title." },
   {
+    name: "mode",
+    type: "string",
+    default: "power",
+    description: (
+      <>
+        What the sensors measure: <code>power</code> for live power in W, or <code>energy</code> for
+        energy in Wh over the period picked on the dashboard&apos;s energy date picker (today
+        without one). In energy mode every node, the car and the heat pump read energy sensors, each
+        wire carries its energy over the period and the pulses share out what was supplied. A grid
+        or battery that ran both ways gets a parallel line and a value each way. See{" "}
+        <Link to={`${BASE_PATH}/examples`} hash="energy">
+          the energy example
+        </Link>
+        .
+      </>
+    ),
+  },
+  {
+    name: "collection_key",
+    type: "string",
+    description: (
+      <>
+        With <code>mode: energy</code>, the energy date picker to follow, as in Energy Flow Card
+        Plus, for example <code>energy_living_room</code>. Without it, the dashboard&apos;s own.
+      </>
+    ),
+  },
+  {
     name: "grid / solar / battery / home",
     type: "object",
     description: (
@@ -1094,6 +1122,7 @@ const EXAMPLES: {
   text: string;
   code: string;
   states: StateFixtures;
+  energy?: boolean;
 }[] = [
   {
     id: "solar-battery",
@@ -1186,6 +1215,33 @@ heat_pump:
     },
   },
   {
+    id: "energy",
+    title: "Energy over the day",
+    text: "The same house in energy mode: each label shows what its node made, stored, bought or used over the period picked on the dashboard's energy date picker, and each wire its energy, a line each way where the grid or battery ran both ways. The battery's charge stays live.",
+    code: `type: ${CARD_TYPE}
+mode: energy
+grid:
+  entity:
+    consumption: sensor.grid_import_energy
+    production: sensor.grid_export_energy
+solar:
+  entity: sensor.solar_energy
+battery:
+  entity:
+    consumption: sensor.battery_discharge_energy
+    production: sensor.battery_charge_energy
+  state_of_charge: sensor.battery_soc`,
+    states: {
+      "sensor.grid_import_energy": sensor("4.2", { unit: "kWh" }),
+      "sensor.grid_export_energy": sensor("1.1", { unit: "kWh" }),
+      "sensor.solar_energy": sensor("9.6", { unit: "kWh" }),
+      "sensor.battery_discharge_energy": sensor("2.4", { unit: "kWh" }),
+      "sensor.battery_charge_energy": sensor("3.8", { unit: "kWh" }),
+      "sensor.battery_soc": sensor("58", { unit: "%" }),
+    },
+    energy: true,
+  },
+  {
     id: "thresholds",
     title: "Your own battery thresholds",
     text: "Turn the charge bar yellow and red where it matters for your battery.",
@@ -1267,7 +1323,7 @@ export function ExamplesPage() {
           <Prose>
             <p>{example.text}</p>
           </Prose>
-          <LiveExample code={example.code} states={example.states} />
+          <LiveExample code={example.code} states={example.states} energy={example.energy} />
         </Section>
       ))}
 

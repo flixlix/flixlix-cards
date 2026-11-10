@@ -65,6 +65,8 @@ export type FakeHassOptions = {
   templates?: Record<string, string>;
   statistics?: StatisticsFixture;
   energyCollection?: FakeEnergyCollection;
+  /** Other dashboards' date pickers, by the `collection_key` a card follows them with. */
+  energyCollections?: Record<string, FakeEnergyCollection>;
   /** Whether Home Assistant is in a dark theme; cards read it from `hass.themes.darkMode`. */
   darkMode?: boolean;
 };
@@ -167,9 +169,16 @@ const fakeConnection = (options: FakeHassOptions): Connection => {
     }
     return async () => undefined;
   };
+  const keyedCollections: Record<string, FakeEnergyCollection> = Object.fromEntries(
+    Object.entries(options.energyCollections ?? {}).map(([key, collection]) => [
+      `_${key}`,
+      collection,
+    ])
+  );
   const connection: Partial<Connection> & { _energy?: FakeEnergyCollection } = {
     subscribeMessage: subscribeMessage as Connection["subscribeMessage"],
     ...(options.energyCollection ? { _energy: options.energyCollection } : {}),
+    ...keyedCollections,
   };
   const fake = connection as Connection;
   templateSubscribers.set(fake, subscribers);

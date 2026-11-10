@@ -1,6 +1,7 @@
+import { wattsReader } from "@flixlix-cards/shared/card-state";
 import { type HomeAssistant } from "custom-card-helpers";
 import { describe, expect, test } from "vite-plus/test";
-import { carEntities, carStatus } from "./car-node";
+import { carEntities, carStatus as statusWith } from "./car-node";
 import { type HouseCar } from "./types";
 
 const hass = (states: Record<string, string>): HomeAssistant => {
@@ -28,6 +29,9 @@ const car: HouseCar = {
   idle: [{ condition: "state", entity: "binary_sensor.cable", state: "off" }],
 };
 
+const carStatus = (states: HomeAssistant, config: HouseCar) =>
+  statusWith(states, config, wattsReader(states));
+
 describe("car status", () => {
   test("away, the car is hidden whatever it draws", () => {
     expect(carStatus(hass({ "device_tracker.car": "work", "sensor.wallbox": "7400" }), car)).toBe(
@@ -48,7 +52,6 @@ describe("car status", () => {
     expect(carStatus(hass({ "sensor.wallbox": "0" }), plain)).toBe("idle");
     expect(carStatus(hass({ "sensor.wallbox": "unavailable" }), plain)).toBe("idle");
   });
-
   test("the card watches the car's entities and those its conditions read", () => {
     expect(carEntities({ ...car, state_of_charge: "sensor.car_soc" })).toEqual([
       "sensor.wallbox",

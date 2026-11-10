@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vite-plus/test";
 import { userEvent } from "vite-plus/test/browser/context";
 import {
+  energyCollection,
   fakeHass,
   sensor,
   type StateFixtures,
@@ -878,5 +879,157 @@ describe("home flow card", () => {
     await resize(300);
 
     expect(size()).toBeLessThan(wide);
+  });
+});
+
+const day = (date: number) => ({
+  start: new Date(2026, 0, date, 0, 0, 0),
+  end: new Date(2026, 0, date, 23, 59, 59),
+});
+
+describe("energy mode", () => {
+  const energyNodes: Partial<HomeFlowCardConfig> = {
+    mode: "energy",
+    grid: { entity: { consumption: "sensor.grid_import", production: "sensor.grid_export" } },
+    solar: { entity: "sensor.solar" },
+    battery: {
+      entity: { consumption: "sensor.battery_out", production: "sensor.battery_in" },
+      state_of_charge: "sensor.battery_soc",
+    },
+  };
+  /** A day: 3 kWh of solar, 2 kWh into the battery and 0.5 kWh back, 1.2 kWh bought. */
+  const aDay = {
+    "sensor.grid_import": 1200,
+    "sensor.grid_export": 0,
+    "sensor.solar": 3000,
+    "sensor.battery_in": 2000,
+    "sensor.battery_out": 500,
+  };
+  const mountEnergy = (
+    options: Partial<HomeFlowCardConfig> = {},
+    hass = fakeHass({
+      states: { "sensor.battery_soc": sensor("64", { unit: "%" }) },
+      statistics: aDay,
+      energyCollection: energyCollection(day(1).start, day(1).end),
+    })
+  ) => mountCard(HomeFlowCard, { type: "custom:home-flow-card", ...energyNodes, ...options }, hass);
+
+  test("each node shows its energy over the dashboard's period", async () => {
+    const { root } = await mountEnergy();
+
+    expect(reading(root, "solar")).toBe("3 kWh");
+    expect(reading(root, "grid")).toBe("1.2 kWh");
+    expect(reading(root, "home")).toBe("2.7 kWh");
+  });
+
+  test("a node that ran both ways gets a parallel line and a value each way", async () => {
+    const { root } = await mountEnergy(
+      {},
+      fakeHass({
+        states: { "sensor.battery_soc": sensor("64", { unit: "%" }) },
+        statistics: { ...aDay, "sensor.grid_export": 400 },
+        energyCollection: energyCollection(day(1).start, day(1).end),
+      })
+    );
+
+    expect(valueLine(root, "battery")).toBe("500 Wh · 2 kWh");
+    expect(valueLine(root, "grid")).toBe("1.2 kWh · 400 Wh");
+    for (const node of ["battery", "grid"]) {
+      const lines = [...root.querySelectorAll(`.power.${node} .flow`)].map(
+        (path) => path.getAttribute("d") ?? ""
+      );
+      expect(lines).toHaveLength(2);
+      expect(startOf(lines[0] ?? "")).not.toBe(endOf(lines[1] ?? ""));
+    }
+  });
+
+  test("a node that ran one way keeps a single line", async () => {
+    const { root } = await mountEnergy();
+
+    expect(root.querySelectorAll(".power.grid")).toHaveLength(1);
+    expect(valueLine(root, "grid")).toBe("1.2 kWh");
+  });
+
+  test("the battery shows its state of charge, but not what it is doing now", async () => {
+    const { root } = await mountEnergy();
+
+    expect(batteryLine(root)).toBe("64 %");
+    expect(root.querySelector(".power.battery .pulse")).not.toBeNull();
+  });
+
+  test("shows loading until the period's statistics arrive", async () => {
+    let deliver: ((growth: Record<string, number>) => void) | undefined;
+    const statistics = new Promise<Record<string, number>>((resolve) => {
+      deliver = resolve;
+    });
+    const { settle, root, text } = await mountEnergy(
+      {},
+      fakeHass({
+        statistics: () => statistics,
+        energyCollection: energyCollection(day(1).start, day(1).end),
+      })
+    );
+    expect(text(".card-content")).toBe("Loading…");
+
+    deliver?.(aDay);
+    await settle();
+    expect(reading(root, "solar")).toBe("3 kWh");
+  });
+
+  test("changing the dashboard's period shows that period", async () => {
+    const collection = energyCollection(day(1).start, day(1).end);
+    const { settle, root } = await mountEnergy(
+      {},
+      fakeHass({
+        statistics: (window) => (window.start.getDate() === 1 ? aDay : { "sensor.solar": 500 }),
+        energyCollection: collection,
+      })
+    );
+    collection.setPeriod(day(2).start, day(2).end);
+    await settle();
+
+    expect(reading(root, "solar")).toBe("500 Wh");
+  });
+
+  test("with collection_key, follows that dashboard's date picker", async () => {
+    const { root } = await mountEnergy(
+      { collection_key: "energy_garage" },
+      fakeHass({
+        statistics: (window) => (window.start.getDate() === 2 ? aDay : {}),
+        energyCollection: energyCollection(day(1).start, day(1).end),
+        energyCollections: { energy_garage: energyCollection(day(2).start, day(2).end) },
+      })
+    );
+
+    expect(reading(root, "solar")).toBe("3 kWh");
+  });
+
+  test("the car and the heat pump show their energy over the period", async () => {
+    const { root } = await mountEnergy(
+      { car: { entity: "sensor.car_energy" }, heat_pump: { entity: "sensor.heat_pump_energy" } },
+      fakeHass({
+        statistics: { ...aDay, "sensor.car_energy": 7400, "sensor.heat_pump_energy": 1400 },
+        energyCollection: energyCollection(day(1).start, day(1).end),
+      })
+    );
+
+    expect(reading(root, "car")).toBe("7.4 kWh");
+    expect(reading(root, "heat_pump")).toBe("1.4 kWh");
+  });
+
+  test("without a date picker on the dashboard, still shows a period's energy", async () => {
+    const { root } = await mountEnergy({}, fakeHass({ statistics: aDay }));
+
+    expect(reading(root, "solar")).toBe("3 kWh");
+  });
+
+  test("in power mode, the card fetches no statistics", async () => {
+    const hass = fakeHass({
+      states: evening,
+      energyCollection: energyCollection(day(1).start, day(1).end),
+    });
+    await mountCard(HomeFlowCard, { type: "custom:home-flow-card", ...allNodes }, hass);
+
+    expect(hass.callWS).not.toHaveBeenCalled();
   });
 });

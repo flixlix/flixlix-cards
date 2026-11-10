@@ -24,10 +24,15 @@ export type LabelStatus = {
   word: string;
 };
 
+/** One direction of a node that ran both ways, in the colour of its lane. */
+export type Lane = { reading: ScaledReading; color: string };
+
 /** What a label shows: `reading` null shows a dash. */
 export type Label = {
   node: LabelledNode;
   reading: ScaledReading | null;
+  /** In place of `reading`, while the node ran both ways: a value per lane, into the inverter first. */
+  lanes?: Lane[];
   /** A second value on the reading's line, as large as it, after it or `first`. */
   aside?: { reading: ScaledReading; first: boolean };
   name: string;
@@ -95,18 +100,32 @@ const placeCharge = (
   }
 };
 
+/** What the battery is doing now; over an energy period it may have done both. */
+const batteryDirection = ({ family }: ReadyCardState, wire: HouseWire) => {
+  if (family === "energy" || wire.power === 0) {
+    return undefined;
+  }
+  return wire.intoInverter ? "discharging" : "charging";
+};
+
+/** A value per lane, or none for a node on a single wire. */
+const lanesOf = (wires: HouseWire[]): Lane[] | undefined =>
+  wires.length > 1 ? wires.map(({ reading, color }) => ({ reading, color })) : undefined;
+
 /**
  * The battery's power and state of charge, placed as `position` asks; without a state of charge,
- * its power and direction as always.
+ * its power and direction as always. With a lane each way, both fill the value line, so the
+ * state of charge goes under them.
  */
 const batteryLabel = (
-  { nodes }: ReadyCardState,
+  state: ReadyCardState,
   wire: HouseWire,
+  lanes: Lane[] | undefined,
   position: StateOfChargePosition | undefined,
   language: string
 ): Label => {
-  const { battery } = nodes;
-  const direction = wire.power > 0 ? (wire.intoInverter ? "discharging" : "charging") : undefined;
+  const { battery } = state.nodes;
+  const direction = batteryDirection(state, wire);
   const word = direction ? translate(`card.battery.${direction}`, language) : "";
   const status = (figure?: Figure): LabelStatus | undefined =>
     figure || direction ? { figure, direction, word } : undefined;
@@ -118,6 +137,9 @@ const batteryLabel = (
     entity: battery.mainEntity,
   };
   const charge = chargeOf(battery.state_of_charge);
+  if (lanes) {
+    return { ...label, lanes, status: status(charge?.figure) };
+  }
   return charge ? placeCharge(label, charge, position, status) : { ...label, status: status() };
 };
 
@@ -128,6 +150,7 @@ const batteryLabel = (
 const gridLabel = (
   { nodes }: ReadyCardState,
   wire: HouseWire,
+  lanes: Lane[] | undefined,
   alert: string | undefined,
   language: string
 ): Label => {
@@ -136,6 +159,7 @@ const gridLabel = (
   return {
     node: "grid",
     reading: outage ? null : wire.reading,
+    ...(lanes ? { lanes } : {}),
     name: grid.name,
     alert: outage ? (alert ?? translate("editor.power_outage", language)) : undefined,
     actions: grid,
@@ -207,7 +231,8 @@ export const houseLabels = (
   heatPump?: HeatPumpConfig
 ): Label[] => {
   const { nodes } = state;
-  const wireOf = (node: HouseNode) => wires.find((wire) => wire.node === node);
+  const wiresOf = (node: HouseNode) => wires.filter((wire) => wire.node === node);
+  const wireOf = (node: HouseNode) => wiresOf(node)[0];
   const solar = wireOf("solar");
   const home = wireOf("home");
   const battery = wireOf("battery");
@@ -229,8 +254,10 @@ export const houseLabels = (
       actions: nodes.home,
       entity: nodes.home.entity,
     },
-    battery && batteryLabel(state, battery, batteryPosition, language),
-    grid && !generatorWire ? gridLabel(state, grid, gridAlert, language) : undefined,
+    battery && batteryLabel(state, battery, lanesOf(wiresOf("battery")), batteryPosition, language),
+    grid && !generatorWire
+      ? gridLabel(state, grid, lanesOf(wiresOf("grid")), gridAlert, language)
+      : undefined,
     generatorWire && {
       node: "generator",
       reading: generatorWire.reading,

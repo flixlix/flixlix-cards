@@ -95,6 +95,24 @@ describe("energy period", () => {
       expect.objectContaining({ start_time: day(2).start.toISOString() })
     );
   });
+
+  test("with collection_key, follows that dashboard's period instead of the default one", async () => {
+    const growthByDay: Record<number, Record<string, number>> = {
+      1: { "sensor.grid_import": 1000, "sensor.grid_export": 0, "sensor.solar": 0 },
+      2: { "sensor.grid_import": 2000, "sensor.grid_export": 0, "sensor.solar": 0 },
+    };
+    const livingRoom = energyCollection(day(2).start, day(2).end);
+    const card = await mountCard(
+      EnergyFlowCardPlus,
+      { type: "custom:energy-flow-card-plus", collection_key: "energy_living_room", entities },
+      fakeHass({
+        statistics: (window) => growthByDay[window.start.getDate()] ?? {},
+        energyCollection: energyCollection(day(1).start, day(1).end),
+        energyCollections: { energy_living_room: livingRoom },
+      })
+    );
+    expect(card.text(".grid .consumption")).toBe("2 kWh");
+  });
 });
 
 const mountLive = async (options: object = {}) => {

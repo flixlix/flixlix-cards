@@ -55,7 +55,7 @@ export const includeLabel = (
 /** Makes room in the viewBox for a drawn label, at `scale` against the scene. */
 export const includeLabelOf = (extent: Extent, label: Label, scale: number, layout: SceneLayout) =>
   includeLabel(extent, label.node, [label.status, label.alert].filter(Boolean).length, {
-    aside: Boolean(label.aside),
+    aside: Boolean(label.aside) || (label.lanes?.length ?? 0) > 1,
     scale,
     layout,
   });
@@ -71,25 +71,41 @@ export const leaderSvg = (label: Label, layout: SceneLayout) => {
 };
 
 /** A number that rolls to its new value with number-flow, or plain text when it should not. */
-const numberHtml = (value: number, decimals: number, context: LabelContext, suffix = "") =>
+const numberHtml = (
+  value: number,
+  decimals: number,
+  context: LabelContext,
+  suffix = "",
+  style: string | typeof nothing = nothing
+) =>
   context.animateNumbers
     ? html`<number-flow
         class="number"
+        style=${style}
         data-value=${value}
         .format=${{ maximumFractionDigits: decimals }}
         .numberSuffix=${suffix}
         .locales=${context.locale ? numberFormatToLocale(context.locale) : undefined}
       ></number-flow>`
-    : html`<span class="number">${formatNumber(value, context.locale)}${suffix}</span>`;
+    : html`<span class="number" style=${style}
+        >${formatNumber(value, context.locale)}${suffix}</span
+      >`;
 
-/** The unit and the direction word are left empty for `morphWord` to fill. */
-const valueHtml = (reading: ScaledReading | null, context: LabelContext) =>
-  reading === null
-    ? "—"
-    : html`${numberHtml(reading.value, reading.decimals, context)}<span
-          class="unit"
-          data-word=${reading.unit}
-        ></span>`;
+/**
+ * The unit and the direction word are left empty for `morphWord` to fill. A lane's value takes
+ * its lane's colour, number and unit apart, so they stay flat in the line.
+ */
+const valueHtml = (reading: ScaledReading | null, context: LabelContext, color?: string) => {
+  if (reading === null) {
+    return "—";
+  }
+  const style = color ? `color: ${color}` : nothing;
+  return html`${numberHtml(reading.value, reading.decimals, context, "", style)}<span
+      class="unit"
+      style=${style}
+      data-word=${reading.unit}
+    ></span>`;
+};
 
 const figureHtml = ({ value, decimals, suffix }: Figure, context: LabelContext) =>
   numberHtml(value, decimals, context, suffix);
@@ -98,13 +114,19 @@ const figureHtml = ({ value, decimals, suffix }: Figure, context: LabelContext) 
  * The value, with its aside before or after it. Both stay flat in the line, so whatever follows a
  * unit slides along with it as its number rolls.
  */
-const valueLineHtml = ({ reading, aside }: Label, context: LabelContext) => {
+const valueLineHtml = ({ reading, aside, lanes }: Label, context: LabelContext) => {
+  const separator = html`<span class="separator">·</span>`;
+  if (lanes) {
+    return lanes.map(
+      (lane, index) =>
+        html`${index > 0 ? separator : nothing}${valueHtml(lane.reading, context, lane.color)}`
+    );
+  }
   const value = valueHtml(reading, context);
   if (!aside) {
     return value;
   }
   const second = valueHtml(aside.reading, context);
-  const separator = html`<span class="separator">·</span>`;
   return aside.first ? html`${second}${separator}${value}` : html`${value}${separator}${second}`;
 };
 

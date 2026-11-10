@@ -4,7 +4,7 @@ import { type HomeAssistant, NumberFormat, TimeFormat } from "custom-card-helper
 import { describe, expect, test } from "vite-plus/test";
 import { computeCardState } from "./compute-card-state";
 import { type CarReading, type HeatPumpReading, houseWires } from "./house-wires";
-import { type ReadyReadings } from "./types";
+import { type ReadyReadings, type UnitFamily } from "./types";
 
 /** A `hass` whose outage sensor reads `on` while there is an outage. */
 const hassWith = (outage: boolean): HomeAssistant => {
@@ -58,11 +58,12 @@ type Power = {
   toGrid?: number;
   generator?: number;
   outage?: boolean;
+  family?: UnitFamily;
 };
 
 const readings = (power: Power): ReadyReadings => ({
   status: "ready",
-  family: "power",
+  family: power.family ?? "power",
   grid: { kind: "split", outOf: power.fromGrid ?? 0, into: power.toGrid ?? 0 },
   solar: { total: power.solar ?? 0, secondary: 0 },
   battery: { kind: "split", outOf: power.fromBattery ?? 0, into: power.toBattery ?? 0 },
@@ -99,6 +100,8 @@ const wiresFor = (
   return houseWires(cardConfig, state, car, heatPump);
 };
 
+const isGrid = (wire: { node: string }) => wire.node === "grid";
+
 const summary = (cardConfig: FlowCardPlusConfig, power: Power) =>
   wiresFor(cardConfig, power).map(({ node, power: watts, intoInverter, color }) => ({
     node,
@@ -108,6 +111,35 @@ const summary = (cardConfig: FlowCardPlusConfig, power: Power) =>
   }));
 
 describe("house wires", () => {
+  test("live power runs one way at a time: the grid's wire carries what it nets", () => {
+    expect(summary(allNodes, { fromGrid: 1200, toGrid: 800 }).filter(isGrid)).toEqual([
+      {
+        node: "grid",
+        watts: 400,
+        intoInverter: true,
+        color: "var(--energy-grid-consumption-color)",
+      },
+    ]);
+  });
+
+  test("energy that ran both ways gets a lane per direction, each in its own colour", () => {
+    const grid = wiresFor(allNodes, { fromGrid: 1200, toGrid: 800, family: "energy" }).filter(
+      isGrid
+    );
+    expect(grid).toMatchObject([
+      { power: 1200, intoInverter: true, lane: -1, reading: { value: 1.2, unit: "kWh" } },
+      { power: 800, intoInverter: false, lane: 1, color: "var(--energy-grid-return-color)" },
+    ]);
+  });
+
+  test("energy that ran one way keeps a single wire", () => {
+    const battery = wiresFor(allNodes, { toBattery: 2000, family: "energy" }).filter(
+      (wire) => wire.node === "battery"
+    );
+    expect(battery).toEqual([expect.objectContaining({ power: 2000, intoInverter: false })]);
+    expect(battery[0]?.lane).toBeUndefined();
+  });
+
   test("a charging car draws from the home's outlet, in the home's colour", () => {
     const car = wiresFor(allNodes, { solar: 9000, toGrid: 1000 }, { power: 7400 }).find(
       (wire) => wire.node === "car"

@@ -71,10 +71,17 @@ const mountEditor = async (config: Record<string, unknown> = {}, states: StateFi
 };
 
 describe("editor", () => {
+  test("in energy mode, the main page also asks which date picker to follow", async () => {
+    const { fields, helper } = await mountEditor({ mode: "energy" });
+
+    expect(fields()).toEqual(["title", "mode", "collection_key"]);
+    expect(helper("mode")).toBe("Default: Power");
+  });
+
   test("the main page holds the title and a link per node, then advanced", async () => {
     const { editor, fields, links } = await mountEditor();
 
-    expect(fields()).toEqual(["title"]);
+    expect(fields()).toEqual(["title", "mode"]);
     expect(links().map((link) => link.getAttribute("path"))).toEqual([
       "grid",
       "solar",

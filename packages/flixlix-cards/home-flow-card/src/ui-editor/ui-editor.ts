@@ -133,7 +133,7 @@ export class HomeFlowCardEditor extends LitElement implements LovelaceCardEditor
     }
     return html`
       <div class="card-config">
-        ${this._form(this._config, generalSchema, this._valueChanged)}
+        ${this._form(this._config, generalSchema(this._config.mode), this._valueChanged)}
         <div class="pages">
           ${NODE_PAGES.map(({ page, icon }) => {
             const nodeConfig = this._config?.[page];

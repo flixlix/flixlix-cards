@@ -5,7 +5,7 @@
 ![GitHub release](https://img.shields.io/github/v/release/flixlix/home-flow-card?style=flat-square)
 ![GitHub total downloads](https://img.shields.io/github/downloads/flixlix/home-flow-card/total?style=flat-square)
 
-**Your own little isometric home in Home Assistant, with your live power flowing through it.**
+**Your own little isometric home in Home Assistant, with your live power, or your day's energy, flowing through it.**
 
 <img width="498" alt="Home Flow Card through a day: a sunny afternoon charging the battery, an evening on the battery, and a grid outage with the generator taking over" src="https://raw.githubusercontent.com/flixlix/flixlix-cards/main/packages/flixlix-cards/home-flow-card/assets/home-flow-card.gif">
 
@@ -77,28 +77,30 @@ or `battery` are required.
 
 ### Card options
 
-| Name                 | Type    | Default | Description                                                                                                                                         |
-| -------------------- | ------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `type`               | string  | -       | `custom:home-flow-card`                                                                                                                             |
-| `title`              | string  | -       | Card title                                                                                                                                          |
-| `grid`               | object  | -       | The grid, see [Grid](#grid)                                                                                                                         |
-| `solar`              | object  | -       | Solar on the roof, see [Solar](#solar)                                                                                                              |
-| `battery`            | object  | -       | The battery on the wall, see [Battery](#battery)                                                                                                    |
-| `home`               | object  | -       | The home's consumption, see [Home](#home). Without it, the card works out what the home uses from the others                                        |
-| `generator`          | object  | -       | A generator for grid outages, see [Generator](#generator)                                                                                           |
-| `car`                | object  | -       | An electric car in front of the house, see [Car](#car)                                                                                              |
-| `heat_pump`          | object  | -       | A heat pump on the front wall, see [Heat pump](#heat-pump)                                                                                          |
-| `animate_numbers`    | boolean | `true`  | Roll each number to its new value when a reading changes. Always still when your system asks for reduced motion                                     |
-| `disable_dots`       | boolean | `false` | Keep the wires still: no pulses, only the colour of the power they carry                                                                            |
-| `wire_width`         | number  | `1`     | How many times thicker the wires are drawn, for example `2` for twice as thick. Like the labels, they keep a similar size whatever the card's width |
-| `clickable_entities` | boolean | `true`  | Tapping a value opens its entity's details; `false` turns that off. A node's own actions run either way                                             |
-| `base_decimals`      | number  | `0`     | Decimals of values in W                                                                                                                             |
-| `kilo_decimals`      | number  | `1`     | Decimals of values in kW                                                                                                                            |
-| `kilo_threshold`     | number  | `1000`  | From how many watts a value is shown in kW                                                                                                          |
-| `min_flow_rate`      | number  | `0.75`  | Seconds per pulse at the most power                                                                                                                 |
-| `max_flow_rate`      | number  | `6`     | Seconds per pulse at the least power                                                                                                                |
-| `min_expected_power` | number  | `0.01`  | Power at which pulses run their slowest, in W                                                                                                       |
-| `max_expected_power` | number  | `2000`  | Power at which pulses run their fastest, in W                                                                                                       |
+| Name                 | Type    | Default | Description                                                                                                                                                                                                |
+| -------------------- | ------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `type`               | string  | -       | `custom:home-flow-card`                                                                                                                                                                                    |
+| `title`              | string  | -       | Card title                                                                                                                                                                                                 |
+| `mode`               | string  | `power` | What the sensors measure: `power` for live power, or `energy` for energy over the period picked on the dashboard's energy date picker (today without one). See [Energy over the day](#energy-over-the-day) |
+| `collection_key`     | string  | -       | With `mode: energy`, the energy date picker to follow, as in Energy Flow Card Plus, for example `energy_living_room`. Without it, the dashboard's own                                                      |
+| `grid`               | object  | -       | The grid, see [Grid](#grid)                                                                                                                                                                                |
+| `solar`              | object  | -       | Solar on the roof, see [Solar](#solar)                                                                                                                                                                     |
+| `battery`            | object  | -       | The battery on the wall, see [Battery](#battery)                                                                                                                                                           |
+| `home`               | object  | -       | The home's consumption, see [Home](#home). Without it, the card works out what the home uses from the others                                                                                               |
+| `generator`          | object  | -       | A generator for grid outages, see [Generator](#generator)                                                                                                                                                  |
+| `car`                | object  | -       | An electric car in front of the house, see [Car](#car)                                                                                                                                                     |
+| `heat_pump`          | object  | -       | A heat pump on the front wall, see [Heat pump](#heat-pump)                                                                                                                                                 |
+| `animate_numbers`    | boolean | `true`  | Roll each number to its new value when a reading changes. Always still when your system asks for reduced motion                                                                                            |
+| `disable_dots`       | boolean | `false` | Keep the wires still: no pulses, only the colour of the power they carry                                                                                                                                   |
+| `wire_width`         | number  | `1`     | How many times thicker the wires are drawn, for example `2` for twice as thick. Like the labels, they keep a similar size whatever the card's width                                                        |
+| `clickable_entities` | boolean | `true`  | Tapping a value opens its entity's details; `false` turns that off. A node's own actions run either way                                                                                                    |
+| `base_decimals`      | number  | `0`     | Decimals of values in W                                                                                                                                                                                    |
+| `kilo_decimals`      | number  | `1`     | Decimals of values in kW                                                                                                                                                                                   |
+| `kilo_threshold`     | number  | `1000`  | From how many watts a value is shown in kW                                                                                                                                                                 |
+| `min_flow_rate`      | number  | `0.75`  | Seconds per pulse at the most power                                                                                                                                                                        |
+| `max_flow_rate`      | number  | `6`     | Seconds per pulse at the least power                                                                                                                                                                       |
+| `min_expected_power` | number  | `0.01`  | Power at which pulses run their slowest, in W                                                                                                                                                              |
+| `max_expected_power` | number  | `2000`  | Power at which pulses run their fastest, in W                                                                                                                                                              |
 
 Leave a node out and the house does not draw it. `grid`, `solar`, `battery` and `home` take the
 same options as in [Power Flow Card Plus](https://cards.flixlix.com/power-flow-card-plus/configuration);
@@ -332,6 +334,31 @@ heat_pump:
   entity: sensor.heat_pump_power
   climate: climate.heat_pump
   status: temperature_and_target
+```
+
+### Energy over the day
+
+With `mode: energy`, the same house shows what each node made, stored, bought or used over the
+period picked on the dashboard's energy date picker. Point every node, the car and the heat pump at
+energy sensors (kWh), the ones Home Assistant's energy dashboard uses. Each wire carries its energy
+over the period, and its pulses share out what was supplied. When the grid or the battery ran both
+ways, it gets two parallel lines, one each way, and its label shows both values in their colours. The battery's state of charge
+stays live, and its label leaves out "Charging" and "Discharging", which only make sense now.
+
+```yaml
+type: custom:home-flow-card
+mode: energy
+grid:
+  entity:
+    consumption: sensor.grid_import_energy
+    production: sensor.grid_export_energy
+solar:
+  entity: sensor.solar_energy
+battery:
+  entity:
+    consumption: sensor.battery_discharge_energy
+    production: sensor.battery_charge_energy
+  state_of_charge: sensor.battery_soc
 ```
 
 ### Your own battery thresholds

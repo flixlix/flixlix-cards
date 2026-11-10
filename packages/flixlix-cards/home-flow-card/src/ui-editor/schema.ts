@@ -8,6 +8,8 @@ import { defaultValues } from "@flixlix-cards/shared/utils/get-default-config";
 import {
   DEFAULT_STATE_OF_CHARGE_SEVERITY,
   HEAT_PUMP_STATUSES,
+  type HomeFlowMode,
+  MODES,
   STATE_OF_CHARGE_POSITIONS,
 } from "../types";
 
@@ -164,7 +166,23 @@ export const CAR_CONDITIONS_AS_YAML = [
   { name: "idle", selector: { object: {} } },
 ] as const;
 
-export const generalSchema = [{ name: "title", selector: { text: {} } }] as const;
+const modeField = {
+  name: "mode",
+  selector: {
+    select: {
+      mode: "dropdown",
+      options: MODES.map((mode) => ({ value: mode, label: localize(`editor.mode_${mode}`) })),
+    },
+  },
+} as const;
+
+/** The title and what the sensors measure; the date picker to follow only for energy. */
+export const generalSchema = (mode: HomeFlowMode | undefined) =>
+  [
+    { name: "title", selector: { text: {} } },
+    modeField,
+    ...(mode === "energy" ? [{ name: "collection_key", selector: { text: {} } }] : []),
+  ] as const;
 
 /** Everything but the title and the nodes, grouped by what it changes. */
 export const advancedSchema = [
@@ -250,4 +268,5 @@ export const FIELD_DEFAULTS: Record<string, string> = {
   wire_width: "1×",
   state_of_charge_position: localize("editor.state_of_charge_position_below_power"),
   status: localize("editor.heat_pump_status_state"),
+  mode: localize("editor.mode_power"),
 };

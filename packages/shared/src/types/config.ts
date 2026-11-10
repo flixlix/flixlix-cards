@@ -90,6 +90,8 @@ export interface PowerFlowCardPlusConfig extends LovelaceCardConfig, mainConfigO
 export interface EnergyFlowCardPlusConfig extends LovelaceCardConfig, mainConfigOptions {
   entities: ConfigEntities;
   collection_key?: string;
+  /** `false` reads each entity's own state instead of its growth over the selected period. */
+  energy_date_selection?: boolean;
 }
 
 export type IndividualField = IndividualDeviceType[];

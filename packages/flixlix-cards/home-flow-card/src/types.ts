@@ -72,6 +72,14 @@ export type HouseHeatPump = {
   status?: HeatPumpStatus;
 };
 
+/**
+ * What the card's sensors measure: live power in W (`power`), or energy in Wh over the period
+ * picked on the dashboard's energy date picker (`energy`).
+ */
+export type HomeFlowMode = "power" | "energy";
+
+export const MODES: readonly HomeFlowMode[] = ["power", "energy"];
+
 /** The card's nodes, configured as in Power Flow Card Plus' `entities`. */
 export type HomeFlowNodes = {
   grid?: ConfigEntities["grid"];
@@ -84,6 +92,13 @@ export type HomeFlowNodes = {
 type WithoutEntities<T> = { [K in keyof T as K extends "entities" ? never : K]: T[K] };
 
 type CardOptions = WithoutEntities<PowerFlowCardPlusConfig> & {
+  /** Defaults to `power`. */
+  mode?: HomeFlowMode;
+  /**
+   * With `mode: energy`, the energy date picker to follow, as in Energy Flow Card Plus; without,
+   * the dashboard's own.
+   */
+  collection_key?: string;
   /** Roll the numbers to their new value when a reading changes. Defaults to true. */
   animate_numbers?: boolean;
   /**

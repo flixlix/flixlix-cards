@@ -64,8 +64,6 @@ const DEFS = svg`<defs>
 export type SceneInput = {
   cardState: ReadyCardState;
   wires: HouseWire[];
-  /** Grows to hold everything drawn. */
-  extent: Extent;
   severity: ChargeSeverity;
   /**
    * A configured generator shows only during an outage but always keeps its place, so the house
@@ -89,14 +87,6 @@ const batteryLook = ({ nodes }: ReadyCardState, severity: ChargeSeverity) => {
   };
 };
 
-/** Every face of a group, in screen space, into the extent. */
-const includeFaces = (extent: Extent, group: SceneGroup) =>
-  group.shapes.forEach((shape) => {
-    if (shape.kind === "face") {
-      shape.points.forEach((point) => extent.include(project(point)));
-    }
-  });
-
 /** Room for the car in front of the house, kept while it is away or not yet drawn. */
 export const includeCar = (extent: Extent) => {
   const box = carScreenBox();
@@ -110,22 +100,41 @@ const carSvg = (car: CarImage | null) =>
     ? svg`<image class="node car" href=${car.href} x=${car.box.x} y=${car.box.y} width=${car.box.width} height=${car.box.height}></image>`
     : nothing;
 
-/** The house, its fixtures and the wires between them, layered back to front. */
-export const sceneSvg = ({
+/** Every face of a group, in screen space, into the extent. */
+const includeFaces = (extent: Extent, group: SceneGroup) =>
+  group.shapes.forEach((shape) => {
+    if (shape.kind === "face") {
+      shape.points.forEach((point) => extent.include(project(point)));
+    }
+  });
+
+const points = (list: readonly Point[]) => list.map((point) => project(point).join(" ")).join(" ");
+
+const shapeSvg = (item: Shape) =>
+  item.kind === "face"
+    ? svg`<polygon points=${points(item.points)} fill=${fillOf(item.fill)} stroke=${fillOf(item.fill)} stroke-width="0.4" stroke-linejoin="round"></polygon>`
+    : svg`<g transform=${faceTransform(item.face, item.at)}><g class=${item.spin ? "spin" : nothing}><path d=${item.path} transform="scale(${item.size / 24}) translate(-12 -12)" fill="var(--house-icon)"></path></g></g>`;
+
+const SEAMS = svg`<path d=${panelSeams()
+  .map(([from, to]) => `M${project(from).join(" ")}L${project(to).join(" ")}`)
+  .join("")} stroke="var(--house-panel-seam)" stroke-width="1"></path>`;
+
+const groupSvg = (part: SceneGroup) =>
+  svg`<g class="node ${part.node}">${part.shapes.map(shapeSvg)}${part.node === "solar" ? SEAMS : nothing}</g>`;
+
+/**
+ * The house, its fixtures and the wires between them. `include` makes room for all of it but the
+ * wires, which run past the card's edge; `draw` layers it back to front, the wires at
+ * `wireScale`, which the labels' fit decides.
+ */
+export const houseScene = ({
   cardState,
   wires,
-  extent,
   severity,
   reserveGenerator,
   car,
   layout,
 }: SceneInput) => {
-  const screen = (point: Point) => {
-    const projected = project(point);
-    extent.include(projected);
-    return projected.join(" ");
-  };
-  const points = (list: readonly Point[]) => list.map(screen).join(" ");
   const { nodes } = cardState;
   const hasGenerator = wires.some((wire) => wire.node === "generator");
   const heatPumpWire = wires.find((wire) => wire.node === "heat_pump");
@@ -139,36 +148,36 @@ export const sceneSvg = ({
       running: heatPumpWire.power > 0 && cardState.animate,
     },
   });
-  if (reserveGenerator && !hasGenerator) {
-    fixtures({ solar: false, generator: true })
-      .filter((part) => part.node === "generator")
-      .forEach((part) => includeFaces(extent, part));
-  }
-  const shape = (item: Shape) =>
-    item.kind === "face"
-      ? svg`<polygon points=${points(item.points)} fill=${fillOf(item.fill)} stroke=${fillOf(item.fill)} stroke-width="0.4" stroke-linejoin="round"></polygon>`
-      : svg`<g transform=${faceTransform(item.face, item.at)}><g class=${item.spin ? "spin" : nothing}><path d=${item.path} transform="scale(${item.size / 24}) translate(-12 -12)" fill="var(--house-icon)"></path></g></g>`;
-  const seams = svg`<path d=${panelSeams()
-    .map(([from, to]) => `M${screen(from)}L${screen(to)}`)
-    .join("")} stroke="var(--house-panel-seam)" stroke-width="1"></path>`;
-  const group = (part: SceneGroup) =>
-    svg`<g class="node ${part.node}">${part.shapes.map(shape)}${part.node === "solar" ? seams : nothing}</g>`;
+  const include = (extent: Extent) => {
+    [houseShell(), ...parts].forEach((part) => includeFaces(extent, part));
+    SHADOW.forEach((point) => extent.include(project(point)));
+    if (car !== undefined) {
+      CAR_SHADOW.forEach((point) => extent.include(project(point)));
+    }
+    if (reserveGenerator && !hasGenerator) {
+      fixtures({ solar: false, generator: true })
+        .filter((part) => part.node === "generator")
+        .forEach((part) => includeFaces(extent, part));
+    }
+  };
   const [groundX, groundY] = project([4, 6, 0]);
-  return svg`
+  const draw = (wireScale: number) => svg`
     ${DEFS}
     <ellipse cx=${groundX} cy=${groundY + 30} rx="260" ry="150" fill="url(#house-ground)"></ellipse>
     <polygon points=${points(SHADOW)} fill="var(--house-shadow)" filter="url(#house-blur)" opacity="0.55"></polygon>
     ${car === undefined ? nothing : svg`<polygon points=${points(CAR_SHADOW)} fill="var(--house-shadow)" filter="url(#house-car-blur)" opacity="0.9"></polygon>`}
-    ${group(houseShell())}
+    ${groupSvg(houseShell())}
     ${DRAW_ORDER.map((layer) =>
       "wire" in layer
         ? wiresSvg(
             wires.filter((wire) => wire.node === layer.wire),
             cardState.animate,
-            layout
+            layout,
+            wireScale
           )
-        : parts.filter((part) => part.node === layer.part).map(group)
+        : parts.filter((part) => part.node === layer.part).map(groupSvg)
     )}
     ${car === undefined ? nothing : carSvg(car)}
   `;
+  return { include, draw };
 };

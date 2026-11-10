@@ -21,6 +21,9 @@ export type UnitFamily = "power" | "energy";
 
 export type Readings = { status: "loading" } | ReadyReadings;
 
+/** An entity's reading in W or Wh, or null while it is unavailable or has no value. */
+export type EntityReader = (entity?: string) => number | null;
+
 /**
  * A grid or battery reading as read from its entities: one entity for both directions, or one
  * entity each for the flow into the node (export, charge) and out of it (import, discharge).
@@ -114,6 +117,7 @@ export type CardLayout = {
 
 export type ReadyCardState = {
   status: "ready";
+  family: UnitFamily;
   nodes: {
     grid: GridObject;
     solar: SolarObject;

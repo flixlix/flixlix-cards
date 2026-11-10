@@ -106,6 +106,10 @@ export const styles = css`
     overflow: hidden;
   }
 
+  .card-content {
+    padding: 16px;
+  }
+
   .stage {
     position: relative;
   }
