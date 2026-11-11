@@ -12,11 +12,7 @@
     "view": {
       "name": "Periode",
       "live": "Live",
-      "today": "Vandaag",
-      "yesterday": "Gisteren",
-      "week": "Week",
-      "month": "Maand",
-      "year": "Jaar"
+      "today": "Vandaag"
     }
   },
   "editor": {
@@ -159,7 +155,6 @@
     "connect_to_grid": "Net (lijn omhoog naar het net)",
     "connect_to_battery": "Batterij (lijn naar de batterij)",
     "connect_to_none": "Geen (geen lijn)",
-    "energy_entities": "Keuze live / periode",
-    "periods": "Periodes"
+    "energy_entities": "Keuze live / periode"
   }
 }

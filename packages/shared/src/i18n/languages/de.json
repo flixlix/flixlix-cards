@@ -12,11 +12,7 @@
     "view": {
       "name": "Zeitraum",
       "live": "Live",
-      "today": "Heute",
-      "yesterday": "Gestern",
-      "week": "Woche",
-      "month": "Monat",
-      "year": "Jahr"
+      "today": "Heute"
     }
   },
   "editor": {
@@ -159,7 +155,6 @@
     "connect_to_grid": "Netz (Linie hoch zum Netz)",
     "connect_to_battery": "Batterie (Linie hinüber zur Batterie)",
     "connect_to_none": "Keine (ohne Linie)",
-    "energy_entities": "Live- / Zeitraum-Auswahl",
-    "periods": "Zeiträume"
+    "energy_entities": "Live- / Zeitraum-Auswahl"
   }
 }

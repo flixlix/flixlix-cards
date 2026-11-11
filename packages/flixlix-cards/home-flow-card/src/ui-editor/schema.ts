@@ -315,5 +315,4 @@ export const fieldDefaults = (mode: HomeFlowMode | undefined): Record<string, st
   state_of_charge_position: localize("editor.state_of_charge_position_below_value"),
   status: localize("editor.heat_pump_status_state"),
   mode: localize("editor.mode_power"),
-  periods: localize("card.view.today"),
 });

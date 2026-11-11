@@ -34,7 +34,6 @@ const topLevel = (schema: unknown): string[] =>
     : [];
 
 const selectorFields = [
-  "periods",
   "consumption",
   "production",
   "solar",
@@ -91,16 +90,12 @@ describe("editor", () => {
     expect(helper("mode")).toBe("Default: Power");
   });
 
-  test("the selector's periods sit at the top level, its sensors under energy_entities", async () => {
-    const { schema, helper } = await mountEditor();
+  test("the selector's sensors sit under energy_entities", async () => {
+    const { schema } = await mountEditor();
     const fields = schema();
     const selector = Array.isArray(fields) ? fields.at(-1) : undefined;
 
-    expect(topLevel(isGroup(selector) ? selector.schema : [])).toEqual([
-      "periods",
-      "energy_entities",
-    ]);
-    expect(helper("periods")).toBe("Default: Today");
+    expect(topLevel(isGroup(selector) ? selector.schema : [])).toEqual(["energy_entities"]);
   });
 
   test("the main page holds the title and a link per node, then advanced", async () => {

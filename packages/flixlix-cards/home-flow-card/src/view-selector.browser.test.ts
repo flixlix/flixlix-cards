@@ -77,6 +77,42 @@ const overlaps = (root: ShadowRoot) => {
   });
 };
 
+const wholeHouse = () =>
+  fakeHass({
+    states: {
+      ...states,
+      "sensor.grid_in": "200",
+      "sensor.grid_out": "0",
+      "sensor.car_power": "1500",
+      "sensor.car_soc": sensor("60", { unit: "%" }),
+      "sensor.heat_pump_power": "600",
+    },
+    statistics: {
+      "sensor.solar_energy": 12700,
+      "sensor.grid_import": 7700,
+      "sensor.grid_export": 2400,
+      "sensor.battery_out": 3800,
+      "sensor.battery_in": 4600,
+      "sensor.heat_pump_energy": 2100,
+    },
+  });
+
+const frame = (root: ShadowRoot) => {
+  const haCard = root.querySelector("ha-card")?.getBoundingClientRect();
+  const house = root.querySelector(".node.home")?.getBoundingClientRect();
+  return {
+    viewBox: root.querySelector(".stage > svg")?.getAttribute("viewBox"),
+    height: Math.round(haCard?.height ?? 0),
+    house: [
+      (house?.left ?? 0) - (haCard?.left ?? 0),
+      (house?.top ?? 0) - (haCard?.top ?? 0),
+      house?.width ?? 0,
+      house?.height ?? 0,
+    ].map(Math.round),
+    solar: root.querySelector<HTMLElement>(".label.solar")?.style.cssText,
+  };
+};
+
 const selected = (root: ShadowRoot) =>
   root.querySelector('.views [aria-checked="true"]')?.textContent?.trim();
 
@@ -96,23 +132,11 @@ describe("view selector", () => {
     expect(reading(root, "solar")).toBe("800 W");
   });
 
-  test("reads its own period, not the dashboard's date picker", async () => {
-    const { root, settle } = await mount({ periods: ["today", "yesterday"] });
+  test("with mode: energy, opens on today", async () => {
+    const { root } = await mount({ mode: "energy" });
 
-    await userEvent.click(segment(root, "Yesterday"));
-    await settle();
-    expect(reading(root, "solar")).toBe("5 kWh");
-
-    await userEvent.click(segment(root, "Today"));
-    await settle();
+    expect(selected(root)).toBe("Today");
     expect(reading(root, "solar")).toBe("3 kWh");
-  });
-
-  test("with mode: energy, opens on the first period", async () => {
-    const { root } = await mount({ mode: "energy", periods: ["yesterday", "today"] });
-
-    expect(selected(root)).toBe("Yesterday");
-    expect(reading(root, "solar")).toBe("5 kWh");
   });
 
   test("a node without an energy sensor is left out of the periods", async () => {
@@ -125,7 +149,7 @@ describe("view selector", () => {
   });
 
   test("arrow keys move the selection and the focus with it", async () => {
-    const { root, settle } = await mount({ periods: ["today", "week"] });
+    const { root, settle } = await mount();
     segment(root, "Live").focus();
 
     await userEvent.keyboard("{ArrowRight}");
@@ -133,9 +157,10 @@ describe("view selector", () => {
     expect(selected(root)).toBe("Today");
     expect(root.activeElement).toBe(segment(root, "Today"));
 
-    await userEvent.keyboard("{ArrowLeft}{ArrowLeft}");
+    await userEvent.keyboard("{ArrowRight}");
     await settle();
-    expect(selected(root)).toBe("Week");
+    expect(selected(root)).toBe("Live");
+    expect(root.activeElement).toBe(segment(root, "Live"));
   });
 
   test.each([300, 360, 500, 800])("keeps clear of the labels on a %ipx card", async (width) => {
@@ -168,82 +193,36 @@ describe("view selector", () => {
     expect(overlaps(root)).toEqual([]);
   });
 
-  test("falls back to a dropdown when the segments do not fit", async () => {
+  test("only the selector is added: the house, its labels and the card's height stay put", async () => {
+    const { energy_entities: _energy, ...plainCard } = card;
+    const config = {
+      type: "custom:home-flow-card",
+      ...plainCard,
+      grid: { entity: { consumption: "sensor.grid_in", production: "sensor.grid_out" } },
+      car: { entity: "sensor.car_power", state_of_charge: "sensor.car_soc" },
+      heat_pump: { entity: "sensor.heat_pump_power" },
+    };
+    const plain = frame((await mountCard(HomeFlowCard, config, wholeHouse(), { width: 400 })).root);
+
     const { root, settle } = await mountCard(
       HomeFlowCard,
       {
-        type: "custom:home-flow-card",
-        ...card,
-        periods: ["today", "yesterday", "week", "month", "year"],
-        heat_pump: { entity: "sensor.heat_pump_power" },
-        energy_entities: { ...card.energy_entities, heat_pump: "sensor.heat_pump_energy" },
-      },
-      fakeHass({ states: { ...states, "sensor.heat_pump_power": "600" }, statistics }),
-      { width: 360 }
-    );
-    await settle();
-    const select = root.querySelector(".views select");
-    if (!(select instanceof HTMLSelectElement)) {
-      throw new Error("no dropdown");
-    }
-    expect(root.querySelector('.views [role="radio"]')).toBeNull();
-    expect(overlaps(root)).toEqual([]);
-
-    await userEvent.selectOptions(select, "today");
-    await settle();
-    expect(reading(root, "solar")).toBe("3 kWh");
-    expect(overlaps(root)).toEqual([]);
-  });
-
-  test("the card and the house keep their size from one view to the next", async () => {
-    const { root, settle } = await mountCard(
-      HomeFlowCard,
-      {
-        type: "custom:home-flow-card",
-        ...card,
-        grid: { entity: { consumption: "sensor.grid_in", production: "sensor.grid_out" } },
-        car: { entity: "sensor.car_power", state_of_charge: "sensor.car_soc" },
-        heat_pump: { entity: "sensor.heat_pump_power" },
+        ...config,
         energy_entities: {
           ...card.energy_entities,
           battery: { consumption: "sensor.battery_out", production: "sensor.battery_in" },
           heat_pump: "sensor.heat_pump_energy",
         },
       },
-      fakeHass({
-        states: {
-          ...states,
-          "sensor.grid_in": "200",
-          "sensor.grid_out": "0",
-          "sensor.car_power": "1500",
-          "sensor.car_soc": sensor("60", { unit: "%" }),
-          "sensor.heat_pump_power": "600",
-        },
-        statistics: {
-          "sensor.solar_energy": 12700,
-          "sensor.grid_import": 7700,
-          "sensor.grid_export": 2400,
-          "sensor.battery_out": 3800,
-          "sensor.battery_in": 4600,
-          "sensor.heat_pump_energy": 2100,
-        },
-      }),
+      wholeHouse(),
       { width: 400 }
     );
-    const size = () => {
-      const haCard = root.querySelector("ha-card")?.getBoundingClientRect();
-      const house = root.querySelector(".node.home")?.getBoundingClientRect();
-      return {
-        card: Math.round(haCard?.height ?? 0),
-        house: [Math.round(house?.width ?? 0), Math.round(house?.height ?? 0)],
-      };
-    };
-    const live = size();
+    expect(frame(root)).toEqual(plain);
 
     await userEvent.click(segment(root, "Today"));
     await settle();
     expect(root.querySelector(".label.grid")?.textContent).toContain("·");
-    expect(size()).toEqual(live);
+    expect(frame(root)).toEqual(plain);
   });
 
   test("without energy_entities, the card shows no selector", async () => {

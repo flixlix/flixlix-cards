@@ -12,11 +12,7 @@
     "view": {
       "name": "Okres",
       "live": "Na żywo",
-      "today": "Dziś",
-      "yesterday": "Wczoraj",
-      "week": "Tydzień",
-      "month": "Miesiąc",
-      "year": "Rok"
+      "today": "Dziś"
     }
   },
   "editor": {
@@ -159,7 +155,6 @@
     "connect_to_grid": "Sieć (linia w górę do sieci)",
     "connect_to_battery": "Bateria (linia do baterii)",
     "connect_to_none": "Brak (bez linii)",
-    "energy_entities": "Wybór na żywo / okres",
-    "periods": "Okresy"
+    "energy_entities": "Wybór na żywo / okres"
   }
 }

@@ -83,8 +83,7 @@ or `battery` are required.
 | `title`              | string  | -         | Card title                                                                                                                                                                                                                      |
 | `mode`               | string  | `power`   | What the sensors measure: `power` for live power, or `energy` for energy over the period picked on the dashboard's energy date picker (today without one). See [Energy over the day](#energy-over-the-day)                      |
 | `collection_key`     | string  | -         | With `mode: energy`, the energy date picker to follow, as in Energy Flow Card Plus, for example `energy_living_room`. Without it, the dashboard's own                                                                           |
-| `energy_entities`    | object  | -         | Each node's energy sensor, for a selector in the card's corner between live power and `periods`. See [Live power or the day so far](#live-power-or-the-day-so-far)                                                              |
-| `periods`            | list    | `[today]` | With `energy_entities`, the periods the selector offers after live power: `today`, `yesterday`, `week`, `month` and `year`                                                                                                      |
+| `energy_entities`    | object  | -         | Each node's energy sensor, for a selector in the card's corner between live power and today. See [Live power or the day so far](#live-power-or-the-day-so-far)                                                                  |
 | `grid`               | object  | -         | The grid, see [Grid](#grid)                                                                                                                                                                                                     |
 | `solar`              | object  | -         | Solar on the roof, see [Solar](#solar)                                                                                                                                                                                          |
 | `battery`            | object  | -         | The battery on the wall, see [Battery](#battery)                                                                                                                                                                                |
@@ -377,11 +376,11 @@ battery:
 ### Live power or the day so far
 
 Give the nodes their energy sensors too, under `energy_entities`, and the card gets a selector in
-its top right corner: live power, or energy over each of `periods` (today without them). The card
-reads the period itself rather than follow a date picker; week, month and year run up to today.
-Each node keeps its name, colours and state of charge; only its sensor changes. A node without an
-energy sensor is left out of the periods, and the home without one shows what flowed into it. With
-`mode: energy`, the card opens on the first period.
+its top right corner between live power and today's energy. The card reads today itself rather than
+follow a date picker. Each node keeps its name, colours and state of charge; only its sensor
+changes. The house keeps the size and place it has for live power, so only the selector is added. A
+node without an energy sensor is left out of today, and the home without one shows what flowed into
+it. With `mode: energy`, the card opens on today.
 
 ```yaml
 type: custom:home-flow-card
@@ -400,9 +399,6 @@ energy_entities:
   battery:
     consumption: sensor.battery_discharge_energy
     production: sensor.battery_charge_energy
-periods:
-  - today
-  - week
 ```
 
 ### Your own battery thresholds

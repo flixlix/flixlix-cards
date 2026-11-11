@@ -63,8 +63,7 @@ views:
                 consumption: sensor.battery_discharge_energy
                 production: sensor.battery_charge_energy
           - type: custom:home-flow-card
-            title: Every period, car and heat pump
-            periods: [today, yesterday, week, month, year]
+            title: Live or today, car and heat pump
             grid:
               entity:
                 consumption: sensor.grid_import_power

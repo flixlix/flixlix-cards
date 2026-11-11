@@ -1,5 +1,4 @@
 import { type Condition } from "@flixlix-cards/shared/card-state";
-import { type EnergyPeriodKey } from "@flixlix-cards/shared/states/utils/energy-period";
 import { type ConfigEntities, type PowerFlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { type ChargeSeverity } from "@flixlix-cards/shared/utils/severity";
 import { expectedRange } from "./generic-options";
@@ -92,11 +91,9 @@ export type HomeFlowMode = "power" | "energy";
 
 export const MODES: readonly HomeFlowMode[] = ["power", "energy"];
 
-export const PERIODS: readonly EnergyPeriodKey[] = ["today", "yesterday", "week", "month", "year"];
+export const VIEWS = ["live", "today"] as const;
 
-export const DEFAULT_PERIODS: readonly EnergyPeriodKey[] = ["today"];
-
-export type HomeFlowView = "live" | EnergyPeriodKey;
+export type HomeFlowView = (typeof VIEWS)[number];
 
 type NodeEntity = NonNullable<ConfigEntities["grid"]>["entity"];
 
@@ -131,7 +128,6 @@ type CardOptions = CardKeys<PowerFlowCardPlusConfig> & {
   /** Defaults to `power`. */
   mode?: HomeFlowMode;
   energy_entities?: HomeFlowEnergyEntities;
-  periods?: EnergyPeriodKey[];
   /**
    * With `mode: energy`, the energy date picker to follow, as in Energy Flow Card Plus; without,
    * the dashboard's own.
@@ -219,7 +215,7 @@ export const toFlowConfig = (config: HomeFlowCardConfig): FlowConfig => {
 };
 
 const overPeriod = (config: HomeFlowCardConfig, energy: HomeFlowEnergyEntities) => {
-  const { energy_entities: _energy, periods: _periods, ...options } = config;
+  const { energy_entities: _energy, ...options } = config;
   const { grid, solar, battery, home, generator, car, heat_pump: heatPump } = energy;
   return toFlowConfig({
     ...options,
@@ -240,7 +236,6 @@ const overPeriod = (config: HomeFlowCardConfig, energy: HomeFlowEnergyEntities) 
 export type HomeFlowViews = {
   live: FlowConfig;
   period: FlowConfig;
-  periods: readonly EnergyPeriodKey[];
   initial: HomeFlowView;
 };
 
@@ -259,13 +254,11 @@ export const toFlowViews = (config: HomeFlowCardConfig): HomeFlowViews | null =>
   if (!energy) {
     return null;
   }
-  const periods = config.periods?.length ? config.periods : DEFAULT_PERIODS;
-  const { energy_entities: _energy, periods: _periods, ...live } = config;
+  const { energy_entities: _energy, ...live } = config;
   return {
     live: toFlowConfig({ ...live, mode: "power" }),
     period: overPeriod(config, energy),
-    periods,
-    initial: config.mode === "energy" ? (periods[0] ?? "today") : "live",
+    initial: config.mode === "energy" ? "today" : "live",
   };
 };
 

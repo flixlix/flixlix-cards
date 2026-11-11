@@ -12,11 +12,7 @@
     "view": {
       "name": "Periode",
       "live": "Live",
-      "today": "I dag",
-      "yesterday": "I går",
-      "week": "Uge",
-      "month": "Måned",
-      "year": "År"
+      "today": "I dag"
     }
   },
   "editor": {
@@ -159,7 +155,6 @@
     "connect_to_grid": "Net (linje op til nettet)",
     "connect_to_battery": "Batteri (linje over til batteriet)",
     "connect_to_none": "Ingen (ingen linje)",
-    "energy_entities": "Vælger live / periode",
-    "periods": "Perioder"
+    "energy_entities": "Vælger live / periode"
   }
 }

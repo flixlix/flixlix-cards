@@ -943,12 +943,11 @@ function houseEntries(): SearchEntry[] {
       "date picker",
     ]),
     option("collection_key", "The energy date picker to follow.", "card-options", ["energy"]),
-    option("energy_entities", "Energy sensors for a live / period selector.", "card-options", [
+    option("energy_entities", "Energy sensors for a live / today selector.", "card-options", [
       "energy",
       "selector",
       "today",
     ]),
-    option("periods", "The periods the selector offers.", "card-options", ["today", "week"]),
     option("min_expected_value", "Where the pulses run their slowest.", "numbers", [
       "min_expected_power",
       "pulse speed",
@@ -1001,7 +1000,7 @@ function houseEntries(): SearchEntry[] {
     example(
       "live-or-today",
       "Live power or the day so far",
-      "energy_entities and periods add a live / today selector."
+      "energy_entities adds a live / today selector."
     ),
     example("grid-only", "Grid only", "No solar or battery."),
     example("wire-width", "Thicker wires", "wire_width 2."),
