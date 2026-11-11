@@ -475,6 +475,66 @@ describe("layout", () => {
   });
 });
 
+/** A card with solar, grid and battery: a node in each row. */
+const mountThreeRows = async () => {
+  const mounted = await mountCard(
+    PowerFlowCardPlus,
+    {
+      type: "custom:power-flow-card-plus",
+      entities: {
+        grid: { entity: "sensor.grid" },
+        solar: { entity: "sensor.solar" },
+        battery: { entity: "sensor.battery" },
+      },
+    },
+    fakeHass({
+      states: { "sensor.grid": "300", "sensor.solar": "100", "sensor.battery": "50" },
+    }),
+    { width: 500 }
+  );
+  const setHeight = async (height: number) => {
+    const container = mounted.card.parentElement;
+    if (!container) {
+      throw new Error("mounted card has no container");
+    }
+    container.style.height = `${height}px`;
+    await mounted.settle();
+  };
+  const circles = () => ({
+    card: centerOf(mounted.root.querySelector("ha-card")),
+    grid: centerOf(mounted.root.querySelector(".grid .circle")),
+    solar: centerOf(mounted.root.querySelector(".solar .circle")),
+    home: centerOf(mounted.root.querySelector(".home .circle")),
+    battery: centerOf(mounted.root.querySelector(".battery .circle")),
+  });
+  return { mounted, setHeight, circles };
+};
+
+describe("height (#507)", () => {
+  test("a taller card spreads its rows apart and the lines follow the circles", async () => {
+    const { mounted, setHeight, circles } = await mountThreeRows();
+    const natural = circles();
+
+    await setHeight(450);
+    const tall = circles();
+
+    expect(tall.home.y - tall.solar.y).toBeGreaterThan(natural.home.y - natural.solar.y);
+    expect(tall.battery.y - tall.home.y).toBeCloseTo(tall.home.y - tall.solar.y, 0);
+    expectFlowCard(mounted, {});
+  });
+
+  test("rows spread no further apart than the columns, then the diagram stays centred", async () => {
+    const { mounted, setHeight, circles } = await mountThreeRows();
+
+    await setHeight(1200);
+    const { card, grid, solar, home } = circles();
+
+    expect(home.y - solar.y).toBeCloseTo((home.x - grid.x) / 2, -1);
+    expect(home.y).toBeCloseTo(card.y, 0);
+    expectFlowCard(mounted, {});
+  });
+});
+
 const centerOf = (element: Element | null) => {
   const box = element?.getBoundingClientRect();
   if (!box) {

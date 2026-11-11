@@ -150,6 +150,11 @@ function configSections(
       "standard / battery_hub / isolated_battery: which wires the card draws."
     ),
     make(
+      "card-height",
+      "Card height",
+      "Taller cards in a sections dashboard spread the rows: grid_options rows."
+    ),
+    make(
       "custom-css",
       "Custom CSS",
       "card-mod selectors for each circle's value, icon and secondary info."

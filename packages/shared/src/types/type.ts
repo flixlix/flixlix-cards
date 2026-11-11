@@ -375,7 +375,7 @@ interface LovelaceLayoutOptions {
   grid_max_rows?: number;
 }
 
-interface LovelaceGridOptions {
+export interface LovelaceGridOptions {
   columns?: number | "full";
   rows?: number | "auto";
   max_columns?: number;

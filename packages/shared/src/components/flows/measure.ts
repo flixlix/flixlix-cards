@@ -70,11 +70,14 @@ const sameLayout = (a: FlowLayout | undefined, b: FlowLayout | undefined) =>
   JSON.stringify(a) === JSON.stringify(b);
 
 /**
- * Measures where the card's node circles landed after every render and renders again when they
- * moved, so the flow lines can be drawn to them.
+ * Measures where the card's node circles landed after every render and whenever the content
+ * resizes without one (a sections grid making the card taller), and renders again when they moved,
+ * so the flow lines can be drawn to them.
  */
 export class FlowLayoutController implements ReactiveController {
   private current?: FlowLayout;
+  private observer?: ResizeObserver;
+  private observed?: HTMLElement;
 
   constructor(
     private readonly host: ReactiveControllerHost & HTMLElement,
@@ -87,8 +90,32 @@ export class FlowLayoutController implements ReactiveController {
     return this.current;
   }
 
+  hostConnected(): void {
+    this.hostUpdated();
+  }
+
   hostUpdated(): void {
-    const content = this.host.shadowRoot?.getElementById(this.contentId);
+    const content = this.host.shadowRoot?.getElementById(this.contentId) ?? undefined;
+    this.observe(content);
+    this.measure(content);
+  }
+
+  hostDisconnected(): void {
+    this.observer?.disconnect();
+    this.observed = undefined;
+  }
+
+  private observe(content: HTMLElement | undefined) {
+    if (!content || content === this.observed) {
+      return;
+    }
+    this.observed = content;
+    this.observer?.disconnect();
+    this.observer ??= new ResizeObserver(() => this.measure(this.observed));
+    this.observer.observe(content);
+  }
+
+  private measure(content: HTMLElement | undefined) {
     const next = content ? measureFlowLayout(content) : undefined;
     if (next && !sameLayout(next, this.current)) {
       this.current = next;

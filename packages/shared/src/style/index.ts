@@ -50,10 +50,9 @@ export const styles = css`
     overflow: hidden;
     /* Keeps the z-index of the circles inside the card, under overlays like a floating nav bar. */
     isolation: isolate;
-  }
-
-  ha-card.full-size {
     height: 100%;
+    display: flex;
+    flex-direction: column;
   }
 
   .card-content.full-size {
@@ -63,6 +62,20 @@ export const styles = css`
   .card-content {
     position: relative;
     margin: 0 auto;
+    flex-grow: 1;
+    /* Auto margins keep a flex item from stretching; fill the card like a block, padding outside. */
+    width: -webkit-fill-available;
+    width: -moz-available;
+    width: stretch;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  /* At most the room columns get between them at the content's max width, so a tall card keeps the diagram's proportions and centres it. */
+  .row-gap {
+    flex: 1 1 0;
+    max-height: 85px;
   }
 
   .circle {
@@ -125,6 +138,7 @@ export const styles = css`
   .row {
     display: flex;
     justify-content: space-between;
+    width: 100%;
     max-width: 500px;
     margin: 0 auto;
   }

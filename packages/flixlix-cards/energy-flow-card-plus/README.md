@@ -446,6 +446,15 @@ Same readings with each topology (solar charging the battery, the grid topping u
 | -------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | ![standard](https://raw.githubusercontent.com/flixlix/flixlix-cards/main/packages/flixlix-cards/power-flow-card-plus/assets/topology-standard.png) | ![battery_hub](https://raw.githubusercontent.com/flixlix/flixlix-cards/main/packages/flixlix-cards/power-flow-card-plus/assets/topology-battery-hub.png) | ![isolated_battery](https://raw.githubusercontent.com/flixlix/flixlix-cards/main/packages/flixlix-cards/power-flow-card-plus/assets/topology-isolated-battery.png) |
 
+#### Card height
+
+In a sections dashboard, make the card taller in the dashboard editor or with `grid_options.rows` to line it up with the cards beside it. The rows of circles spread apart to fill the extra height, up to the spacing the columns get at full width. Past that, the circles stay centred and the lines follow them.
+
+```yaml
+grid_options:
+  rows: 8
+```
+
 #### Custom CSS
 
 With [card-mod](https://github.com/thomasloven/lovelace-card-mod) you can style each part of a circle. Every node's value has its own element, so it can be moved or recoloured without touching the icon or the secondary info:
