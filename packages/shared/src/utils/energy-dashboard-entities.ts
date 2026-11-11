@@ -3,49 +3,27 @@ import { type HomeAssistant } from "custom-card-helpers";
 
 export type UnitFamily = "power" | "energy";
 
-/** How the user picked a power sensor in the energy dashboard, before HA normalises it. */
-type PowerConfig = {
-  stat_rate?: string;
-  stat_rate_inverted?: string;
-  stat_rate_from?: string;
-  stat_rate_to?: string;
-};
-
-type PowerSource = { stat_rate?: string; power_config?: PowerConfig };
-
-type GridSource = PowerSource & {
-  type: "grid";
+/**
+ * The parts of `energy/get_prefs` the cards use. HA keeps `stat_rate` positive out of the node
+ * and pointed at a real entity, even when the user picked an inverted sensor or a pair.
+ */
+type EnergySource = {
+  type: string;
   stat_energy_from?: string | null;
   stat_energy_to?: string | null;
-  /** Older HA versions kept one grid source holding lists of meters. */
-  flow_from?: { stat_energy_from: string }[];
-  flow_to?: { stat_energy_to: string }[];
-  power?: PowerSource[];
-};
-
-type SolarSource = { type: "solar"; stat_energy_from: string; stat_rate?: string };
-
-type BatterySource = PowerSource & {
-  type: "battery";
-  stat_energy_from: string;
-  stat_energy_to: string;
+  stat_rate?: string;
   stat_soc?: string;
 };
 
-type DeviceConsumption = {
-  stat_consumption: string;
-  stat_rate?: string;
-  name?: string;
-  included_in_stat?: string;
-};
-
 export type EnergyPreferences = {
-  energy_sources: (GridSource | SolarSource | BatterySource | { type: "gas" | "water" | "home" })[];
-  device_consumption: DeviceConsumption[];
+  energy_sources: EnergySource[];
+  device_consumption: {
+    stat_consumption: string;
+    stat_rate?: string;
+    name?: string;
+    included_in_stat?: string;
+  }[];
 };
-
-const isNotFound = (error: unknown): boolean =>
-  typeof error === "object" && error !== null && "code" in error && error.code === "not_found";
 
 /** The energy dashboard's configuration, or null when the user never set it up. */
 export const fetchEnergyPreferences = async (
@@ -54,122 +32,45 @@ export const fetchEnergyPreferences = async (
   try {
     return await hass.callWS<EnergyPreferences>({ type: "energy/get_prefs" });
   } catch (error) {
-    if (isNotFound(error)) {
+    if (typeof error === "object" && error && "code" in error && error.code === "not_found") {
       return null;
     }
     throw error;
   }
 };
 
-type TwoWayEntity = { entity: string | ComboEntity; invert_state?: boolean };
-
 const existing = (hass: HomeAssistant, ids: (string | null | undefined)[]): string[] =>
   ids.filter((id): id is string => !!id && id in hass.states);
 
-/**
- * Joins entities with `|` so the card sums them. A sum is only meaningful in one unit, so
- * entities in another unit than the first are left out.
- */
-const sumOf = (hass: HomeAssistant, ids: (string | null | undefined)[]): string | undefined => {
-  const found = existing(hass, ids);
-  const unit = found[0] && hass.states[found[0]]?.attributes.unit_of_measurement;
-  const sameUnit = found.filter((id) => hass.states[id]?.attributes.unit_of_measurement === unit);
-  return sameUnit.length > 0 ? sameUnit.join(" | ") : undefined;
-};
-
-const comboOf = (
-  hass: HomeAssistant,
-  outOfNode: (string | null | undefined)[],
-  intoNode: (string | null | undefined)[]
-): TwoWayEntity | undefined => {
-  const consumption = sumOf(hass, outOfNode);
-  const production = sumOf(hass, intoNode);
-  if (!consumption) {
-    return undefined;
-  }
-  return { entity: production ? { consumption, production } : consumption };
-};
+/** Joins the existing entities with `|`, which the cards read as their sum. */
+const sumOf = (hass: HomeAssistant, ids: (string | null | undefined)[]): string | undefined =>
+  existing(hass, ids).join(" | ") || undefined;
 
 /**
- * HA's `stat_rate` is positive out of the node, like the cards expect, but may be a sensor HA
- * generated from the user's own. With a single source, the user's own sensors read better.
+ * Power is one signed `stat_rate`; energy is two meters counting up, out of the node
+ * (consumption: grid import, battery discharge) and into it.
  */
-const powerOf = (hass: HomeAssistant, sources: PowerSource[]): TwoWayEntity | undefined => {
-  const config = sources.length === 1 ? sources[0]?.power_config : undefined;
-  if (config?.stat_rate && config.stat_rate in hass.states) {
-    return { entity: config.stat_rate };
-  }
-  if (config?.stat_rate_inverted && config.stat_rate_inverted in hass.states) {
-    return { entity: config.stat_rate_inverted, invert_state: true };
-  }
-  if (config?.stat_rate_from && config.stat_rate_to) {
-    const combo = comboOf(hass, [config.stat_rate_from], [config.stat_rate_to]);
-    if (combo) {
-      return combo;
-    }
-  }
-  const sum = sumOf(
-    hass,
-    sources.map((source) => source.stat_rate)
-  );
-  return sum ? { entity: sum } : undefined;
-};
-
-const gridPowerSources = (grid: GridSource): PowerSource[] => grid.power ?? [grid];
-
-const gridOf = (
+const flowOf = (
   hass: HomeAssistant,
-  grids: GridSource[],
+  sources: EnergySource[],
   family: UnitFamily
-): TwoWayEntity | undefined => {
+): string | ComboEntity | undefined => {
   if (family === "power") {
-    return powerOf(hass, grids.flatMap(gridPowerSources));
+    return sumOf(
+      hass,
+      sources.map((source) => source.stat_rate)
+    );
   }
-  return comboOf(
+  const consumption = sumOf(
     hass,
-    grids.flatMap((grid) => [
-      grid.stat_energy_from,
-      ...(grid.flow_from ?? []).map((flow) => flow.stat_energy_from),
-    ]),
-    grids.flatMap((grid) => [
-      grid.stat_energy_to,
-      ...(grid.flow_to ?? []).map((flow) => flow.stat_energy_to),
-    ])
+    sources.map((source) => source.stat_energy_from)
   );
-};
-
-const batteryOf = (
-  hass: HomeAssistant,
-  batteries: BatterySource[],
-  family: UnitFamily
-): (TwoWayEntity & { state_of_charge?: string }) | undefined => {
-  const flow =
-    family === "power"
-      ? powerOf(hass, batteries)
-      : comboOf(
-          hass,
-          batteries.map((battery) => battery.stat_energy_from),
-          batteries.map((battery) => battery.stat_energy_to)
-        );
-  if (!flow) {
-    return undefined;
-  }
-  const [stateOfCharge] = existing(
+  const production = sumOf(
     hass,
-    batteries.map((battery) => battery.stat_soc)
+    sources.map((source) => source.stat_energy_to)
   );
-  return stateOfCharge ? { ...flow, state_of_charge: stateOfCharge } : flow;
+  return consumption && production ? { consumption, production } : consumption;
 };
-
-const solarOf = (hass: HomeAssistant, solars: SolarSource[], family: UnitFamily) => {
-  const entity = sumOf(
-    hass,
-    solars.map((solar) => (family === "power" ? solar.stat_rate : solar.stat_energy_from))
-  );
-  return entity ? { entity } : undefined;
-};
-
-const MAX_DEVICES = 4;
 
 /** Top-level devices: one counted inside another device's meter would be counted twice. */
 export const energyDashboardDevices = (
@@ -177,43 +78,40 @@ export const energyDashboardDevices = (
   preferences: EnergyPreferences,
   family: UnitFamily
 ): { entity: string; name?: string }[] =>
-  preferences.device_consumption
-    .filter((device) => !device.included_in_stat)
-    .flatMap((device) => {
-      const entity = family === "power" ? device.stat_rate : device.stat_consumption;
-      if (!entity || !(entity in hass.states)) {
+  preferences.device_consumption.flatMap(
+    ({ stat_consumption, stat_rate, name, included_in_stat }) => {
+      const entity = family === "power" ? stat_rate : stat_consumption;
+      if (!entity || !(entity in hass.states) || included_in_stat) {
         return [];
       }
-      return [device.name ? { entity, name: device.name } : { entity }];
-    });
+      return [name ? { entity, name } : { entity }];
+    }
+  );
 
-/** Grid, solar, battery and individual devices as the user set them up in the energy dashboard. */
+/** Grid, solar, battery and up to four devices as the user set them up in the energy dashboard. */
 export const energyDashboardEntities = (
   hass: HomeAssistant,
   preferences: EnergyPreferences,
   family: UnitFamily
 ): ConfigEntities => {
-  const sources = preferences.energy_sources;
-  const grid = gridOf(
+  const sources = (type: string) =>
+    preferences.energy_sources.filter((source) => source.type === type);
+  const grid = flowOf(hass, sources("grid"), family);
+  const solar = flowOf(hass, sources("solar"), family);
+  const battery = flowOf(hass, sources("battery"), family);
+  const [stateOfCharge] = existing(
     hass,
-    sources.filter((source): source is GridSource => source.type === "grid"),
-    family
+    sources("battery").map((source) => source.stat_soc)
   );
-  const solar = solarOf(
-    hass,
-    sources.filter((source): source is SolarSource => source.type === "solar"),
-    family
-  );
-  const battery = batteryOf(
-    hass,
-    sources.filter((source): source is BatterySource => source.type === "battery"),
-    family
-  );
-  const individual = energyDashboardDevices(hass, preferences, family).slice(0, MAX_DEVICES);
+  const individual = energyDashboardDevices(hass, preferences, family).slice(0, 4);
   return {
-    ...(grid && { grid }),
-    ...(solar && { solar }),
-    ...(battery && { battery }),
+    ...(grid && { grid: { entity: grid } }),
+    ...(typeof solar === "string" && { solar: { entity: solar } }),
+    ...(battery && {
+      battery: stateOfCharge
+        ? { entity: battery, state_of_charge: stateOfCharge }
+        : { entity: battery },
+    }),
     ...(individual.length > 0 && { individual }),
   };
 };

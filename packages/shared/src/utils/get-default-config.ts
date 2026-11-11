@@ -1,8 +1,4 @@
-import {
-  type ConfigEntities,
-  type DisplayZeroLinesMode,
-  type FlowCardPlusConfig,
-} from "@flixlix-cards/shared/types";
+import { type ConfigEntities, type DisplayZeroLinesMode } from "@flixlix-cards/shared/types";
 import { type HomeAssistant } from "custom-card-helpers";
 import {
   energyDashboardEntities,
@@ -28,22 +24,6 @@ export const defaultValues = {
   },
 };
 
-type SuggestedConfig = Pick<
-  FlowCardPlusConfig,
-  | "entities"
-  | "clickable_entities"
-  | "base_decimals"
-  | "kilo_decimals"
-  | "min_flow_rate"
-  | "max_flow_rate"
-  | "max_expected_power"
-  | "min_expected_power"
-  | "kilo_threshold"
-  | "mega_threshold"
-  | "transparency_zero_lines"
-  | "sort_individual_devices"
->;
-
 /**
  * Entities for a new card: what the user set up in the energy dashboard, then a guess from entity
  * names for whatever it leaves out.
@@ -60,25 +40,10 @@ const suggestedEntities = async (
   );
 };
 
+/** A new card's config: just its entities, since every other option already has a default. */
 export async function getDefaultConfig(
   hass: HomeAssistant,
   family: UnitFamily = "power"
-): Promise<SuggestedConfig> {
-  const entities = await suggestedEntities(hass, family);
-  return {
-    entities: entities.solar
-      ? { ...entities, solar: { ...entities.solar, display_zero_state: true } }
-      : entities,
-    clickable_entities: true,
-    base_decimals: defaultValues.baseDecimals,
-    kilo_decimals: defaultValues.kiloDecimals,
-    min_flow_rate: defaultValues.minFlowRate,
-    max_flow_rate: defaultValues.maxFlowRate,
-    max_expected_power: defaultValues.maxExpectedPower,
-    min_expected_power: defaultValues.minExpectedPower,
-    kilo_threshold: defaultValues.kiloThreshold,
-    mega_threshold: defaultValues.megaThreshold,
-    transparency_zero_lines: defaultValues.transparencyZeroLines,
-    sort_individual_devices: true,
-  };
+): Promise<{ entities: ConfigEntities }> {
+  return { entities: await suggestedEntities(hass, family) };
 }

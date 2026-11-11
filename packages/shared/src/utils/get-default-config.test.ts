@@ -49,10 +49,6 @@ const DASHBOARD: EnergyPreferences = {
       stat_energy_from: "sensor.meter_import_energy",
       stat_energy_to: "sensor.meter_export_energy",
       stat_rate: "sensor.grid_power_generated",
-      power_config: {
-        stat_rate_from: "sensor.meter_import_power",
-        stat_rate_to: "sensor.meter_export_power",
-      },
     },
     {
       type: "solar",
@@ -80,19 +76,14 @@ const DASHBOARD: EnergyPreferences = {
 };
 
 describe("getDefaultConfig from the energy dashboard", () => {
-  test("power cards get the dashboard's power sensors, the user's own grid pair over HA's generated one", async () => {
+  test("power cards get the dashboard's power sensors and top-level devices", async () => {
     const hass = fakeHass({ states: DASHBOARD_STATES, callWS: withEnergyDashboard(DASHBOARD) });
 
     const { entities } = await getDefaultConfig(hass, "power");
 
     expect(entities).toEqual({
-      grid: {
-        entity: {
-          consumption: "sensor.meter_import_power",
-          production: "sensor.meter_export_power",
-        },
-      },
-      solar: { entity: "sensor.inverter_pv_power", display_zero_state: true },
+      grid: { entity: "sensor.grid_power_generated" },
+      solar: { entity: "sensor.inverter_pv_power" },
       battery: { entity: "sensor.inverter_dc_power", state_of_charge: "sensor.inverter_dc_level" },
       individual: [
         { entity: "sensor.wallbox_power", name: "Car" },
@@ -121,29 +112,7 @@ describe("getDefaultConfig from the energy dashboard", () => {
     ]);
   });
 
-  test("an inverted power sensor keeps its polarity with invert_state", async () => {
-    const hass = fakeHass({
-      states: statesOf(power("sensor.battery_power"), power("sensor.battery_power_inverted")),
-      callWS: withEnergyDashboard({
-        energy_sources: [
-          {
-            type: "battery",
-            stat_energy_from: "sensor.battery_out",
-            stat_energy_to: "sensor.battery_in",
-            stat_rate: "sensor.battery_power_inverted",
-            power_config: { stat_rate_inverted: "sensor.battery_power" },
-          },
-        ],
-        device_consumption: [],
-      }),
-    });
-
-    const { entities } = await getDefaultConfig(hass, "power");
-
-    expect(entities.battery).toEqual({ entity: "sensor.battery_power", invert_state: true });
-  });
-
-  test("several sources of one kind are summed, from the older grid layout too", async () => {
+  test("several sources of one kind are summed", async () => {
     const hass = fakeHass({
       states: statesOf(
         energy("sensor.peak_energy"),
@@ -156,12 +125,10 @@ describe("getDefaultConfig from the energy dashboard", () => {
         energy_sources: [
           {
             type: "grid",
-            flow_from: [
-              { stat_energy_from: "sensor.peak_energy" },
-              { stat_energy_from: "sensor.offpeak_energy" },
-            ],
-            flow_to: [{ stat_energy_to: "sensor.return_energy" }],
+            stat_energy_from: "sensor.peak_energy",
+            stat_energy_to: "sensor.return_energy",
           },
+          { type: "grid", stat_energy_from: "sensor.offpeak_energy", stat_energy_to: null },
           { type: "solar", stat_energy_from: "sensor.roof_energy" },
           { type: "solar", stat_energy_from: "sensor.garage_roof_energy" },
         ],
@@ -218,7 +185,7 @@ describe("getDefaultConfig without an energy dashboard", () => {
         power("sensor.grid_power", "1200", { friendly_name: "Grid Power" }),
         power("sensor.solar_power", "800", { friendly_name: "Solar Power" }),
         power("sensor.home_battery_power", "300", { friendly_name: "Home Battery" }),
-        percent("sensor.battery_level", { friendly_name: "Battery Level" })
+        percent("sensor.battery_level", { device_class: "battery" })
       )
     );
 
@@ -226,7 +193,6 @@ describe("getDefaultConfig without an energy dashboard", () => {
     expect(config.entities.solar?.entity).toBe("sensor.solar_power");
     expect(config.entities.battery?.entity).toBe("sensor.home_battery_power");
     expect(config.entities.battery?.state_of_charge).toBe("sensor.battery_level");
-    expect(config.sort_individual_devices).toBe(true);
   });
 
   test("ignores look-alikes: other domains, unavailable sensors, forecasts and words inside words", async () => {
@@ -263,27 +229,11 @@ describe("getDefaultConfig without an energy dashboard", () => {
     expect(entities.battery?.state_of_charge).toBe("sensor.sonnen_battery_soc");
   });
 
-  test("power cards prefer a net sensor, energy cards an import and export pair", async () => {
-    const states = statesOf(
-      power("sensor.grid_power"),
-      power("sensor.grid_import_power"),
-      power("sensor.grid_export_power"),
-      energy("sensor.grid_energy"),
-      energy("sensor.grid_import_energy"),
-      energy("sensor.grid_export_energy"),
-      energy("sensor.battery_charge_energy"),
-      energy("sensor.battery_discharge_energy")
+  test("the plainest name wins", async () => {
+    const { entities } = await guess(
+      statesOf(power("sensor.grid_import_power"), power("sensor.grid_power"))
     );
 
-    expect((await guess(states, "power")).entities.grid?.entity).toBe("sensor.grid_power");
-    const { entities } = await guess(states, "energy");
-    expect(entities.grid?.entity).toEqual({
-      consumption: "sensor.grid_import_energy",
-      production: "sensor.grid_export_energy",
-    });
-    expect(entities.battery?.entity).toEqual({
-      consumption: "sensor.battery_discharge_energy",
-      production: "sensor.battery_charge_energy",
-    });
+    expect(entities.grid?.entity).toBe("sensor.grid_power");
   });
 });
