@@ -255,9 +255,9 @@ const setEnergyEntities = (energy: HomeFlowEnergyEntities = {}): HomeFlowEnergyE
 const isView = (view: unknown): view is HomeFlowView => VIEWS.some((known) => known === view);
 
 const selectorViews = (views: unknown[] | undefined): readonly HomeFlowView[] => {
-  const picked = [...new Set(views ?? DEFAULT_VIEWS)];
+  const picked = views ?? DEFAULT_VIEWS;
   if (picked.every(isView)) {
-    return picked;
+    return VIEWS.filter((view) => picked.includes(view));
   }
   throw new Error(`views takes any of ${VIEWS.join(", ")}`);
 };

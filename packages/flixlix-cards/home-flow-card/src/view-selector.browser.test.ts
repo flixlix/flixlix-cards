@@ -137,18 +137,18 @@ describe("view selector", () => {
     expect(() => new HomeFlowCard().setConfig(config)).toThrow("only work with mode: power");
   });
 
-  test("views picks the two segments and their order", async () => {
+  test("views picks the segments, always in the same order", async () => {
     const { root, settle } = await mount({ views: ["yesterday", "today"] });
     const names = [...root.querySelectorAll(".views button")].map((button) =>
       button.textContent?.trim()
     );
-    expect(names).toEqual(["Yesterday", "Today"]);
-    expect(selected(root)).toBe("Yesterday");
-    expect(reading(root, "solar")).toBe("5 kWh");
-
-    await userEvent.click(segment(root, "Today"));
-    await settle();
+    expect(names).toEqual(["Today", "Yesterday"]);
+    expect(selected(root)).toBe("Today");
     expect(reading(root, "solar")).toBe("3 kWh");
+
+    await userEvent.click(segment(root, "Yesterday"));
+    await settle();
+    expect(reading(root, "solar")).toBe("5 kWh");
   });
 
   test("an empty views list leaves the plain live card", async () => {
