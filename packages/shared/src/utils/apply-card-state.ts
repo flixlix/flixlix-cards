@@ -183,9 +183,13 @@ const animateGpuDot = (dot: SVGSVGElement, route: Route, duration: number) => {
  * dot where the main thread last saw it, a step back on every state update (#478). A dot only
  * starts over, from the same place on its line, when its route or direction changes.
  *
- * Browsers without Web Animations (before Chrome 84) get classic dots.
+ * Browsers without Web Animations (before Chrome 84) get classic dots. A DOM without SVG geometry,
+ * like the one unit tests render in, has no way to place them.
  */
 const animateFlowDots = (root: ShadowRoot, animation: DotAnimation): void => {
+  if (typeof SVGPathElement === "undefined") {
+    return;
+  }
   const mode = typeof Element.prototype.animate === "function" ? animation : "classic";
   for (const dot of root.querySelectorAll<SVGSVGElement>("svg.flow-dot")) {
     const motion = dotMotion(root, dot);
