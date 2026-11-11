@@ -131,6 +131,38 @@ describe("energy-breakdown-card", () => {
     expect(energyInUnit(6000, undefined)).toBe(6000);
   });
 
+  test("a new card lists the energy dashboard's devices, not ones counted inside another", async () => {
+    const dashboardHass = makeHass({
+      callWS: <T>() =>
+        Promise.resolve({
+          energy_sources: [],
+          device_consumption: [
+            { stat_consumption: "sensor.grid", name: "Workshop" },
+            { stat_consumption: "sensor.battery", included_in_stat: "sensor.grid" },
+            { stat_consumption: "sensor.removed" },
+          ],
+        } as T),
+    });
+
+    const stub = await EnergyBreakdownCard.getStubConfig(dashboardHass);
+
+    expect(stub.entities).toEqual([{ entity: "sensor.grid", name: "Workshop" }]);
+  });
+
+  test("a new card without an energy dashboard picks energy sensors by name", async () => {
+    const noDashboardHass = makeHass({
+      states: {
+        "sensor.kitchen_energy": entityState("sensor.kitchen_energy", "3", "Kitchen"),
+        "sensor.solar": entityState("sensor.solar", "120", "Solar"),
+      },
+      callWS: () => Promise.reject({ code: "not_found", message: "No prefs" }),
+    });
+
+    const stub = await EnergyBreakdownCard.getStubConfig(noDashboardHass);
+
+    expect(stub.entities).toEqual([{ entity: "sensor.kitchen_energy" }]);
+  });
+
   test("getCardSize returns sensible default", () => {
     const card = new EnergyBreakdownCard();
     card.setConfig({

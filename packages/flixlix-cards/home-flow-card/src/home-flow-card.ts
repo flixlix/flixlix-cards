@@ -132,8 +132,8 @@ export class HomeFlowCard extends LitElement {
     return new HomeFlowCardEditor();
   }
 
-  public static getStubConfig(hass: HomeAssistant): object {
-    return fromEntities(getDefaultConfig(hass, "power"));
+  public static async getStubConfig(hass: HomeAssistant): Promise<object> {
+    return fromEntities(await getDefaultConfig(hass, "power"));
   }
 
   public getCardSize(): number {
