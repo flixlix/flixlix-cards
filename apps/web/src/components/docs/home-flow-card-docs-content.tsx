@@ -375,7 +375,7 @@ const CARD_OPTIONS: OptionRow[] = [
         the card gets a selector in its top right corner between live power and today, and reads
         today itself instead of following a date picker. The house keeps its live size and place. A
         node without an energy sensor is left out of today; the home without one shows what flowed
-        into it. <code>mode: energy</code> opens the card on today. See{" "}
+        into it. Only with <code>mode: power</code>, the default. See{" "}
         <Link to={`${BASE_PATH}/examples`} hash="live-or-today">
           the example
         </Link>

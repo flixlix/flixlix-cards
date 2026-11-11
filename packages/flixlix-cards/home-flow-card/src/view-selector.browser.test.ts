@@ -132,11 +132,9 @@ describe("view selector", () => {
     expect(reading(root, "solar")).toBe("800 W");
   });
 
-  test("with mode: energy, opens on today", async () => {
-    const { root } = await mount({ mode: "energy" });
-
-    expect(selected(root)).toBe("Today");
-    expect(reading(root, "solar")).toBe("3 kWh");
+  test("the selector is for power mode only", () => {
+    const config = { type: "custom:home-flow-card", ...card, mode: "energy" } as HomeFlowCardConfig;
+    expect(() => new HomeFlowCard().setConfig(config)).toThrow("only work with mode: power");
   });
 
   test("views picks the two segments and their order", async () => {

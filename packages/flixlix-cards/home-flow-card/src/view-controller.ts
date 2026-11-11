@@ -29,7 +29,7 @@ export class ViewController implements ReactiveController {
   configure(views: HomeFlowViews | null): void {
     const kept = this.views !== null && views?.views.includes(this.view);
     this.views = views;
-    this.view = kept ? this.view : (views?.initial ?? "live");
+    this.view = kept ? this.view : (views?.views[0] ?? "live");
   }
 
   render(language: string): TemplateResult | typeof nothing {

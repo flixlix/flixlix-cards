@@ -240,7 +240,6 @@ export type HomeFlowViews = {
   live: FlowConfig;
   period: FlowConfig;
   views: readonly HomeFlowView[];
-  initial: HomeFlowView;
 };
 
 const isSet = (entity: NodeEntity | undefined) =>
@@ -264,6 +263,9 @@ const selectorViews = (views: unknown[] | undefined): readonly HomeFlowView[] =>
 };
 
 export const toFlowViews = (config: HomeFlowCardConfig): HomeFlowViews | null => {
+  if (config.mode === "energy" && (config.energy_entities || config.views)) {
+    throw new Error("energy_entities and views only work with mode: power");
+  }
   const energy = setEnergyEntities(config.energy_entities);
   if (!energy) {
     return null;
@@ -277,10 +279,6 @@ export const toFlowViews = (config: HomeFlowCardConfig): HomeFlowViews | null =>
     live: toFlowConfig({ ...live, mode: "power" }),
     period: overPeriod(config, energy),
     views,
-    initial:
-      (config.mode === "energy" ? views.find((view) => view !== "live") : undefined) ??
-      views[0] ??
-      "live",
   };
 };
 

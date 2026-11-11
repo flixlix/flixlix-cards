@@ -381,7 +381,8 @@ its top right corner between live power and today's energy. The card reads today
 follow a date picker. Each node keeps its name, colours and state of charge; only its sensor
 changes. The house keeps the size and place it has for live power, so only the selector is added. A
 node without an energy sensor is left out of today, and the home without one shows what flowed into
-it. With `mode: energy`, the card opens on today.
+it. The selector is for `mode: power`, the default; with `mode: energy` the card reads the dashboard's
+date picker instead, and `energy_entities` or `views` is a config error.
 
 `views` picks the selector's choices, from `live`, `today`, `yesterday`, `week`, `month` and
 `year`, for example `views: [today, yesterday]`. Two sit side by side; with more, the corner shows

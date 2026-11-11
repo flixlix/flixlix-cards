@@ -62,6 +62,10 @@ const inViewOrder = (views: unknown) =>
   VIEWS.filter((view) => Array.isArray(views) && views.includes(view));
 
 export const fromViewFields = ({ views, ...config }: Record<string, unknown>) => {
+  if (config.mode === "energy") {
+    const { energy_entities: _energy, ...energyMode } = config;
+    return energyMode;
+  }
   const picked = inViewOrder(views);
   const isDefault =
     picked.length === DEFAULT_VIEWS.length &&

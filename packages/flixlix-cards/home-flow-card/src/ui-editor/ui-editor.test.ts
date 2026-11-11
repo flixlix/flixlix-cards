@@ -87,7 +87,7 @@ describe("editor", () => {
   test("in energy mode, the main page also asks which date picker to follow", async () => {
     const { fields, helper } = await mountEditor({ mode: "energy" });
 
-    expect(fields()).toEqual(["title", "mode", "collection_key", ...selectorFields]);
+    expect(fields()).toEqual(["title", "mode", "collection_key"]);
     expect(helper("mode")).toBe("Default: Power");
   });
 
@@ -100,6 +100,22 @@ describe("editor", () => {
       "views",
       "energy_entities",
     ]);
+  });
+
+  test("switching to energy mode drops the selector's sensors and views", async () => {
+    const { change, changes } = await mountEditor({
+      energy_entities: { solar: "sensor.solar_energy" },
+      views: ["today", "week"],
+    });
+
+    change({
+      type: "custom:home-flow-card",
+      mode: "energy",
+      energy_entities: { solar: "sensor.solar_energy" },
+      views: ["today", "week"],
+    });
+
+    expect(changes).toEqual([{ type: "custom:home-flow-card", mode: "energy" }]);
   });
 
   test("the views list reads and writes views in their usual order, leaving the default out", async () => {

@@ -188,8 +188,9 @@ export const generalSchema = (mode: HomeFlowMode | undefined) =>
   [
     { name: "title", selector: { text: {} } },
     modeField,
-    ...(mode === "energy" ? [{ name: "collection_key", selector: { text: {} } }] : []),
-    energyEntities,
+    ...(mode === "energy"
+      ? [{ name: "collection_key", selector: { text: {} } }]
+      : [energyEntities]),
   ] as const;
 
 /** Only energy mode has a grid or battery with a value each way. */
