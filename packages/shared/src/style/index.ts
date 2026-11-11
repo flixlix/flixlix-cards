@@ -7,6 +7,7 @@ export const styles = css`
     --size-circle-entity: 79.99px;
     --mdc-icon-size: 24px;
     --clickable-cursor: pointer;
+    --clickable-pointer-events: auto;
     --individual-left-bottom-color: #d0cc5b;
     --individual-left-top-color: #964cb5;
     --individual-right-top-color: #b54c9d;
@@ -214,7 +215,10 @@ export const styles = css`
     left: 0;
   }
 
+  /* A circle with nothing to open (a home without an entity) turns off pointer events, which
+     its secondary info inherits even though it opens an entity of its own. */
   span.secondary-info {
+    pointer-events: var(--clickable-pointer-events);
     color: var(--primary-text-color);
     font-size: 12px;
     max-width: 60px;

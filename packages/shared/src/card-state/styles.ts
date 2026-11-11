@@ -303,6 +303,7 @@ export const computeCssVars = (
   const greyIdle = greysIdleCircles(config);
   return {
     "--clickable-cursor": config.clickable_entities ? "pointer" : "default",
+    "--clickable-pointer-events": config.clickable_entities ? "auto" : "none",
     ...gridVars(nodes, entities, greyIdle),
     ...solarVars(entities),
     ...batteryVars(nodes, entities, greyIdle),
