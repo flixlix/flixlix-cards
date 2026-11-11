@@ -1,3 +1,4 @@
+import { mdiChevronDown } from "@mdi/js";
 import { css, html, type TemplateResult } from "lit";
 import { type HomeFlowView } from "./types";
 
@@ -7,7 +8,45 @@ export type ViewSelector = {
   label: (view: HomeFlowView) => string;
   name: string;
   instant: boolean;
+  compact: boolean;
   onSelect: (view: HomeFlowView, from: "pointer" | "keyboard") => void;
+};
+
+const dropdown = ({ views, selected, label, name, onSelect }: ViewSelector) => {
+  const onChange = (event: Event) => {
+    const value = event.target instanceof HTMLSelectElement ? event.target.value : undefined;
+    const view = views.find((candidate) => candidate === value);
+    if (view !== undefined) {
+      onSelect(view, "pointer");
+    }
+  };
+  return html`<label class="views compact">
+    <select aria-label=${name} @change=${onChange}>
+      ${views.map(
+        (view) => html`<option value=${view} ?selected=${view === selected}>${label(view)}</option>`
+      )}
+    </select>
+    <svg class="chevron" viewBox="0 0 24 24" aria-hidden="true">
+      <path d=${mdiChevronDown}></path>
+    </svg>
+  </label>`;
+};
+
+export const overflows = (stage: Element, selector: Element) => {
+  const bounds = stage.getBoundingClientRect();
+  const box = selector.getBoundingClientRect();
+  return (
+    box.left < bounds.left ||
+    [...stage.querySelectorAll(".label")].some((label) => {
+      const other = label.getBoundingClientRect();
+      return (
+        other.left < box.right &&
+        box.left < other.right &&
+        other.top < box.bottom &&
+        box.top < other.bottom
+      );
+    })
+  );
 };
 
 const STEPS: Record<string, (index: number, count: number) => number> = {
@@ -19,14 +58,11 @@ const STEPS: Record<string, (index: number, count: number) => number> = {
   End: (_index, count) => count - 1,
 };
 
-export const viewSelector = ({
-  views,
-  selected,
-  label,
-  name,
-  instant,
-  onSelect,
-}: ViewSelector): TemplateResult => {
+export const viewSelector = (selector: ViewSelector): TemplateResult => {
+  if (selector.compact) {
+    return dropdown(selector);
+  }
+  const { views, selected, label, name, instant, onSelect } = selector;
   const index = views.indexOf(selected);
   const onKeydown = (event: KeyboardEvent) => {
     const step = STEPS[event.key];
@@ -146,6 +182,36 @@ export const viewSelectorStyles = css`
 
   .views.instant .view-indicator {
     transition: none;
+  }
+
+  .views.compact {
+    display: block;
+    padding: 0;
+  }
+
+  .views.compact select {
+    appearance: none;
+    margin: 0;
+    border: 0;
+    border-radius: 999px;
+    padding: 0.75em 2.4em 0.75em 1.2em;
+    background: none;
+    font: inherit;
+    line-height: 1;
+    color: var(--primary-text-color);
+    cursor: pointer;
+    outline: none;
+  }
+
+  .views.compact .chevron {
+    position: absolute;
+    top: 50%;
+    right: 0.8em;
+    width: 1.3em;
+    height: 1.3em;
+    transform: translateY(-50%);
+    fill: var(--secondary-text-color);
+    pointer-events: none;
   }
 
   @media (prefers-reduced-motion: reduce) {

@@ -2,7 +2,7 @@ import { translate } from "@flixlix-cards/shared/i18n";
 import { type EnergyPeriodKey } from "@flixlix-cards/shared/states/utils/energy-period";
 import { nothing, type ReactiveController, type ReactiveElement, type TemplateResult } from "lit";
 import { type FlowConfig, type HomeFlowView, type HomeFlowViews } from "./types";
-import { viewSelector } from "./view-selector";
+import { overflows, viewSelector } from "./view-selector";
 
 export class ViewController implements ReactiveController {
   public views: HomeFlowViews | null = null;
@@ -10,6 +10,8 @@ export class ViewController implements ReactiveController {
   public period?: EnergyPeriodKey;
   private _instant = false;
   private _focus = false;
+  private _compact = false;
+  private _fittedWidth?: number;
 
   constructor(
     private readonly _host: ReactiveElement,
@@ -29,6 +31,7 @@ export class ViewController implements ReactiveController {
   configure(views: HomeFlowViews | null): void {
     const reconfigured = this.views !== null;
     this.views = views;
+    this._fittedWidth = undefined;
     if (!views) {
       this.view = "live";
       this.period = undefined;
@@ -51,6 +54,7 @@ export class ViewController implements ReactiveController {
       label: (view) => translate(`card.view.${view}`, language),
       name: translate("card.view.name", language),
       instant: this._instant,
+      compact: this._compact,
       onSelect: this._select,
     });
   }
@@ -59,6 +63,25 @@ export class ViewController implements ReactiveController {
     if (this._focus) {
       this._focus = false;
       this._host.shadowRoot?.querySelector<HTMLElement>('.views [aria-checked="true"]')?.focus();
+    }
+    this._fit();
+  }
+
+  private _fit() {
+    const stage = this._host.shadowRoot?.querySelector(".stage");
+    const selector = stage?.querySelector(".views");
+    if (!stage || !selector) {
+      return;
+    }
+    const width = stage.clientWidth;
+    const resized = width !== this._fittedWidth;
+    this._fittedWidth = width;
+    if (resized && this._compact) {
+      this._compact = false;
+      this._host.requestUpdate();
+    } else if (!this._compact && overflows(stage, selector)) {
+      this._compact = true;
+      this._host.requestUpdate();
     }
   }
 

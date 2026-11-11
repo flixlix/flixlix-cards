@@ -63,6 +63,20 @@ const segment = (root: ShadowRoot, name: string) => {
   return button;
 };
 
+const overlaps = (root: ShadowRoot) => {
+  const selector = root.querySelector(".views")?.getBoundingClientRect();
+  return [...root.querySelectorAll(".label")].flatMap((label) => {
+    const box = label.getBoundingClientRect();
+    return selector &&
+      box.left < selector.right &&
+      selector.left < box.right &&
+      box.top < selector.bottom &&
+      selector.top < box.bottom
+      ? [label.className]
+      : [];
+  });
+};
+
 const selected = (root: ShadowRoot) =>
   root.querySelector('.views [aria-checked="true"]')?.textContent?.trim();
 
@@ -147,24 +161,38 @@ describe("view selector", () => {
       }),
       { width }
     );
-    const overlaps = () => {
-      const selector = root.querySelector(".views")?.getBoundingClientRect();
-      return [...root.querySelectorAll(".label")].flatMap((label) => {
-        const box = label.getBoundingClientRect();
-        return selector &&
-          box.left < selector.right &&
-          selector.left < box.right &&
-          box.top < selector.bottom &&
-          selector.top < box.bottom
-          ? [label.className]
-          : [];
-      });
-    };
-    expect(overlaps()).toEqual([]);
+    expect(overlaps(root)).toEqual([]);
 
     await userEvent.click(segment(root, "Today"));
     await settle();
-    expect(overlaps()).toEqual([]);
+    expect(overlaps(root)).toEqual([]);
+  });
+
+  test("falls back to a dropdown when the segments do not fit", async () => {
+    const { root, settle } = await mountCard(
+      HomeFlowCard,
+      {
+        type: "custom:home-flow-card",
+        ...card,
+        periods: ["today", "yesterday", "week", "month", "year"],
+        heat_pump: { entity: "sensor.heat_pump_power" },
+        energy_entities: { ...card.energy_entities, heat_pump: "sensor.heat_pump_energy" },
+      },
+      fakeHass({ states: { ...states, "sensor.heat_pump_power": "600" }, statistics }),
+      { width: 360 }
+    );
+    await settle();
+    const select = root.querySelector(".views select");
+    if (!(select instanceof HTMLSelectElement)) {
+      throw new Error("no dropdown");
+    }
+    expect(root.querySelector('.views [role="radio"]')).toBeNull();
+    expect(overlaps(root)).toEqual([]);
+
+    await userEvent.selectOptions(select, "today");
+    await settle();
+    expect(reading(root, "solar")).toBe("3 kWh");
+    expect(overlaps(root)).toEqual([]);
   });
 
   test("the card and the house keep their size from one view to the next", async () => {
