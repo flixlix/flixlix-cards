@@ -77,7 +77,7 @@ const sameLayout = (a: FlowLayout | undefined, b: FlowLayout | undefined) =>
 export class FlowLayoutController implements ReactiveController {
   private current?: FlowLayout;
   private observer?: ResizeObserver;
-  private observed?: Element;
+  private observed?: HTMLElement;
 
   constructor(
     private readonly host: ReactiveControllerHost & HTMLElement,
@@ -111,11 +111,7 @@ export class FlowLayoutController implements ReactiveController {
     }
     this.observed = content;
     this.observer?.disconnect();
-    this.observer ??= new ResizeObserver(([entry]) => {
-      if (entry?.target instanceof HTMLElement) {
-        this.measure(entry.target);
-      }
-    });
+    this.observer ??= new ResizeObserver(() => this.measure(this.observed));
     this.observer.observe(content);
   }
 
