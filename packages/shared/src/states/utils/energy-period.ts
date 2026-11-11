@@ -355,6 +355,7 @@ export const watchGlobalEnergyPeriodChanges = (
   };
 };
 
+/** Signed: a net meter that runs backwards over the period reports negative growth. */
 const getSumGrowth = (values: StatisticsValue[]): number => {
   if (!values.length) {
     return 0;
@@ -369,7 +370,7 @@ const getSumGrowth = (values: StatisticsValue[]): number => {
     hasChange = true;
   }
   if (hasChange) {
-    return Math.max(changeGrowth, 0);
+    return changeGrowth;
   }
   const sums = values.flatMap((item) =>
     item.sum === null || item.sum === undefined ? [] : [item.sum]
@@ -379,7 +380,7 @@ const getSumGrowth = (values: StatisticsValue[]): number => {
   if (first === undefined || first === null || last === undefined || last === null) {
     return 0;
   }
-  return Math.max(last - first, 0);
+  return last - first;
 };
 
 export const fetchEnergyPeriodGrowth = async (
@@ -415,7 +416,10 @@ export const getEntityEnergyFromGrowthMap = (
   if (!entity) {
     return 0;
   }
-  return getEntityNames(entity).reduce((sum, entityId) => sum + (growthMap[entityId] ?? 0), 0);
+  return getEntityNames(entity).reduce(
+    (sum, entityId) => sum + Math.max(growthMap[entityId] ?? 0, 0),
+    0
+  );
 };
 
 export type FossilEnergyConsumption = Record<string, number>;

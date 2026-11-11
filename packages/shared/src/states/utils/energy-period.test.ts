@@ -333,15 +333,15 @@ describe("fetchEnergyPeriodGrowth", () => {
     });
   });
 
-  test("never reports negative growth", async () => {
+  test("reports a net meter that ran backwards as negative growth", async () => {
     const { hass } = hassReturning({
-      "sensor.by_change": [{ change: -50 }],
+      "sensor.by_change": [{ change: 100 }, { change: -150 }],
       "sensor.by_sum": [{ sum: 500 }, { sum: 100 }],
     });
 
     expect(
       await fetchEnergyPeriodGrowth(hass, ["sensor.by_change", "sensor.by_sum"], todayWindow)
-    ).toEqual({ "sensor.by_change": 0, "sensor.by_sum": 0 });
+    ).toEqual({ "sensor.by_change": -50, "sensor.by_sum": -400 });
   });
 
   test("reports zero for statistics the recorder has no data for", async () => {
@@ -400,6 +400,12 @@ describe("getEntityEnergyFromGrowthMap", () => {
 
     expect(getEntityEnergyFromGrowthMap(growth, "sensor.a | sensor.b | sensor.unknown")).toBe(150);
     expect(getEntityEnergyFromGrowthMap(growth)).toBe(0);
+  });
+
+  test("counts an entity that ran backwards as no energy", () => {
+    expect(
+      getEntityEnergyFromGrowthMap({ "sensor.a": 100, "sensor.b": -300 }, "sensor.a | sensor.b")
+    ).toBe(100);
   });
 });
 

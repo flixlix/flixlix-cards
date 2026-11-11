@@ -10,7 +10,7 @@ const idsOf = (entity: string | ComboEntity | undefined): string[] => {
 };
 
 /**
- * Every statistic an energy card reads its period's growth from: each node's entities, the summed
+ * Every statistic an energy card reads its period's growth from: each node's entities, the
  * secondary entities of its devices, and `extra` for what a card draws beyond the shared nodes.
  */
 export const energyStatisticIds = (
@@ -22,7 +22,7 @@ export const energyStatisticIds = (
   }
   const devices = [...(entities.individual ?? []), entities.auxiliary].flatMap((device) => [
     device?.entity,
-    device?.secondary_info?.sum_total ? device.secondary_info.entity : undefined,
+    device?.secondary_info?.entity,
   ]);
   return [
     ...new Set([

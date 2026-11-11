@@ -35,8 +35,18 @@ const unconfigured: IndividualObject = {
 
 const missingStates = new Set(["", "unavailable", "unknown"]);
 
-/** The secondary entity's state, numeric or text such as "heating"; null while it is missing. */
-const secondaryReading = (hass: HomeAssistant, field: IndividualDeviceType) => {
+/**
+ * The secondary entity's state, numeric or text such as "heating"; null while it is missing.
+ * `periodValue` replaces the live state with the entity's energy over the selected period.
+ */
+const secondaryReading = (
+  hass: HomeAssistant,
+  field: IndividualDeviceType,
+  periodValue: number | null
+) => {
+  if (periodValue !== null) {
+    return periodValue === 0 ? null : periodValue;
+  }
   const entity = field.secondary_info?.entity;
   const state = entity === undefined ? undefined : hass.states[getFirstEntityName(entity)]?.state;
   if (state === undefined || missingStates.has(state)) {
@@ -67,10 +77,11 @@ const individualSecondary = (
   hass: HomeAssistant,
   format: Formatter,
   field: IndividualDeviceType,
-  templateResult: string | undefined
+  templateResult: string | undefined,
+  periodValue: number | null
 ): IndividualObject["secondary"] => {
   const info = field.secondary_info;
-  const state = secondaryReading(hass, field);
+  const state = secondaryReading(hass, field, periodValue);
   return {
     entity: nonEmpty(info?.entity),
     icon: nonEmpty(info?.icon),
@@ -81,6 +92,7 @@ const individualSecondary = (
           unitWhiteSpace: info.unit_white_space !== false,
           decimals: info.decimals ?? 0,
           accept_negative: info.accept_negative ?? false,
+          reading: periodValue !== null,
         }),
     templateResult: nonEmpty(templateResult),
     show: secondaryShown(info, state, templateResult),
@@ -102,13 +114,14 @@ type DeviceReading = {
   has: boolean;
   feeding: boolean;
   templateResult: string | undefined;
+  secondaryPeriodValue: number | null;
 };
 
 const deviceNode = (
   input: CardStateInput,
   format: Formatter,
   field: IndividualDeviceType,
-  { state, has, feeding, templateResult }: DeviceReading,
+  { state, has, feeding, templateResult, secondaryPeriodValue }: DeviceReading,
   fallbackName: string
 ): IndividualObject => ({
   field,
@@ -129,8 +142,11 @@ const deviceNode = (
     accept_negative: feeding,
     reading: true,
   }),
-  secondary: individualSecondary(input.hass, format, field, templateResult),
+  secondary: individualSecondary(input.hass, format, field, templateResult, secondaryPeriodValue),
 });
+
+const periodSecondaries = ({ readings }: CardStateInput) =>
+  readings.status === "ready" ? readings.periodSecondaries : undefined;
 
 /** Individual device nodes in config order. */
 export const individualNodes = (
@@ -149,6 +165,7 @@ export const individualNodes = (
             has: presence.individuals[index] ?? false,
             feeding: feedingIndividuals[index] ?? false,
             templateResult: input.templates.individual[index],
+            secondaryPeriodValue: periodSecondaries(input)?.individuals[index] ?? null,
           },
           "Individual"
         )
@@ -174,6 +191,7 @@ export const auxiliaryNode = (
       has: presence.auxiliary,
       feeding: auxiliary.feeding,
       templateResult: input.templates.auxiliarySecondary,
+      secondaryPeriodValue: periodSecondaries(input)?.auxiliary ?? null,
     },
     "Auxiliary"
   );

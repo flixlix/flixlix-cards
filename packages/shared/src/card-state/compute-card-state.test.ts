@@ -1383,6 +1383,15 @@ describe("the auxiliary node", () => {
     expect(state.flows.auxiliary.value).toBe(450);
   });
 
+  test("a negative reading scales to kW like a positive one", () => {
+    const state = auxiliaryState(
+      withAuxiliary({ entity: "sensor.virtual_battery", accept_negative: true }),
+      readings({ grid: { fromGrid: 600 }, auxiliary: -1200 })
+    );
+
+    expect(state.nodes.auxiliary.displayState).toBe(`-1.2${thinSpace}kW`);
+  });
+
   test("below its tolerance it is hidden unless display_zero is set", () => {
     const idle = readings({ grid: { fromGrid: 600 }, auxiliary: 4 });
     const field = { entity: "sensor.gas", display_zero_tolerance: 5 };
@@ -1391,6 +1400,52 @@ describe("the auxiliary node", () => {
     expect(
       auxiliaryState(withAuxiliary({ ...field, display_zero: true }), idle).nodes.auxiliary.has
     ).toBe(true);
+  });
+
+  test("in energy mode, a net meter that ran backwards over the period reads negative", () => {
+    const hass = hassWith({ "binary_sensor.outage": "off" });
+    const cardConfig = withAuxiliary({ entity: "sensor.virtual_battery", accept_negative: true });
+    const state = ready(
+      compute({
+        config: cardConfig,
+        hass,
+        readings: energyReadings(
+          hass,
+          { ...cardConfig, type: "custom:energy-flow-card-plus" },
+          {
+            "sensor.virtual_battery": -3300,
+          }
+        ),
+      })
+    );
+
+    expect(state.nodes.auxiliary.displayState).toBe(`-3.3${thinSpace}kWh`);
+    expect(state.nodes.auxiliary.invertAnimation).toBe(true);
+  });
+
+  test("in energy mode, its secondary energy meter shows the period's growth", () => {
+    const hass = hassWith({ "binary_sensor.outage": "off", "sensor.export": "859" });
+    hass.states["sensor.export"]!.attributes = { unit_of_measurement: "kWh" };
+    const cardConfig = withAuxiliary({
+      entity: "sensor.virtual_battery",
+      secondary_info: { entity: "sensor.export", unit_of_measurement: "kWh", decimals: 1 },
+    });
+    const state = ready(
+      compute({
+        config: cardConfig,
+        hass,
+        readings: energyReadings(
+          hass,
+          { ...cardConfig, type: "custom:energy-flow-card-plus" },
+          {
+            "sensor.virtual_battery": 1000,
+            "sensor.export": 5200,
+          }
+        ),
+      })
+    );
+
+    expect(state.nodes.auxiliary.secondary.text).toBe(`5.2${thinSpace}kWh`);
   });
 
   test("reads its entity's power", () => {

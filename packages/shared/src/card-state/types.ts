@@ -47,6 +47,11 @@ export type ReadyReadings = {
   /** Reading of each configured individual device, in config order. */
   individuals: (number | null)[];
   auxiliary: number | null;
+  /**
+   * Each device's secondary entity read over the energy period, in Wh. Null, or left out, shows
+   * the secondary entity's live state instead.
+   */
+  periodSecondaries?: { individuals: (number | null)[]; auxiliary: number | null };
   fossilEnergyConsumption?: FossilEnergyConsumption;
 };
 
