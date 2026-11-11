@@ -1,5 +1,9 @@
 import { type CardLayout, type ReadyCardState } from "@flixlix-cards/shared/card-state";
-import { type CardMainContext, type FlowCardPlusConfig } from "@flixlix-cards/shared/types";
+import {
+  type CardMainContext,
+  type FlowCardPlusConfig,
+  type LovelaceGridOptions,
+} from "@flixlix-cards/shared/types";
 import { type HomeAssistant } from "custom-card-helpers";
 import { html, nothing, type TemplateResult } from "lit";
 import { auxiliaryElement } from "./auxiliary";
@@ -18,6 +22,9 @@ type RowContext = { main: CardMainContext; config: FlowCardPlusConfig; cardState
 
 /** The slot under solar and above the battery, where their lines cross the grid–home axis. */
 const hub = html`<div class="spacer hub"></div>`;
+
+/** Room between two rows that grows, up to a cap, when the card is taller than its nodes. */
+const rowGap = html`<div class="row-gap"></div>`;
 
 const gridColumn = (layout: CardLayout, content: TemplateResult) =>
   layout.hasGridColumn ? content : nothing;
@@ -89,6 +96,12 @@ const bottomRow = ({ main, config, cardState }: RowContext) => {
   </div>`;
 };
 
+/**
+ * Full width and as tall as the nodes until resized: a taller card spreads the rows apart, so
+ * Home Assistant offers resizing in rows.
+ */
+export const flowCardGridOptions = (): LovelaceGridOptions => ({ columns: 12, rows: "auto" });
+
 /** The ready flow card: nodes in three rows around the home, the flows between them and the buttons under them. */
 export const flowCard = (
   main: CardMainContext,
@@ -113,7 +126,8 @@ export const flowCard = (
         id=${contentId}
         style="--optical-shift: ${cardState.layout.opticalShift}; ${config.style_card_content ?? ""}"
       >
-        ${topRow(rows)} ${middleRow(rows)} ${bottomRow(rows)}
+        ${topRow(rows)} ${cardState.layout.showTopRow ? rowGap : nothing} ${middleRow(rows)}
+        ${cardState.layout.showBottomRow ? rowGap : nothing} ${bottomRow(rows)}
         ${flowElement(cardState, config, flowLayout)}
       </div>
       ${cardButtonsElement(main, config, hass)}

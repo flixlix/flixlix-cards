@@ -119,6 +119,25 @@ views:
       - type: grid
         cards:
           - type: heading
+            heading: Taller than its nodes
+            icon: mdi:arrow-expand-vertical
+          - type: custom:power-flow-card-plus
+            title: Ten rows tall
+            grid_options:
+              rows: 10
+            entities:
+              grid:
+                entity: sensor.grid_power
+              solar:
+                entity: sensor.solar_power
+              battery:
+                entity: sensor.battery_power
+                state_of_charge: sensor.battery_soc
+              home:
+                entity: sensor.home_power
+      - type: grid
+        cards:
+          - type: heading
             heading: Edge cases
             icon: mdi:alert-circle-outline
           - type: custom:power-flow-card-plus

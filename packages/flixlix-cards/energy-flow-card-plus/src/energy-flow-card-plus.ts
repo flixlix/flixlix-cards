@@ -5,13 +5,16 @@ import {
   energyReadings,
   watchedEntities,
 } from "@flixlix-cards/shared/card-state";
-import { flowCard } from "@flixlix-cards/shared/components/flow-card";
+import { flowCard, flowCardGridOptions } from "@flixlix-cards/shared/components/flow-card";
 import { styles } from "@flixlix-cards/shared/style";
 import {
   energyStatisticIds,
   gridImportIds,
 } from "@flixlix-cards/shared/states/utils/statistic-ids";
-import { type EnergyFlowCardPlusConfig } from "@flixlix-cards/shared/types";
+import {
+  type EnergyFlowCardPlusConfig,
+  type LovelaceGridOptions,
+} from "@flixlix-cards/shared/types";
 import { applyCardState } from "@flixlix-cards/shared/utils/apply-card-state";
 import { liveConditionContext } from "@flixlix-cards/shared/utils/condition-context";
 import { EnergyPeriodController } from "@flixlix-cards/shared/utils/energy-period-controller";
@@ -112,6 +115,10 @@ export class EnergyFlowCardPlus extends LitElement {
 
   public getCardSize(): Promise<number> | number {
     return 3;
+  }
+
+  public getGridOptions(): LovelaceGridOptions {
+    return flowCardGridOptions();
   }
 
   protected shouldUpdate(changedProps: PropertyValues<this>): boolean {

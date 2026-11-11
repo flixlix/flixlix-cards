@@ -14,6 +14,7 @@ import {
   Layers,
   Leaf,
   MousePointerClick,
+  MoveVertical,
   Network,
   Palette,
   RectangleEllipsis,
@@ -1238,6 +1239,7 @@ export function ConfigurationPage({ cardKey }: { cardKey: CardKey }) {
     { id: "power-outage", label: "Power outage", depth: 2 },
     { id: "display-zero-lines", label: "Display zero lines", depth: 2 },
     { id: "topology", label: "Topology", depth: 2 },
+    { id: "card-height", label: "Card height", depth: 2 },
     { id: "custom-css", label: "Custom CSS", depth: 2 },
     ...(cardKey === "energy" ? [{ id: "collection-key", label: "Collection key" } as TocItem] : []),
     { id: "flow-formula", label: "Flow formulas" },
@@ -1794,6 +1796,27 @@ entities:
         >
           <TopologyDemo card={cardKey} />
           <OptionList rows={TOPOLOGY_OPTIONS} />
+        </CategorySection>
+
+        <CategorySection
+          id="card-height"
+          title="Card height"
+          icon={MoveVertical}
+          accent="slate"
+          description="Make the card taller in a sections dashboard to line it up with the cards beside it."
+          example={{
+            language: "yaml",
+            code: `grid_options:
+  rows: 8`,
+          }}
+        >
+          <Prose>
+            <p>
+              Resize the card in the dashboard editor, or set <code>grid_options.rows</code>. The
+              rows of circles spread apart to fill the extra height, up to the spacing the columns
+              get at full width. Past that, the circles stay centred and the lines follow them.
+            </p>
+          </Prose>
         </CategorySection>
 
         <CategorySection
