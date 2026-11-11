@@ -160,6 +160,46 @@ describe("node actions", () => {
     );
     expect(root.querySelector(".grid .circle")?.hasAttribute("tabindex")).toBe(false);
   });
+
+  test("the home's secondary info opens its entity when the home has no entity", async () => {
+    const { card, root } = await mountCard(
+      PowerFlowCardPlus,
+      {
+        type: "custom:power-flow-card-plus",
+        entities: {
+          grid: { entity: "sensor.grid" },
+          home: { secondary_info: { entity: "sensor.price" } },
+        },
+      },
+      fakeHass({ states: { "sensor.grid": "300", "sensor.price": "0.25" } })
+    );
+    const events = recordHaEvents(card);
+    const secondary = root.querySelector<HTMLElement>(".home .secondary-info");
+    if (!secondary) {
+      throw new Error("home secondary info not rendered");
+    }
+    await userEvent.click(secondary);
+    expect(events).toEqual([{ type: "hass-more-info", detail: { entityId: "sensor.price" } }]);
+  });
+
+  test("secondary info is not clickable when entities are not clickable", async () => {
+    const { root } = await mountCard(
+      PowerFlowCardPlus,
+      {
+        type: "custom:power-flow-card-plus",
+        clickable_entities: false,
+        entities: {
+          grid: { entity: "sensor.grid", secondary_info: { entity: "sensor.price" } },
+        },
+      },
+      fakeHass({ states: { "sensor.grid": "300", "sensor.price": "0.25" } })
+    );
+    const secondary = root.querySelector(".grid .secondary-info");
+    if (!secondary) {
+      throw new Error("grid secondary info not rendered");
+    }
+    expect(getComputedStyle(secondary).pointerEvents).toBe("none");
+  });
 });
 
 const mountButtons = async (options: object) => {
