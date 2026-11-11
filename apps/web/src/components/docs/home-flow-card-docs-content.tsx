@@ -384,6 +384,18 @@ const CARD_OPTIONS: OptionRow[] = [
     ),
   },
   {
+    name: "views",
+    type: "list",
+    default: "[live, today]",
+    description: (
+      <>
+        With <code>energy_entities</code>, up to two of <code>live</code>, <code>today</code>,{" "}
+        <code>yesterday</code>, <code>week</code>, <code>month</code> and <code>year</code> for the
+        selector, in order. A single one shows that view without a selector.
+      </>
+    ),
+  },
+  {
     name: "grid / solar / battery / home",
     type: "object",
     description: (

@@ -12,7 +12,11 @@
     "view": {
       "name": "अवधि",
       "live": "लाइव",
-      "today": "आज"
+      "today": "आज",
+      "yesterday": "कल",
+      "week": "सप्ताह",
+      "month": "महीना",
+      "year": "वर्ष"
     }
   },
   "editor": {
@@ -155,6 +159,8 @@
     "connect_to_grid": "ग्रिड (ग्रिड तक ऊपर लाइन)",
     "connect_to_battery": "बैटरी (बैटरी तक लाइन)",
     "connect_to_none": "कोई नहीं (कोई लाइन नहीं)",
-    "energy_entities": "लाइव / अवधि चयनकर्ता"
+    "energy_entities": "लाइव / अवधि चयनकर्ता",
+    "view_first": "पहला दृश्य",
+    "view_second": "दूसरा दृश्य"
   }
 }

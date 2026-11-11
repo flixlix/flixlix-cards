@@ -12,7 +12,11 @@
     "view": {
       "name": "Període",
       "live": "En directe",
-      "today": "Avui"
+      "today": "Avui",
+      "yesterday": "Ahir",
+      "week": "Setmana",
+      "month": "Mes",
+      "year": "Any"
     }
   },
   "editor": {
@@ -155,6 +159,8 @@
     "connect_to_grid": "Xarxa (línia cap amunt a la xarxa)",
     "connect_to_battery": "Bateria (línia cap a la bateria)",
     "connect_to_none": "Cap (sense línia)",
-    "energy_entities": "Selector en directe / període"
+    "energy_entities": "Selector en directe / període",
+    "view_first": "Primera vista",
+    "view_second": "Segona vista"
   }
 }

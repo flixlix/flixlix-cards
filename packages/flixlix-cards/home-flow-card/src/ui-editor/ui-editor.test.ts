@@ -34,6 +34,8 @@ const topLevel = (schema: unknown): string[] =>
     : [];
 
 const selectorFields = [
+  "view_first",
+  "view_second",
   "consumption",
   "production",
   "solar",
@@ -95,7 +97,24 @@ describe("editor", () => {
     const fields = schema();
     const selector = Array.isArray(fields) ? fields.at(-1) : undefined;
 
-    expect(topLevel(isGroup(selector) ? selector.schema : [])).toEqual(["energy_entities"]);
+    expect(topLevel(isGroup(selector) ? selector.schema : [])).toEqual([
+      "(group)",
+      "energy_entities",
+    ]);
+  });
+
+  test("the two view dropdowns read and write views, leaving the default out", async () => {
+    const { data, change, changes } = await mountEditor({ views: ["today", "week"] });
+
+    expect(data()).toMatchObject({ view_first: "today", view_second: "week" });
+
+    change({ type: "custom:home-flow-card", view_first: "live", view_second: "month" });
+    change({ type: "custom:home-flow-card", view_first: "live", view_second: "today" });
+
+    expect(changes).toEqual([
+      { type: "custom:home-flow-card", views: ["live", "month"] },
+      { type: "custom:home-flow-card" },
+    ]);
   });
 
   test("the main page holds the title and a link per node, then advanced", async () => {

@@ -1,6 +1,7 @@
 import { translate } from "@flixlix-cards/shared/i18n";
+import { type EnergyPeriodKey } from "@flixlix-cards/shared/states/utils/energy-period";
 import { nothing, type ReactiveController, type ReactiveElement, type TemplateResult } from "lit";
-import { type FlowConfig, type HomeFlowView, type HomeFlowViews, VIEWS } from "./types";
+import { type FlowConfig, type HomeFlowView, type HomeFlowViews } from "./types";
 import { viewSelector } from "./view-selector";
 
 export class ViewController implements ReactiveController {
@@ -20,22 +21,23 @@ export class ViewController implements ReactiveController {
     return this.view === "live" ? this.views?.live : this.views?.period;
   }
 
-  get period() {
-    return this.views ? ("today" as const) : undefined;
+  get period(): EnergyPeriodKey | undefined {
+    const views = this.views?.views ?? [];
+    return [this.view, ...views].find((view): view is EnergyPeriodKey => view !== "live");
   }
 
   configure(views: HomeFlowViews | null): void {
-    const reconfigured = this.views !== null;
+    const kept = this.views !== null && views?.views.includes(this.view);
     this.views = views;
-    this.view = views && reconfigured ? this.view : (views?.initial ?? "live");
+    this.view = kept ? this.view : (views?.initial ?? "live");
   }
 
   render(language: string): TemplateResult | typeof nothing {
-    if (!this.views) {
+    if (!this.views || this.views.views.length < 2) {
       return nothing;
     }
     return viewSelector({
-      views: VIEWS,
+      views: this.views.views,
       selected: this.view,
       label: (view) => translate(`card.view.${view}`, language),
       name: translate("card.view.name", language),

@@ -12,7 +12,11 @@
     "view": {
       "name": "Period",
       "live": "Live",
-      "today": "Idag"
+      "today": "Idag",
+      "yesterday": "Igår",
+      "week": "Vecka",
+      "month": "Månad",
+      "year": "År"
     }
   },
   "editor": {
@@ -155,6 +159,8 @@
     "connect_to_grid": "Elnät (linje upp till nätet)",
     "connect_to_battery": "Batteri (linje till batteriet)",
     "connect_to_none": "Ingen (ingen linje)",
-    "energy_entities": "Väljare live / period"
+    "energy_entities": "Väljare live / period",
+    "view_first": "Första vy",
+    "view_second": "Andra vy"
   }
 }

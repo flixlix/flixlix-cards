@@ -91,9 +91,11 @@ export type HomeFlowMode = "power" | "energy";
 
 export const MODES: readonly HomeFlowMode[] = ["power", "energy"];
 
-export const VIEWS = ["live", "today"] as const;
+export const VIEWS = ["live", "today", "yesterday", "week", "month", "year"] as const;
 
 export type HomeFlowView = (typeof VIEWS)[number];
+
+export const DEFAULT_VIEWS: readonly HomeFlowView[] = ["live", "today"];
 
 type NodeEntity = NonNullable<ConfigEntities["grid"]>["entity"];
 
@@ -128,6 +130,7 @@ type CardOptions = CardKeys<PowerFlowCardPlusConfig> & {
   /** Defaults to `power`. */
   mode?: HomeFlowMode;
   energy_entities?: HomeFlowEnergyEntities;
+  views?: HomeFlowView[];
   /**
    * With `mode: energy`, the energy date picker to follow, as in Energy Flow Card Plus; without,
    * the dashboard's own.
@@ -215,7 +218,7 @@ export const toFlowConfig = (config: HomeFlowCardConfig): FlowConfig => {
 };
 
 const overPeriod = (config: HomeFlowCardConfig, energy: HomeFlowEnergyEntities) => {
-  const { energy_entities: _energy, ...options } = config;
+  const { energy_entities: _energy, views: _views, ...options } = config;
   const { grid, solar, battery, home, generator, car, heat_pump: heatPump } = energy;
   return toFlowConfig({
     ...options,
@@ -236,6 +239,7 @@ const overPeriod = (config: HomeFlowCardConfig, energy: HomeFlowEnergyEntities) 
 export type HomeFlowViews = {
   live: FlowConfig;
   period: FlowConfig;
+  views: readonly HomeFlowView[];
   initial: HomeFlowView;
 };
 
@@ -249,16 +253,34 @@ const setEnergyEntities = (energy: HomeFlowEnergyEntities = {}): HomeFlowEnergyE
   return Object.keys(set).length > 0 ? set : null;
 };
 
+const isView = (view: unknown): view is HomeFlowView => VIEWS.some((known) => known === view);
+
+const selectorViews = (views: unknown[] | undefined): readonly HomeFlowView[] => {
+  const picked = [...new Set(views?.length ? views : DEFAULT_VIEWS)];
+  if (picked.length <= 2 && picked.every(isView)) {
+    return picked;
+  }
+  throw new Error(`views takes up to two of ${VIEWS.join(", ")}`);
+};
+
 export const toFlowViews = (config: HomeFlowCardConfig): HomeFlowViews | null => {
   const energy = setEnergyEntities(config.energy_entities);
   if (!energy) {
     return null;
   }
-  const { energy_entities: _energy, ...live } = config;
+  const views = selectorViews(config.views);
+  if (views.every((view) => view === "live")) {
+    return null;
+  }
+  const { energy_entities: _energy, views: _views, ...live } = config;
   return {
     live: toFlowConfig({ ...live, mode: "power" }),
     period: overPeriod(config, energy),
-    initial: config.mode === "energy" ? "today" : "live",
+    views,
+    initial:
+      (config.mode === "energy" ? views.find((view) => view !== "live") : undefined) ??
+      views[0] ??
+      "live",
   };
 };
 

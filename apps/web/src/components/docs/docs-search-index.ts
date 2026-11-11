@@ -948,6 +948,14 @@ function houseEntries(): SearchEntry[] {
       "selector",
       "today",
     ]),
+    option("views", "The selector's two choices.", "card-options", [
+      "selector",
+      "today",
+      "yesterday",
+      "week",
+      "month",
+      "year",
+    ]),
     option("min_expected_value", "Where the pulses run their slowest.", "numbers", [
       "min_expected_power",
       "pulse speed",

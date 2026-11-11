@@ -12,7 +12,11 @@
     "view": {
       "name": "Jakso",
       "live": "Live",
-      "today": "Tänään"
+      "today": "Tänään",
+      "yesterday": "Eilen",
+      "week": "Viikko",
+      "month": "Kuukausi",
+      "year": "Vuosi"
     }
   },
   "editor": {
@@ -155,6 +159,8 @@
     "connect_to_grid": "Sähköverkko (viiva ylös verkkoon)",
     "connect_to_battery": "Akku (viiva akkuun)",
     "connect_to_none": "Ei mitään (ei viivaa)",
-    "energy_entities": "Live / jakso -valitsin"
+    "energy_entities": "Live / jakso -valitsin",
+    "view_first": "Ensimmäinen näkymä",
+    "view_second": "Toinen näkymä"
   }
 }

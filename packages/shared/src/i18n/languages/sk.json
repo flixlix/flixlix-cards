@@ -12,7 +12,11 @@
     "view": {
       "name": "Obdobie",
       "live": "Živo",
-      "today": "Dnes"
+      "today": "Dnes",
+      "yesterday": "Včera",
+      "week": "Týždeň",
+      "month": "Mesiac",
+      "year": "Rok"
     }
   },
   "editor": {
@@ -155,6 +159,8 @@
     "connect_to_grid": "Sieť (čiara hore k sieti)",
     "connect_to_battery": "Batéria (čiara k batérii)",
     "connect_to_none": "Žiadne (bez čiary)",
-    "energy_entities": "Prepínač živo / obdobie"
+    "energy_entities": "Prepínač živo / obdobie",
+    "view_first": "Prvé zobrazenie",
+    "view_second": "Druhé zobrazenie"
   }
 }

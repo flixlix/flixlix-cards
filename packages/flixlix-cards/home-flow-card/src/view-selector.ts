@@ -70,7 +70,7 @@ export const viewSelectorStyles = css`
     --view-inset: 2px;
     position: absolute;
     top: calc(var(--label-unit, 1.26px) * 6);
-    right: calc(var(--label-unit, 1.26px) * 6);
+    right: calc(var(--label-unit, 1.26px) * 16);
     display: grid;
     grid-auto-flow: column;
     grid-auto-columns: 1fr;

@@ -12,7 +12,11 @@
     "view": {
       "name": "Periodo",
       "live": "Live",
-      "today": "Oggi"
+      "today": "Oggi",
+      "yesterday": "Ieri",
+      "week": "Settimana",
+      "month": "Mese",
+      "year": "Anno"
     }
   },
   "editor": {
@@ -155,6 +159,8 @@
     "connect_to_grid": "Rete (linea verso la rete)",
     "connect_to_battery": "Batteria (linea verso la batteria)",
     "connect_to_none": "Nessuno (senza linea)",
-    "energy_entities": "Selettore live / periodo"
+    "energy_entities": "Selettore live / periodo",
+    "view_first": "Prima vista",
+    "view_second": "Seconda vista"
   }
 }

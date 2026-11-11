@@ -139,6 +139,36 @@ describe("view selector", () => {
     expect(reading(root, "solar")).toBe("3 kWh");
   });
 
+  test("views picks the two segments and their order", async () => {
+    const { root, settle } = await mount({ views: ["yesterday", "today"] });
+    const names = [...root.querySelectorAll(".views button")].map((button) =>
+      button.textContent?.trim()
+    );
+    expect(names).toEqual(["Yesterday", "Today"]);
+    expect(selected(root)).toBe("Yesterday");
+    expect(reading(root, "solar")).toBe("5 kWh");
+
+    await userEvent.click(segment(root, "Today"));
+    await settle();
+    expect(reading(root, "solar")).toBe("3 kWh");
+  });
+
+  test("a single view shows its energy without a selector", async () => {
+    const { root } = await mount({ views: ["today"] });
+
+    expect(root.querySelector(".views")).toBeNull();
+    expect(reading(root, "solar")).toBe("3 kWh");
+  });
+
+  test("more than two views is a config error", () => {
+    const config = {
+      type: "custom:home-flow-card",
+      ...card,
+      views: ["live", "today", "week"],
+    } as HomeFlowCardConfig;
+    expect(() => new HomeFlowCard().setConfig(config)).toThrow("views takes up to two");
+  });
+
   test("a node without an energy sensor is left out of the periods", async () => {
     const { root, settle } = await mount();
     expect(root.querySelector(".label.battery")).not.toBeNull();
