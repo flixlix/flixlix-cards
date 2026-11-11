@@ -11,6 +11,7 @@
     "dev": "vp dev --port 3000",
     "build": "vp build",
     "preview": "vp preview",
+    "og:images": "node scripts/og-images.ts",
     "test": "vp test run"
   },
   "dependencies": {
@@ -55,6 +56,7 @@
     "@types/turndown": "^5.0.6",
     "@vitejs/plugin-react": "^5.2.0",
     "jsdom": "catalog:",
+    "playwright": "catalog:packages",
     "typescript": "catalog:",
     "vite": "catalog:packages",
     "vite-plus": "catalog:packages",

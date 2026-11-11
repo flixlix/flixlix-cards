@@ -4,9 +4,9 @@ import TurndownService from "turndown";
 import { gfm } from "turndown-plugin-gfm";
 
 import { INDEXABLE_PAGES } from "@/lib/seo";
-import { SITE_URL } from "@/lib/site";
+import { markdownUrl, SITE_URL } from "@/lib/site";
 
-export { SITE_URL };
+export { markdownUrl, SITE_URL };
 
 export type DocsPage = { path: string; title: string; description?: string; section: string };
 
@@ -16,8 +16,6 @@ export const DOCS_PAGES: DocsPage[] = INDEXABLE_PAGES.map((entry) => ({
   description: entry.description,
   section: entry.breadcrumb,
 }));
-
-export const markdownUrl = (path: string) => `${SITE_URL}/llms${path === "/" ? "/index" : path}.md`;
 
 export function findDocsPage(path: string): DocsPage | undefined {
   return DOCS_PAGES.find((page) => page.path === path);

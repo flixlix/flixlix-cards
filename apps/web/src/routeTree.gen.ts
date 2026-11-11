@@ -16,6 +16,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as DocsIndexRouteImport } from './routes/_docs/index'
 import { Route as DocsContributingRouteImport } from './routes/_docs/contributing'
 import { Route as LlmsSplatRouteImport } from './routes/llms/$'
+import { Route as OgImageRouteImport } from './routes/og.$image'
 import { Route as DocsEnergyBreakdownCardIndexRouteImport } from './routes/_docs/energy-breakdown-card/index'
 import { Route as DocsEnergyBreakdownCardConfigurationRouteImport } from './routes/_docs/energy-breakdown-card/configuration'
 import { Route as DocsEnergyBreakdownCardExamplesRouteImport } from './routes/_docs/energy-breakdown-card/examples'
@@ -77,6 +78,11 @@ const DocsContributingRoute = DocsContributingRouteImport.update({
 const LlmsSplatRoute = LlmsSplatRouteImport.update({
   id: '/llms/$',
   path: '/llms/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OgImageRoute = OgImageRouteImport.update({
+  id: '/og/$image',
+  path: '/og/$image',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DocsEnergyBreakdownCardIndexRoute =
@@ -254,6 +260,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/contributing': typeof DocsContributingRoute
   '/llms/$': typeof LlmsSplatRoute
+  '/og/$image': typeof OgImageRoute
   '/energy-breakdown-card/configuration': typeof DocsEnergyBreakdownCardConfigurationRoute
   '/energy-breakdown-card/examples': typeof DocsEnergyBreakdownCardExamplesRoute
   '/energy-breakdown-card/installation': typeof DocsEnergyBreakdownCardInstallationRoute
@@ -289,6 +296,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/contributing': typeof DocsContributingRoute
   '/llms/$': typeof LlmsSplatRoute
+  '/og/$image': typeof OgImageRoute
   '/': typeof DocsIndexRoute
   '/energy-breakdown-card/configuration': typeof DocsEnergyBreakdownCardConfigurationRoute
   '/energy-breakdown-card/examples': typeof DocsEnergyBreakdownCardExamplesRoute
@@ -327,6 +335,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_docs/contributing': typeof DocsContributingRoute
   '/llms/$': typeof LlmsSplatRoute
+  '/og/$image': typeof OgImageRoute
   '/_docs/': typeof DocsIndexRoute
   '/_docs/energy-breakdown-card/configuration': typeof DocsEnergyBreakdownCardConfigurationRoute
   '/_docs/energy-breakdown-card/examples': typeof DocsEnergyBreakdownCardExamplesRoute
@@ -366,6 +375,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/contributing'
     | '/llms/$'
+    | '/og/$image'
     | '/energy-breakdown-card/configuration'
     | '/energy-breakdown-card/examples'
     | '/energy-breakdown-card/installation'
@@ -401,6 +411,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/contributing'
     | '/llms/$'
+    | '/og/$image'
     | '/'
     | '/energy-breakdown-card/configuration'
     | '/energy-breakdown-card/examples'
@@ -438,6 +449,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/_docs/contributing'
     | '/llms/$'
+    | '/og/$image'
     | '/_docs/'
     | '/_docs/energy-breakdown-card/configuration'
     | '/_docs/energy-breakdown-card/examples'
@@ -475,6 +487,7 @@ export interface RootRouteChildren {
   LlmsDottxtRoute: typeof LlmsDottxtRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   LlmsSplatRoute: typeof LlmsSplatRoute
+  OgImageRoute: typeof OgImageRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -526,6 +539,13 @@ declare module '@tanstack/react-router' {
       path: '/llms/$'
       fullPath: '/llms/$'
       preLoaderRoute: typeof LlmsSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/og/$image': {
+      id: '/og/$image'
+      path: '/og/$image'
+      fullPath: '/og/$image'
+      preLoaderRoute: typeof OgImageRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_docs/energy-breakdown-card/': {
@@ -813,6 +833,7 @@ const rootRouteChildren: RootRouteChildren = {
   LlmsDottxtRoute: LlmsDottxtRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   LlmsSplatRoute: LlmsSplatRoute,
+  OgImageRoute: OgImageRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
