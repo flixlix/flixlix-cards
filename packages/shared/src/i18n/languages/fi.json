@@ -8,6 +8,15 @@
       "car": "Auto",
       "heat_pump": "Lämpöpumppu",
       "motorbike": "Moottoripyörä"
+    },
+    "view": {
+      "name": "Jakso",
+      "live": "Live",
+      "today": "Tänään",
+      "yesterday": "Eilen",
+      "week": "Viikko",
+      "month": "Kuukausi",
+      "year": "Vuosi"
     }
   },
   "editor": {
@@ -149,6 +158,8 @@
     "connect_to": "Yhdistä",
     "connect_to_grid": "Sähköverkko (viiva ylös verkkoon)",
     "connect_to_battery": "Akku (viiva akkuun)",
-    "connect_to_none": "Ei mitään (ei viivaa)"
+    "connect_to_none": "Ei mitään (ei viivaa)",
+    "energy_entities": "Live / jakso -valitsin",
+    "views": "Näkymät"
   }
 }

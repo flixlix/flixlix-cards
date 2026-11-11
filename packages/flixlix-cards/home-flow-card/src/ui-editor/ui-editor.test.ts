@@ -33,6 +33,19 @@ const topLevel = (schema: unknown): string[] =>
       })
     : [];
 
+const selectorFields = [
+  "views",
+  "consumption",
+  "production",
+  "solar",
+  "consumption",
+  "production",
+  "home",
+  "generator",
+  "car",
+  "heat_pump",
+];
+
 const mountEditor = async (config: Record<string, unknown> = {}, states: StateFixtures = {}) => {
   const editor = new HomeFlowCardEditor();
   editor.hass = fakeHass({ states });
@@ -78,10 +91,61 @@ describe("editor", () => {
     expect(helper("mode")).toBe("Default: Power");
   });
 
+  test("the selector's sensors sit under energy_entities", async () => {
+    const { schema } = await mountEditor();
+    const fields = schema();
+    const selector = Array.isArray(fields) ? fields.at(-1) : undefined;
+
+    expect(topLevel(isGroup(selector) ? selector.schema : [])).toEqual([
+      "views",
+      "energy_entities",
+    ]);
+  });
+
+  test("switching to energy mode drops the selector's sensors and views", async () => {
+    const { change, changes } = await mountEditor({
+      energy_entities: { solar: "sensor.solar_energy" },
+      views: ["today", "week"],
+    });
+
+    change({
+      type: "custom:home-flow-card",
+      mode: "energy",
+      energy_entities: { solar: "sensor.solar_energy" },
+      views: ["today", "week"],
+    });
+
+    expect(changes).toEqual([{ type: "custom:home-flow-card", mode: "energy" }]);
+  });
+
+  test("unticking the last view keeps the list empty instead of falling back to the default", async () => {
+    const { data, change, changes } = await mountEditor({ views: ["live"] });
+
+    expect(data()).toMatchObject({ views: ["live"] });
+
+    change({ type: "custom:home-flow-card", views: [] });
+
+    expect(changes).toEqual([{ type: "custom:home-flow-card", views: [] }]);
+  });
+
+  test("the views list reads and writes views in their usual order, leaving the default out", async () => {
+    const { data, change, changes } = await mountEditor();
+
+    expect(data()).toMatchObject({ views: ["live", "today"] });
+
+    change({ type: "custom:home-flow-card", views: ["live", "today", "month", "yesterday"] });
+    change({ type: "custom:home-flow-card", views: ["today", "live"] });
+
+    expect(changes).toEqual([
+      { type: "custom:home-flow-card", views: ["live", "today", "yesterday", "month"] },
+      { type: "custom:home-flow-card" },
+    ]);
+  });
+
   test("the main page holds the title and a link per node, then advanced", async () => {
     const { editor, fields, links } = await mountEditor();
 
-    expect(fields()).toEqual(["title", "mode"]);
+    expect(fields()).toEqual(["title", "mode", ...selectorFields]);
     expect(links().map((link) => link.getAttribute("path"))).toEqual([
       "grid",
       "solar",

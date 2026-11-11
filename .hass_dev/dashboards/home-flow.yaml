@@ -39,6 +39,62 @@ views:
       - type: grid
         cards:
           - type: heading
+            heading: Live or over a period
+            icon: mdi:toggle-switch-outline
+          - type: custom:home-flow-card
+            title: Live or today
+            grid:
+              entity:
+                consumption: sensor.grid_import_power
+                production: sensor.grid_export_power
+            solar:
+              entity: sensor.solar_power
+            battery:
+              entity:
+                consumption: sensor.battery_discharge_power
+                production: sensor.battery_charge_power
+              state_of_charge: sensor.battery_soc
+            energy_entities:
+              grid:
+                consumption: sensor.grid_import_energy
+                production: sensor.grid_export_energy
+              solar: sensor.solar_energy
+              battery:
+                consumption: sensor.battery_discharge_energy
+                production: sensor.battery_charge_energy
+          - type: custom:home-flow-card
+            title: Live or any period, car and heat pump
+            views: [live, today, yesterday, week, month, year]
+            grid:
+              entity:
+                consumption: sensor.grid_import_power
+                production: sensor.grid_export_power
+            solar:
+              entity: sensor.solar_power
+            battery:
+              entity:
+                consumption: sensor.battery_discharge_power
+                production: sensor.battery_charge_power
+              state_of_charge: sensor.battery_soc
+            car:
+              entity: sensor.car_power
+              state_of_charge: sensor.car_battery
+            heat_pump:
+              entity: sensor.heat_pump_power
+              climate: climate.heat_pump
+            energy_entities:
+              grid:
+                consumption: sensor.grid_import_energy
+                production: sensor.grid_export_energy
+              solar: sensor.solar_energy
+              battery:
+                consumption: sensor.battery_discharge_energy
+                production: sensor.battery_charge_energy
+              car: sensor.ev_charger_energy
+              heat_pump: sensor.heat_pump_energy
+      - type: grid
+        cards:
+          - type: heading
             heading: Solar, battery and grid
             icon: mdi:home-lightning-bolt
           - type: custom:home-flow-card

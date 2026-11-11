@@ -26,6 +26,7 @@ import {
 } from "@flixlix-cards/shared/ui-editor/components/conditions-panel";
 import { carConditionKeys, carConditionsAsYaml, carConditionsHtml } from "./car-conditions";
 import { withGenericOptions } from "../generic-options";
+import { fromViewFields, withViewFields } from "./energy-schema";
 import { advancedSchema, fieldDefaults, generalSchema, nodeSchemas } from "./schema";
 
 defineEditorElements();
@@ -129,7 +130,7 @@ export class HomeFlowCardEditor extends LitElement implements LovelaceCardEditor
     }
     return html`
       <div class="card-config">
-        ${this._form(this._config, generalSchema(this._config.mode), this._valueChanged)}
+        ${this._form(withViewFields(this._config), generalSchema(this._config.mode), this._generalChanged)}
         <div class="pages">
           ${NODE_PAGES.map(({ page, icon }) => {
             const nodeConfig = this._config?.[page];
@@ -191,6 +192,10 @@ export class HomeFlowCardEditor extends LitElement implements LovelaceCardEditor
 
   private _valueChanged = (event: ValueChangedEvent<Record<string, unknown>>): void => {
     fireEvent(this, "config-changed", { config: event.detail.value });
+  };
+
+  private _generalChanged = (event: ValueChangedEvent<Record<string, unknown>>): void => {
+    fireEvent(this, "config-changed", { config: fromViewFields(event.detail.value) });
   };
 
   /** The car's fields, then its visibility and idle conditions in Home Assistant's own editor. */

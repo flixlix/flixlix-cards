@@ -365,6 +365,38 @@ const CARD_OPTIONS: OptionRow[] = [
     ),
   },
   {
+    name: "energy_entities",
+    type: "object",
+    description: (
+      <>
+        Each node&apos;s energy sensor, by node: <code>grid</code>, <code>solar</code>,{" "}
+        <code>battery</code>, <code>home</code>, <code>generator</code>, <code>car</code> and{" "}
+        <code>heat_pump</code>, each written like the node&apos;s <code>entity</code>. With them,
+        the card gets a selector in its top right corner between live power and today, and reads
+        today itself instead of following a date picker. The house keeps its live size and place. A
+        node without an energy sensor is left out of today; the home without one shows what flowed
+        into it. Only with <code>mode: power</code>, the default. See{" "}
+        <Link to={`${BASE_PATH}/examples`} hash="live-or-today">
+          the example
+        </Link>
+        .
+      </>
+    ),
+  },
+  {
+    name: "views",
+    type: "list",
+    default: "[live, today]",
+    description: (
+      <>
+        With <code>energy_entities</code>, any of <code>live</code>, <code>today</code>,{" "}
+        <code>yesterday</code>, <code>week</code>, <code>month</code> and <code>year</code> for the
+        selector, always shown in that order. Two sit side by side; more open in Home
+        Assistant&apos;s dropdown. A single one shows that view without a selector.
+      </>
+    ),
+  },
+  {
     name: "grid / solar / battery / home",
     type: "object",
     description: (
@@ -1289,6 +1321,39 @@ battery:
       "sensor.battery_discharge_energy": sensor("2.4", { unit: "kWh" }),
       "sensor.battery_charge_energy": sensor("3.8", { unit: "kWh" }),
       "sensor.battery_soc": sensor("58", { unit: "%" }),
+    },
+    energy: true,
+  },
+  {
+    id: "live-or-today",
+    title: "Live power or the day so far",
+    text: "Give the nodes their energy sensors too and the card gets a selector in its corner: live power, or today's energy, picked on the card itself rather than on a date picker.",
+    code: `type: ${CARD_TYPE}
+grid:
+  entity: sensor.grid_power
+solar:
+  entity: sensor.solar_power
+battery:
+  entity: sensor.battery_power
+  state_of_charge: sensor.battery_soc
+energy_entities:
+  grid:
+    consumption: sensor.grid_import_energy
+    production: sensor.grid_export_energy
+  solar: sensor.solar_energy
+  battery:
+    consumption: sensor.battery_discharge_energy
+    production: sensor.battery_charge_energy`,
+    states: {
+      "sensor.grid_power": "2600",
+      "sensor.solar_power": "0",
+      "sensor.battery_power": "-1700",
+      "sensor.battery_soc": sensor("28", { unit: "%" }),
+      "sensor.grid_import_energy": sensor("6.8", { unit: "kWh" }),
+      "sensor.grid_export_energy": sensor("2.1", { unit: "kWh" }),
+      "sensor.solar_energy": sensor("11.2", { unit: "kWh" }),
+      "sensor.battery_discharge_energy": sensor("3.4", { unit: "kWh" }),
+      "sensor.battery_charge_energy": sensor("4.1", { unit: "kWh" }),
     },
     energy: true,
   },

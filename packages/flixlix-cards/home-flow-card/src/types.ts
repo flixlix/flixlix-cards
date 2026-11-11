@@ -91,6 +91,24 @@ export type HomeFlowMode = "power" | "energy";
 
 export const MODES: readonly HomeFlowMode[] = ["power", "energy"];
 
+export const VIEWS = ["live", "today", "yesterday", "week", "month", "year"] as const;
+
+export type HomeFlowView = (typeof VIEWS)[number];
+
+export const DEFAULT_VIEWS: readonly HomeFlowView[] = ["live", "today"];
+
+type NodeEntity = NonNullable<ConfigEntities["grid"]>["entity"];
+
+export type HomeFlowEnergyEntities = {
+  grid?: NodeEntity;
+  solar?: string;
+  battery?: NodeEntity;
+  home?: string;
+  generator?: string;
+  car?: string;
+  heat_pump?: string;
+};
+
 /** The card's nodes, configured as in Power Flow Card Plus' `entities`. */
 export type HomeFlowNodes = {
   grid?: ConfigEntities["grid"];
@@ -111,6 +129,8 @@ type CardKeys<T> = { [K in keyof T as K extends "entities" | ExpectedRange ? nev
 type CardOptions = CardKeys<PowerFlowCardPlusConfig> & {
   /** Defaults to `power`. */
   mode?: HomeFlowMode;
+  energy_entities?: HomeFlowEnergyEntities;
+  views?: HomeFlowView[];
   /**
    * With `mode: energy`, the energy date picker to follow, as in Energy Flow Card Plus; without,
    * the dashboard's own.
@@ -194,6 +214,71 @@ export const toFlowConfig = (config: HomeFlowCardConfig): FlowConfig => {
     ...(car?.entity ? { car } : {}),
     ...(heatPump?.entity ? { heat_pump: heatPump } : {}),
     entities,
+  };
+};
+
+const overPeriod = (config: HomeFlowCardConfig, energy: HomeFlowEnergyEntities) => {
+  const { energy_entities: _energy, views: _views, ...options } = config;
+  const { grid, solar, battery, home, generator, car, heat_pump: heatPump } = energy;
+  return toFlowConfig({
+    ...options,
+    mode: "energy",
+    grid: grid === undefined ? undefined : { ...config.grid, entity: grid },
+    solar: solar === undefined ? undefined : { ...config.solar, entity: solar },
+    battery: battery === undefined ? undefined : { ...config.battery, entity: battery },
+    home:
+      home === undefined
+        ? config.home && { ...config.home, override_state: false }
+        : { ...config.home, entity: home },
+    generator: generator === undefined ? undefined : { ...config.generator, entity: generator },
+    car: car === undefined ? undefined : { ...config.car, entity: car },
+    heat_pump: heatPump === undefined ? undefined : { ...config.heat_pump, entity: heatPump },
+  });
+};
+
+export type HomeFlowViews = {
+  live: FlowConfig;
+  period: FlowConfig;
+  views: readonly HomeFlowView[];
+};
+
+const isSet = (entity: NodeEntity | undefined) =>
+  typeof entity === "string"
+    ? entity !== ""
+    : [entity?.consumption, entity?.production].some((id) => id !== undefined && id !== "");
+
+const setEnergyEntities = (energy: HomeFlowEnergyEntities = {}): HomeFlowEnergyEntities | null => {
+  const set = Object.fromEntries(Object.entries(energy).filter(([, entity]) => isSet(entity)));
+  return Object.keys(set).length > 0 ? set : null;
+};
+
+const isView = (view: unknown): view is HomeFlowView => VIEWS.some((known) => known === view);
+
+const selectorViews = (views: unknown[] | undefined): readonly HomeFlowView[] => {
+  const picked = views ?? DEFAULT_VIEWS;
+  if (picked.every(isView)) {
+    return VIEWS.filter((view) => picked.includes(view));
+  }
+  throw new Error(`views takes any of ${VIEWS.join(", ")}`);
+};
+
+export const toFlowViews = (config: HomeFlowCardConfig): HomeFlowViews | null => {
+  if (config.mode === "energy" && (config.energy_entities || config.views)) {
+    throw new Error("energy_entities and views only work with mode: power");
+  }
+  const energy = setEnergyEntities(config.energy_entities);
+  if (!energy) {
+    return null;
+  }
+  const views = selectorViews(config.views);
+  if (views.every((view) => view === "live")) {
+    return null;
+  }
+  const { energy_entities: _energy, views: _views, ...live } = config;
+  return {
+    live: toFlowConfig({ ...live, mode: "power" }),
+    period: overPeriod(config, energy),
+    views,
   };
 };
 

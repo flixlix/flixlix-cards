@@ -14,10 +14,19 @@ permissions:
 
 jobs:
   test:
+    # Chromium and its system libraries come with the image, so no apt download from Ubuntu mirrors.
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.1-noble
+      options: --ipc=host
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      # The container user does not own the checkout, and checkout's safe.directory only lasts
+      # for its own step, so the build id would fall back to "unknown" without this.
+      - name: Trust the checkout for git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -37,15 +46,12 @@ jobs:
       - name: Build cards (fails on syntax older browsers cannot parse)
         run: pnpm build:cards
 
-      - name: Install Chromium for browser tests
-        run: pnpm --filter power-flow-card-plus exec playwright install --with-deps chromium
-
       - name: Test
         run: pnpm test
 
   visual:
     # Screenshot comparison in the image the baselines were made in (`pnpm test:visual`).
-    # Keep the tag in step with the `playwright` version in pnpm-workspace.yaml.
+    # Keep both jobs' image tags in step with the `playwright` version in pnpm-workspace.yaml.
     runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/playwright:v1.64.1-noble

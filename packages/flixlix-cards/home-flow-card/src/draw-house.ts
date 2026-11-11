@@ -71,11 +71,12 @@ export const drawHouse = (
   cardState: ReadyCardState,
   hass: HomeAssistant,
   car: CarScene,
-  read: EntityReader
+  read: EntityReader,
+  frame?: SceneLayout
 ) => {
   const language = hass.locale?.language ?? "en";
   // a configured car keeps its place whether or not it is home, so the heat pump does too
-  const layout: SceneLayout = {
+  const layout: SceneLayout = frame ?? {
     car: Boolean(config.car),
     generatorBesideGrid: config.mode === "energy" && hasGenerator(config),
   };

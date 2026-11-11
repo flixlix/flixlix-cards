@@ -8,6 +8,15 @@
       "car": "Auto",
       "heat_pump": "Warmtepomp",
       "motorbike": "Motorfiets"
+    },
+    "view": {
+      "name": "Periode",
+      "live": "Live",
+      "today": "Vandaag",
+      "yesterday": "Gisteren",
+      "week": "Week",
+      "month": "Maand",
+      "year": "Jaar"
     }
   },
   "editor": {
@@ -149,6 +158,8 @@
     "connect_to": "Verbinden met",
     "connect_to_grid": "Net (lijn omhoog naar het net)",
     "connect_to_battery": "Batterij (lijn naar de batterij)",
-    "connect_to_none": "Geen (geen lijn)"
+    "connect_to_none": "Geen (geen lijn)",
+    "energy_entities": "Keuze live / periode",
+    "views": "Weergaven"
   }
 }

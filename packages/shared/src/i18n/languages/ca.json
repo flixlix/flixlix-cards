@@ -8,6 +8,15 @@
       "car": "Cotxe",
       "heat_pump": "Bomba de calor",
       "motorbike": "Moto"
+    },
+    "view": {
+      "name": "Període",
+      "live": "En directe",
+      "today": "Avui",
+      "yesterday": "Ahir",
+      "week": "Setmana",
+      "month": "Mes",
+      "year": "Any"
     }
   },
   "editor": {
@@ -149,6 +158,8 @@
     "connect_to": "Connecta a",
     "connect_to_grid": "Xarxa (línia cap amunt a la xarxa)",
     "connect_to_battery": "Bateria (línia cap a la bateria)",
-    "connect_to_none": "Cap (sense línia)"
+    "connect_to_none": "Cap (sense línia)",
+    "energy_entities": "Selector en directe / període",
+    "views": "Vistes"
   }
 }

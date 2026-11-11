@@ -77,33 +77,35 @@ or `battery` are required.
 
 ### Card options
 
-| Name                 | Type    | Default   | Description                                                                                                                                                                                                                     |
-| -------------------- | ------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `type`               | string  | -         | `custom:home-flow-card`                                                                                                                                                                                                         |
-| `title`              | string  | -         | Card title                                                                                                                                                                                                                      |
-| `mode`               | string  | `power`   | What the sensors measure: `power` for live power, or `energy` for energy over the period picked on the dashboard's energy date picker (today without one). See [Energy over the day](#energy-over-the-day)                      |
-| `collection_key`     | string  | -         | With `mode: energy`, the energy date picker to follow, as in Energy Flow Card Plus, for example `energy_living_room`. Without it, the dashboard's own                                                                           |
-| `grid`               | object  | -         | The grid, see [Grid](#grid)                                                                                                                                                                                                     |
-| `solar`              | object  | -         | Solar on the roof, see [Solar](#solar)                                                                                                                                                                                          |
-| `battery`            | object  | -         | The battery on the wall, see [Battery](#battery)                                                                                                                                                                                |
-| `home`               | object  | -         | The home's consumption, see [Home](#home). Without it, the card works out what the home uses from the others                                                                                                                    |
-| `generator`          | object  | -         | A generator for grid outages, see [Generator](#generator)                                                                                                                                                                       |
-| `car`                | object  | -         | An electric car in front of the house, see [Car](#car)                                                                                                                                                                          |
-| `heat_pump`          | object  | -         | A heat pump on the front wall, see [Heat pump](#heat-pump)                                                                                                                                                                      |
-| `animate_numbers`    | boolean | `true`    | Roll each number to its new value when a reading changes. Always still when your system asks for reduced motion                                                                                                                 |
-| `disable_dots`       | boolean | `false`   | Keep the wires still: no pulses, only the colour of the power they carry                                                                                                                                                        |
-| `wire_width`         | number  | `1`       | How many times thicker the wires are drawn, for example `2` for twice as thick. Like the labels, they keep a similar size whatever the card's width                                                                             |
-| `two_way_value_size` | number  | `1`       | In energy mode, how large the values of a grid or battery that ran both ways are drawn against the other labels' values, for example `0.8` so their two values take less room                                                   |
-| `clickable_entities` | boolean | `true`    | Tapping a value opens its entity's details; `false` turns that off. A node's own actions run either way                                                                                                                         |
-| `base_decimals`      | number  | `0`       | Decimals of values in W (Wh in energy mode)                                                                                                                                                                                     |
-| `kilo_decimals`      | number  | `1`       | Decimals of values in kW (kWh)                                                                                                                                                                                                  |
-| `kilo_threshold`     | number  | `1000`    | From how many W (Wh) a value is shown in kW (kWh)                                                                                                                                                                               |
-| `mega_decimals`      | number  | `2`       | Decimals of values in MW (MWh)                                                                                                                                                                                                  |
-| `mega_threshold`     | number  | `1000000` | From how many W (Wh) a value is shown in MW (MWh)                                                                                                                                                                               |
-| `min_flow_rate`      | number  | `0.75`    | Seconds per pulse at the most power                                                                                                                                                                                             |
-| `max_flow_rate`      | number  | `6`       | Seconds per pulse at the least power                                                                                                                                                                                            |
-| `min_expected_value` | number  | `0.01`    | Where pulses run their slowest and shortest, in W (Wh in energy mode). In energy mode without an expected range, each wire's pulses share out what was supplied. Replaces `min_expected_power`, which still works in power mode |
-| `max_expected_value` | number  | `2000`    | Where pulses run their fastest and longest, in W (Wh in energy mode). Replaces `max_expected_power`, which still works in power mode                                                                                            |
+| Name                 | Type    | Default         | Description                                                                                                                                                                                                                                                                              |
+| -------------------- | ------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `type`               | string  | -               | `custom:home-flow-card`                                                                                                                                                                                                                                                                  |
+| `title`              | string  | -               | Card title                                                                                                                                                                                                                                                                               |
+| `mode`               | string  | `power`         | What the sensors measure: `power` for live power, or `energy` for energy over the period picked on the dashboard's energy date picker (today without one). See [Energy over the day](#energy-over-the-day)                                                                               |
+| `collection_key`     | string  | -               | With `mode: energy`, the energy date picker to follow, as in Energy Flow Card Plus, for example `energy_living_room`. Without it, the dashboard's own                                                                                                                                    |
+| `energy_entities`    | object  | -               | Each node's energy sensor, for a selector in the card's corner between live power and today. See [Live power or the day so far](#live-power-or-the-day-so-far)                                                                                                                           |
+| `views`              | list    | `[live, today]` | With `energy_entities`, any of `live`, `today`, `yesterday`, `week`, `month` and `year` for the selector, always shown in that order. Two show side by side, more open in Home Assistant's dropdown, a single one shows without a selector, and an empty list leaves the plain live card |
+| `grid`               | object  | -               | The grid, see [Grid](#grid)                                                                                                                                                                                                                                                              |
+| `solar`              | object  | -               | Solar on the roof, see [Solar](#solar)                                                                                                                                                                                                                                                   |
+| `battery`            | object  | -               | The battery on the wall, see [Battery](#battery)                                                                                                                                                                                                                                         |
+| `home`               | object  | -               | The home's consumption, see [Home](#home). Without it, the card works out what the home uses from the others                                                                                                                                                                             |
+| `generator`          | object  | -               | A generator for grid outages, see [Generator](#generator)                                                                                                                                                                                                                                |
+| `car`                | object  | -               | An electric car in front of the house, see [Car](#car)                                                                                                                                                                                                                                   |
+| `heat_pump`          | object  | -               | A heat pump on the front wall, see [Heat pump](#heat-pump)                                                                                                                                                                                                                               |
+| `animate_numbers`    | boolean | `true`          | Roll each number to its new value when a reading changes. Always still when your system asks for reduced motion                                                                                                                                                                          |
+| `disable_dots`       | boolean | `false`         | Keep the wires still: no pulses, only the colour of the power they carry                                                                                                                                                                                                                 |
+| `wire_width`         | number  | `1`             | How many times thicker the wires are drawn, for example `2` for twice as thick. Like the labels, they keep a similar size whatever the card's width                                                                                                                                      |
+| `two_way_value_size` | number  | `1`             | In energy mode, how large the values of a grid or battery that ran both ways are drawn against the other labels' values, for example `0.8` so their two values take less room                                                                                                            |
+| `clickable_entities` | boolean | `true`          | Tapping a value opens its entity's details; `false` turns that off. A node's own actions run either way                                                                                                                                                                                  |
+| `base_decimals`      | number  | `0`             | Decimals of values in W (Wh in energy mode)                                                                                                                                                                                                                                              |
+| `kilo_decimals`      | number  | `1`             | Decimals of values in kW (kWh)                                                                                                                                                                                                                                                           |
+| `kilo_threshold`     | number  | `1000`          | From how many W (Wh) a value is shown in kW (kWh)                                                                                                                                                                                                                                        |
+| `mega_decimals`      | number  | `2`             | Decimals of values in MW (MWh)                                                                                                                                                                                                                                                           |
+| `mega_threshold`     | number  | `1000000`       | From how many W (Wh) a value is shown in MW (MWh)                                                                                                                                                                                                                                        |
+| `min_flow_rate`      | number  | `0.75`          | Seconds per pulse at the most power                                                                                                                                                                                                                                                      |
+| `max_flow_rate`      | number  | `6`             | Seconds per pulse at the least power                                                                                                                                                                                                                                                     |
+| `min_expected_value` | number  | `0.01`          | Where pulses run their slowest and shortest, in W (Wh in energy mode). In energy mode without an expected range, each wire's pulses share out what was supplied. Replaces `min_expected_power`, which still works in power mode                                                          |
+| `max_expected_value` | number  | `2000`          | Where pulses run their fastest and longest, in W (Wh in energy mode). Replaces `max_expected_power`, which still works in power mode                                                                                                                                                     |
 
 Leave a node out and the house does not draw it. `grid`, `solar`, `battery` and `home` take the
 same options as in [Power Flow Card Plus](https://cards.flixlix.com/power-flow-card-plus/configuration);
@@ -370,6 +372,41 @@ battery:
     consumption: sensor.battery_discharge_energy
     production: sensor.battery_charge_energy
   state_of_charge: sensor.battery_soc
+```
+
+### Live power or the day so far
+
+Give the nodes their energy sensors too, under `energy_entities`, and the card gets a selector in
+its top right corner between live power and today's energy. The card reads today itself rather than
+follow a date picker. Each node keeps its name, colours and state of charge; only its sensor
+changes. The house keeps the size and place it has for live power, so only the selector is added. A
+node without an energy sensor is left out of today, and the home without one shows what flowed into
+it. The selector is for `mode: power`, the default; with `mode: energy` the card reads the dashboard's
+date picker instead, and `energy_entities` or `views` is a config error.
+
+`views` picks the selector's choices, from `live`, `today`, `yesterday`, `week`, `month` and
+`year`, for example `views: [today, yesterday]`. They always show in that order, whatever order the
+list uses, and the card opens on the first. Two sit side by side; with more, the corner shows
+the current one and opens Home Assistant's dropdown to pick another. With one, the card shows it
+without a selector, and an empty list leaves the plain live card.
+
+```yaml
+type: custom:home-flow-card
+grid:
+  entity: sensor.grid_power
+solar:
+  entity: sensor.solar_power
+battery:
+  entity: sensor.battery_power
+  state_of_charge: sensor.battery_soc
+energy_entities:
+  grid:
+    consumption: sensor.grid_import_energy
+    production: sensor.grid_export_energy
+  solar: sensor.solar_energy
+  battery:
+    consumption: sensor.battery_discharge_energy
+    production: sensor.battery_charge_energy
 ```
 
 ### Your own battery thresholds

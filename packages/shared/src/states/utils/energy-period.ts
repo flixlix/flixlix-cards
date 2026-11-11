@@ -52,7 +52,7 @@ const getStartOfWeek = (date: Date): Date => {
   return start;
 };
 
-const getPeriodWindow = (period: EnergyPeriodKey): EnergyPeriodWindow => {
+export const energyPeriodWindow = (period: EnergyPeriodKey): EnergyPeriodWindow => {
   const now = new Date();
 
   if (period === "yesterday") {
@@ -210,7 +210,7 @@ export const getGlobalEnergyPeriodWindow = (
     period = "yesterday";
   }
 
-  return getPeriodWindow(period);
+  return energyPeriodWindow(period);
 };
 
 const getEnergyCollection = (
