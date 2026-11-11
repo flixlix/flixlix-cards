@@ -27,7 +27,7 @@ const FAQS: Faq[] = [
   {
     question: "Which card should I use?",
     answer:
-      "For live watts, Power Flow Card Plus draws the classic circles and Home Flow Card draws a house. For kilowatt-hours over a day, week or year, Energy Flow Card Plus draws the flow, Energy Breakdown Card shows which devices used it, and Energy Period Selector Plus picks the period for both.",
+      "For live watts, Power Flow Card Plus draws the classic circles and Home Flow Card draws a house, which can also show energy over the dashboard's period with `mode: energy`. For kilowatt-hours over a day, week or year, Energy Flow Card Plus draws the flow, Energy Breakdown Card shows which devices used it, and Energy Period Selector Plus picks the period for both.",
     links: [
       { label: "Home Flow Card", to: "/home-flow-card" },
       { label: "Energy Breakdown Card", to: "/energy-breakdown-card" },
@@ -37,7 +37,7 @@ const FAQS: Faq[] = [
   {
     question: "Do I need the Energy dashboard set up?",
     answer:
-      "Not for the power cards: Power Flow Card Plus and Home Flow Card read your power sensors directly. The energy cards add up energy sensors over the period selected on the dashboard, the same way the built-in energy distribution card does, so those sensors need long-term statistics.",
+      "Not for live power: Power Flow Card Plus and Home Flow Card read your power sensors directly. Anything that shows energy over a period (Energy Flow Card Plus, Energy Breakdown Card and Home Flow Card's energy mode) adds up energy sensors, the same way the built-in energy distribution card does, so those sensors need long-term statistics.",
     links: [{ label: "Energy Flow Card Plus setup", to: "/energy-flow-card-plus/configuration" }],
   },
   {
