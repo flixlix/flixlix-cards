@@ -1,15 +1,15 @@
 import { lineDuration, type ReadyCardState } from "@flixlix-cards/shared/card-state";
+import {
+  classicDotAnimations,
+  type DotRoute,
+  loopProgress,
+} from "@flixlix-cards/shared/utils/classic-dot";
 import { type DotAnimation, resolveDotAnimation } from "@flixlix-cards/shared/utils/dot-animation";
 
 /** Points sampled along a line; the dot moves straight between them. */
 const SAMPLES = 40;
 
-/** A dot's way along its line, in the dot's own pixels. */
-type Route = {
-  points: { x: number; y: number; shown: boolean }[];
-  radius: number;
-  reverse: boolean;
-};
+type Route = DotRoute;
 
 /**
  * Each dot's running motion and the route it was built from. `getAnimations()` is missing before
@@ -115,8 +115,7 @@ const stopClassicDot = (dot: SVGSVGElement): number => {
   if (!running) {
     return 0;
   }
-  const loops = (dot.getCurrentTime() - running.begin) / running.duration;
-  return loops - Math.floor(loops);
+  return loopProgress(dot.getCurrentTime(), running.begin, running.duration);
 };
 
 const smil = (tag: "animateMotion" | "animate", attributes: Record<string, string>) => {
@@ -127,37 +126,15 @@ const smil = (tag: "animateMotion" | "animate", attributes: Record<string, strin
   return element;
 };
 
-/**
- * Moves a dot with SVG `<animateMotion>`, as before 0.4.0: drawn on the main thread, so Chromium
- * adds no GPU layers for it. The path runs in the direction of travel because older Chromium
- * ignores `keyPoints` with `calcMode="paced"` (the `no-paced-key-points` lint rule).
- */
+/** Moves a dot with SVG animation, as before 0.4.0: on the main thread, with no GPU layers. */
 const moveClassicDot = (dot: SVGSVGElement, route: Route, duration: number, progress: number) => {
-  const points = route.reverse
-    ? route.points.map((point, index, all) => all[all.length - 1 - index] ?? point)
-    : route.points;
   const begin = dot.getCurrentTime() - progress * duration;
-  const timing = { dur: `${duration}s`, begin: `${begin}s`, repeatCount: "indefinite" };
+  const { motion, opacity } = classicDotAnimations(route, duration, begin);
   const circle = dot.firstElementChild;
   circle?.setAttribute("r", String(route.radius));
-  circle?.append(
-    smil("animateMotion", {
-      path: points.map(({ x, y }, index) => `${index === 0 ? "M" : "L"}${x} ${y}`).join(" "),
-      calcMode: "paced",
-      ...timing,
-    })
-  );
-  if (points.some(({ shown }) => !shown)) {
-    // The points are evenly spaced along the line, so they are evenly spaced in time too.
-    circle?.append(
-      smil("animate", {
-        attributeName: "opacity",
-        values: points.map(({ shown }) => (shown ? "1" : "0")).join(";"),
-        keyTimes: points.map((_, index) => String(index / (points.length - 1))).join(";"),
-        calcMode: "linear",
-        ...timing,
-      })
-    );
+  circle?.append(smil("animateMotion", motion));
+  if (opacity) {
+    circle?.append(smil("animate", opacity));
   }
   classicMotions.set(dot, { route, duration, begin });
 };

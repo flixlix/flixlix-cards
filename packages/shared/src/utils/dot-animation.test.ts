@@ -24,3 +24,9 @@ describe("resolveDotAnimation", () => {
     expect(resolveDotAnimation("classic")).toBe("classic");
   });
 });
+
+describe("resolveDotAnimation without a browser", () => {
+  test("auto keeps the GPU dots when no renderer can be read", () => {
+    expect(resolveDotAnimation("auto")).toBe("gpu");
+  });
+});
