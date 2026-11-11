@@ -109,7 +109,7 @@ export class EnergyFlowCardPlus extends LitElement {
     return new EnergyFlowCardPlusEditor();
   }
 
-  public static getStubConfig(hass: HomeAssistant): object {
+  public static getStubConfig(hass: HomeAssistant): Promise<object> {
     return getDefaultConfig(hass, "energy");
   }
 

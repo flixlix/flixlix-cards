@@ -96,7 +96,7 @@ export class PowerFlowCardPlus extends LitElement {
     return new PowerFlowCardPlusEditor();
   }
 
-  public static getStubConfig(hass: HomeAssistant): object {
+  public static getStubConfig(hass: HomeAssistant): Promise<object> {
     return getDefaultConfig(hass, "power");
   }
 

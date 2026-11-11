@@ -5,6 +5,10 @@ import {
   watchGlobalEnergyPeriodChanges,
   type EnergyPeriodWindow,
 } from "@flixlix-cards/shared/states/utils/energy-period";
+import {
+  energyDashboardDevices,
+  fetchEnergyPreferences,
+} from "@flixlix-cards/shared/utils/energy-dashboard-entities";
 import { getEnergyEntityState } from "@flixlix-cards/shared/utils/get-energy-entity-state";
 import { registerCustomCard } from "@flixlix-cards/shared/utils/register-custom-card";
 import { cardShouldUpdate } from "@flixlix-cards/shared/utils/relevant-change";
@@ -68,7 +72,12 @@ export class EnergyBreakdownCard extends LitElement implements LovelaceCard {
     return new EnergyBreakdownCardEditor();
   }
 
-  public static getStubConfig(hass: HomeAssistant): EnergyBreakdownCardConfig {
+  public static async getStubConfig(hass: HomeAssistant): Promise<EnergyBreakdownCardConfig> {
+    const preferences = await fetchEnergyPreferences(hass);
+    const devices = preferences ? energyDashboardDevices(hass, preferences, "energy") : [];
+    if (devices.length > 0) {
+      return { type: "custom:energy-breakdown-card", chart_type: "bar", entities: devices };
+    }
     const energyEntities = Object.keys(hass?.states ?? {})
       .filter((id) => {
         const stateObj = hass.states[id];
