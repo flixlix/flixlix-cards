@@ -1,5 +1,11 @@
 # energy-breakdown-card
 
+## 0.0.5-beta.0
+
+### Patch Changes
+
+- **New:** A card added from the card picker starts with the grid, solar, battery and devices from your energy dashboard, and guesses the rest from entity names more carefully than before. ([#524](https://github.com/flixlix/flixlix-cards/pull/524))
+
 ## 0.0.4
 
 ### Patch Changes

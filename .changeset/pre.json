@@ -19,5 +19,22 @@
     "@flixlix-cards/typescript-config": "0.0.0",
     "@flixlix-cards/ui": "0.0.1"
   },
-  "changesets": []
+  "changesets": [
+    "classic-dots-on-mali",
+    "docs-landing-faq",
+    "docs-og-images",
+    "docs-open-with-agent",
+    "energy-negative-period",
+    "energy-secondary-period",
+    "flow-card-fills-height",
+    "home-flow-energy-mode",
+    "home-flow-generic-options",
+    "home-flow-idle-car-label",
+    "home-flow-mega-options",
+    "home-flow-two-way-value-size",
+    "home-flow-view-selector",
+    "home-secondary-info-clickable",
+    "negative-unit-scaling",
+    "new-card-from-energy-dashboard"
+  ]
 }
