@@ -151,6 +151,13 @@ describe("view selector", () => {
     expect(reading(root, "solar")).toBe("3 kWh");
   });
 
+  test("an empty views list leaves the plain live card", async () => {
+    const { root } = await mount({ views: [] });
+
+    expect(root.querySelector(".views")).toBeNull();
+    expect(reading(root, "solar")).toBe("800 W");
+  });
+
   test("a single view shows its energy without a selector", async () => {
     const { root } = await mount({ views: ["today"] });
 

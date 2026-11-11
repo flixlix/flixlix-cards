@@ -387,7 +387,7 @@ date picker instead, and `energy_entities` or `views` is a config error.
 `views` picks the selector's choices, from `live`, `today`, `yesterday`, `week`, `month` and
 `year`, for example `views: [today, yesterday]`. Two sit side by side; with more, the corner shows
 the current one and opens Home Assistant's dropdown to pick another. With one, the card shows it
-without a selector.
+without a selector, and an empty list leaves the plain live card.
 
 ```yaml
 type: custom:home-flow-card

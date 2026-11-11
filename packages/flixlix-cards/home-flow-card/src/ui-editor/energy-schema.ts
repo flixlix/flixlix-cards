@@ -55,7 +55,7 @@ export const energyEntities = {
 
 export const withViewFields = (config: HomeFlowCardConfig) => ({
   ...config,
-  views: config.views?.length ? config.views : [...DEFAULT_VIEWS],
+  views: config.views ?? [...DEFAULT_VIEWS],
 });
 
 const inViewOrder = (views: unknown) =>
@@ -70,5 +70,5 @@ export const fromViewFields = ({ views, ...config }: Record<string, unknown>) =>
   const isDefault =
     picked.length === DEFAULT_VIEWS.length &&
     picked.every((view, index) => view === DEFAULT_VIEWS[index]);
-  return isDefault || picked.length === 0 ? config : { ...config, views: picked };
+  return isDefault ? config : { ...config, views: picked };
 };

@@ -118,6 +118,16 @@ describe("editor", () => {
     expect(changes).toEqual([{ type: "custom:home-flow-card", mode: "energy" }]);
   });
 
+  test("unticking the last view keeps the list empty instead of falling back to the default", async () => {
+    const { data, change, changes } = await mountEditor({ views: ["live"] });
+
+    expect(data()).toMatchObject({ views: ["live"] });
+
+    change({ type: "custom:home-flow-card", views: [] });
+
+    expect(changes).toEqual([{ type: "custom:home-flow-card", views: [] }]);
+  });
+
   test("the views list reads and writes views in their usual order, leaving the default out", async () => {
     const { data, change, changes } = await mountEditor();
 
