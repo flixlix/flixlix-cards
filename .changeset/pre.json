@@ -1,0 +1,23 @@
+{
+  "mode": "pre",
+  "tag": "beta",
+  "initialVersions": {
+    "@flixlix-cards/web": "1.2.0",
+    "@flixlix-cards/e2e": null,
+    "energy-breakdown-card": "0.0.4",
+    "energy-flow-card-plus": "0.5.1",
+    "energy-period-selector-plus": "0.3.2",
+    "home-flow-card": "0.3.2",
+    "power-flow-card-plus": "0.6.1",
+    "sortable-list-card": "0.1.4",
+    "@flixlix-cards/shared": "0.0.5",
+    "@flixlix-cards/bundle-size": "0.0.0",
+    "@flixlix-cards/bundler": "0.0.3",
+    "@flixlix-cards/lint-rules": "0.0.0",
+    "@flixlix-cards/release-notes": "0.0.0",
+    "@flixlix-cards/testing": "0.0.0",
+    "@flixlix-cards/typescript-config": "0.0.0",
+    "@flixlix-cards/ui": "0.0.1"
+  },
+  "changesets": []
+}
