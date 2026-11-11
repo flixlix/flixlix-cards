@@ -30,6 +30,14 @@ describe("docs as markdown", () => {
     expect(markdown).toContain("```yaml\ntype: custom:home-flow-card\n");
   });
 
+  it("keeps each homepage question as a heading over its collapsed answer", async () => {
+    const markdown = await markdownOf("/");
+
+    expect(markdown).toContain(
+      "### Do I have to write YAML?\n\nNo. Every card has a visual editor in the dashboard"
+    );
+  });
+
   it("links in-page anchors to the page on the docs site", async () => {
     const markdown = await markdownOf("/home-flow-card/configuration");
 

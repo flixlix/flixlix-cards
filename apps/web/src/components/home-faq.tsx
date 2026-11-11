@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
+import * as React from "react";
 
 type FaqLink = { label: string; to: string };
 
@@ -92,34 +93,58 @@ export function HomeFaq() {
         Common questions
       </h2>
       <div className="divide-y border-b">
-        {FAQS.map(({ question, answer, links }) => (
-          <details key={question} className="group">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-6 py-5 [&::-webkit-details-marker]:hidden">
-              <h3 className="text-[17px] leading-snug font-medium text-pretty">{question}</h3>
-              <Plus
-                aria-hidden
-                className="text-muted-foreground size-4 shrink-0 transition-transform duration-200 ease-(--ease-out-strong) group-open:rotate-45 motion-reduce:transition-none"
-              />
-            </summary>
-            <div className="max-w-[62ch] pr-10 pb-6">
-              <p className="text-foreground/80 text-[15px] leading-relaxed text-pretty">
-                <AnswerText answer={answer} />
-              </p>
-              <nav aria-label={`More on: ${question}`} className="mt-4 flex flex-wrap gap-1.5">
-                {links.map((link) => (
-                  <Link
-                    key={link.to}
-                    to={link.to}
-                    className="press bg-card hover:bg-accent rounded-full border px-3 py-1 text-[13px] font-medium"
-                  >
-                    {link.label}
-                  </Link>
-                ))}
-              </nav>
-            </div>
-          </details>
+        {FAQS.map((faq) => (
+          <FaqItem key={faq.question} faq={faq} />
         ))}
       </div>
     </section>
+  );
+}
+
+function FaqItem({ faq: { question, answer, links } }: { faq: Faq }) {
+  const [open, setOpen] = React.useState(false);
+  const answerId = React.useId();
+  return (
+    <div data-state={open ? "open" : "closed"} className="group">
+      <h3>
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-controls={answerId}
+          onClick={() => setOpen(!open)}
+          className="flex w-full cursor-pointer items-center justify-between gap-6 py-5 text-left text-[17px] leading-snug font-medium text-pretty"
+        >
+          {question}
+          <Plus
+            aria-hidden
+            className="text-muted-foreground size-4 shrink-0 transition-transform duration-200 ease-(--ease-out-strong) group-data-[state=open]:rotate-45 motion-reduce:transition-none"
+          />
+        </button>
+      </h3>
+      <div
+        id={answerId}
+        inert={!open}
+        className="grid grid-rows-[0fr] transition-[grid-template-rows] duration-200 ease-(--ease-out-strong) group-data-[state=open]:grid-rows-[1fr] motion-reduce:transition-none"
+      >
+        <div className="overflow-hidden">
+          <div className="max-w-[62ch] pr-10 pb-6">
+            <p className="text-foreground/80 text-[15px] leading-relaxed text-pretty">
+              <AnswerText answer={answer} />
+            </p>
+            <nav aria-label={`More on: ${question}`} className="mt-4 flex flex-wrap gap-1.5">
+              {links.map((link) => (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className="press bg-card hover:bg-accent rounded-full border px-3 py-1 text-[13px] font-medium"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
