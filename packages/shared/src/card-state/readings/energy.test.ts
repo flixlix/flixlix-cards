@@ -38,6 +38,41 @@ const grid = (entity: string | { consumption: string; production: string }, inve
   grid: { entity, invert_state: invert, power_outage: { entity: "" } },
 });
 
+const deviceReadings = (accept_negative: boolean) =>
+  ready(
+    energyReadings(
+      hassWith(),
+      config({
+        individual: [{ entity: "sensor.heat_pump", accept_negative }],
+        auxiliary: { entity: "sensor.virtual_battery", accept_negative },
+      }),
+      { "sensor.heat_pump": -200, "sensor.virtual_battery": -3300 }
+    )
+  );
+
+/** Only the auxiliary's secondary accepts negative values. */
+const secondaryOf = (
+  unit: string,
+  growth: number,
+  options: Partial<EnergyFlowCardPlusConfig> = {}
+) =>
+  ready(
+    energyReadings(
+      hassWith({ "sensor.secondary": ["859", unit] }),
+      config(
+        {
+          individual: [{ entity: "sensor.device", secondary_info: { entity: "sensor.secondary" } }],
+          auxiliary: {
+            entity: "sensor.device",
+            secondary_info: { entity: "sensor.secondary", accept_negative: true },
+          },
+        },
+        options
+      ),
+      { "sensor.device": 100, "sensor.secondary": growth }
+    )
+  ).periodSecondaries;
+
 describe("energyReadings", () => {
   test("are loading until the period's growth map is available", () => {
     expect(energyReadings(hassWith(), config(grid("sensor.grid")), undefined)).toEqual({
@@ -130,5 +165,32 @@ describe("energyReadings", () => {
     expect(read({ "sensor.charger_2": 300 })).toEqual([300]);
     expect(read({ "sensor.charger": 1200 })).toEqual([1200]);
     expect(read({})).toEqual([null]);
+  });
+
+  test("a device's growth that went down over the period is signed only with accept_negative", () => {
+    expect(deviceReadings(true)).toMatchObject({ individuals: [-200], auxiliary: -3300 });
+    expect(deviceReadings(false)).toMatchObject({ individuals: [0], auxiliary: 0 });
+  });
+
+  test("other nodes never read growth that went down over the period", () => {
+    const result = ready(
+      energyReadings(hassWith(), config({ solar: { entity: "sensor.solar" } }), {
+        "sensor.solar": -100,
+      })
+    );
+
+    expect(result.solar.total).toBe(0);
+  });
+
+  test("a device's secondary energy meter reads its growth over the period", () => {
+    expect(secondaryOf("kWh", 5200)).toEqual({ individuals: [5200], auxiliary: 5200 });
+    expect(secondaryOf("kWh", -1500)).toEqual({ individuals: [0], auxiliary: -1500 });
+  });
+
+  test("a device's secondary keeps its live state when it is no energy meter or the card ignores the period", () => {
+    const live = { individuals: [null], auxiliary: null };
+
+    expect(secondaryOf("°C", 5200)).toEqual(live);
+    expect(secondaryOf("kWh", 5200, { energy_date_selection: false })).toEqual(live);
   });
 });

@@ -57,7 +57,8 @@ const scaleFor = (
     return explicitScale(config, unit, reading === true);
   }
   const base = { divisor: 1, unit: baseUnit, decimals: config.base_decimals, fallbackDecimals: 0 };
-  if (value >= (config.mega_threshold ?? defaultValues.megaThreshold)) {
+  const size = Math.abs(value);
+  if (size >= (config.mega_threshold ?? defaultValues.megaThreshold)) {
     return {
       divisor: 1000000,
       unit: `M${baseUnit}`,
@@ -65,7 +66,7 @@ const scaleFor = (
       fallbackDecimals: 2,
     };
   }
-  if (value >= (config.kilo_threshold ?? defaultValues.kiloThreshold)) {
+  if (size >= (config.kilo_threshold ?? defaultValues.kiloThreshold)) {
     return {
       divisor: 1000,
       unit: `k${baseUnit}`,
