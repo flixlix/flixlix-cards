@@ -160,7 +160,6 @@
     "connect_to_battery": "Battery (line across to the battery)",
     "connect_to_none": "None (no line)",
     "energy_entities": "Live / today selector",
-    "view_first": "First view",
-    "view_second": "Second view"
+    "views": "Views"
   }
 }

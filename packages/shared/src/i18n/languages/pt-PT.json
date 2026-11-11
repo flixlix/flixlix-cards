@@ -160,7 +160,6 @@
     "connect_to_battery": "Bateria (linha até à bateria)",
     "connect_to_none": "Nenhum (sem linha)",
     "energy_entities": "Seletor em direto / período",
-    "view_first": "Primeira vista",
-    "view_second": "Segunda vista"
+    "views": "Vistas"
   }
 }

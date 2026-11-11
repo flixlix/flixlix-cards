@@ -160,7 +160,6 @@
     "connect_to_battery": "Батарея (лінія до батареї)",
     "connect_to_none": "Немає (без лінії)",
     "energy_entities": "Перемикач зараз / період",
-    "view_first": "Перший вигляд",
-    "view_second": "Другий вигляд"
+    "views": "Вигляди"
   }
 }

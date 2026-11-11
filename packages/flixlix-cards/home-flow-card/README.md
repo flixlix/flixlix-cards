@@ -383,8 +383,10 @@ changes. The house keeps the size and place it has for live power, so only the s
 node without an energy sensor is left out of today, and the home without one shows what flowed into
 it. With `mode: energy`, the card opens on today.
 
-`views` picks the selector's two choices, from `live`, `today`, `yesterday`, `week`, `month` and
-`year`, for example `views: [today, yesterday]`. With one, the card shows it without a selector.
+`views` picks the selector's choices, from `live`, `today`, `yesterday`, `week`, `month` and
+`year`, for example `views: [today, yesterday]`. Two sit side by side; with more, the corner shows
+the current one and opens Home Assistant's dropdown to pick another. With one, the card shows it
+without a selector.
 
 ```yaml
 type: custom:home-flow-card

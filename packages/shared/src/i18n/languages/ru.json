@@ -160,7 +160,6 @@
     "connect_to_battery": "Батарея (линия к батарее)",
     "connect_to_none": "Нет (без линии)",
     "energy_entities": "Переключатель сейчас / период",
-    "view_first": "Первый вид",
-    "view_second": "Второй вид"
+    "views": "Виды"
   }
 }

@@ -160,7 +160,6 @@
     "connect_to_battery": "Batterij (lijn naar de batterij)",
     "connect_to_none": "Geen (geen lijn)",
     "energy_entities": "Keuze live / periode",
-    "view_first": "Eerste weergave",
-    "view_second": "Tweede weergave"
+    "views": "Weergaven"
   }
 }

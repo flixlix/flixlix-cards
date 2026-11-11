@@ -389,9 +389,10 @@ const CARD_OPTIONS: OptionRow[] = [
     default: "[live, today]",
     description: (
       <>
-        With <code>energy_entities</code>, up to two of <code>live</code>, <code>today</code>,{" "}
+        With <code>energy_entities</code>, any of <code>live</code>, <code>today</code>,{" "}
         <code>yesterday</code>, <code>week</code>, <code>month</code> and <code>year</code> for the
-        selector, in order. A single one shows that view without a selector.
+        selector, in order. Two sit side by side; more open in Home Assistant&apos;s dropdown. A
+        single one shows that view without a selector.
       </>
     ),
   },

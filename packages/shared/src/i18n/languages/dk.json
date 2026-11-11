@@ -160,7 +160,6 @@
     "connect_to_battery": "Batteri (linje over til batteriet)",
     "connect_to_none": "Ingen (ingen linje)",
     "energy_entities": "Vælger live / periode",
-    "view_first": "Første visning",
-    "view_second": "Anden visning"
+    "views": "Visninger"
   }
 }

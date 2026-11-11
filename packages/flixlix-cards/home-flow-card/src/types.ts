@@ -257,10 +257,10 @@ const isView = (view: unknown): view is HomeFlowView => VIEWS.some((known) => kn
 
 const selectorViews = (views: unknown[] | undefined): readonly HomeFlowView[] => {
   const picked = [...new Set(views?.length ? views : DEFAULT_VIEWS)];
-  if (picked.length <= 2 && picked.every(isView)) {
+  if (picked.every(isView)) {
     return picked;
   }
-  throw new Error(`views takes up to two of ${VIEWS.join(", ")}`);
+  throw new Error(`views takes any of ${VIEWS.join(", ")}`);
 };
 
 export const toFlowViews = (config: HomeFlowCardConfig): HomeFlowViews | null => {

@@ -160,7 +160,6 @@
     "connect_to_battery": "Batteri (linje till batteriet)",
     "connect_to_none": "Ingen (ingen linje)",
     "energy_entities": "Väljare live / period",
-    "view_first": "Första vy",
-    "view_second": "Andra vy"
+    "views": "Vyer"
   }
 }

@@ -50,6 +50,7 @@ import {
 } from "./types";
 import { unitSlide } from "./unit-slide";
 import { ViewController } from "./view-controller";
+import { viewDropdownStyles } from "./view-dropdown";
 import { viewSelectorStyles } from "./view-selector";
 import { morphWord } from "./word-morph";
 
@@ -307,7 +308,7 @@ export class HomeFlowCard extends LitElement {
     return this._config.animate_numbers !== false && canAnimate;
   }
 
-  static styles = [styles, viewSelectorStyles];
+  static styles = [styles, viewSelectorStyles, viewDropdownStyles];
 }
 
 declare global {

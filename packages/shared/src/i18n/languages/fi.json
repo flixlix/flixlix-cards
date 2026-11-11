@@ -160,7 +160,6 @@
     "connect_to_battery": "Akku (viiva akkuun)",
     "connect_to_none": "Ei mitään (ei viivaa)",
     "energy_entities": "Live / jakso -valitsin",
-    "view_first": "Ensimmäinen näkymä",
-    "view_second": "Toinen näkymä"
+    "views": "Näkymät"
   }
 }

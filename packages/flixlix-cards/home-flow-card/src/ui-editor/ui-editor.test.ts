@@ -34,8 +34,7 @@ const topLevel = (schema: unknown): string[] =>
     : [];
 
 const selectorFields = [
-  "view_first",
-  "view_second",
+  "views",
   "consumption",
   "production",
   "solar",
@@ -98,21 +97,21 @@ describe("editor", () => {
     const selector = Array.isArray(fields) ? fields.at(-1) : undefined;
 
     expect(topLevel(isGroup(selector) ? selector.schema : [])).toEqual([
-      "(group)",
+      "views",
       "energy_entities",
     ]);
   });
 
-  test("the two view dropdowns read and write views, leaving the default out", async () => {
-    const { data, change, changes } = await mountEditor({ views: ["today", "week"] });
+  test("the views list reads and writes views in their usual order, leaving the default out", async () => {
+    const { data, change, changes } = await mountEditor();
 
-    expect(data()).toMatchObject({ view_first: "today", view_second: "week" });
+    expect(data()).toMatchObject({ views: ["live", "today"] });
 
-    change({ type: "custom:home-flow-card", view_first: "live", view_second: "month" });
-    change({ type: "custom:home-flow-card", view_first: "live", view_second: "today" });
+    change({ type: "custom:home-flow-card", views: ["live", "today", "month", "yesterday"] });
+    change({ type: "custom:home-flow-card", views: ["today", "live"] });
 
     expect(changes).toEqual([
-      { type: "custom:home-flow-card", views: ["live", "month"] },
+      { type: "custom:home-flow-card", views: ["live", "today", "yesterday", "month"] },
       { type: "custom:home-flow-card" },
     ]);
   });

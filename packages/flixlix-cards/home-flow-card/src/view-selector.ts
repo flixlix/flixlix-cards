@@ -1,5 +1,6 @@
 import { css, html, type TemplateResult } from "lit";
 import { type HomeFlowView } from "./types";
+import { viewDropdown } from "./view-dropdown";
 
 export type ViewSelector = {
   views: readonly HomeFlowView[];
@@ -19,14 +20,11 @@ const STEPS: Record<string, (index: number, count: number) => number> = {
   End: (_index, count) => count - 1,
 };
 
-export const viewSelector = ({
-  views,
-  selected,
-  label,
-  name,
-  instant,
-  onSelect,
-}: ViewSelector): TemplateResult => {
+export const viewSelector = (selector: ViewSelector): TemplateResult => {
+  if (selector.views.length > 2) {
+    return viewDropdown(selector);
+  }
+  const { views, selected, label, name, instant, onSelect } = selector;
   const index = views.indexOf(selected);
   const onKeydown = (event: KeyboardEvent) => {
     const step = STEPS[event.key];

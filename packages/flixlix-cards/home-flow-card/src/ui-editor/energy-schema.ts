@@ -18,15 +18,16 @@ const twoWayEnergy = (node: "grid" | "battery") =>
     ],
   }) as const;
 
-const viewSelect = (name: "view_first" | "view_second") => ({
-  name,
+const viewsField = {
+  name: "views",
   selector: {
     select: {
-      mode: "dropdown",
+      multiple: true,
+      mode: "list",
       options: VIEWS.map((view) => ({ value: view, label: localize(`card.view.${view}`) })),
     },
   },
-});
+} as const;
 
 export const energyEntities = {
   type: "expandable",
@@ -34,7 +35,7 @@ export const energyEntities = {
   title: localize("editor.energy_entities"),
   icon: "mdi:calendar-today",
   schema: [
-    { type: "grid", name: "", schema: [viewSelect("view_first"), viewSelect("view_second")] },
+    viewsField,
     {
       type: "grid",
       name: "energy_entities",
@@ -52,20 +53,18 @@ export const energyEntities = {
   ],
 } as const;
 
-export const withViewFields = (config: HomeFlowCardConfig) => {
-  const [first, second] = config.views?.length ? config.views : DEFAULT_VIEWS;
-  return { ...config, view_first: first, view_second: second };
-};
+export const withViewFields = (config: HomeFlowCardConfig) => ({
+  ...config,
+  views: config.views?.length ? config.views : [...DEFAULT_VIEWS],
+});
 
-export const fromViewFields = ({
-  view_first: first,
-  view_second: second,
-  ...config
-}: Record<string, unknown>) => {
-  const views = [first, second].filter((view) => typeof view === "string" && view !== "");
+const inViewOrder = (views: unknown) =>
+  VIEWS.filter((view) => Array.isArray(views) && views.includes(view));
+
+export const fromViewFields = ({ views, ...config }: Record<string, unknown>) => {
+  const picked = inViewOrder(views);
   const isDefault =
-    views.length === DEFAULT_VIEWS.length &&
-    views.every((view, index) => view === DEFAULT_VIEWS[index]);
-  const { views: _views, ...rest } = config;
-  return isDefault ? rest : { ...rest, views };
+    picked.length === DEFAULT_VIEWS.length &&
+    picked.every((view, index) => view === DEFAULT_VIEWS[index]);
+  return isDefault || picked.length === 0 ? config : { ...config, views: picked };
 };

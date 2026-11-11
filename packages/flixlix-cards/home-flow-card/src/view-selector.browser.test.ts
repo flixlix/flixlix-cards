@@ -160,13 +160,29 @@ describe("view selector", () => {
     expect(reading(root, "solar")).toBe("3 kWh");
   });
 
-  test("more than two views is a config error", () => {
+  test("more than two views move into Home Assistant's dropdown", async () => {
+    const { root, settle } = await mount({ views: ["live", "today", "yesterday"] });
+    const menu = root.querySelector("ha-dropdown");
+    const items = [...root.querySelectorAll("ha-dropdown-item")];
+
+    expect(root.querySelector('[role="radiogroup"]')).toBeNull();
+    expect(root.querySelector(".view-trigger")?.textContent?.trim()).toBe("Live");
+    expect(items.map((item) => item.getAttribute("value"))).toEqual(["live", "today", "yesterday"]);
+    expect(overlaps(root)).toEqual([]);
+
+    menu?.dispatchEvent(Object.assign(new Event("wa-select"), { detail: { item: items[2] } }));
+    await settle();
+    expect(root.querySelector(".view-trigger")?.textContent?.trim()).toBe("Yesterday");
+    expect(reading(root, "solar")).toBe("5 kWh");
+  });
+
+  test("an unknown view is a config error", () => {
     const config = {
       type: "custom:home-flow-card",
       ...card,
-      views: ["live", "today", "week"],
-    } as HomeFlowCardConfig;
-    expect(() => new HomeFlowCard().setConfig(config)).toThrow("views takes up to two");
+      views: ["live", "decade"],
+    } as unknown as HomeFlowCardConfig;
+    expect(() => new HomeFlowCard().setConfig(config)).toThrow("views takes any of");
   });
 
   test("a node without an energy sensor is left out of the periods", async () => {
