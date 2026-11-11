@@ -280,6 +280,26 @@ export const periodDemo: Demo = {
 /** The period selector on its own, as it sits at the top of an energy dashboard. */
 export const selectorDemo: Demo = { configs: [periodSelector], states: energyStates, energy: true };
 
+export const sortableDemo: Demo = {
+  configs: [
+    {
+      type: "custom:sortable-list-card",
+      title: "Load priority",
+      entity: "input_text.hems_priority",
+      items: [
+        { key: "battery", name: "Battery", icon: "mdi:battery-charging" },
+        { key: "ev", name: "EV charger", icon: "mdi:car-electric" },
+        { key: "heating", name: "Heating", icon: "mdi:radiator" },
+        { key: "water_heater", name: "Hot water", icon: "mdi:water-boiler" },
+      ],
+    },
+  ],
+  states: {
+    "input_text.hems_priority": sensor("battery,ev,heating,water_heater", { unit: undefined }),
+  },
+  width: 400,
+};
+
 export const breakdownDemo: Demo = {
   configs: [
     periodSelector,

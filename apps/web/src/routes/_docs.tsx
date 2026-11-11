@@ -3,6 +3,7 @@ import { Github } from "lucide-react";
 
 import { AppSidebar } from "@/components/app-sidebar";
 import { DocsSearch } from "@/components/docs/docs-search";
+import { OpenWithAgent } from "@/components/docs/open-with-agent";
 import { pageHead } from "@/lib/seo";
 import {
   Breadcrumb,
@@ -97,6 +98,7 @@ function DocsLayout() {
           </Breadcrumb>
           <div className="ml-auto flex flex-1 items-center justify-end gap-2 lg:flex-none">
             <DocsSearch className="lg:w-80" />
+            <OpenWithAgent />
             <Button asChild size="sm" variant="ghost">
               <a
                 href="https://github.com/flixlix/flixlix-cards"

@@ -23,9 +23,38 @@ describe("pageHead", () => {
   });
 
   it("points the canonical URL at the production domain", () => {
-    expect(pageHead("/home-flow-card/examples").links).toEqual([
-      { rel: "canonical", href: "https://cards.flixlix.com/home-flow-card/examples" },
-    ]);
+    expect(pageHead("/home-flow-card/examples").links).toContainEqual({
+      rel: "canonical",
+      href: "https://cards.flixlix.com/home-flow-card/examples",
+    });
+  });
+
+  it("links each page to its markdown version for AI assistants", () => {
+    expect(pageHead("/").links).toContainEqual({
+      rel: "alternate",
+      type: "text/markdown",
+      href: "https://cards.flixlix.com/llms/index.md",
+    });
+    expect(pageHead("/energy-breakdown-card/configuration").links).toContainEqual({
+      rel: "alternate",
+      type: "text/markdown",
+      href: "https://cards.flixlix.com/llms/energy-breakdown-card/configuration.md",
+    });
+  });
+
+  it("shares a card's pages with that card's image", () => {
+    expect(metaContent("/home-flow-card/configuration", "og:image")).toEqual({
+      property: "og:image",
+      content: "https://cards.flixlix.com/og/house.png",
+    });
+    expect(metaContent("/contributing", "og:image")).toEqual({
+      property: "og:image",
+      content: "https://cards.flixlix.com/og/general.png",
+    });
+    expect(metaContent("/", "twitter:card")).toEqual({
+      name: "twitter:card",
+      content: "summary_large_image",
+    });
   });
 
   it("keeps playgrounds out of the index", () => {
