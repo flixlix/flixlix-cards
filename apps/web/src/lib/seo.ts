@@ -3,9 +3,9 @@ import { SEARCH_ENTRIES, type SearchEntry } from "@/components/docs/docs-search-
 import { OG_IMAGE_SIZE, ogImageUrl, type OgImage } from "./og-images";
 import { markdownUrl, SITE_NAME, SITE_URL } from "./site";
 
-const HOME_TITLE = `${SITE_NAME}: Home Assistant energy cards`;
+const HOME_TITLE = `Solar, battery and grid power flow cards for Home Assistant | ${SITE_NAME}`;
 const HOME_DESCRIPTION =
-  "Open-source Lovelace cards that show where your home's electricity comes from and where it goes.";
+  "Free, open-source Lovelace cards that show live solar, battery and grid power flowing through your home: Power Flow Card Plus, Home Flow Card, Energy Flow Card Plus and more.";
 
 export const INDEXABLE_PAGES: SearchEntry[] = SEARCH_ENTRIES.filter(
   (entry) => entry.type === "page" && !isPlayground(entry.to)

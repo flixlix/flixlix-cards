@@ -74,6 +74,11 @@ function createConverter(pagePath: string): TurndownService {
     },
   });
 
+  converter.addRule("disclosure", {
+    filter: (node) => node.nodeName === "BUTTON" && node.hasAttribute("aria-controls"),
+    replacement: (content) => content,
+  });
+
   // Rules added later take precedence, and addRule outranks remove(), so this goes last.
   converter.addRule("skip", {
     filter: (node) =>

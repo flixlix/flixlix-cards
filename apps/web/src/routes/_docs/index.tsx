@@ -5,11 +5,15 @@ import * as React from "react";
 import { CardDemo } from "@/components/card-demo";
 import { CardPreview } from "@/components/card-preview";
 import { houseDay } from "@/components/demos";
+import { faqStructuredData, HomeFaq } from "@/components/home-faq";
 import { SegmentedControl } from "@/components/segmented-control";
 import { cn } from "cn";
 import { Button } from "@flixlix-cards/ui/components/button";
 
 export const Route = createFileRoute("/_docs/")({
+  head: () => ({
+    scripts: [{ type: "application/ld+json", children: JSON.stringify(faqStructuredData) }],
+  }),
   component: IndexPage,
 });
 
@@ -48,7 +52,7 @@ const GROUPS: Group[] = [
   {
     id: "live-power",
     title: "What's flowing right now",
-    lead: "Live power in watts and kilowatts, redrawn every time a sensor changes.",
+    lead: "Live solar, battery and grid power in watts, redrawn every time a sensor changes.",
     cards: [
       {
         slug: "power-flow-card-plus",
@@ -318,13 +322,12 @@ function IndexPage() {
     <div className="pb-8">
       <section className="grid grid-cols-1 items-center gap-x-12 gap-y-10 pt-4 pb-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,30rem)] lg:pt-10 lg:pb-24">
         <div>
-          <h1 className="max-w-[13ch] text-[2.75rem] leading-[1.02] font-semibold tracking-[-0.035em] md:text-[3.75rem]">
-            Lovelace cards for the power in your home
+          <h1 className="max-w-[12ch] text-[2.75rem] leading-[1.02] font-semibold tracking-[-0.035em] text-balance md:text-[3.75rem]">
+            Power flow cards for Home Assistant
           </h1>
-          <p className="text-foreground/75 mt-6 max-w-[46ch] text-lg leading-relaxed text-pretty">
-            See where your power comes from and where it goes, live on your Home Assistant
-            dashboard. Solar, battery, grid and the devices in between, clear at a glance and
-            beautiful enough to leave on the wall tablet.
+          <p className="text-foreground/75 mt-6 max-w-[44ch] text-lg leading-relaxed text-pretty">
+            Watch solar, battery and grid power move through your home, live on your dashboard. Free
+            and open source.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Button asChild size="lg" className="rounded-full px-6">
@@ -340,9 +343,6 @@ function IndexPage() {
               </a>
             </Button>
           </div>
-          <p className="text-muted-foreground mt-6 text-sm">
-            Free and MIT licensed. Installs through HACS, configures in the dashboard editor.
-          </p>
         </div>
         <HeroHouse />
       </section>
@@ -365,7 +365,9 @@ function IndexPage() {
         </section>
       ))}
 
-      <section className="mt-6 border-t pt-12">
+      <HomeFaq />
+
+      <section className="mt-12 border-t pt-12">
         <h2 className="text-[1.75rem] leading-tight font-semibold tracking-[-0.025em]">
           Something missing?
         </h2>
