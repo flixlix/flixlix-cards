@@ -10,6 +10,7 @@ import {
 import { dotLoop } from "@flixlix-cards/shared/testing/dot-loop";
 import { expectFlowCard } from "@flixlix-cards/shared/testing/expect-flow-card";
 import { flowScenarios } from "@flixlix-cards/shared/testing/flow-scenarios";
+import { gpuLayersWithAndWithoutDots } from "@flixlix-cards/shared/testing/gpu-layers";
 import { type MountedCard, mountCard } from "@flixlix-cards/shared/testing/mount-card";
 import { PowerFlowCardPlus } from "./power-flow-card-plus";
 
@@ -969,6 +970,108 @@ describe("dot motion across updates", () => {
     await setHass(withStates(hass, { "sensor.grid": "3000" }));
     expect(motionOf(root, gridDot)).toBe(before);
     expect(dotLoop(root, gridDot).seconds).toBeLessThan(slow);
+  });
+});
+
+type Point = { x: number; y: number };
+
+const pointsOf = (text: string): Point[] =>
+  [...text.matchAll(/(-?[\d.]+)[ ,px]+(-?[\d.]+)/g)].map(([, x, y]) => ({
+    x: Number(x),
+    y: Number(y),
+  }));
+
+type Ends = [Point | undefined, Point | undefined];
+
+/** Where a dot starts and ends its loop, in its own pixels. */
+const endsOf = (dot: SVGSVGElement): Ends => {
+  const motion = dot.querySelector("animateMotion");
+  if (motion) {
+    const points = pointsOf(motion.getAttribute("path") ?? "");
+    return [points.at(0), points.at(-1)];
+  }
+  const effect = dot.getAnimations()[0]?.effect;
+  const frames = effect instanceof KeyframeEffect ? effect.getKeyframes() : [];
+  const first = pointsOf(String(frames.at(0)?.transform))[0];
+  const last = pointsOf(String(frames.at(-1)?.transform))[0];
+  return effect?.getTiming().direction === "reverse" ? [last, first] : [first, last];
+};
+
+/** Each dot's loop ends, keyed by the line it runs along. */
+const dotEnds = (root: ShadowRoot): Map<string, Ends> =>
+  new Map(
+    [...root.querySelectorAll<SVGSVGElement>("svg.flow-dot")].map((dot) => [
+      dot.dataset.path ?? "",
+      endsOf(dot),
+    ])
+  );
+
+const mountScenario = (scenario: (typeof flowScenarios)[number], options: object = {}) =>
+  mountCard(
+    PowerFlowCardPlus,
+    {
+      type: "custom:power-flow-card-plus",
+      ...scenario.options,
+      ...options,
+      entities: scenario.entities,
+    },
+    fakeHass({ states: scenario.states, templates: scenario.templates }),
+    { width: scenario.width }
+  );
+
+/** How far through its loop a classic dot is at `time` seconds of its own timeline. */
+const classicProgress = (motion: Element, time: number) => {
+  const loops =
+    (time - Number.parseFloat(motion.getAttribute("begin") ?? "0")) /
+    Number.parseFloat(motion.getAttribute("dur") ?? "1");
+  return loops - Math.floor(loops);
+};
+
+describe("classic dots (dot_animation: classic)", () => {
+  test.for(flowScenarios)(
+    "$name: they run the same way along the same lines as GPU dots, with no GPU layer",
+    async (scenario) => {
+      const gpu = dotEnds((await mountScenario(scenario, { dot_animation: "gpu" })).root);
+      const { root } = await mountScenario(scenario, { dot_animation: "classic" });
+      expect(root.getAnimations()).toEqual([]);
+      const classic = dotEnds(root);
+      expect([...classic.keys()]).toEqual([...gpu.keys()]);
+      for (const [path, ends] of classic) {
+        ends.forEach((point, index) => {
+          const expected = gpu.get(path)?.[index];
+          expect(point?.x).toBeCloseTo(Number(expected?.x), 1);
+          expect(point?.y).toBeCloseTo(Number(expected?.y), 1);
+        });
+      }
+      const layers = await gpuLayersWithAndWithoutDots(root);
+      expect(layers.with).toEqual(layers.without);
+    }
+  );
+
+  test("a new speed carries on from where the dot is", async () => {
+    const hass = fakeHass({
+      states: { "sensor.grid": "300", "sensor.solar": "100", "light.kitchen": "off" },
+      templates: { [priceTemplate]: "1.20 €" },
+    });
+    const { root, setHass } = await mountCard(
+      PowerFlowCardPlus,
+      { ...watchedConfig, dot_animation: "classic" },
+      hass
+    );
+    const dot = root.querySelector<SVGSVGElement>(gridDot);
+    // A still clock gives one moment to compare the old and the new motion at.
+    dot?.pauseAnimations();
+    const before = dot?.querySelector("animateMotion")?.cloneNode();
+    await setHass(withStates(hass, { "sensor.grid": "3000" }));
+    const after = dot?.querySelector("animateMotion");
+    if (!dot || !(before instanceof Element) || !after) {
+      throw new Error("grid dot has no classic motion");
+    }
+    const now = dot.getCurrentTime();
+    expect(Number.parseFloat(after.getAttribute("dur") ?? "")).toBeLessThan(
+      Number.parseFloat(before.getAttribute("dur") ?? "")
+    );
+    expect(classicProgress(after, now)).toBeCloseTo(classicProgress(before, now), 2);
   });
 });
 

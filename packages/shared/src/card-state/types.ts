@@ -1,6 +1,7 @@
 import { type FossilEnergyConsumption } from "@flixlix-cards/shared/states/utils/energy-period";
 import {
   type BatteryObject,
+  type DotAnimationOption,
   type EnergyFlowCardPlusConfig,
   type GridObject,
   type HomeObject,
@@ -148,6 +149,8 @@ export type ReadyCardState = {
   flows: Flows;
   /** Whether flow dots are animated. */
   animate: boolean;
+  /** How flow dots move; `auto` is resolved in the browser (`resolveDotAnimation`). */
+  dotAnimation: DotAnimationOption;
   cssVars: Record<`--${string}`, string>;
   layout: CardLayout;
 };

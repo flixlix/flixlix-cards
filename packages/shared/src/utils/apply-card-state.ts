@@ -1,4 +1,5 @@
 import { lineDuration, type ReadyCardState } from "@flixlix-cards/shared/card-state";
+import { type DotAnimation, resolveDotAnimation } from "@flixlix-cards/shared/utils/dot-animation";
 
 /** Points sampled along a line; the dot moves straight between them. */
 const SAMPLES = 40;
@@ -96,6 +97,106 @@ const dotMotion = (root: ShadowRoot, dot: SVGSVGElement) => {
   return { route, lengthPixels: length * pixelsPerUnit };
 };
 
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+/** Each classic dot's route and timing, in seconds of its own `<svg>`'s timeline. */
+const classicMotions = new WeakMap<
+  SVGSVGElement,
+  { route: Route; duration: number; begin: number }
+>();
+
+/** How far through its loop a classic dot is, from 0 to 1, stopping its current motion. */
+const stopClassicDot = (dot: SVGSVGElement): number => {
+  const running = classicMotions.get(dot);
+  for (const animation of dot.querySelectorAll("animateMotion, animate")) {
+    animation.remove();
+  }
+  classicMotions.delete(dot);
+  if (!running) {
+    return 0;
+  }
+  const loops = (dot.getCurrentTime() - running.begin) / running.duration;
+  return loops - Math.floor(loops);
+};
+
+const smil = (tag: "animateMotion" | "animate", attributes: Record<string, string>) => {
+  const element = document.createElementNS(SVG_NS, tag);
+  for (const [name, value] of Object.entries(attributes)) {
+    element.setAttribute(name, value);
+  }
+  return element;
+};
+
+/**
+ * Moves a dot with SVG `<animateMotion>`, as before 0.4.0: drawn on the main thread, so Chromium
+ * adds no GPU layers for it. The path runs in the direction of travel because older Chromium
+ * ignores `keyPoints` with `calcMode="paced"` (the `no-paced-key-points` lint rule).
+ */
+const moveClassicDot = (dot: SVGSVGElement, route: Route, duration: number, progress: number) => {
+  const points = route.reverse
+    ? route.points.map((point, index, all) => all[all.length - 1 - index] ?? point)
+    : route.points;
+  const begin = dot.getCurrentTime() - progress * duration;
+  const timing = { dur: `${duration}s`, begin: `${begin}s`, repeatCount: "indefinite" };
+  const circle = dot.firstElementChild;
+  circle?.setAttribute("r", String(route.radius));
+  circle?.append(
+    smil("animateMotion", {
+      path: points.map(({ x, y }, index) => `${index === 0 ? "M" : "L"}${x} ${y}`).join(" "),
+      calcMode: "paced",
+      ...timing,
+    })
+  );
+  if (points.some(({ shown }) => !shown)) {
+    // The points are evenly spaced along the line, so they are evenly spaced in time too.
+    circle?.append(
+      smil("animate", {
+        attributeName: "opacity",
+        values: points.map(({ shown }) => (shown ? "1" : "0")).join(";"),
+        keyTimes: points.map((_, index) => String(index / (points.length - 1))).join(";"),
+        calcMode: "linear",
+        ...timing,
+      })
+    );
+  }
+  classicMotions.set(dot, { route, duration, begin });
+};
+
+/** Like a GPU dot, a classic dot carries on from the same place when its speed or route changes. */
+const animateClassicDot = (dot: SVGSVGElement, route: Route, duration: number) => {
+  const running = classicMotions.get(dot);
+  if (running && sameRoute(running.route, route) && Math.abs(running.duration - duration) < 1e-6) {
+    return;
+  }
+  moveClassicDot(dot, route, duration, stopClassicDot(dot));
+};
+
+/** Moves a dot with Web Animations, which Chromium and WebKit run off the main thread. */
+const animateGpuDot = (dot: SVGSVGElement, route: Route, duration: number) => {
+  const running = motions.get(dot);
+  if (running && running.animation.playState !== "idle" && sameRoute(running.route, route)) {
+    const built = Number(running.animation.effect?.getTiming().duration);
+    const rate = built / duration;
+    if (Math.abs(rate - running.animation.playbackRate) > 1e-6) {
+      running.animation.updatePlaybackRate(rate);
+    }
+    return;
+  }
+  const progress = stopDot(dot);
+  dot.firstElementChild?.setAttribute("r", String(route.radius));
+  const keyframes = route.points.map(({ x, y, shown }) => ({
+    transform: `translate(${x}px, ${y}px)`,
+    opacity: shown ? 1 : 0,
+  }));
+  const animation = dot.animate(keyframes, {
+    duration,
+    iterations: Infinity,
+    direction: route.reverse ? "reverse" : "normal",
+  });
+  animation.currentTime = progress * duration;
+  motions.set(dot, { animation, route });
+};
+
 /**
  * Moves every flow dot along its line at an even pace. `data-duration` is seconds per reference
  * line, stretched to the line's length (`lineDuration`).
@@ -104,43 +205,26 @@ const dotMotion = (root: ShadowRoot, dot: SVGSVGElement) => {
  * playback rate: cancelling a compositor animation and starting another makes Chromium redraw the
  * dot where the main thread last saw it, a step back on every state update (#478). A dot only
  * starts over, from the same place on its line, when its route or direction changes.
+ *
+ * Browsers without Web Animations (before Chrome 84) get classic dots.
  */
-const animateFlowDots = (root: ShadowRoot): void => {
-  if (typeof Element.prototype.animate !== "function") {
-    return;
-  }
+const animateFlowDots = (root: ShadowRoot, animation: DotAnimation): void => {
+  const mode = typeof Element.prototype.animate === "function" ? animation : "classic";
   for (const dot of root.querySelectorAll<SVGSVGElement>("svg.flow-dot")) {
     const motion = dotMotion(root, dot);
-    const duration = motion
-      ? lineDuration(Number(dot.dataset.duration), motion.lengthPixels) * 1000
-      : 0;
-    if (!motion || !(duration > 0)) {
+    const seconds = motion ? lineDuration(Number(dot.dataset.duration), motion.lengthPixels) : 0;
+    if (!motion || !(seconds > 0)) {
       stopDot(dot);
+      stopClassicDot(dot);
       continue;
     }
-    const { route } = motion;
-    const running = motions.get(dot);
-    if (running && running.animation.playState !== "idle" && sameRoute(running.route, route)) {
-      const built = Number(running.animation.effect?.getTiming().duration);
-      const rate = built / duration;
-      if (Math.abs(rate - running.animation.playbackRate) > 1e-6) {
-        running.animation.updatePlaybackRate(rate);
-      }
-      continue;
+    if (mode === "classic") {
+      stopDot(dot);
+      animateClassicDot(dot, motion.route, seconds);
+    } else {
+      stopClassicDot(dot);
+      animateGpuDot(dot, motion.route, seconds * 1000);
     }
-    const progress = stopDot(dot);
-    dot.firstElementChild?.setAttribute("r", String(route.radius));
-    const keyframes = route.points.map(({ x, y, shown }) => ({
-      transform: `translate(${x}px, ${y}px)`,
-      opacity: shown ? 1 : 0,
-    }));
-    const animation = dot.animate(keyframes, {
-      duration,
-      iterations: Infinity,
-      direction: route.reverse ? "reverse" : "normal",
-    });
-    animation.currentTime = progress * duration;
-    motions.set(dot, { animation, route });
   }
 };
 
@@ -167,6 +251,6 @@ const applyCssVars = (host: HTMLElement, cssVars: ReadyCardState["cssVars"]): vo
 export const applyCardState = (host: HTMLElement, state: ReadyCardState): void => {
   applyCssVars(host, state.cssVars);
   if (host.shadowRoot) {
-    animateFlowDots(host.shadowRoot);
+    animateFlowDots(host.shadowRoot, resolveDotAnimation(state.dotAnimation));
   }
 };

@@ -57,6 +57,12 @@ interface mainConfigOptions {
   style_ha_card?: string;
   style_card_content?: string;
   disable_dots?: boolean;
+  /**
+   * How flow dots move: `gpu` (Web Animations, off the main thread), `classic` (SVG
+   * `<animateMotion>`, on the main thread as before 0.4.0) or `auto`, the default, which picks
+   * `classic` on GPUs known to draw `gpu` dots wrong.
+   */
+  dot_animation?: DotAnimationOption;
   no_labels?: boolean;
   display_zero_lines?: {
     mode?: DisplayZeroLinesMode;
@@ -184,3 +190,5 @@ export type ConfigEntity =
   | Home
   | FossilFuelPercentage
   | IndividualDeviceType;
+
+export type DotAnimationOption = "auto" | "gpu" | "classic";
