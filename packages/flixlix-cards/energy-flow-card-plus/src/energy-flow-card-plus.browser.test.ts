@@ -10,6 +10,7 @@ import {
 import { dotLoop } from "@flixlix-cards/shared/testing/dot-loop";
 import { expectFlowCard } from "@flixlix-cards/shared/testing/expect-flow-card";
 import { asEnergyUnits, flowScenarios } from "@flixlix-cards/shared/testing/flow-scenarios";
+import { gpuLayersWithAndWithoutDots } from "@flixlix-cards/shared/testing/gpu-layers";
 import { mountCard } from "@flixlix-cards/shared/testing/mount-card";
 import { EnergyFlowCardPlus } from "./energy-flow-card-plus";
 
@@ -41,6 +42,34 @@ describe("energy flow card scenarios", () => {
     );
     expectFlowCard(card, scenario.expect, asEnergyUnits);
   });
+});
+
+describe("classic dots (dot_animation: classic)", () => {
+  test.for(flowScenarios.filter((scenario) => scenario.energy))(
+    "$name: they move with SVG animation and add no GPU layer",
+    async (scenario) => {
+      const { root } = await mountCard(
+        EnergyFlowCardPlus,
+        {
+          type: "custom:energy-flow-card-plus",
+          ...scenario.options,
+          dot_animation: "classic",
+          entities: scenario.entities,
+        },
+        fakeHass({
+          states: scenario.states,
+          statistics: growthOf(scenario.states),
+          energyCollection: energyCollection(day(1).start, day(1).end),
+        }),
+        { width: scenario.width }
+      );
+      const dots = [...root.querySelectorAll("svg.flow-dot")];
+      expect(root.getAnimations()).toEqual([]);
+      expect(dots.filter((dot) => !dot.querySelector("animateMotion"))).toEqual([]);
+      const layers = await gpuLayersWithAndWithoutDots(root);
+      expect(layers.with).toEqual(layers.without);
+    }
+  );
 });
 
 describe("energy period", () => {

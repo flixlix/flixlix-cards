@@ -447,6 +447,19 @@ const ADVANCED_CARD_OPTIONS = (v: Variant): OptionRow[] => [
     default: "6",
     description: "Time (s) for the slowest dot to travel 175px of line; shorter lines take less.",
   },
+  {
+    name: "dot_animation",
+    type: "string",
+    default: "auto",
+    description: (
+      <>
+        How the flow dots move: <code>gpu</code> moves them off the main thread,{" "}
+        <code>classic</code> uses SVG animation as before v0.4.0. <code>auto</code> picks{" "}
+        <code>classic</code> on ARM Mali GPUs, such as the Fire HD 10 (2023), whose drivers draw
+        icons, values and lines in the wrong place with <code>gpu</code> dots.
+      </>
+    ),
+  },
   // The energy card always uses the relative formula, so these never apply there
   ...(v.key === "energy"
     ? []

@@ -88,6 +88,10 @@ export function computeCardState(input: CardStateInput): CardState {
     },
     flows,
     animate,
+    dotAnimation:
+      config.dot_animation === "gpu" || config.dot_animation === "classic"
+        ? config.dot_animation
+        : "auto",
     cssVars: computeCssVars(
       config,
       { ...nodes, auxiliary },
