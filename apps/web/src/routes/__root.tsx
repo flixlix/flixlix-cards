@@ -19,12 +19,12 @@ export const Route = createRootRoute({
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "flixlix-cards: Home Assistant energy cards",
+        title: "Solar, battery and grid power flow cards for Home Assistant | flixlix-cards",
       },
       {
         name: "description",
         content:
-          "Open-source Lovelace cards that show where your home's electricity comes from and where it goes.",
+          "Free, open-source Lovelace cards that show live solar, battery and grid power flowing through your home: Power Flow Card Plus, Home Flow Card, Energy Flow Card Plus and more.",
       },
     ],
     links: [
