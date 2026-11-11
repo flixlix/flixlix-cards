@@ -1143,6 +1143,22 @@ export const SEARCH_ENTRIES: SearchEntry[] = [
   ...CONTRIBUTING_SECTIONS,
 ];
 
+const CARD_NAMES_BY_OVERVIEW: Record<string, string> = {
+  "/power-flow-card-plus": POWER,
+  "/energy-flow-card-plus": ENERGY,
+  [BREAKDOWN_BASE]: BREAKDOWN,
+  [PERIOD_BASE]: PERIOD,
+  [HOUSE_BASE]: HOUSE,
+  [SORTABLE_BASE]: SORTABLE,
+};
+
+const TYPE_RANK: Record<SearchEntry["type"], number> = {
+  page: 0,
+  section: 1,
+  option: 2,
+  example: 3,
+};
+
 /** Exact match beats prefix match beats substring match. */
 function matchScore(value: string, q: string, weight: number): number {
   if (!value) {
@@ -1155,6 +1171,20 @@ function matchScore(value: string, q: string, weight: number): number {
     return weight * 2;
   }
   return value.includes(q) ? weight : 0;
+}
+
+/** Every query word starts a word of the card's name, so "energy card" names all energy cards. */
+function namesCard(query: string, entry: SearchEntry): boolean {
+  const cardName = CARD_NAMES_BY_OVERVIEW[entry.to];
+  if (!cardName) {
+    return false;
+  }
+  const words = cardName.toLowerCase().split(/\s+/);
+  return query
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean)
+    .every((token) => words.some((word) => word.startsWith(token)));
 }
 
 function score(query: string, entry: SearchEntry): number {
@@ -1183,11 +1213,6 @@ function score(query: string, entry: SearchEntry): number {
     } // multi-word queries require all tokens to match
   }
 
-  // boost type
-  if (entry.type === "page" && total > 0) {
-    total += 1;
-  }
-
   return total;
 }
 
@@ -1196,9 +1221,14 @@ export function searchDocs(query: string, max = 8): SearchEntry[] {
   if (!q) {
     return [];
   }
-  return SEARCH_ENTRIES.map((entry) => ({ entry, s: score(q, entry) }))
+  return SEARCH_ENTRIES.map((entry) => ({ entry, card: namesCard(q, entry), s: score(q, entry) }))
     .filter(({ s }) => s > 0)
-    .toSorted((a, b) => b.s - a.s)
+    .toSorted(
+      (a, b) =>
+        Number(b.card) - Number(a.card) ||
+        b.s - a.s ||
+        TYPE_RANK[a.entry.type] - TYPE_RANK[b.entry.type]
+    )
     .slice(0, max)
     .map(({ entry }) => entry);
 }
