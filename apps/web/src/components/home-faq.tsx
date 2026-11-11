@@ -94,7 +94,7 @@ export function HomeFaq() {
       <div className="divide-y border-b">
         {FAQS.map(({ question, answer, links }) => (
           <details key={question} className="group">
-            <summary className="press flex cursor-pointer list-none items-center justify-between gap-6 py-5 [&::-webkit-details-marker]:hidden">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-6 py-5 [&::-webkit-details-marker]:hidden">
               <h3 className="text-[17px] leading-snug font-medium text-pretty">{question}</h3>
               <Plus
                 aria-hidden
