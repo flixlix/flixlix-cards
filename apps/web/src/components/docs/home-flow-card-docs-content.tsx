@@ -869,7 +869,9 @@ const CONDITION_ROWS: OptionRow[] = [
     type: "condition",
     description: (
       <>
-        <code>locations</code>: <code>home</code>, <code>not_home</code> or zones.
+        <code>target</code>: zones, by id, area, floor or label; <code>match_mode</code>:{" "}
+        <code>any_zone</code> or <code>active_zone</code>; <code>away</code>. Or the older{" "}
+        <code>locations</code>: <code>home</code>, <code>not_home</code> or zone names.
       </>
     ),
   },

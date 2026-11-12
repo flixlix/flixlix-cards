@@ -1,6 +1,7 @@
 import { type Locator } from "@playwright/test";
 import { CARD_DASHBOARDS } from "../src/dashboards.ts";
 import { cardByTitle, expect, openDashboard, runScript, test } from "../src/fixtures.ts";
+import { getJson, isObject, postJson, readToken } from "../src/hass.ts";
 
 const TAG = "home-flow-card";
 
@@ -46,4 +47,38 @@ test.describe("the car's conditions", () => {
     await runScript("car_away");
     await expect.poll(() => carStatus(card)).toBe("hidden");
   });
+});
+
+/** Puts the dev user's person where a device tracker would, keeping its other attributes. */
+const placePerson = async (state: string, inZones: string[]) => {
+  const token = await readToken();
+  const person = await getJson("/api/states/person.dev", token);
+  const attributes = isObject(person) && isObject(person.attributes) ? person.attributes : {};
+  await postJson(
+    "/api/states/person.dev",
+    { state, attributes: { ...attributes, in_zones: inZones } },
+    token
+  );
+};
+
+test.describe("a location condition as Home Assistant 2026.11 writes it", () => {
+  const title = "Car: shown while the viewer is home (location by zone)";
+
+  test.afterAll(async () => {
+    await placePerson("unknown", []);
+  });
+
+  for (const [state, inZones, status] of [
+    ["home", ["zone.home"], "idle"],
+    ["not_home", [], "hidden"],
+  ] as const) {
+    test(`shows the car to a viewer whose person is ${state}: ${status}`, async ({ page }) => {
+      await runScript("car_unplugged");
+      await placePerson(state, [...inZones]);
+      await openDashboard(page, CARD_DASHBOARDS[TAG]);
+      const card = cardByTitle(page, TAG, title);
+      await expect(card.locator("svg").first()).toBeAttached();
+      await expect.poll(() => carStatus(card)).toBe(status);
+    });
+  }
 });
