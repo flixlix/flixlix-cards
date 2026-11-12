@@ -41,9 +41,10 @@ export const LABEL_ANCHORS: Record<Exclude<LabelledNode, "heat_pump">, LabelAnch
 };
 
 /**
- * The heat pump's label hangs left of its leader. With a car it rises from the unit's top to the
- * roof's height; without one, a label up there would cover the panels, so it hangs down from the
- * unit's foot into the ground the car would take, left of the home's label.
+ * The heat pump's label hangs left of its leader, into the room left of the house. With a car it
+ * rises from the unit's top right corner to above the roof's eave, so it reaches less far left;
+ * without one, a label up there would cover the panels, so it hangs down from the unit's foot into
+ * the ground the car would take, left of the home's label.
  */
 const heatPumpAnchor = (layout: SceneLayout): LabelAnchor => {
   const x = heatPumpLeft(layout);
@@ -51,9 +52,9 @@ const heatPumpAnchor = (layout: SceneLayout): LabelAnchor => {
   if (!layout.car) {
     return { at: [x, HEAT_PUMP_FRONT, bottom], leader: 26, side: "left" };
   }
-  const at: Point = [x, HEAT_PUMP_FRONT, bottom + HEAT_PUMP.height];
-  // its leader ends left of the house at the roof's height, clear of the roof and the solar label
-  return { at, leader: -40 - project(at)[1], side: "left" };
+  const at: Point = [x + HEAT_PUMP.width - 0.3, HEAT_PUMP_FRONT, bottom + HEAT_PUMP.height];
+  // its leader ends left of the roof's slope, clear of the roof and the solar label
+  return { at, leader: -58 - project(at)[1], side: "left" };
 };
 
 /** Under the grid cable, clear of the generator's label above it. */
