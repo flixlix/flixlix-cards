@@ -14,11 +14,25 @@ export class Extent {
   /** Points the box must hold without being centred on them, as `require` keeps them. */
   private _required: [left: number, right: number] = [Infinity, -Infinity];
 
+  /** Points the centred box widens to on their own side only, as `extend` keeps them. */
+  private _extended: [left: number, right: number] = [Infinity, -Infinity];
+
   clone(): Extent {
     const copy = new Extent();
     copy._box = [...this._box];
     copy._required = [...this._required];
+    copy._extended = [...this._extended];
     return copy;
+  }
+
+  /**
+   * Widens the box to hold `x` on that side alone, after centring and without its padding: a point
+   * in the room centring already leaves costs nothing, and one past it widens the box by only its
+   * overhang.
+   */
+  extend(x: number, margin = 0): void {
+    const [left, right] = this._extended;
+    this._extended = [Math.min(left, x - margin), Math.max(right, x + margin)];
   }
 
   /** Widens the box to hold `x`, without moving the middle the box is centred on. */
@@ -50,10 +64,12 @@ export class Extent {
     const half =
       Math.max(centerX - Math.min(left, requiredLeft), Math.max(right, requiredRight) - centerX) +
       padding;
+    const [extendedLeft, extendedRight] = this._extended;
+    const x = Math.min(centerX - half, extendedLeft);
     return {
-      x: centerX - half,
+      x,
       y: top - padding,
-      width: half * 2,
+      width: Math.max(centerX + half, extendedRight) - x,
       height: bottom - top + padding * 2,
     };
   }

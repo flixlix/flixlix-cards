@@ -51,12 +51,15 @@ export const includeLabel = (
   // a label starts LABEL_INDENT left of its leader, as its CSS moves it, or ends LABEL_INDENT
   // right of it when it hangs left; the house's centring leaves room for that on a wide card, but
   // not on a narrow one
-  const left = anchor.side === "left" ? x + LABEL_INDENT * scale - width : x - LABEL_INDENT * scale;
+  if (anchor.side === "left") {
+    // hangs into the room the house's centring leaves, so it widens the box only past it
+    extent.include([x + LABEL_INDENT * scale, end], 4);
+    extent.extend(x + LABEL_INDENT * scale - width, 4);
+    return;
+  }
+  const left = x - LABEL_INDENT * scale;
   extent.require(left, 4);
   extent.include([left + width, end], 4);
-  if (anchor.side === "left") {
-    extent.include([left, end], 4);
-  }
 };
 
 /** Makes room in the viewBox for a drawn label, at `scale` against the scene. */

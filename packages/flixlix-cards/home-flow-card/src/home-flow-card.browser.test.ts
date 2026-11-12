@@ -449,6 +449,25 @@ describe("a heat pump", () => {
     expect(stage && label.getBoundingClientRect().left).toBeGreaterThanOrEqual(stage?.left ?? 0);
   });
 
+  test.each([
+    ["without a car", 500, {}],
+    ["with a car", 500, car],
+    ["without a car, wide", 800, {}],
+    ["with a car, wide", 800, car],
+  ])(
+    "its label hangs in the room left of the house, which keeps its size %s",
+    async (_, width, options) => {
+      const states = { ...heatPumpHeating, ...carCharging, ...heatPumpStates };
+      const houseWidth = async (config: Partial<HomeFlowCardConfig>) =>
+        (await mountHouse(config, states, width)).root
+          .querySelector(".node.home")
+          ?.getBoundingClientRect().width ?? 0;
+      const without = await houseWidth(options);
+
+      expect(await houseWidth({ ...heatPump(), ...options })).toBeGreaterThan(without * 0.98);
+    }
+  );
+
   test("its fan turns while it runs, and stands still while it is off", async () => {
     const running = await mountHouse(heatPump(), heatPumpHeating);
     const off = await mountHouse(heatPump(), { ...heatPumpHeating, "sensor.heat_pump_power": "0" });
