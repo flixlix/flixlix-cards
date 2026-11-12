@@ -234,7 +234,10 @@ export class EnergyFlowCardPlusEditor extends LitElement implements LovelaceCard
     if (currentPage === "individual") {
       return html`
         ${alerts}
-        <subpage-header @go-back=${this._goBack} page=${currentPage}> </subpage-header>
+        <flixlix-subpage-header
+          @go-back=${this._goBack}
+          header=${localize(`editor.${currentPage}`)}
+        ></flixlix-subpage-header>
         <individual-devices-editor
           .hass=${this.hass}
           .config=${this._config}
@@ -245,7 +248,10 @@ export class EnergyFlowCardPlusEditor extends LitElement implements LovelaceCard
     if (currentPage === "buttons") {
       return html`
         ${alerts}
-        <subpage-header @go-back=${this._goBack} page=${currentPage}> </subpage-header>
+        <flixlix-subpage-header
+          @go-back=${this._goBack}
+          header=${localize(`editor.${currentPage}`)}
+        ></flixlix-subpage-header>
         <buttons-editor .hass=${this.hass} .config=${this._config}></buttons-editor>
       `;
     }
@@ -253,7 +259,10 @@ export class EnergyFlowCardPlusEditor extends LitElement implements LovelaceCard
     if (currentPage === "advanced") {
       return html`
         ${alerts}
-        <subpage-header @go-back=${this._goBack} page=${currentPage}> </subpage-header>
+        <flixlix-subpage-header
+          @go-back=${this._goBack}
+          header=${localize(`editor.${currentPage}`)}
+        ></flixlix-subpage-header>
         <ha-form
           .hass=${this.hass}
           .data=${data}
@@ -270,7 +279,10 @@ export class EnergyFlowCardPlusEditor extends LitElement implements LovelaceCard
     if (entityPage) {
       return html`
         ${alerts}
-        <subpage-header @go-back=${this._goBack} page=${entityPage.page}> </subpage-header>
+        <flixlix-subpage-header
+          @go-back=${this._goBack}
+          header=${localize(`editor.${entityPage.page}`)}
+        ></flixlix-subpage-header>
         <ha-form
           .hass=${this.hass}
           .data=${data.entities[entityPage.page]}

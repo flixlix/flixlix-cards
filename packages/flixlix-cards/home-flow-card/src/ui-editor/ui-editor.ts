@@ -102,7 +102,7 @@ export class HomeFlowCardEditor extends LitElement implements LovelaceCardEditor
     }
     if (this._page === "advanced") {
       return html`
-        <subpage-header @go-back=${this._goBack} page="advanced"></subpage-header>
+        ${this._header("advanced")}
         ${this._form(
           {
             animate_numbers: true,
@@ -124,7 +124,7 @@ export class HomeFlowCardEditor extends LitElement implements LovelaceCardEditor
           ? { state_of_charge_severity: DEFAULT_STATE_OF_CHARGE_SEVERITY, ...this._config.battery }
           : this._config[node];
       return html`
-        <subpage-header @go-back=${this._goBack} page=${node}></subpage-header>
+        ${this._header(node)}
         ${this._form(data, nodeSchemas(this._config.mode)[node], (event) => this._nodeChanged(node, event.detail.value))}
       `;
     }
@@ -186,6 +186,13 @@ export class HomeFlowCardEditor extends LitElement implements LovelaceCardEditor
     return [ids.join(" / "), ...readings, charge].filter(Boolean).join(" · ");
   }
 
+  private _header(page: Page) {
+    return html`<flixlix-subpage-header
+      @go-back=${this._goBack}
+      header=${localize(`editor.${page}`)}
+    ></flixlix-subpage-header>`;
+  }
+
   private _goBack = () => {
     this._page = undefined;
   };
@@ -207,8 +214,7 @@ export class HomeFlowCardEditor extends LitElement implements LovelaceCardEditor
     const schema = visual ? fields : [...fields, ...carConditionsAsYaml(mode)];
     const onChange = (value: Record<string, unknown>) => this._nodeChanged("car", value);
     return html`
-      <subpage-header @go-back=${this._goBack} page="car"></subpage-header>
-      ${this._form(car, schema, (event) => onChange(event.detail.value))}
+      ${this._header("car")} ${this._form(car, schema, (event) => onChange(event.detail.value))}
       ${visual ? carConditionsHtml(this.hass, car, carConditionKeys(mode), onChange) : nothing}
     `;
   }
