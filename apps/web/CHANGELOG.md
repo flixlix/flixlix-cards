@@ -1,5 +1,7 @@
 # @flixlix-cards/web
 
+## 1.2.1-beta.1
+
 ## 1.2.1-beta.0
 
 ### Patch Changes
