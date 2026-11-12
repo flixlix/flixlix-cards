@@ -1,16 +1,18 @@
 import {
   type CarReading,
+  type Condition,
   conditionEntities,
+  type ConditionContext,
   conditionsMet,
   type EntityReader,
   type UnitFamily,
+  visibilityConditions,
 } from "@flixlix-cards/shared/card-state";
 import { getEntityState } from "@flixlix-cards/shared/states/utils/get-entity-state";
-import { liveConditionContext } from "@flixlix-cards/shared/utils/condition-context";
 import { type HomeAssistant } from "custom-card-helpers";
 import { type CarImage } from "./car-image";
 import { type CarConfig } from "./labels";
-import { type HouseCar } from "./types";
+import { type FlowConfig, type HouseCar } from "./types";
 
 /**
  * Active: charging or feeding the home, wired to the outlet. Idle: parked, unplugged and faded.
@@ -31,16 +33,27 @@ export const carStatus = (
   hass: HomeAssistant,
   car: HouseCar,
   read: EntityReader,
-  family: UnitFamily
+  family: UnitFamily,
+  context: ConditionContext
 ): CarStatus => {
-  if (car.visibility && !conditionsMet(car.visibility, hass, liveConditionContext)) {
+  if (car.visibility && !conditionsMet(car.visibility, hass, context)) {
     return "hidden";
   }
   if (car.idle && family === "power") {
-    return conditionsMet(car.idle, hass, liveConditionContext) ? "idle" : "active";
+    return conditionsMet(car.idle, hass, context) ? "idle" : "active";
   }
   return read(car.entity) ? "active" : "idle";
 };
+
+/** The card's conditions, its individual devices' and its car's, for Home Assistant to check. */
+export const houseConditions = (config: FlowConfig | undefined): Condition[] =>
+  config
+    ? [
+        ...visibilityConditions(config),
+        ...(config.car?.visibility ?? []),
+        ...(config.car?.idle ?? []),
+      ]
+    : [];
 
 /** The entities the car reads, its conditions' included, so the card redraws when they change. */
 export const carEntities = (car: HouseCar | undefined): string[] =>

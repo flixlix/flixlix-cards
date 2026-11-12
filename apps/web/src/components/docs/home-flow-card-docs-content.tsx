@@ -1158,8 +1158,10 @@ generator:
           <Prose>
             <p>
               <code>car.visibility</code> and <code>car.idle</code> take the conditions of a
-              card&apos;s visibility tab. Template, sun, zone and device conditions need Home
-              Assistant itself and are ignored.
+              card&apos;s visibility tab. Since Home Assistant 2026.10 its editor writes{" "}
+              <code>state</code> and <code>numeric_state</code> with <code>entity_id</code>, as
+              automations do, and offers template, sun, zone and device conditions, which Home
+              Assistant checks for the card. Before 2026.10 those are ignored.
             </p>
           </Prose>
           <OptionList rows={CONDITION_ROWS} />

@@ -354,6 +354,23 @@ views:
                   entity: binary_sensor.car_plugged_in
                   state: "off"
           - type: custom:home-flow-card
+            title: "Car: conditions as Home Assistant 2026.10 writes them"
+            grid:
+              entity: sensor.grid_power
+            solar:
+              entity: sensor.solar_power
+            car:
+              entity: sensor.car_power
+              state_of_charge: sensor.car_battery
+              visibility:
+                - condition: template
+                  value_template: "{{ is_state('input_select.car_location', 'home') }}"
+              idle:
+                - condition: state
+                  entity_id: binary_sensor.car_plugged_in
+                  state:
+                    - "off"
+          - type: custom:home-flow-card
             title: "Car: no conditions (idle at 0 W)"
             grid:
               entity: sensor.grid_power

@@ -89,7 +89,7 @@
     "idle": "Nečinné",
     "car_visibility_hint": "Zobraziť auto len, kým sú splnené všetky tieto podmienky. Bez podmienok sa zobrazuje vždy.",
     "car_idle_hint": "Zobraziť auto zaparkované a odpojené, vyblednuté a bez kábla, kým sú splnené všetky tieto podmienky. Bez podmienok je nečinné, kým neodoberá energiu.",
-    "conditions_ignored": "Podmienky šablóny, slnka, zóny a zariadenia potrebujú samotný Home Assistant a tu sa ignorujú.",
+    "conditions_ignored": "Pred Home Assistant 2026.10 sa tu podmienky šablóny, slnka, zóny a zariadenia ignorujú.",
     "individual_visibility_hint": "Zobraziť toto zariadenie len, kým sú splnené všetky tieto podmienky, napr. kým je auto pripojené. Bez podmienok sa zobrazuje ako obvykle.",
     "flow_rate_model": "Model prietoku",
     "flow_rate_model_duration": "Trvanie (predvolené)",

@@ -89,7 +89,7 @@
     "idle": "Inaktiv",
     "car_visibility_hint": "Das Auto nur anzeigen, solange alle diese Bedingungen erfüllt sind. Ohne Bedingungen wird es immer angezeigt.",
     "car_idle_hint": "Das Auto geparkt und abgesteckt zeigen, blasser und ohne Kabel, solange alle diese Bedingungen erfüllt sind. Ohne Bedingungen ist es inaktiv, solange es keinen Strom bezieht.",
-    "conditions_ignored": "Template-, Sonnen-, Zonen- und Gerätebedingungen brauchen Home Assistant selbst und werden hier ignoriert.",
+    "conditions_ignored": "Vor Home Assistant 2026.10 werden Template-, Sonnen-, Zonen- und Gerätebedingungen hier ignoriert.",
     "individual_visibility_hint": "Dieses Gerät nur anzeigen, solange alle diese Bedingungen erfüllt sind, z. B. solange das Auto eingesteckt ist. Ohne Bedingungen wird es wie gewohnt angezeigt.",
     "flow_rate_model": "Fluss-Modell",
     "flow_rate_model_duration": "Dauer (Standard)",
