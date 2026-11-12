@@ -1,5 +1,17 @@
 # home-flow-card
 
+## 0.3.3-beta.1
+
+### Patch Changes
+
+- **Fix:** Conditions set up in Home Assistant 2026.10's editor work again: the car's `visibility` and `idle`, and a device's `visibility`. Zone, sun, template and device conditions now count too, instead of always holding. ([#528](https://github.com/flixlix/flixlix-cards/pull/528))
+
+- **Fix:** An editor page's title is translated by its own card, so the home flow card's heat pump page no longer reads `editor.heat_pump` when an older power or energy flow card loads first. ([#527](https://github.com/flixlix/flixlix-cards/pull/527))
+
+- **Fix:** A configured heat pump no longer makes the house smaller. Its label hangs in the room left of the house, so the card keeps its size and height on cards about 500px and wider; narrow cards shrink less than before. ([#526](https://github.com/flixlix/flixlix-cards/pull/526))
+
+- **Fix:** A location condition set up in Home Assistant 2026.11's editor, by zone, area, floor or label, with `match_mode` or `away`, works instead of breaking the card. ([#529](https://github.com/flixlix/flixlix-cards/pull/529))
+
 ## 0.3.3-beta.0
 
 ### Patch Changes

@@ -21,12 +21,15 @@
   },
   "changesets": [
     "classic-dots-on-mali",
+    "conditions-home-assistant-2026-10",
     "docs-landing-faq",
     "docs-og-images",
     "docs-open-with-agent",
+    "editor-header-translation",
     "energy-negative-period",
     "energy-secondary-period",
     "flow-card-fills-height",
+    "heat-pump-keeps-house-size",
     "home-flow-energy-mode",
     "home-flow-generic-options",
     "home-flow-idle-car-label",
@@ -34,6 +37,7 @@
     "home-flow-two-way-value-size",
     "home-flow-view-selector",
     "home-secondary-info-clickable",
+    "location-condition-target",
     "negative-unit-scaling",
     "new-card-from-energy-dashboard"
   ]
