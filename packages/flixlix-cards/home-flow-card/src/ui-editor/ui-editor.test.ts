@@ -284,7 +284,9 @@ describe("editor", () => {
     await open("grid");
     expect(fields()).not.toEqual(expect.arrayContaining(["state_alert"]));
 
-    editor.shadowRoot?.querySelector("subpage-header")?.dispatchEvent(new CustomEvent("go-back"));
+    editor.shadowRoot
+      ?.querySelector("flixlix-subpage-header")
+      ?.dispatchEvent(new CustomEvent("go-back"));
     await editor.updateComplete;
     await open("car");
     expect(fields()).toEqual(["entity", "state_of_charge", "name", "visibility"]);
@@ -371,6 +373,7 @@ describe("editor", () => {
     const { editor, open, fields, change, changes } = await mountEditor();
     await open("heat_pump");
 
+    expect(editor.shadowRoot?.querySelector("flixlix-subpage-header")?.header).toBe("Heat pump");
     expect(fields()).toEqual(["entity", "climate", "status", "name"]);
     change({
       entity: "sensor.heat_pump_power",
