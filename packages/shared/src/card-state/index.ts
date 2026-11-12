@@ -1,9 +1,12 @@
 export { computeCardState } from "./compute-card-state";
 export {
+  automationCondition,
   type Condition,
   conditionEntities,
   conditionsMet,
   type ConditionContext,
+  serverConditions,
+  type ServerVerdict,
 } from "./conditions";
 export { auxiliaryConnection, flowRateModel, lineDuration, REFERENCE_LINE_LENGTH } from "./flows";
 export {
@@ -18,4 +21,4 @@ export { type ScaledReading } from "./format";
 export { energyReader, energyReadings } from "./readings/energy";
 export { powerReadings, wattsReader } from "./readings/power";
 export type * from "./types";
-export { watchedEntities } from "./watched-entities";
+export { visibilityConditions, watchedEntities } from "./watched-entities";

@@ -1,4 +1,5 @@
 import { energyReader, wattsReader } from "@flixlix-cards/shared/card-state";
+import { fakeConditionContext } from "@flixlix-cards/shared/testing/fixtures";
 import { type HomeAssistant } from "custom-card-helpers";
 import { describe, expect, test } from "vite-plus/test";
 import { carEntities, carStatus as statusWith } from "./car-node";
@@ -30,11 +31,11 @@ const car: HouseCar = {
 };
 
 const carStatus = (states: HomeAssistant, config: HouseCar) =>
-  statusWith(states, config, wattsReader(states), "power");
+  statusWith(states, config, wattsReader(states), "power", fakeConditionContext);
 
 /** Over a period, read as the energy each entity's statistic grew by. */
 const periodStatus = (states: HomeAssistant, config: HouseCar, growth: Record<string, number>) =>
-  statusWith(states, config, energyReader(states, growth, true), "energy");
+  statusWith(states, config, energyReader(states, growth, true), "energy", fakeConditionContext);
 
 describe("car status", () => {
   test("away, the car is hidden whatever it draws", () => {
@@ -47,6 +48,19 @@ describe("car status", () => {
     const home = { "device_tracker.car": "home", "sensor.wallbox": "0" };
     expect(carStatus(hass({ ...home, "binary_sensor.cable": "off" }), car)).toBe("idle");
     expect(carStatus(hass({ ...home, "binary_sensor.cable": "on" }), car)).toBe("active");
+  });
+
+  test("idle conditions as Home Assistant's editor writes them make the car idle", () => {
+    const written: HouseCar = {
+      entity: "sensor.wallbox",
+      idle: [{ condition: "state", entity_id: "sensor.connector", state: ["Unplugged"] }],
+    };
+    expect(
+      carStatus(hass({ "sensor.connector": "Unplugged", "sensor.wallbox": "0" }), written)
+    ).toBe("idle");
+    expect(
+      carStatus(hass({ "sensor.connector": "Charging", "sensor.wallbox": "0" }), written)
+    ).toBe("active");
   });
 
   test("without conditions it always shows, idle while it draws no power", () => {

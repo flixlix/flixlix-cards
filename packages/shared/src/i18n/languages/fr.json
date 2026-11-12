@@ -89,7 +89,7 @@
     "idle": "Inactif",
     "car_visibility_hint": "N'afficher la voiture que tant que toutes ces conditions sont remplies. Sans conditions, elle est toujours affichée.",
     "car_idle_hint": "Afficher la voiture garée et débranchée, estompée et sans câble, tant que toutes ces conditions sont remplies. Sans conditions, elle est inactive tant qu'elle ne consomme pas d'énergie.",
-    "conditions_ignored": "Les conditions de modèle, de soleil, de zone et d'appareil nécessitent Home Assistant lui-même et sont ignorées ici.",
+    "conditions_ignored": "Avant Home Assistant 2026.10, les conditions de modèle, de soleil, de zone et d'appareil sont ignorées ici.",
     "individual_visibility_hint": "N'afficher cet appareil que tant que toutes ces conditions sont remplies, p. ex. tant que la voiture est branchée. Sans conditions, il s'affiche comme d'habitude.",
     "flow_rate_model": "Modèle de débit",
     "flow_rate_model_duration": "Durée (par défaut)",

@@ -1,6 +1,13 @@
 import { type HomeAssistant } from "custom-card-helpers";
 import { describe, expect, test } from "vite-plus/test";
-import { type Condition, conditionEntities, conditionsMet } from "./conditions";
+import {
+  automationCondition,
+  type Condition,
+  conditionEntities,
+  conditionsMet,
+  serverConditions,
+  type ServerVerdict,
+} from "./conditions";
 
 const entity = (state: string) => ({
   entity_id: "",
@@ -115,5 +122,85 @@ describe("conditions", () => {
     const atHome: Condition = { condition: "location", locations: ["home"] };
     expect(met([atHome], { "person.luca": "home" })).toBe(true);
     expect(met([atHome], { "person.luca": "work" })).toBe(false);
+  });
+
+  test("state and numeric state in the automation format Home Assistant's editor writes", () => {
+    const unplugged: Condition = {
+      condition: "state",
+      entity_id: "sensor.connector",
+      state: ["Unplugged"],
+    };
+    expect(met([unplugged], { "sensor.connector": "Unplugged" })).toBe(true);
+    expect(met([unplugged], { "sensor.connector": "Charging" })).toBe(false);
+    const charging: Condition = {
+      condition: "numeric_state",
+      entity_id: ["sensor.wallbox", "sensor.wallbox_2"],
+      above: 50,
+    };
+    expect(met([charging], { "sensor.wallbox": "7400", "sensor.wallbox_2": "60" })).toBe(true);
+    expect(met([charging], { "sensor.wallbox": "7400", "sensor.wallbox_2": "0" })).toBe(false);
+    expect(conditionEntities([unplugged, charging])).toEqual([
+      "sensor.connector",
+      "sensor.wallbox",
+      "sensor.wallbox_2",
+    ]);
+  });
+
+  test("a condition disabled in Home Assistant's editor is left out", () => {
+    const off: Condition = { condition: "user", users: ["partner"], enabled: false };
+    expect(met([off], {})).toBe(true);
+  });
+});
+
+/** With the connector unplugged, and Home Assistant's verdicts on the conditions it checks. */
+const metWith = (conditions: Condition[], verdicts: Map<Condition, ServerVerdict>) =>
+  conditionsMet(conditions, hass({ "sensor.connector": "Unplugged" }), {
+    ...wide,
+    server: (condition) => verdicts.get(condition) ?? "local",
+  });
+
+describe("conditions Home Assistant checks", () => {
+  const atHome: Condition = {
+    condition: "zone",
+    entity_id: "device_tracker.car",
+    zone: "zone.home",
+  };
+  const unplugged: Condition = {
+    condition: "state",
+    entity_id: "sensor.connector",
+    state: "Unplugged",
+  };
+  const wideScreen: Condition = { condition: "screen", media_query: "(min-width: 768px)" };
+  const plugged: Condition = { condition: "state", entity: "binary_sensor.cable", state: "on" };
+
+  test("are those of the automation format and the ones only Home Assistant knows", () => {
+    const either: Condition = { condition: "or", conditions: [atHome, unplugged] };
+    const mixed: Condition = { condition: "and", conditions: [atHome, wideScreen] };
+    expect(serverConditions([either, mixed, plugged, wideScreen])).toEqual([either, atHome]);
+  });
+
+  test("Home Assistant's verdict decides them", () => {
+    expect(metWith([atHome], new Map([[atHome, true]]))).toBe(true);
+    expect(metWith([atHome], new Map([[atHome, false]]))).toBe(false);
+    expect(metWith([unplugged], new Map([[unplugged, false]]))).toBe(false);
+  });
+
+  test("until Home Assistant has said, they do not hold, nor does a not around them", () => {
+    const pending = new Map<Condition, ServerVerdict>([[atHome, "pending"]]);
+    expect(metWith([atHome], pending)).toBe(false);
+    expect(metWith([{ condition: "not", conditions: [atHome] }], pending)).toBe(false);
+    expect(metWith([{ condition: "or", conditions: [atHome, wideScreen] }], pending)).toBe(true);
+  });
+
+  test("without Home Assistant's verdict the card checks them, holding those it cannot", () => {
+    expect(metWith([unplugged], new Map())).toBe(true);
+    expect(metWith([atHome], new Map())).toBe(true);
+  });
+
+  test("a card's not, unlike an automation's, holds while not all of its conditions hold", () => {
+    expect(automationCondition({ condition: "not", conditions: [atHome, unplugged] })).toEqual({
+      condition: "not",
+      conditions: [{ condition: "and", conditions: [atHome, unplugged] }],
+    });
   });
 });

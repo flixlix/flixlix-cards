@@ -11,12 +11,12 @@ import {
 } from "@flixlix-cards/shared/card-state";
 import { EntityActions } from "@flixlix-cards/shared/utils/entity-actions";
 import { applyCardState } from "@flixlix-cards/shared/utils/apply-card-state";
-import { liveConditionContext } from "@flixlix-cards/shared/utils/condition-context";
 import { EnergyPeriodController } from "@flixlix-cards/shared/utils/energy-period-controller";
 import { getDefaultConfig } from "@flixlix-cards/shared/utils/get-default-config";
 import { registerCustomCard } from "@flixlix-cards/shared/utils/register-custom-card";
 import { cardShouldUpdate } from "@flixlix-cards/shared/utils/relevant-change";
 import { SecondaryTemplates } from "@flixlix-cards/shared/utils/secondary-templates";
+import { ServerConditionsController } from "@flixlix-cards/shared/utils/server-conditions";
 import { WidthController } from "@flixlix-cards/shared/utils/width-controller";
 import { type HomeAssistant, type LovelaceCardEditor } from "custom-card-helpers";
 import { html, LitElement, nothing, type PropertyValues, type TemplateResult } from "lit";
@@ -32,7 +32,7 @@ import {
   prefersReducedMotion,
   statisticIds,
 } from "./card-environment";
-import { carEntities, carScene, type CarStatus, carStatus } from "./car-node";
+import { carEntities, carScene, type CarStatus, carStatus, houseConditions } from "./car-node";
 import { drawHouse } from "./draw-house";
 import { withDefaults } from "./flow-defaults";
 import { heatPumpEntities } from "./heat-pump-node";
@@ -97,6 +97,10 @@ export class HomeFlowCard extends LitElement {
   private readonly _actions = new EntityActions(this, () => ({
     hass: this.hass,
     clickableEntities: this._config.clickable_entities,
+  }));
+  private readonly _conditions = new ServerConditionsController(this, () => ({
+    hass: this.hass,
+    conditions: [this._config, this._views.views?.live].flatMap(houseConditions),
   }));
   private readonly _templates = new SecondaryTemplates(this, () => ({
     hass: this.hass,
@@ -169,12 +173,13 @@ export class HomeFlowCard extends LitElement {
       void this._energy.refresh();
     }
     this._read = this._reader();
+    this._conditions.sync();
     this._cardState = computeCardState({
       config: this._config,
       hass: this.hass,
       readings: this._readings(),
       templates: this._templates.templates(this._config),
-      conditionContext: liveConditionContext,
+      conditionContext: this._conditions.context,
       width: this._width.width,
       pageHidden: this._pageHidden,
     });
@@ -201,9 +206,9 @@ export class HomeFlowCard extends LitElement {
   /** Draws the car again only when its state, the theme's colours or the card's size change. */
   private _drawCar() {
     const car = this._config.car;
-    this._carStatus = car
-      ? carStatus(this.hass, car, this._read, isEnergy(this._config) ? "energy" : "power")
-      : "hidden";
+    const family = isEnergy(this._config) ? "energy" : "power";
+    const context = this._conditions.context;
+    this._carStatus = car ? carStatus(this.hass, car, this._read, family, context) : "hidden";
     const palette =
       this._carStatus !== "hidden" && this.shadowRoot
         ? readCarPalette(this.shadowRoot, this._carStatus === "idle")
@@ -273,6 +278,7 @@ export class HomeFlowCard extends LitElement {
           width: this._width.width,
           pageHidden: this._pageHidden,
           carImage: this._carImage,
+          conditionContext: this._conditions.context,
         })
       : undefined;
   }

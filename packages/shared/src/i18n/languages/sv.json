@@ -89,7 +89,7 @@
     "idle": "Inaktiv",
     "car_visibility_hint": "Visa bilen bara så länge alla dessa villkor är uppfyllda. Utan villkor visas den alltid.",
     "car_idle_hint": "Visa bilen parkerad och urkopplad, nedtonad och utan kabel, så länge alla dessa villkor är uppfyllda. Utan villkor är den inaktiv så länge den inte drar ström.",
-    "conditions_ignored": "Mall-, sol-, zon- och enhetsvillkor kräver Home Assistant självt och ignoreras här.",
+    "conditions_ignored": "Före Home Assistant 2026.10 ignoreras mall-, sol-, zon- och enhetsvillkor här.",
     "individual_visibility_hint": "Visa bara den här enheten så länge alla dessa villkor är uppfyllda, t.ex. medan bilen är ansluten. Utan villkor visas den som vanligt.",
     "flow_rate_model": "Flödesmodell",
     "flow_rate_model_duration": "Varaktighet (standard)",

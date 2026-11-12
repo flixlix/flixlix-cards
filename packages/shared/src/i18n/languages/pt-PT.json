@@ -89,7 +89,7 @@
     "idle": "Inativo",
     "car_visibility_hint": "Mostrar o carro apenas enquanto todas estas condições forem cumpridas. Sem condições, é sempre mostrado.",
     "car_idle_hint": "Mostrar o carro estacionado e desligado, esbatido e sem cabo, enquanto todas estas condições forem cumpridas. Sem condições, fica inativo enquanto não consumir energia.",
-    "conditions_ignored": "As condições de modelo, sol, zona e dispositivo precisam do próprio Home Assistant e são ignoradas aqui.",
+    "conditions_ignored": "Antes do Home Assistant 2026.10, as condições de modelo, sol, zona e dispositivo são ignoradas aqui.",
     "individual_visibility_hint": "Mostrar este dispositivo apenas enquanto todas estas condições forem cumpridas, p. ex. enquanto o carro estiver ligado à tomada. Sem condições, é mostrado como habitualmente.",
     "flow_rate_model": "Modelo de Velocidade",
     "flow_rate_model_duration": "Duração (predefinido)",

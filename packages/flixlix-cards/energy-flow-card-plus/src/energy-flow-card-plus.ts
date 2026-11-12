@@ -3,6 +3,7 @@ import {
   computeCardState,
   type CardState,
   energyReadings,
+  visibilityConditions,
   watchedEntities,
 } from "@flixlix-cards/shared/card-state";
 import { flowCard, flowCardGridOptions } from "@flixlix-cards/shared/components/flow-card";
@@ -16,7 +17,6 @@ import {
   type LovelaceGridOptions,
 } from "@flixlix-cards/shared/types";
 import { applyCardState } from "@flixlix-cards/shared/utils/apply-card-state";
-import { liveConditionContext } from "@flixlix-cards/shared/utils/condition-context";
 import { EnergyPeriodController } from "@flixlix-cards/shared/utils/energy-period-controller";
 import {
   assertRenderableFlowCardConfig,
@@ -28,6 +28,7 @@ import { defaultValues, getDefaultConfig } from "@flixlix-cards/shared/utils/get
 import { registerCustomCard } from "@flixlix-cards/shared/utils/register-custom-card";
 import { cardShouldUpdate } from "@flixlix-cards/shared/utils/relevant-change";
 import { SecondaryTemplates } from "@flixlix-cards/shared/utils/secondary-templates";
+import { ServerConditionsController } from "@flixlix-cards/shared/utils/server-conditions";
 import { coerceNumber } from "@flixlix-cards/shared/utils/utils";
 import { WidthController } from "@flixlix-cards/shared/utils/width-controller";
 import { type HomeAssistant, type LovelaceCardEditor } from "custom-card-helpers";
@@ -65,6 +66,10 @@ export class EnergyFlowCardPlus extends LitElement {
     clickableEntities: this._config.clickable_entities,
   }));
   private readonly _flowLayout = new FlowLayoutController(this, "energy-flow-card-plus");
+  private readonly _conditions = new ServerConditionsController(this, () => ({
+    hass: this.hass,
+    conditions: this._config ? visibilityConditions(this._config) : [],
+  }));
   private readonly _templates = new SecondaryTemplates(this, () => ({
     hass: this.hass,
     config: this._config,
@@ -137,6 +142,7 @@ export class EnergyFlowCardPlus extends LitElement {
     if (changedProps.has("_config")) {
       void this._energy.refresh();
     }
+    this._conditions.sync();
     this._cardState = computeCardState({
       config: this._config,
       hass: this.hass,
@@ -147,7 +153,7 @@ export class EnergyFlowCardPlus extends LitElement {
         this._energy.fossilConsumption
       ),
       templates: this._templates.templates(this._config),
-      conditionContext: liveConditionContext,
+      conditionContext: this._conditions.context,
       width: this._width.width,
       pageHidden: this._pageHidden,
     });

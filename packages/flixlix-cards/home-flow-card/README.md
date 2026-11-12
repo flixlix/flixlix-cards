@@ -249,7 +249,7 @@ them up the same way:
 | `and`, `or`     | `conditions`                                         |
 | `not`           | `conditions`, passes unless all of them hold         |
 
-Template, sun, zone and device conditions need Home Assistant itself and are ignored.
+Since Home Assistant 2026.10 its editor writes `state` and `numeric_state` with `entity_id`, as automations do, and offers template, sun, zone and device conditions, which Home Assistant checks for the card. Before 2026.10 those are ignored.
 
 ### Actions
 
