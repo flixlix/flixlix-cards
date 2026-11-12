@@ -1,4 +1,5 @@
 import { type HomeAssistant } from "custom-card-helpers";
+import { type LocationCondition, locationMet } from "./location";
 
 /**
  * Conditions in the format of a Home Assistant card's visibility tab. Since Home Assistant
@@ -43,8 +44,7 @@ export type Condition = (
       before?: string;
       weekdays?: Weekday[];
     }
-  /** Where the person of whoever looks at the card is: `home`, `not_home` or a zone's name. */
-  | { condition: "location"; locations: string[] }
+  | LocationCondition
   | { condition: "and" | "or" | "not"; conditions: Condition[] }
   /** Only Home Assistant can check these; integrations add more. */
   | { condition: "zone" | "sun" | "template" | "device"; [option: string]: unknown }
@@ -140,15 +140,6 @@ const timeMet = (
   return start <= until ? time >= start && time < until : time >= start || time < until;
 };
 
-/** Where the person of the user looking at the card is, by their person entity. */
-const userLocation = (hass: HomeAssistant) =>
-  Object.values(hass.states).find(
-    (entity) =>
-      entity.entity_id.startsWith("person.") &&
-      hass.user?.id !== undefined &&
-      entity.attributes.user_id === hass.user.id
-  )?.state;
-
 const isLogical = (
   condition: Condition
 ): condition is Extract<Condition, { condition: "and" | "or" | "not" }> =>
@@ -222,7 +213,7 @@ const localVerdict = (
     case "time":
       return timeMet(condition, context.now());
     case "location":
-      return condition.locations.includes(userLocation(hass) ?? "");
+      return locationMet(hass, condition);
     case "and":
       return allOf(verdicts(condition.conditions, hass, context));
     case "or":

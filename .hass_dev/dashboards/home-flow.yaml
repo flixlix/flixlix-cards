@@ -371,6 +371,17 @@ views:
                   state:
                     - "off"
           - type: custom:home-flow-card
+            title: "Car: shown while the viewer is home (location by zone)"
+            grid:
+              entity: sensor.grid_power
+            car:
+              entity: sensor.car_power
+              visibility:
+                - condition: location
+                  target:
+                    entity_id: zone.home
+                  match_mode: any_zone
+          - type: custom:home-flow-card
             title: "Car: no conditions (idle at 0 W)"
             grid:
               entity: sensor.grid_power
