@@ -1,5 +1,15 @@
 # @flixlix-cards/web
 
+## 1.2.1-beta.0
+
+### Patch Changes
+
+- **Docs:** The homepage says what the cards do in the words people search for, and answers common questions, such as how to show solar and battery flow and how the cards differ from the built-in energy distribution card. ([#515](https://github.com/flixlix/flixlix-cards/pull/515))
+
+- **New:** Links to the docs show a preview image of the card when shared on Discord, Reddit, X or the Home Assistant forum, and each page points AI assistants at its Markdown version. ([#514](https://github.com/flixlix/flixlix-cards/pull/514))
+
+- **New:** Every docs page has an "Open in ChatGPT" button that hands the page to ChatGPT, Claude, Perplexity or Grok, remembers your pick, and can copy or open the page as Markdown. ([#514](https://github.com/flixlix/flixlix-cards/pull/514))
+
 ## 1.2.0
 
 ### Minor Changes

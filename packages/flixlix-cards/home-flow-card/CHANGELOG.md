@@ -1,5 +1,29 @@
 # home-flow-card
 
+## 0.3.3-beta.0
+
+### Patch Changes
+
+- **Fix:** An individual or auxiliary device with `accept_negative` shows a net meter that ran backwards over the selected period as a negative value with its arrow and dots reversed, instead of 0 Wh. ([#521](https://github.com/flixlix/flixlix-cards/pull/521))
+
+- **Fix:** An individual or auxiliary device's secondary info shows its energy meter over the selected period instead of the meter's lifetime total. ([#521](https://github.com/flixlix/flixlix-cards/pull/521))
+
+- **New:** The house can show energy over the dashboard's period instead of live power with `mode: energy`, following its energy date picker or another one picked with `collection_key`. A grid or battery that ran both ways gets a parallel line each way. ([#505](https://github.com/flixlix/flixlix-cards/pull/505))
+
+- **New:** `min_expected_value` and `max_expected_value` set the pulses in both modes, in Wh in energy mode, and `state_of_charge_position` takes `below_value` and the like. The older `_power` names still work; the visual editor saves the new ones. ([#505](https://github.com/flixlix/flixlix-cards/pull/505))
+
+- **Fix:** An idle car without a state of charge is drawn on its own, without a dash and a leader line pointing at it. ([#505](https://github.com/flixlix/flixlix-cards/pull/505))
+
+- **New:** `mega_threshold` and `mega_decimals` are documented and in the visual editor, for totals shown in MW or MWh. ([#505](https://github.com/flixlix/flixlix-cards/pull/505))
+
+- **New:** `two_way_value_size` draws the two values of a grid or battery that ran both ways in energy mode smaller, for example `0.8`, so they take less room. It is in the visual editor's appearance section. ([#505](https://github.com/flixlix/flixlix-cards/pull/505))
+
+- **New:** The house gets a selector in its corner to switch between live power and a period's energy (today, yesterday, week, month or year), set with `views` and `energy_entities`, without a date picker on the dashboard. ([#511](https://github.com/flixlix/flixlix-cards/pull/511))
+
+- **Fix:** Negative values switch to kW, kWh, MW or MWh past the same thresholds as positive ones, so -1200 W shows as -1.2 kW. ([#521](https://github.com/flixlix/flixlix-cards/pull/521))
+
+- **New:** A card added from the card picker starts with the grid, solar, battery and devices from your energy dashboard, and guesses the rest from entity names more carefully than before. ([#524](https://github.com/flixlix/flixlix-cards/pull/524))
+
 ## 0.3.2
 
 ### Patch Changes
