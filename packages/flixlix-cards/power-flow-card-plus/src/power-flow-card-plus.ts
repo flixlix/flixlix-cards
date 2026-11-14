@@ -11,8 +11,9 @@ import { type PowerFlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { applyCardState } from "@flixlix-cards/shared/utils/apply-card-state";
 import {
   assertRenderableFlowCardConfig,
-  withoutEmptyEntities,
   displayZeroLinesWithDefaults,
+  isDeviceOnly,
+  withoutEmptyEntities,
 } from "@flixlix-cards/shared/utils/flow-card-config";
 import { EntityActions } from "@flixlix-cards/shared/utils/entity-actions";
 import { defaultValues, getDefaultConfig } from "@flixlix-cards/shared/utils/get-default-config";
@@ -40,6 +41,7 @@ export class PowerFlowCardPlus extends LitElement {
   @property({ attribute: false }) public hass!: HomeAssistant;
   @state() private _config!: PowerFlowCardPlusConfig;
   @state() private _width = 0;
+  private _deviceOnly = false;
   @state() private _pageHidden = isPageHidden();
   private _cardState?: CardState;
   private _appliedCardState?: CardState;
@@ -59,9 +61,9 @@ export class PowerFlowCardPlus extends LitElement {
   };
 
   setConfig(rawConfig: PowerFlowCardPlusConfig): void {
-    // A cleared entity picker leaves an empty entity behind: read it as "not selected".
     const config = withoutEmptyEntities(rawConfig);
     assertRenderableFlowCardConfig(config, { allowDeviceOnly: true });
+    this._deviceOnly = isDeviceOnly(config.entities);
     this._config = {
       ...config,
       min_flow_rate: coerceNumber(config.min_flow_rate, defaultValues.minFlowRate),
@@ -77,6 +79,8 @@ export class PowerFlowCardPlus extends LitElement {
 
   public connectedCallback() {
     super.connectedCallback();
+    // Moving the card to another column stops its observer; without this the width stays stale.
+    this._observeWidth();
     if (typeof document !== "undefined") {
       document.addEventListener("visibilitychange", this._handleVisibilityChange);
     }
@@ -121,10 +125,11 @@ export class PowerFlowCardPlus extends LitElement {
     this._cardState = computeCardState({
       config: this._config,
       hass: this.hass,
-      readings: powerReadings(this.hass, this._config),
+      readings: powerReadings(this.hass, this._config, this._deviceOnly),
       templates: this._templates.templates(this._config),
       width: this._width,
       pageHidden: this._pageHidden,
+      deviceOnly: this._deviceOnly,
     });
   }
 

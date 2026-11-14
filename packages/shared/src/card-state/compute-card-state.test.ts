@@ -433,13 +433,15 @@ describe("device-only mode", () => {
     { entity: "sensor.plug_a", name: "Plug A" },
     { entity: "sensor.plug_b", name: "Plug B" },
   ];
+  const deviceOnly = (entities: Partial<FlowCardPlusConfig["entities"]>) => ({
+    config: config({ entities: { ...noSources, ...entities } }),
+    deviceOnly: true,
+  });
 
   test("shows the home entity's reading and a plain home circle", () => {
     const { homeRing, nodes, flows } = ready(
       compute({
-        config: config({
-          entities: { ...noSources, home: { entity: "sensor.home" }, individual: devices },
-        }),
+        ...deviceOnly({ home: { entity: "sensor.home" }, individual: devices }),
         readings: readings({ home: 1500, individuals: [900, 200] }),
       })
     );
@@ -457,7 +459,7 @@ describe("device-only mode", () => {
   test("sums the devices when there is no home entity", () => {
     const { homeRing } = ready(
       compute({
-        config: config({ entities: { ...noSources, individual: devices } }),
+        ...deviceOnly({ individual: devices }),
         readings: readings({ individuals: [900, 200] }),
       })
     );
@@ -465,8 +467,65 @@ describe("device-only mode", () => {
     expect(homeRing.usageText).toBe(`1.1${thinSpace}kW`);
   });
 
-  test("a card with a source keeps the segmented ring", () => {
-    expect(ready(compute({})).homeRing.plain).toBe(false);
+  test("takes feeding devices off the home", () => {
+    const { homeRing } = ready(
+      compute({
+        ...deviceOnly({
+          individual: [...devices, { entity: "sensor.balcony", accept_negative: true }],
+        }),
+        readings: readings({ individuals: [1100, 700, -200] }),
+      })
+    );
+
+    expect(homeRing.usageText).toBe(`1.6${thinSpace}kW`);
+  });
+
+  test("says the home is unavailable rather than showing the sum of the devices", () => {
+    const { homeRing } = ready(
+      compute({
+        ...deviceOnly({ home: { entity: "sensor.home" }, individual: devices }),
+        readings: readings({ home: null, individuals: [900, 200] }),
+      })
+    );
+
+    expect(homeRing.usageText).toBe("state.default.unavailable");
+  });
+
+  test("puts every device on the orbit, not in four slots", () => {
+    const many = Array.from({ length: 11 }, (_, index) => ({ entity: `sensor.plug_${index}` }));
+    const { orbit, individualSlots } = ready(
+      compute({
+        ...deviceOnly({ individual: many }),
+        readings: readings({ individuals: many.map((_, index) => 100 + index) }),
+      })
+    );
+
+    expect(orbit?.devices).toHaveLength(11);
+    expect(individualSlots).toEqual({});
+  });
+
+  test("a device keeps its colour as the others sort around it", () => {
+    const pair = [{ entity: "sensor.first" }, { entity: "sensor.second" }];
+    const colourOf = (powers: number[]) =>
+      Object.fromEntries(
+        ready(
+          compute({
+            ...deviceOnly({ individual: pair }),
+            readings: readings({ individuals: powers }),
+          })
+        ).orbit?.devices.map((device) => [device.node.entity, device.style]) ?? []
+      );
+
+    const firstLarger = colourOf([500, 100]);
+    const secondLarger = colourOf([100, 500]);
+    expect(secondLarger["sensor.first"]).toBe(firstLarger["sensor.first"]);
+    expect(secondLarger["sensor.second"]).toBe(firstLarger["sensor.second"]);
+  });
+
+  test("a card with a source keeps the segmented ring and the slots", () => {
+    const { homeRing, orbit } = ready(compute({}));
+    expect(homeRing.plain).toBe(false);
+    expect(orbit).toBeUndefined();
   });
 });
 

@@ -16,13 +16,14 @@ export const computeOrbit = (
   return {
     geometry,
     devices: visible.map((device, position) => {
-      const point = geometry.devices[position] ?? geometry.home;
+      const point = geometry.devices[position] ?? { ...geometry.home, labelAbove: false };
       const index = all.indexOf(device.node);
       return {
         ...device,
         index,
         x: point.x,
         y: point.y,
+        labelAbove: point.labelAbove,
         style: orbitDeviceStyle(device.node.field, index),
       };
     }),

@@ -1,12 +1,11 @@
 import { computeNonFossilFromCollection } from "@flixlix-cards/shared/states/utils/energy-period";
 import { getEntityState } from "@flixlix-cards/shared/states/utils/get-entity-state";
 import { type ConfigEntities } from "@flixlix-cards/shared/types";
-import { isDeviceOnly } from "@flixlix-cards/shared/utils/flow-card-config";
 import { type HomeAssistant } from "custom-card-helpers";
 import { adjustZeroTolerance } from "./tolerance";
 import { type CardStateInput, type ReadyReadings, type TwoWayReading } from "./types";
 
-type NormalizeInput = Pick<CardStateInput, "config" | "hass">;
+type NormalizeInput = Pick<CardStateInput, "config" | "hass" | "deviceOnly">;
 
 /** What each node puts in or takes out, after signs, tolerance, outage and display_zero. */
 export type NodeTotals = Readonly<{
@@ -153,8 +152,7 @@ const presenceOf = (
     battery: hasBatteryEntity(entities.battery) && shownWithTotals(entities.battery, nodes.battery),
     individuals: individuals.map((total, index) => {
       const field = entities.individual?.[index];
-      // With no source there are no slots to save, so a device is shown at 0 W unless hidden.
-      const showsZero = field?.display_zero ?? isDeviceOnly(entities);
+      const showsZero = field?.display_zero ?? input.deviceOnly ?? false;
       return !!field?.entity && (showsZero || total > 0);
     }),
   };
@@ -181,14 +179,33 @@ const gridDuringOutage = (input: NormalizeInput, readings: ReadyReadings): Direc
   ),
 });
 
+/** What the devices draw from the home, less what feeding ones (`accept_negative`) put into it. */
+const netConsumption = (
+  totals: ReadonlyArray<number>,
+  presence: ReadonlyArray<boolean>,
+  feeding: ReadonlyArray<boolean>
+): number =>
+  Math.max(
+    totals.reduce((sum, total, index) => {
+      if (!presence[index]) {
+        return sum;
+      }
+      return feeding[index] ? sum - total : sum + total;
+    }, 0),
+    0
+  );
+
 const measuredHome = (
   input: NormalizeInput,
   readings: ReadyReadings,
-  shownDevices: number
+  devices: number
 ): number | undefined => {
   const home = input.config.entities.home;
-  if (isDeviceOnly(input.config.entities)) {
-    return home?.entity && readings.home !== null ? magnitude(readings.home) : shownDevices;
+  if (input.deviceOnly) {
+    if (!home?.entity) {
+      return devices;
+    }
+    return readings.home === null ? undefined : magnitude(readings.home);
   }
   return home?.override_state && home.entity ? magnitude(readings.home) : undefined;
 };
@@ -211,10 +228,7 @@ export const normalize = (input: NormalizeInput, readings: ReadyReadings): Norma
     nonFossil: nonFossilShown(input, visible.grid, outage, nodes.toleratedGrid.outOf * fraction),
   };
   const grid = outage ? gridDuringOutage(input, readings) : nodes.toleratedGrid;
-  const shownDevices = individuals.reduce(
-    (sum, total, index) => sum + (presence.individuals[index] ? total : 0),
-    0
-  );
+  const feeding = feedingIndividuals(input, readings);
   return {
     totals: {
       gridImport: shown(presence.grid, grid.outOf),
@@ -222,12 +236,16 @@ export const normalize = (input: NormalizeInput, readings: ReadyReadings): Norma
       solar: shown(presence.solar, nodes.toleratedSolar),
       batteryCharge: shown(presence.battery, nodes.battery.into),
       batteryDischarge: shown(presence.battery, nodes.battery.outOf),
-      measuredHome: measuredHome(input, readings, shownDevices),
+      measuredHome: measuredHome(
+        input,
+        readings,
+        netConsumption(individuals, presence.individuals, feeding)
+      ),
       individuals,
       nonFossilFraction: shown(presence.nonFossil, fraction),
     },
     presence,
     outage,
-    feedingIndividuals: feedingIndividuals(input, readings),
+    feedingIndividuals: feeding,
   };
 };

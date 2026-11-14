@@ -1,23 +1,17 @@
-/**
- * Where the individual devices sit around the home when the card has no grid, solar or battery:
- * the home in the middle and every device on a ring around it, however many there are.
- *
- * Pure geometry in pixels, so the rendered card and its tests share one source of truth. Every
- * point is the centre of a node's circle, measured from the top left of the orbit box.
- */
-
 export type OrbitPoint = { x: number; y: number };
 
+/** Where a device's circle is centred, and whether its name sits above the circle or below it. */
+export type OrbitPlace = OrbitPoint & { labelAbove: boolean };
+
+export type OrbitRect = { left: number; top: number; right: number; bottom: number };
+
 export type OrbitGeometry = {
-  /** Size of the orbit box the nodes are placed in. */
   width: number;
   height: number;
   /** How much the devices' circles are scaled down from their normal 80px; 1 is full size. */
   scale: number;
   home: OrbitPoint;
-  /** One per device, in the order given. */
-  devices: OrbitPoint[];
-  /** How many rings the devices were spread over. */
+  devices: OrbitPlace[];
   rings: 1 | 2;
   /**
    * Below 1 when so many devices were given that the box outgrew the card even with the smallest
@@ -26,58 +20,177 @@ export type OrbitGeometry = {
   fit: number;
 };
 
-/** Diameter of a circle at scale 1, and the height a label takes under it. */
 export const ORBIT_NODE_SIZE = 80;
-const LABEL_HEIGHT = 20;
+/** Home Assistant pads the card content by this much on each side. */
+export const CARD_CONTENT_PADDING = 16;
 
-/** Space kept free at the edges of the box. */
+const HOME_RADIUS = ORBIT_NODE_SIZE / 2;
+const LABEL_HEIGHT = 20;
+const MAX_CONTENT_WIDTH = 470;
+const UNMEASURED_CARD_WIDTH = 400;
+
 const MARGIN = 8;
-/** Free space between neighbouring circles, and between the inner and the outer ring. */
 const GAP = 12;
 const RING_GAP = 14;
+const CLEARANCE = 4;
 /** Straight line kept visible between the home and the circles nearest to it. */
 const LINE_ROOM = 28;
 /** How far from the home a few devices sit, instead of spreading to the card's edge. */
 const COMFORTABLE_RADIUS = 120;
 
-/** Cards are drawn at most this wide, and at this width until they have been measured. */
-const MAX_WIDTH = 470;
-const DEFAULT_WIDTH = 400;
-
-/** Circles shrink down to these scales: a single ring until `SINGLE_RING_MIN_SCALE`, then two. */
 const SINGLE_RING_MIN_SCALE = 0.7;
 const MIN_SCALE = 0.4;
 const SCALE_STEP = 0.025;
-
+const RADIUS_STEP = 2;
+const GROWTH_LIMIT = 1000;
 const START_ANGLE = -Math.PI / 2;
 
 type Ring = { radius: number; angles: number[] };
+
+const HOME: OrbitPoint = { x: 0, y: 0 };
 
 const polar = (radius: number, angle: number): OrbitPoint => ({
   x: radius * Math.cos(angle),
   y: radius * Math.sin(angle),
 });
 
-/** The radius at which `count` circles of `diameter` sit side by side with `GAP` between them. */
-const chordRadius = (count: number, diameter: number): number =>
-  count < 2 ? 0 : (diameter + GAP) / (2 * Math.sin(Math.PI / count));
+const distance = (a: OrbitPoint, b: OrbitPoint): number => Math.hypot(a.x - b.x, a.y - b.y);
+
+const pairs = <T>(items: readonly T[]): [T, T][] =>
+  items.flatMap((first, index) => items.slice(index + 1).map((second): [T, T] => [first, second]));
 
 const evenAngles = (count: number, offset = 0): number[] =>
   Array.from({ length: count }, (_, index) => START_ANGLE + offset + (index * 2 * Math.PI) / count);
 
-/** The farthest a device's centre can be from the home and still fit inside the box. */
-const reach = (width: number, diameter: number): number => width / 2 - MARGIN - diameter / 2;
-const nearest = (diameter: number): number => ORBIT_NODE_SIZE / 2 + diameter / 2 + LINE_ROOM;
+const scalesFrom = (from: number, to: number): number[] =>
+  Array.from(
+    { length: Math.floor((from - to) / SCALE_STEP + 1e-9) + 1 },
+    (_, index) => from - index * SCALE_STEP
+  );
+
+const distanceToRect = (point: OrbitPoint, rect: OrbitRect): number =>
+  Math.hypot(
+    Math.max(rect.left - point.x, 0, point.x - rect.right),
+    Math.max(rect.top - point.y, 0, point.y - rect.bottom)
+  );
+
+const rectsApart = (a: OrbitRect, b: OrbitRect, gap: number): boolean =>
+  a.right + gap <= b.left ||
+  b.right + gap <= a.left ||
+  a.bottom + gap <= b.top ||
+  b.bottom + gap <= a.top;
+
+const grown = (rect: OrbitRect, by: number): OrbitRect => ({
+  left: rect.left - by,
+  top: rect.top - by,
+  right: rect.right + by,
+  bottom: rect.bottom + by,
+});
+
+const distanceToLine = (point: OrbitPoint, end: OrbitPoint): number => {
+  const length = Math.hypot(end.x, end.y);
+  const along = (point.x * end.x + point.y * end.y) / length;
+  return along <= 0 ? distance(point, HOME) : Math.abs(point.x * end.y - point.y * end.x) / length;
+};
+
+/** Liang–Barsky clipping of the line from the home to `end` against `rect`. */
+const lineCrosses = (end: OrbitPoint, rect: OrbitRect): boolean => {
+  const edges: [number, number][] = [
+    [-end.x, -rect.left],
+    [end.x, rect.right],
+    [-end.y, -rect.top],
+    [end.y, rect.bottom],
+  ];
+  const parallelOutside = edges.some(([direction, room]) => direction === 0 && room < 0);
+  const enter = Math.max(
+    0,
+    ...edges.filter(([direction]) => direction < 0).map(([direction, room]) => room / direction)
+  );
+  const exit = Math.min(
+    1,
+    ...edges.filter(([direction]) => direction > 0).map(([direction, room]) => room / direction)
+  );
+  return !parallelOutside && enter <= exit;
+};
+
+const radiiFrom = (from: number, to: number): number[] =>
+  Array.from(
+    { length: Math.max(0, Math.floor((to - from) / RADIUS_STEP) + 1) },
+    (_, index) => from + index * RADIUS_STEP
+  );
+
+const radiusOf = (scale: number): number => (ORBIT_NODE_SIZE * scale) / 2;
+
+/**
+ * Where a device's name sits: as wide as its circle, above it in the upper half of the orbit and
+ * below it elsewhere, so it is never between the circle and the home.
+ */
+export const orbitLabelRect = (place: OrbitPlace, scale: number): OrbitRect => {
+  const radius = radiusOf(scale);
+  const height = LABEL_HEIGHT * scale;
+  const top = place.labelAbove ? place.y - radius - height : place.y + radius;
+  return { left: place.x - radius, right: place.x + radius, top, bottom: top + height };
+};
+
+const placesAround = (rings: Ring[], count: number): OrbitPlace[] =>
+  rings
+    .flatMap((ring) => ring.angles.map((angle) => polar(ring.radius, angle)))
+    .slice(0, count)
+    .map((point) => ({ x: point.x, y: point.y, labelAbove: point.y < -1 }));
+
+const circlesApart = (places: OrbitPlace[], radius: number): boolean =>
+  pairs(places).every(([a, b]) => distance(a, b) >= 2 * radius + GAP);
+
+const labelsClear = (places: OrbitPlace[], labels: OrbitRect[], radius: number): boolean =>
+  pairs(labels).every(([a, b]) => rectsApart(a, b, CLEARANCE)) &&
+  labels.every(
+    (label, index) =>
+      distanceToRect(HOME, label) >= HOME_RADIUS + CLEARANCE &&
+      places.every(
+        (place, other) => other === index || distanceToRect(place, label) >= radius + CLEARANCE
+      )
+  );
+
+const linesClear = (places: OrbitPlace[], labels: OrbitRect[], radius: number): boolean =>
+  places.every(
+    (target, index) =>
+      places.every(
+        (other, otherIndex) =>
+          otherIndex === index || distanceToLine(other, target) >= radius + CLEARANCE
+      ) && labels.every((label) => !lineCrosses(target, grown(label, CLEARANCE)))
+  );
+
+/** Whether no circle, name or line around the home runs into another. */
+const isClear = (places: OrbitPlace[], scale: number): boolean => {
+  const radius = radiusOf(scale);
+  const labels = places.map((place) => orbitLabelRect(place, scale));
+  return (
+    circlesApart(places, radius) &&
+    labelsClear(places, labels, radius) &&
+    linesClear(places, labels, radius)
+  );
+};
+
+const maxRingRadius = (width: number, diameter: number): number =>
+  width / 2 - MARGIN - diameter / 2;
+
+const minRingRadius = (diameter: number): number => HOME_RADIUS + diameter / 2 + LINE_ROOM;
+
+/** The radius at which `count` circles side by side keep `GAP` between them; a lower bound. */
+const chordRadius = (count: number, diameter: number): number =>
+  count < 2 ? 0 : (diameter + GAP) / (2 * Math.sin(Math.PI / count));
 
 const singleRing = (count: number, width: number, scale: number): Ring[] | undefined => {
   const diameter = ORBIT_NODE_SIZE * scale;
-  const room = reach(width, diameter);
-  const radius = Math.max(
-    nearest(diameter),
+  const outermost = maxRingRadius(width, diameter);
+  const start = Math.max(
+    minRingRadius(diameter),
     chordRadius(count, diameter),
-    Math.min(room, COMFORTABLE_RADIUS)
+    Math.min(outermost, COMFORTABLE_RADIUS)
   );
-  return radius <= room + 0.01 ? [{ radius, angles: evenAngles(count) }] : undefined;
+  return radiiFrom(start, outermost + 0.01)
+    .map((radius) => [{ radius, angles: evenAngles(count) }])
+    .find((rings) => isClear(placesAround(rings, count), scale));
 };
 
 /**
@@ -95,75 +208,86 @@ const twoRings = (count: number, innerRadius: number, outerRadius: number): Ring
 
 const doubleRing = (count: number, width: number, scale: number): Ring[] | undefined => {
   const diameter = ORBIT_NODE_SIZE * scale;
-  const places = Math.ceil(count / 2);
-  const outerRadius = reach(width, diameter);
+  const outerRadius = maxRingRadius(width, diameter);
   const innerRadius = outerRadius - diameter - RING_GAP;
-  const fits = innerRadius >= Math.max(nearest(diameter), chordRadius(places, diameter));
-  return places >= 2 && fits ? twoRings(count, innerRadius, outerRadius) : undefined;
+  if (count < 4 || innerRadius < minRingRadius(diameter)) {
+    return undefined;
+  }
+  const rings = twoRings(count, innerRadius, outerRadius);
+  return isClear(placesAround(rings, count), scale) ? rings : undefined;
 };
 
-/** Every scale from `from` down to `to`, a step apart. */
-const scales = (from: number, to: number): number[] =>
-  Array.from(
-    { length: Math.floor((from - to) / SCALE_STEP + 1e-9) + 1 },
-    (_, index) => from - index * SCALE_STEP
+const crowdedRings = (count: number, width: number): Ring[] => {
+  const diameter = ORBIT_NODE_SIZE * MIN_SCALE;
+  const start = Math.max(
+    maxRingRadius(width, diameter),
+    minRingRadius(diameter) + diameter + RING_GAP
   );
+  const candidates = radiiFrom(start, start + GROWTH_LIMIT).map((outer) =>
+    twoRings(count, outer - diameter - RING_GAP, outer)
+  );
+  return (
+    candidates.find((rings) => isClear(placesAround(rings, count), MIN_SCALE)) ??
+    twoRings(count, start - diameter - RING_GAP, start)
+  );
+};
 
-/** The largest circles the devices fit at: one ring while they stay reasonably big, else two. */
-const choose = (count: number, width: number): { scale: number; rings: Ring[] } => {
-  for (const scale of scales(1, SINGLE_RING_MIN_SCALE)) {
+const chooseLayout = (count: number, width: number): { scale: number; rings: Ring[] } => {
+  for (const scale of scalesFrom(1, SINGLE_RING_MIN_SCALE)) {
     const rings = singleRing(count, width, scale);
     if (rings) {
       return { scale, rings };
     }
   }
-  for (const scale of scales(1, MIN_SCALE)) {
+  for (const scale of scalesFrom(1, MIN_SCALE)) {
     const rings = doubleRing(count, width, scale);
     if (rings) {
       return { scale, rings };
     }
   }
-  // More devices than fit: keep the smallest circles on two rings and let the box outgrow the card.
-  const diameter = ORBIT_NODE_SIZE * MIN_SCALE;
-  const places = Math.max(2, Math.ceil(count / 2));
-  const innerRadius = Math.max(nearest(diameter), chordRadius(places, diameter));
-  const outerRadius = innerRadius + diameter + RING_GAP;
-  return { scale: MIN_SCALE, rings: twoRings(count, innerRadius, outerRadius) };
+  return { scale: MIN_SCALE, rings: crowdedRings(count, width) };
 };
 
-/** The orbit box's width for a card of `cardWidth`; 0 before the card has been measured. */
+/** The width the orbit has inside a card of `cardWidth`, which is measured with its padding. */
 export const orbitWidth = (cardWidth: number): number =>
-  Math.min(cardWidth > 0 ? cardWidth : DEFAULT_WIDTH, MAX_WIDTH);
+  Math.min(
+    (cardWidth > 0 ? cardWidth : UNMEASURED_CARD_WIDTH) - 2 * CARD_CONTENT_PADDING,
+    MAX_CONTENT_WIDTH
+  );
 
 /**
- * Places `count` devices on rings around the home in a box of at most `cardWidth`, the first at
- * the top and the rest clockwise. Circles shrink, and a second ring is added, as devices are added.
+ * Places `count` devices on rings around the home, the first at the top and the rest clockwise.
+ * Circles shrink, and a second ring is added, as devices are added until no circle, name or line
+ * touches another. Plain pixels, so the card and its tests share one source of truth.
  */
 export const orbitGeometry = (cardWidth: number, count: number): OrbitGeometry => {
   const width = orbitWidth(cardWidth);
-  const { scale, rings } = choose(Math.max(count, 0), width);
-  const diameter = ORBIT_NODE_SIZE * scale;
+  const { scale, rings } = chooseLayout(Math.max(count, 0), width);
+  const places = placesAround(rings, count);
+  const radius = radiusOf(scale);
+  const labelHeight = LABEL_HEIGHT * scale;
 
-  // Devices are dealt to the rings from the inside out.
-  const around = rings
-    .flatMap((ring) => ring.angles.map((angle) => polar(ring.radius, angle)))
-    .slice(0, count);
-
-  const above = Math.max(ORBIT_NODE_SIZE / 2, ...around.map((point) => diameter / 2 - point.y));
-  const below = Math.max(
-    ORBIT_NODE_SIZE / 2 + LABEL_HEIGHT,
-    ...around.map((point) => point.y + diameter / 2 + LABEL_HEIGHT * scale)
+  const above = Math.max(
+    HOME_RADIUS,
+    ...places.map((place) => radius + (place.labelAbove ? labelHeight : 0) - place.y)
   );
-  const widest = Math.max(0, ...around.map((point) => Math.abs(point.x) + diameter / 2));
-  // The box only grows beyond the card when more devices were given than fit at the smallest size.
+  const below = Math.max(
+    HOME_RADIUS + (count <= 1 ? LABEL_HEIGHT : 0),
+    ...places.map((place) => place.y + radius + (place.labelAbove ? 0 : labelHeight))
+  );
+  const widest = Math.max(0, ...places.map((place) => Math.abs(place.x) + radius));
   const boxWidth = Math.max(width, 2 * (MARGIN + widest));
-  const homeY = MARGIN + above;
+  const home = { x: boxWidth / 2, y: MARGIN + above };
   return {
     width: boxWidth,
-    height: homeY + below + MARGIN,
+    height: MARGIN + above + below + MARGIN,
     scale,
-    home: { x: boxWidth / 2, y: homeY },
-    devices: around.map((point) => ({ x: boxWidth / 2 + point.x, y: homeY + point.y })),
+    home,
+    devices: places.map((place) => ({
+      x: home.x + place.x,
+      y: home.y + place.y,
+      labelAbove: place.labelAbove,
+    })),
     rings: rings.length === 2 ? 2 : 1,
     fit: width / boxWidth,
   };

@@ -19,7 +19,6 @@ export type FlowDotOptions = {
   radius?: number;
   /** Runs from the end of the path to its start. */
   reverse?: boolean;
-  /** Extra inline style on the dot's `<svg>`, such as custom properties that colour its circle. */
   style?: string;
 };
 

@@ -7,7 +7,6 @@ import {
 import { convertColorListToHex } from "@flixlix-cards/shared/utils/convert-color";
 import { isNumberValue, nonEmpty, sortedCopy } from "@flixlix-cards/shared/utils/utils";
 import { type HomeAssistant } from "custom-card-helpers";
-import { isDeviceOnly } from "@flixlix-cards/shared/utils/flow-card-config";
 import { type Formatter } from "./format";
 import { type Normalized } from "./normalize";
 import { type CardStateInput, type IndividualSlot, type ReadyCardState } from "./types";
@@ -111,7 +110,7 @@ export const individualNodes = (
     }
     const state = totals.individuals[index] ?? 0;
     const feeding = feedingIndividuals[index] ?? false;
-    const displayZero = field.display_zero ?? isDeviceOnly(input.config.entities);
+    const displayZero = field.display_zero ?? input.deviceOnly ?? false;
     const displayZeroTolerance = field.display_zero_tolerance ?? 0;
     return {
       field,
@@ -142,25 +141,19 @@ const byStateThenEntity = (a: IndividualSlot, b: IndividualSlot) =>
 /** Cards narrower than this show two individual devices unless `allow_layout_break` is set. */
 const WIDTH_FOR_FOUR_INDIVIDUALS = 359;
 
-/**
- * Sorts individual devices unless `sort_individual_devices` is false, then places the visible ones.
- * Around a source they go into the four slots; with no source (`orbit`) all of them are shown, on
- * rings around the home.
- */
-export const placeIndividuals = (
-  input: CardStateInput,
-  devices: IndividualSlot[],
-  { orbit = false }: { orbit?: boolean } = {}
-) => {
+export const placeIndividuals = (input: CardStateInput, devices: IndividualSlot[]) => {
   const sorted =
     input.config.sort_individual_devices === false
       ? devices
       : sortedCopy(devices, byStateThenEntity);
-  const maxVisible =
-    orbit || input.config.allow_layout_break || input.width >= WIDTH_FOR_FOUR_INDIVIDUALS ? 4 : 2;
   const shown = sorted.filter((device) => device.node.has);
-  const visible = orbit ? shown : shown.slice(0, maxVisible);
-  const [leftTop, leftBottom, rightTop, rightBottom] = orbit ? [] : visible;
+  if (input.deviceOnly) {
+    return { sorted: sorted.map((device) => device.node), visible: shown, slots: {} };
+  }
+  const maxVisible =
+    input.config.allow_layout_break || input.width >= WIDTH_FOR_FOUR_INDIVIDUALS ? 4 : 2;
+  const visible = shown.slice(0, maxVisible);
+  const [leftTop, leftBottom, rightTop, rightBottom] = visible;
   const slots: ReadyCardState["individualSlots"] = { leftTop, leftBottom, rightTop, rightBottom };
   return { sorted: sorted.map((device) => device.node), visible, slots };
 };

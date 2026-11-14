@@ -4,17 +4,11 @@ import { coerceNumber } from "./utils";
 
 type Entities = FlowCardPlusConfig["entities"];
 
-const hasBatteryEntity = (battery: Entities["battery"]): boolean => {
-  const entity = battery?.entity;
-  return typeof entity === "object" ? !!(entity.consumption || entity.production) : !!entity;
-};
-
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
 const isFilled = (value: unknown): boolean => typeof value === "string" && value.trim() !== "";
 
-/** Whether a node has anything selected in its `entity`, however the pickers left it. */
 export const hasEntity = (node: { entity?: unknown } | undefined): boolean => {
   const entity = node?.entity;
   return isRecord(entity) ? Object.values(entity).some(isFilled) : isFilled(entity);
@@ -39,7 +33,6 @@ export const dropEmptyEntity = (node: Record<string, unknown>): Record<string, u
 
 const ENTITY_NODES = ["grid", "solar", "battery", "fossil_fuel_percentage", "home"] as const;
 
-/** The config with every node's empty `entity` removed, so "not selected" reads the same everywhere. */
 export const withoutEmptyEntities = (config: FlowCardPlusConfig): FlowCardPlusConfig => {
   const { entities } = config;
   if (!entities) {
@@ -54,23 +47,16 @@ export const withoutEmptyEntities = (config: FlowCardPlusConfig): FlowCardPlusCo
   return { ...config, entities: { ...entities, ...cleaned } };
 };
 
-/** Whether the config has a grid, solar or battery entity: a node the home is supplied from. */
-export const hasSourceEntity = (entities: Entities | undefined): boolean =>
-  !!entities &&
-  (hasBatteryEntity(entities.battery) || !!entities.grid?.entity || !!entities.solar?.entity);
+const hasSourceEntity = (entities: Entities | undefined): boolean =>
+  !!entities && (!!entities.battery?.entity || !!entities.grid?.entity || !!entities.solar?.entity);
 
 /**
- * Whether the card shows only individual devices around the home: no grid, solar or battery.
- * The home then has no sources to be balanced from, so its consumption is read from the home
- * entity, or summed from the devices.
+ * Whether the card has no grid, solar or battery entity and shows only individual devices around
+ * the home. Meant for a config already passed through `withoutEmptyEntities`.
  */
 export const isDeviceOnly = (entities: Entities | undefined): boolean => !hasSourceEntity(entities);
 
 type AssertOptions = {
-  /**
-   * Accept a config without grid, solar or battery, as long as it has a home entity or at least
-   * one individual device. Only the power flow card renders such a config.
-   */
   allowDeviceOnly?: boolean;
 };
 

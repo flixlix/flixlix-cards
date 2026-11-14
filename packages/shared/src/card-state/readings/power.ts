@@ -1,7 +1,6 @@
 import { getEntityState } from "@flixlix-cards/shared/states/utils/get-entity-state";
 import { getEntityStateWatts } from "@flixlix-cards/shared/states/utils/get-entity-state-watts";
 import { type ComboEntity, type FlowCardPlusConfig } from "@flixlix-cards/shared/types";
-import { isDeviceOnly } from "@flixlix-cards/shared/utils/flow-card-config";
 import { type HomeAssistant } from "custom-card-helpers";
 import { type ReadyReadings, type TwoWayReading } from "../types";
 
@@ -37,8 +36,12 @@ const solarReading = (hass: HomeAssistant, config: FlowCardPlusConfig) => {
   };
 };
 
-/** Live power readings in W from `hass.states`. */
-export function powerReadings(hass: HomeAssistant, config: FlowCardPlusConfig): ReadyReadings {
+/** Live power readings in W from `hass.states`; `deviceOnly` also reads the home entity. */
+export function powerReadings(
+  hass: HomeAssistant,
+  config: FlowCardPlusConfig,
+  deviceOnly = false
+): ReadyReadings {
   const { entities } = config;
   const generator = entities.grid?.power_outage?.entity_generator;
   return {
@@ -47,9 +50,8 @@ export function powerReadings(hass: HomeAssistant, config: FlowCardPlusConfig): 
     grid: twoWay(hass, entities.grid?.entity),
     solar: solarReading(hass, config),
     battery: twoWay(hass, entities.battery?.entity),
-    // Without grid, solar or battery the home entity is the only measure of the home.
     home:
-      (entities.home?.override_state || isDeviceOnly(entities)) && entities.home?.entity
+      (entities.home?.override_state || deviceOnly) && entities.home?.entity
         ? watts(hass, entities.home.entity)
         : null,
     generator: generator ? watts(hass, generator) : null,

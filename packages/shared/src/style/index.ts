@@ -543,6 +543,17 @@ export const styles = css`
     border-color: var(--orbit-color);
     color: var(--orbit-text-color);
   }
+  .orbit-device .label {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    text-align: center;
+  }
+  .orbit-device.orbit-label-above .label {
+    top: auto;
+    bottom: 100%;
+  }
   .orbit-device ha-icon:not(.small) {
     color: var(--orbit-icon-color);
   }

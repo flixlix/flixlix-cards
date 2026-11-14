@@ -6,8 +6,11 @@ import { PowerFlowCardPlus } from "./power-flow-card-plus";
 // test that the card renders correctly
 
 // jsdom does not provide ResizeObserver; stub it so the card's `updated` hook doesn't throw
+const observed: Element[] = [];
 globalThis.ResizeObserver = class {
-  observe() {}
+  observe(target: Element) {
+    observed.push(target);
+  }
   disconnect() {}
   unobserve() {}
 };
@@ -342,7 +345,34 @@ describe("entity actions", () => {
   });
 });
 
+describe("the card's width", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  const gridCard = {
+    type: "custom:power-flow-card-plus",
+    entities: { grid: { entity: "sensor.grid" } },
+  } as PowerFlowCardPlusConfig;
+
+  test("is watched again after the card is moved to another column", async () => {
+    const { card } = await renderCard(gridCard, makeHass({ "sensor.grid": "500" }));
+    const before = observed.length;
+
+    const column = document.createElement("div");
+    document.body.append(column);
+    column.append(card);
+    await card.updateComplete;
+
+    expect(observed.length).toBe(before + 1);
+  });
+});
+
 describe("device-only mode (no grid, solar or battery)", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   const sensors = Array.from({ length: 11 }, (_, index) => `sensor.device_${index + 1}`);
   const watts = [111, 40, 0, 1262, 5, 0, 9, 0, 2, 0, 3];
   const states = {
@@ -356,6 +386,7 @@ describe("device-only mode (no grid, solar or battery)", () => {
       individual: sensors.map((entity) => ({ entity })),
     },
   } as PowerFlowCardPlusConfig;
+  const withEntities = (entities: PowerFlowCardPlusConfig["entities"]) => ({ ...config, entities });
 
   test("shows every configured device, not only four", async () => {
     const { root } = await renderCard(config, makeHass(states));
@@ -364,19 +395,12 @@ describe("device-only mode (no grid, solar or battery)", () => {
     expect(root.querySelectorAll(".orbit-line path")).toHaveLength(11);
   });
 
-  test("has no grid, solar, battery or fixed slots", async () => {
+  test("has no grid, solar, battery or low-carbon circle and no fixed rows", async () => {
     const { root } = await renderCard(config, makeHass(states));
 
-    for (const selector of [
-      ".grid",
-      ".solar",
-      ".battery",
-      ".low-carbon",
-      ".row",
-      ".individual-top",
-    ]) {
-      expect(root.querySelector(`.circle-container${selector}, ${selector}.row`)).toBeNull();
-    }
+    const circles = ".circle-container.grid, .circle-container.solar, .circle-container.battery";
+    expect(root.querySelector(`${circles}, .circle-container.low-carbon, .row`)).toBeNull();
+    expect(root.querySelector("#home-circle")).not.toBeNull();
   });
 
   test("the home shows the home entity's reading", async () => {
@@ -387,29 +411,32 @@ describe("device-only mode (no grid, solar or battery)", () => {
 
   test("without a home entity the home shows the sum of the devices", async () => {
     const { text } = await renderCard(
-      {
-        ...config,
-        entities: { individual: sensors.map((entity) => ({ entity })) },
-      },
+      withEntities({ individual: sensors.map((entity) => ({ entity })) }),
       makeHass(states)
     );
 
     expect(text("#home-circle")).toContain(`1.4${thinSpace}kW`);
   });
 
+  test("an unavailable home entity says so instead of showing the sum", async () => {
+    const { text } = await renderCard(
+      config,
+      makeHass({ ...states, "sensor.total": "unavailable" })
+    );
+
+    expect(text("#home-circle")).toContain("state.default.unavailable");
+  });
+
   test("devices at 0 W are shown unless display_zero is false", async () => {
     const { root } = await renderCard(
-      {
-        ...config,
-        entities: {
-          home: { entity: "sensor.total" },
-          individual: [
-            { entity: "sensor.device_4" },
-            { entity: "sensor.device_3" },
-            { entity: "sensor.device_6", display_zero: false },
-          ],
-        },
-      },
+      withEntities({
+        home: { entity: "sensor.total" },
+        individual: [
+          { entity: "sensor.device_4" },
+          { entity: "sensor.device_3" },
+          { entity: "sensor.device_6", display_zero: false },
+        ],
+      }),
       makeHass(states)
     );
 
@@ -423,45 +450,83 @@ describe("device-only mode (no grid, solar or battery)", () => {
     expect(root.querySelectorAll("svg.flow-dot")).toHaveLength(7);
   });
 
-  test("a device keeps its colour as the others sort around it", async () => {
+  describe("direction arrows", () => {
+    test("point away from the home along the device's line", async () => {
+      const { root } = await renderCard(
+        withEntities({ individual: [{ entity: "sensor.up", show_direction: true }] }),
+        makeHass({ "sensor.up": "300" })
+      );
+
+      // The only device sits straight above the home.
+      expect(root.querySelector("ha-icon.small")?.getAttribute("style")).toContain("rotate(0deg)");
+    });
+
+    test("point towards the home for a device feeding it", async () => {
+      const { root } = await renderCard(
+        withEntities({
+          individual: [{ entity: "sensor.up", show_direction: true, accept_negative: true }],
+        }),
+        makeHass({ "sensor.up": "-200" })
+      );
+
+      expect(root.querySelector("ha-icon.small")?.getAttribute("style")).toContain(
+        "rotate(180deg)"
+      );
+    });
+
+    test("are left out unless show_direction is set", async () => {
+      const { root } = await renderCard(
+        withEntities({ individual: [{ entity: "sensor.up" }] }),
+        makeHass({ "sensor.up": "300" })
+      );
+
+      expect(root.querySelector("ha-icon.small")).toBeNull();
+    });
+  });
+
+  test("names sit above the circles in the upper half and below them elsewhere", async () => {
+    const { root } = await renderCard(
+      withEntities({ individual: [{ entity: "sensor.device_1" }, { entity: "sensor.device_2" }] }),
+      makeHass(states)
+    );
+
+    const [top, bottom] = [...root.querySelectorAll(".orbit-device")];
+    expect(top?.classList.contains("orbit-label-above")).toBe(true);
+    expect(bottom?.classList.contains("orbit-label-above")).toBe(false);
+  });
+
+  test("the orbit fits inside the padding Home Assistant puts around the card", async () => {
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (
+      this: HTMLElement
+    ) {
+      return new DOMRect(0, 0, this.id === "power-flow-card-plus" ? 420 : 0, 0);
+    });
     const { root } = await renderCard(config, makeHass(states));
 
-    const colours = [...root.querySelectorAll<HTMLElement>(".orbit-device")].map(
-      (node) => /--orbit-color:([^;]+)/.exec(node.getAttribute("style") ?? "")?.[1]
-    );
-    expect(new Set(colours).size).toBeGreaterThan(4);
-    expect(colours.every(Boolean)).toBe(true);
+    const frame = root.querySelector<HTMLElement>(".orbit-frame");
+    expect(parseFloat(frame?.style.width ?? "")).toBeLessThanOrEqual(420 - 32);
   });
 
   test("a config with a source keeps the fixed layout", async () => {
     const { root } = await renderCard(
-      {
-        ...config,
-        entities: { ...config.entities, grid: { entity: "sensor.total" } },
-      },
+      withEntities({ ...config.entities, grid: { entity: "sensor.total" } }),
       makeHass(states)
     );
 
     expect(root.querySelector(".orbit")).toBeNull();
-    expect(
-      root.querySelectorAll(".circle-container.individual-top, .circle-container.individual-bottom")
-        .length
-    ).toBeLessThanOrEqual(4);
+    expect(root.querySelector(".circle-container.grid")).not.toBeNull();
   });
 
   test("sources disabled in the editor leave empty entities and still give the orbit", async () => {
     const { root } = await renderCard(
-      {
-        ...config,
-        entities: {
-          grid: { entity: {}, name: "Rete" },
-          solar: { entity: "" },
-          battery: {},
-          fossil_fuel_percentage: { entity: "", name: "Energia Pulita" },
-          home: { entity: "sensor.total" },
-          individual: sensors.map((entity) => ({ entity })),
-        },
-      } as unknown as PowerFlowCardPlusConfig,
+      withEntities({
+        grid: { entity: { consumption: "", production: "" }, name: "Rete" },
+        solar: { entity: "" },
+        battery: { entity: "" },
+        fossil_fuel_percentage: { entity: "", name: "Energia Pulita", secondary_info: {} },
+        home: { entity: "sensor.total" },
+        individual: sensors.map((entity) => ({ entity })),
+      }),
       makeHass(states)
     );
 

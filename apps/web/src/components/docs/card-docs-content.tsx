@@ -1132,13 +1132,16 @@ function DeviceOnlyNotes({ v }: { v: Variant }) {
         <strong>Device-only mode.</strong> When no <code>grid</code>, <code>solar</code> or{" "}
         <code>battery</code> entity is set, the home sits in the middle and <em>every</em> device is
         placed on a ring around it (a second ring takes over for crowded cards, and circles shrink
-        as devices are added). The home shows the <code>home</code> entity's reading, or the sum of
-        the devices when there is none. Devices at 0 W stay visible; set{" "}
-        <code>display_zero: false</code> on a device to hide it while idle.
+        as devices are added). The home shows the <code>home</code> entity's reading, or the net
+        consumption of the devices when there is none: a device that feeds power into the home (
+        <code>accept_negative</code>, below zero) is taken off. An unavailable <code>home</code>{" "}
+        entity shows as unavailable. With <code>show_direction</code>, each device gets an arrow
+        along its line, pointing towards the home when it feeds it.
       </p>
       <p>
-        In the visual editor, use the <strong>Disable</strong> button on the Grid, Solar, Battery
-        and Fossil fuel pages to switch them off.
+        Devices at 0 W stay visible; set <code>display_zero: false</code> on a device to hide it
+        while idle. In the visual editor, use the <strong>Disable</strong> button on the Grid,
+        Solar, Battery and Fossil fuel pages to switch them off.
       </p>
     </>
   );

@@ -40,7 +40,6 @@ const ENTITY_PAGES = [
 
 type EntityPage = (typeof ENTITY_PAGES)[number]["page"];
 
-/** The nodes the home can be supplied from. Each can be disabled, and all of them at once. */
 const OPTIONAL_SOURCES = new Set<EntityPage>([
   "grid",
   "solar",
@@ -306,7 +305,6 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
     fireEvent(this, "config-changed", { config });
   }
 
-  /** Whether a node has an entity selected, however the pickers left it. */
   private _hasEntity(page: EntityPage): boolean {
     return hasEntity(this._config?.entities[page]);
   }

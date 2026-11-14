@@ -303,12 +303,17 @@ describe("normalize properties", () => {
   });
 });
 
+const deviceOnly = (entities: FlowCardPlusConfig["entities"]) => ({
+  ...input(entities),
+  deviceOnly: true,
+});
+
 describe("device-only mode (no grid, solar or battery)", () => {
   const plugs = [{ entity: "sensor.a" }, { entity: "sensor.b", display_zero: false }];
 
   test("measured home is the home entity's reading, even without override_state", () => {
     const totals = normalize(
-      input({ home: { entity: "sensor.home" }, individual: plugs }),
+      deviceOnly({ home: { entity: "sensor.home" }, individual: plugs }),
       readings({ home: 420, individuals: [100, 50] })
     ).totals;
     expect(totals.measuredHome).toBe(420);
@@ -316,18 +321,59 @@ describe("device-only mode (no grid, solar or battery)", () => {
 
   test("without a home entity it is the sum of the shown devices", () => {
     const totals = normalize(
-      input({ individual: plugs }),
+      deviceOnly({ individual: plugs }),
       readings({ individuals: [100, 0] })
     ).totals;
     expect(totals.measuredHome).toBe(100);
   });
 
-  test("an unavailable home entity falls back to the sum of the devices", () => {
+  test("an unavailable home entity is not replaced by the sum of the devices", () => {
     const totals = normalize(
-      input({ home: { entity: "sensor.home" }, individual: plugs }),
+      deviceOnly({ home: { entity: "sensor.home" }, individual: plugs }),
       readings({ home: null, individuals: [100, 30] })
     ).totals;
-    expect(totals.measuredHome).toBe(130);
+    expect(totals.measuredHome).toBeUndefined();
+  });
+
+  describe("devices that feed power into the home", () => {
+    const devices = [
+      { entity: "sensor.oven" },
+      { entity: "sensor.washer" },
+      { entity: "sensor.dryer" },
+      { entity: "sensor.balcony", accept_negative: true },
+    ];
+
+    test("are taken off the sum of the devices", () => {
+      const totals = normalize(
+        deviceOnly({ individual: devices }),
+        readings({ individuals: [1100, 600, 300, -200] })
+      ).totals;
+      expect(totals.measuredHome).toBe(1800);
+    });
+
+    test("never take the sum below zero", () => {
+      const totals = normalize(
+        deviceOnly({ individual: devices }),
+        readings({ individuals: [100, 0, 0, -700] })
+      ).totals;
+      expect(totals.measuredHome).toBe(0);
+    });
+
+    test("count as a load when they are positive", () => {
+      const totals = normalize(
+        deviceOnly({ individual: devices }),
+        readings({ individuals: [1100, 600, 300, 200] })
+      ).totals;
+      expect(totals.measuredHome).toBe(2200);
+    });
+
+    test("without accept_negative a negative reading counts as a load", () => {
+      const totals = normalize(
+        deviceOnly({ individual: [{ entity: "sensor.a" }, { entity: "sensor.b" }] }),
+        readings({ individuals: [100, -200] })
+      ).totals;
+      expect(totals.measuredHome).toBe(300);
+    });
   });
 
   test("a source keeps the old rule: measured only with override_state", () => {
@@ -342,7 +388,7 @@ describe("device-only mode (no grid, solar or battery)", () => {
 
   test("devices at 0 W stay shown by default: there are no slots to save", () => {
     const { presence } = normalize(
-      input({ individual: [{ entity: "sensor.on" }, { entity: "sensor.off" }] }),
+      deviceOnly({ individual: [{ entity: "sensor.on" }, { entity: "sensor.off" }] }),
       readings({ individuals: [50, 0] })
     );
     expect(presence.individuals).toEqual([true, true]);
@@ -350,7 +396,7 @@ describe("device-only mode (no grid, solar or battery)", () => {
 
   test("display_zero: false still hides a device at 0 W", () => {
     const { presence } = normalize(
-      input({
+      deviceOnly({
         individual: [{ entity: "sensor.on" }, { entity: "sensor.off", display_zero: false }],
       }),
       readings({ individuals: [50, 0] })
@@ -360,7 +406,7 @@ describe("device-only mode (no grid, solar or battery)", () => {
 
   test("nothing flows from sources, so balanced home is 0", () => {
     const { totals } = normalize(
-      input({ individual: plugs }),
+      deviceOnly({ individual: plugs }),
       readings({ individuals: [100, 50] })
     );
     expect(solve(totals).home).toBe(0);

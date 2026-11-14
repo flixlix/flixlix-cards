@@ -16,5 +16,7 @@
 - **Display zero lines**: how lines with nothing flowing are drawn: shown, hidden, greyed out or faded.
 - **Secondary info**: a small extra value or rendered template shown inside a node, e.g. a price or a state of charge.
 - **Individual device**: a consumer the user tracks separately (EV charger, heat pump), shown in one of up to four **slots** around the home.
+- **Device-only mode**: a power card with no grid, solar or battery entity. Every individual device is placed on the **orbit** around the home instead of in a slot, and the home is measured rather than balanced (see `docs/adr/0003-device-only-mode.md`).
+- **Orbit**: the one or two rings of individual devices around the home in device-only mode, laid out in pixels from the card width (`card-state/orbit.ts`).
 - **Home ring**: the circle around the home node, split by how much of home consumption each source supplies.
 - **Non-fossil**: the share of grid import from low-carbon sources, from a fossil-percentage entity or the energy dashboard's CO2 data.

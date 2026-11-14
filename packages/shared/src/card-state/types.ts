@@ -56,6 +56,8 @@ export type CardStateInput = {
   width: number;
   /** Dots are not animated while the page is hidden. */
   pageHidden?: boolean;
+  /** No grid, solar or battery entity: the card shows only individual devices around the home. */
+  deviceOnly?: boolean;
 };
 
 export type FlowName =
@@ -84,14 +86,13 @@ export type IndividualSlot = { node: IndividualObject; flow: Flow };
 export type OrbitDevice = IndividualSlot & {
   /** Position in the config's `individual` list: what the device's default colour follows. */
   index: number;
-  /** Centre of the device's circle in the orbit box, in pixels. */
   x: number;
   y: number;
+  labelAbove: boolean;
   /** CSS custom properties that colour the device, its line and its dot. */
   style: string;
 };
 
-/** The home with every individual device on rings around it, when the card has no source. */
 export type OrbitState = { geometry: OrbitGeometry; devices: OrbitDevice[] };
 
 export type HomeRing = {

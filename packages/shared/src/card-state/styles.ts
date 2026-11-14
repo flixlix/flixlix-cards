@@ -229,9 +229,10 @@ const individualVars = (individuals: IndividualObject[]): CssVars => {
   );
 };
 
-/** Colours handed out to devices on the orbit in config order, then repeated. */
+const DEFAULT_ORBIT_COLOR = "#964cb5";
+/** Handed out to devices on the orbit in config order, then repeated. */
 const ORBIT_COLORS = [
-  "#964cb5",
+  DEFAULT_ORBIT_COLOR,
   "#5bd0cc",
   "#b54c9d",
   "#d0cc5b",
@@ -249,14 +250,14 @@ export const orbitDeviceStyle = (
   field: Partial<IndividualDeviceType> | undefined,
   index: number
 ): string => {
-  const fallback = ORBIT_COLORS[Math.max(index, 0) % ORBIT_COLORS.length] ?? "#964cb5";
+  const fallback = ORBIT_COLORS[Math.max(index, 0) % ORBIT_COLORS.length] ?? DEFAULT_ORBIT_COLOR;
   const color = field?.color === undefined ? fallback : cssColor(field.color, fallback);
-  const own = "var(--orbit-color)";
+  const deviceColor = "var(--orbit-color)";
   return [
     `--orbit-color:${color}`,
-    `--orbit-icon-color:${field?.color_icon !== false ? own : PRIMARY_TEXT}`,
-    `--orbit-text-color:${field?.color_value ? own : PRIMARY_TEXT}`,
-    `--orbit-secondary-color:${field?.secondary_info?.color_value ? own : PRIMARY_TEXT}`,
+    `--orbit-icon-color:${field?.color_icon !== false ? deviceColor : PRIMARY_TEXT}`,
+    `--orbit-text-color:${field?.color_value ? deviceColor : PRIMARY_TEXT}`,
+    `--orbit-secondary-color:${field?.secondary_info?.color_value ? deviceColor : PRIMARY_TEXT}`,
   ].join(";");
 };
 

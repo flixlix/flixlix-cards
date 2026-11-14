@@ -47,6 +47,11 @@ describe("flow card config", () => {
     ).toThrow(/individual device/);
   });
 
+  test("an empty battery entity still counts as set, as it always did", () => {
+    const entities = { battery: { entity: { consumption: "", production: "" } } };
+    expect(() => assertRenderableFlowCardConfig(fakeConfig({ entities }))).not.toThrow();
+  });
+
   test("a battery given only as a split entity counts as a source", () => {
     const entities = {
       battery: { entity: { consumption: "sensor.b_in", production: "sensor.b_out" } },
@@ -91,13 +96,13 @@ describe("empty entities", () => {
   test("clears every node's empty entity and leaves the rest of the config", () => {
     const config = fakeConfig({
       entities: {
-        grid: { entity: {} },
+        grid: { entity: { consumption: "", production: "" } },
         solar: { entity: "" },
-        battery: { entity: { consumption: "", production: "" } },
-        fossil_fuel_percentage: { entity: "", name: "Clean" },
+        battery: { entity: "" },
+        fossil_fuel_percentage: { entity: "", name: "Clean", secondary_info: {} },
         home: { entity: "sensor.home" },
         individual: [{ entity: "sensor.plug" }],
-      } as never,
+      },
       title: "Home",
     });
 
@@ -107,7 +112,7 @@ describe("empty entities", () => {
       grid: {},
       solar: {},
       battery: {},
-      fossil_fuel_percentage: { name: "Clean" },
+      fossil_fuel_percentage: { name: "Clean", secondary_info: {} },
       home: { entity: "sensor.home" },
       individual: [{ entity: "sensor.plug" }],
     });
@@ -118,10 +123,10 @@ describe("empty entities", () => {
     const config = withoutEmptyEntities(
       fakeConfig({
         entities: {
-          grid: { entity: {} },
+          grid: { entity: { consumption: "", production: "" } },
           solar: { entity: "" },
           individual: [{ entity: "sensor.plug" }],
-        } as never,
+        },
       })
     );
     expect(isDeviceOnly(config.entities)).toBe(true);
@@ -129,7 +134,7 @@ describe("empty entities", () => {
   });
 
   test("a config without entities is returned as it is", () => {
-    const config = { type: "custom:power-flow-card-plus" } as never;
+    const config = fakeConfig({ entities: undefined });
     expect(withoutEmptyEntities(config)).toBe(config);
   });
 });

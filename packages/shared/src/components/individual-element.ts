@@ -16,13 +16,18 @@ const stateShown = (node: IndividualObject): boolean =>
 export const isFlowing = (node: IndividualObject): boolean =>
   !!node.state && node.state >= (node.displayZeroTolerance ?? 0);
 
-/** A device's circle is shown in one of the four slots, or on the orbit when there is no source. */
-export type CircleKey = IndividualKey | "orbit";
+/** What differs between a device's circle in a slot and on the orbit. */
+export type CircleParts = {
+  valueClass: string;
+  secondaryClass: string;
+  /** Id of the icon, which only the slots' lines are measured from. */
+  iconId?: string;
+  arrow: TemplateResult | typeof nothing;
+};
 
 /** Bottom slots point the other way: their lines run up into the home. */
-const directionArrow = (node: IndividualObject, key: CircleKey) => {
-  // Around the home a line runs outwards at any angle, so no single arrow could point along it.
-  if (!node.showDirection || key === "orbit") {
+const directionArrow = (node: IndividualObject, key: IndividualKey) => {
+  if (!node.showDirection) {
     return nothing;
   }
   const pointsUp = key.endsWith("bottom") ? node.invertAnimation : !node.invertAnimation;
@@ -32,14 +37,20 @@ const directionArrow = (node: IndividualObject, key: CircleKey) => {
   ></ha-icon>`;
 };
 
+const slotCircle = (node: IndividualObject, key: IndividualKey): CircleParts => ({
+  valueClass: `individual-${key.endsWith("top") ? "top" : "bottom"} individual-${key}`,
+  secondaryClass: key,
+  iconId: `individual-${key}-icon`,
+  arrow: directionArrow(node, key),
+});
+
 export const individualCircle = (
   main: CardMainContext,
   config: FlowCardPlusConfig,
   node: IndividualObject,
-  key: CircleKey
+  parts: CircleParts
 ) => {
   const disableEntityClick = !config.clickable_entities;
-  const vertical = key === "orbit" ? "orbit" : key.endsWith("top") ? "top" : "bottom";
   return html`<div
     class="circle ${disableEntityClick ? "pointer-events-none" : ""}"
     tabindex=${disableEntityClick ? nothing : 0}
@@ -66,20 +77,15 @@ export const individualCircle = (
     }}
   >
     <ha-ripple .disabled=${disableEntityClick}></ha-ripple>
-    ${individualSecondarySpan(main, node, key)}
+    ${individualSecondarySpan(main, node, parts.secondaryClass)}
     ${
       node.icon !== " "
-        ? html` <ha-icon
-            id=${key === "orbit" ? nothing : `individual-${key}-icon`}
-            .icon=${node.icon}
-          ></ha-icon>`
+        ? html` <ha-icon id=${parts.iconId ?? nothing} .icon=${node.icon}></ha-icon>`
         : nothing
     }
     ${
       stateShown(node)
-        ? html` <span class="individual-${vertical} individual-${key}">
-            ${directionArrow(node, key)}${node.displayState}
-          </span>`
+        ? html` <span class=${parts.valueClass}> ${parts.arrow}${node.displayState} </span>`
         : nothing
     }
   </div>`;
@@ -203,7 +209,7 @@ export const individualElement = (
     slot,
     line,
     label: html`<span class="label">${slot.node.name}</span>`,
-    circle: individualCircle(main, config, slot.node, key),
+    circle: individualCircle(main, config, slot.node, slotCircle(slot.node, key)),
     dot: line ? individualDot(slot, key, animate, 1.75) : nothing,
   });
 };

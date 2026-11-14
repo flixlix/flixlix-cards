@@ -1,6 +1,5 @@
 import { CIRCLE_CIRCUMFERENCE } from "@flixlix-cards/shared/const/circle";
 import { type IndividualObject } from "@flixlix-cards/shared/types";
-import { isDeviceOnly } from "@flixlix-cards/shared/utils/flow-card-config";
 import { type Formatter } from "./format";
 import { type Balance } from "./nodes";
 import { type NodeFlows } from "./solve";
@@ -41,6 +40,9 @@ const usageText = (
     unitWhiteSpace: home?.unit_white_space,
     reading: true,
   };
+  if (input.deviceOnly && home?.entity && totals.measuredHome === undefined) {
+    return input.hass.localize("state.default.unavailable");
+  }
   const consumption = totals.measuredHome ?? flows.home;
   return format(
     home?.subtract_individual ? consumption - individualConsumption : consumption,
@@ -67,6 +69,6 @@ export const computeHomeRing = (
     ...segments,
     largestSource,
     usageText: usageText(input, balance, individuals, format),
-    plain: isDeviceOnly(input.config.entities),
+    plain: input.deviceOnly ?? false,
   };
 };
