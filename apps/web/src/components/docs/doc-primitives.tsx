@@ -20,14 +20,16 @@ export function PageHeader({
   title,
   description,
   badges,
+  className,
 }: {
+  className?: string;
   eyebrow?: string;
   title: string;
   description?: React.ReactNode;
   badges?: { label: string; variant?: "default" | "secondary" | "outline" }[];
 }) {
   return (
-    <header className="mb-10">
+    <header className={cn("mb-10", className)}>
       {eyebrow ? <p className="text-muted-foreground mb-2 text-sm font-medium">{eyebrow}</p> : null}
       <h1 className="text-[2.25rem] leading-[1.08] font-semibold tracking-[-0.03em] md:text-[2.75rem]">
         {title}

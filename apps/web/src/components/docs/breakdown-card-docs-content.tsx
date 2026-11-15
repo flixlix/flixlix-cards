@@ -3,7 +3,6 @@ import {
   CalendarRange,
   ChartPie,
   Filter,
-  Github,
   Layers,
   ListChecks,
   MousePointerClick,
@@ -13,13 +12,19 @@ import {
 import type * as React from "react";
 
 import { trackEvent } from "#/lib/analytics";
-import { Button } from "@flixlix-cards/ui/components/button";
-import { Checkbox } from "@flixlix-cards/ui/components/checkbox";
 
-import { CardDemo } from "@/components/card-demo";
 import { heading } from "@/lib/page-meta";
 import { sensor, type StateFixtures } from "@flixlix-cards/shared/preview/fake-hass";
 
+import {
+  CardHero,
+  DemoGallery,
+  Highlight,
+  Highlights,
+  SectionPages,
+  SourceSection,
+} from "./card-overview";
+import { breakdownGallery } from "@/components/demos";
 import { CategorySection } from "./category-section";
 import {
   Callout,
@@ -27,7 +32,6 @@ import {
   NextPageNav,
   type OptionRow,
   PageHeader,
-  PageLinks,
   Prose,
   Section,
 } from "./doc-primitives";
@@ -47,113 +51,49 @@ const HACS_REDIRECT =
   "https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=energy-breakdown-card&category=plugin";
 const RELEASE_URL = "https://github.com/flixlix/energy-breakdown-card/releases/latest";
 
-function HighlightItem({ children }: { children: React.ReactNode }) {
-  return (
-    <li className="bg-muted/40 flex items-center gap-2 rounded-md border p-3">
-      <Checkbox className="pointer-events-none" checked />
-      {children}
-    </li>
-  );
-}
-
 // ---------- Overview ----------
 
 export function OverviewPage() {
   return (
     <>
-      <PageHeader
-        eyebrow={TITLE}
-        title={heading(BASE_PATH)}
-        description="A custom Home Assistant Lovelace card that visualizes how your energy use is broken down across sources — as a donut or stacked bar."
-        badges={[{ label: "HACS custom" }, { label: "YAML & UI editor" }, { label: "Donut + bar" }]}
+      <CardHero title={TITLE} demo="breakdown" installHref={HACS_REDIRECT}>
+        <PageHeader
+          className="mb-0"
+          eyebrow="Home Assistant"
+          title={heading(BASE_PATH)}
+          description="Where your energy went, as a donut or a stacked bar."
+          badges={[
+            { label: "HACS custom" },
+            { label: "YAML & UI editor" },
+            { label: "Donut + bar" },
+          ]}
+        />
+      </CardHero>
+
+      <DemoGallery
+        title="Ways to show it"
+        description="The same day's energy, each one live."
+        demos={breakdownGallery}
       />
 
-      <CardDemo demo="breakdown" className="mx-auto w-fit max-w-full rounded-2xl" />
-      <p className="text-muted-foreground mt-2 text-center text-sm">
-        The real card, live, under Energy Period Selector Plus: pick a period to see it change.
-      </p>
-
-      <Prose className="mt-4">
-        <p>
-          <strong>{TITLE}</strong> turns a list of energy sensors into a clean proportional chart.
-          It is designed to fit the design language of the latest Lovelace UI: rounded corners, soft
-          shadows, HA color tokens, and a quiet visual presence that adapts to your theme.
-        </p>
-        <p>
-          <strong>Scope.</strong> This card displays accumulated energy values (Wh / kWh) and shows
-          how a total is split across sources. For an animated flow diagram between grid, solar,
-          battery and home use the <Link to="/energy-flow-card-plus">Energy Flow Card Plus</Link>{" "}
-          instead.
-        </p>
-      </Prose>
-
-      <Section title="Highlights">
-        <ul className="text-foreground/90 grid grid-cols-1 gap-2 text-sm md:grid-cols-2">
-          <HighlightItem>Two visual variants — donut and stacked bar</HighlightItem>
-          <HighlightItem>Optional legend with names, values, and percentages</HighlightItem>
-          <HighlightItem>Mobile-friendly tooltip on tap, desktop hover tooltip</HighlightItem>
-          <HighlightItem>Per-entity color, icon, name, multiplier, and actions</HighlightItem>
-          <HighlightItem>
-            <code>group_others</code> + <code>max_items</code> to keep the chart readable
-          </HighlightItem>
-          <HighlightItem>Optional sync to the Home Assistant energy dashboard period</HighlightItem>
-        </ul>
-      </Section>
+      <Highlights>
+        <Highlight>Donut or stacked bar</Highlight>
+        <Highlight>Legend with names, values and percentages</Highlight>
+        <Highlight>Tooltip on hover, or on tap on mobile</Highlight>
+        <Highlight>Per-entity color, icon, name, multiplier and actions</Highlight>
+        <Highlight>
+          <code>group_others</code> and <code>max_items</code> to keep the chart readable
+        </Highlight>
+        <Highlight>Follows the energy dashboard&apos;s selected period</Highlight>
+      </Highlights>
 
       <Section title="Compare it">
         <RelatedGuides paths={["/guides/energy-distribution-card-alternative", "/guides"]} />
       </Section>
 
-      <Section title="What's in this section">
-        <PageLinks
-          links={[
-            {
-              to: `${BASE_PATH}/installation`,
-              title: "Installation",
-              description: "Marketplace, HACS custom repository or manual install.",
-            },
-            {
-              to: `${BASE_PATH}/configuration`,
-              title: "Configuration",
-              description: "Every option, with defaults and types.",
-            },
-            {
-              to: `${BASE_PATH}/examples`,
-              title: "Examples",
-              description: "Copy-pastable configs for common setups.",
-            },
-          ]}
-        />
-      </Section>
+      <SectionPages basePath={BASE_PATH} />
 
-      <Section title="Source & releases">
-        <Prose>
-          <p>
-            The card is distributed via{" "}
-            <a href={REPO_URL} target="_blank" rel="noopener noreferrer">
-              flixlix/energy-breakdown-card
-            </a>
-            , but the source code lives in the monorepo at{" "}
-            <a
-              href="https://github.com/flixlix/flixlix-cards"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              flixlix/flixlix-cards
-            </a>
-            . Issues and feature requests are tracked there.
-          </p>
-        </Prose>
-        <Button asChild variant="outline" size="sm">
-          <a
-            href="https://github.com/flixlix/flixlix-cards"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Github className="size-4" /> View source on GitHub
-          </a>
-        </Button>
-      </Section>
+      <SourceSection repoUrl={REPO_URL} />
 
       <NextPageNav next={{ label: "Installation", to: `${BASE_PATH}/installation` }} />
     </>

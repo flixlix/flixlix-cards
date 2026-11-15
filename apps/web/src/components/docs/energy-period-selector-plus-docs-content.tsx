@@ -1,15 +1,20 @@
 import { Link } from "@tanstack/react-router";
-import { GitCompareArrows, Github, MousePointerClick, Settings } from "lucide-react";
+import { GitCompareArrows, MousePointerClick, Settings } from "lucide-react";
 import type * as React from "react";
 
 import { trackEvent } from "#/lib/analytics";
-import { CardDemo } from "@/components/card-demo";
 import { heading } from "@/lib/page-meta";
-import { energyStates } from "@/components/demos";
+import { energyStates, periodGallery } from "@/components/demos";
 import { sensor, type StateFixtures } from "@flixlix-cards/shared/preview/fake-hass";
-import { Button } from "@flixlix-cards/ui/components/button";
-import { Checkbox } from "@flixlix-cards/ui/components/checkbox";
 
+import {
+  CardHero,
+  DemoGallery,
+  Highlight,
+  Highlights,
+  SectionPages,
+  SourceSection,
+} from "./card-overview";
 import { CategorySection } from "./category-section";
 import {
   Callout,
@@ -17,7 +22,6 @@ import {
   NextPageNav,
   type OptionRow,
   PageHeader,
-  PageLinks,
   Prose,
   Section,
 } from "./doc-primitives";
@@ -37,127 +41,49 @@ const HACS_REDIRECT =
   "https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=energy-period-selector-plus&category=plugin";
 const RELEASE_URL = "https://github.com/flixlix/energy-period-selector-plus/releases/latest";
 
-function HighlightItem({ children }: { children: React.ReactNode }) {
-  return (
-    <li className="bg-muted/40 flex items-center gap-2 rounded-md border p-3">
-      <Checkbox className="pointer-events-none" checked />
-      {children}
-    </li>
-  );
-}
-
 // ---------- Overview ----------
 
 export function OverviewPage() {
   return (
     <>
-      <PageHeader
-        eyebrow={TITLE}
-        title={heading(BASE_PATH)}
-        description="Picks the period shown by the energy cards on the same dashboard: day, week, month, year or any range, with previous/next, today and compare buttons."
-        badges={[{ label: "HACS custom" }, { label: "YAML & UI editor" }, { label: "Energy" }]}
+      <CardHero
+        title={TITLE}
+        demo="period"
+        installHref={HACS_REDIRECT}
+        playgroundTo={`${BASE_PATH}/playground`}
+      >
+        <PageHeader
+          className="mb-0"
+          eyebrow="Home Assistant"
+          title={heading(BASE_PATH)}
+          description="Picks the period every energy card on the dashboard shows: day, week, month, year or any range."
+          badges={[{ label: "HACS custom" }, { label: "YAML & UI editor" }, { label: "Energy" }]}
+        />
+      </CardHero>
+
+      <DemoGallery
+        title="Ways to set it up"
+        description="Each one live; pick a period to try it."
+        demos={periodGallery}
+        playgroundTo={`${BASE_PATH}/playground`}
       />
 
-      <CardDemo demo="period" className="mx-auto w-fit max-w-full rounded-2xl" />
-      <p className="text-muted-foreground mt-2 mb-8 text-center text-sm">
-        The real card, live, driving an Energy Flow Card Plus below it.{" "}
-        <Link
-          to="/energy-period-selector-plus/playground"
-          className="decoration-solar font-medium underline underline-offset-4"
-        >
-          Try it in the playground
-        </Link>
-        .
-      </p>
-
-      <Prose className="mt-4">
-        <p>
-          <strong>{TITLE}</strong> works like Home Assistant&apos;s{" "}
-          <a
-            href="https://www.home-assistant.io/dashboards/energy/#energy-date-picker"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            energy date picker
-          </a>
-          , with period buttons, an optional compare button and a card background so it matches the
-          cards around it.
-        </p>
-        <p>
-          It drives the energy collection Home Assistant creates for the dashboard, so every energy
-          card on it follows the period you pick: HA&apos;s own energy cards, and{" "}
-          <Link to="/energy-flow-card-plus">Energy Flow Card Plus</Link> and{" "}
-          <Link to="/energy-breakdown-card">Energy Breakdown Card</Link> with{" "}
-          <code>energy_date_selection: true</code>.
-        </p>
-      </Prose>
-
-      <Section title="Highlights">
-        <ul className="text-foreground/90 grid grid-cols-1 gap-2 text-sm md:grid-cols-2">
-          <HighlightItem>Day / week / month / year / custom buttons, in your order</HighlightItem>
-          <HighlightItem>Custom ranges in Home Assistant&apos;s own calendar</HighlightItem>
-          <HighlightItem>Previous, next and today buttons</HighlightItem>
-          <HighlightItem>Compare with the previous period</HighlightItem>
-          <HighlightItem>Optional card background and title</HighlightItem>
-          <HighlightItem>Remembers the last picked period, like HA</HighlightItem>
-        </ul>
-      </Section>
+      <Highlights>
+        <Highlight>Day, week, month, year and custom buttons, in your order</Highlight>
+        <Highlight>Custom ranges in Home Assistant&apos;s own calendar</Highlight>
+        <Highlight>Previous, next and today buttons</Highlight>
+        <Highlight>Compare with the previous period</Highlight>
+        <Highlight>Optional card background and title</Highlight>
+        <Highlight>Remembers the last picked period, like Home Assistant</Highlight>
+      </Highlights>
 
       <Section title="Compare it">
         <RelatedGuides paths={["/guides/energy-distribution-card-alternative", "/guides"]} />
       </Section>
 
-      <Section title="What's in this section">
-        <PageLinks
-          links={[
-            {
-              to: `${BASE_PATH}/installation`,
-              title: "Installation",
-              description: "Marketplace, HACS custom repository or manual install.",
-            },
-            {
-              to: `${BASE_PATH}/configuration`,
-              title: "Configuration",
-              description: "Every option, with defaults and types.",
-            },
-            {
-              to: `${BASE_PATH}/examples`,
-              title: "Examples",
-              description:
-                "Copy-pastable configs, including one paired with Energy Flow Card Plus.",
-            },
-          ]}
-        />
-      </Section>
+      <SectionPages basePath={BASE_PATH} playground />
 
-      <Section title="Source & releases">
-        <Prose>
-          <p>
-            The card is distributed via{" "}
-            <a href={REPO_URL} target="_blank" rel="noopener noreferrer">
-              flixlix/energy-period-selector-plus
-            </a>
-            , but the source code lives in the monorepo at{" "}
-            <a
-              href="https://github.com/flixlix/flixlix-cards"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              flixlix/flixlix-cards
-            </a>
-            . Issues and feature requests are tracked there.
-          </p>
-        </Prose>
-        <Button asChild variant="outline" size="sm">
-          <a
-            href="https://github.com/flixlix/flixlix-cards"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Github className="size-4" /> View source on GitHub
-          </a>
-        </Button>
-      </Section>
+      <SourceSection repoUrl={REPO_URL} />
 
       <NextPageNav next={{ label: "Installation", to: `${BASE_PATH}/installation` }} />
     </>

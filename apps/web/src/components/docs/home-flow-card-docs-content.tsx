@@ -1,33 +1,19 @@
 import { Link } from "@tanstack/react-router";
-import {
-  Activity,
-  ArrowRight,
-  BatteryCharging,
-  Car,
-  Download,
-  Eye,
-  Fan,
-  Fuel,
-  Github,
-  House,
-  Palette,
-  Play,
-  Settings,
-  ShieldAlert,
-  Sun,
-  UtilityPole,
-} from "lucide-react";
-import type * as React from "react";
-import { stringify } from "yaml";
+import { BatteryCharging, Car, Fan, Fuel, House, Settings, Sun, UtilityPole } from "lucide-react";
 
 import { trackEvent } from "#/lib/analytics";
-import { CardDemo } from "@/components/card-demo";
-import { CardPreview } from "@/components/card-preview";
-import { type HouseMoment, houseMoments } from "@/components/demos";
+import { houseGallery, houseMoments } from "@/components/demos";
 import { heading } from "@/lib/page-meta";
 import { sensor, type StateFixtures } from "@flixlix-cards/shared/preview/fake-hass";
-import { Button } from "@flixlix-cards/ui/components/button";
 
+import {
+  CardHero,
+  DemoGallery,
+  Highlight,
+  Highlights,
+  SectionPages,
+  SourceSection,
+} from "./card-overview";
 import { CategorySection } from "./category-section";
 import {
   Callout,
@@ -35,7 +21,6 @@ import {
   NextPageNav,
   type OptionRow,
   PageHeader,
-  PageLinks,
   Prose,
   Section,
 } from "./doc-primitives";
@@ -67,135 +52,39 @@ battery:
 // ---------- Overview ----------
 
 /** A moment of the day as the playground's setup, so a link can open it there. */
-const playgroundSearch = ({ config, states }: HouseMoment) => ({
-  s: { yaml: stringify(config), states, width: 440 },
-});
-
-const BENEFITS: {
-  icon: React.ComponentType<{ className?: string }>;
-  title: string;
-  text: string;
-}[] = [
-  {
-    icon: Eye,
-    title: "Reads at a glance",
-    text: "Solar sits on the roof, the battery on the wall, the grid runs off to the street. You know where your power comes from before you read a single number.",
-  },
-  {
-    icon: Activity,
-    title: "Motion that means something",
-    text: "A pulse runs along every wire in the direction its power flows, faster and longer the more it carries. Numbers roll to their new value, units slide along, and the battery's word changes only the letters that change.",
-  },
-  {
-    icon: Palette,
-    title: "Made for your dashboard",
-    text: "Monotone greys taken from your theme, light and dark, with colour only where power flows. It scales to any card width, and the visual editor sets it up without YAML.",
-  },
-  {
-    icon: ShieldAlert,
-    title: "Ready for the bad days",
-    text: "When the grid fails, its cable goes dead and its label says so. An optional generator appears, wired to the inverter and never to the grid, and its label takes the grid's place. A nearly empty battery turns its bar yellow, then red.",
-  },
-];
-
-function Benefit({ icon: Icon, title, text }: (typeof BENEFITS)[number]) {
-  return (
-    <div className="bg-card rounded-xl border p-5">
-      <div className="bg-primary/10 text-primary mb-3 flex size-9 items-center justify-center rounded-lg">
-        <Icon className="size-4.5" />
-      </div>
-      <h3 className="mb-1.5 font-semibold">{title}</h3>
-      <p className="text-muted-foreground text-sm leading-relaxed">{text}</p>
-    </div>
-  );
-}
-
-function Moment({ moment }: { moment: HouseMoment }) {
-  return (
-    <figure className="flex flex-col gap-3">
-      <CardPreview
-        configs={[moment.config]}
-        states={moment.states}
-        width={400}
-        className="mx-auto w-fit max-w-full rounded-2xl"
-      />
-      <figcaption className="flex items-start justify-between gap-3 px-1">
-        <div>
-          <div className="text-sm font-semibold">{moment.name}</div>
-          <p className="text-muted-foreground text-sm">{moment.caption}</p>
-        </div>
-        <Button asChild size="sm" variant="ghost" className="shrink-0">
-          <Link to={`${BASE_PATH}/playground`} search={playgroundSearch(moment)}>
-            Play <ArrowRight className="size-3.5" />
-          </Link>
-        </Button>
-      </figcaption>
-    </figure>
-  );
-}
-
 export function OverviewPage() {
   return (
     <>
-      <PageHeader
-        eyebrow="Home Assistant"
-        title={heading(BASE_PATH)}
-        description="Your live power on a little house: solar on the roof, a battery on the wall and the grid running off to the street."
-        badges={[{ label: "HACS Default" }, { label: "YAML & UI editor" }, { label: "Power" }]}
+      <CardHero
+        title={TITLE}
+        demo="house"
+        installHref={HACS_REDIRECT}
+        playgroundTo={`${BASE_PATH}/playground`}
+      >
+        <PageHeader
+          className="mb-0"
+          eyebrow="Home Assistant"
+          title={heading(BASE_PATH)}
+          description="Your live power on a little house: solar on the roof, a battery on the wall and the grid running off to the street."
+          badges={[{ label: "HACS Default" }, { label: "YAML & UI editor" }, { label: "Power" }]}
+        />
+      </CardHero>
+
+      <DemoGallery
+        title="A day on your house"
+        description="The same card through the day, each one live."
+        demos={houseGallery}
+        playgroundTo={`${BASE_PATH}/playground`}
       />
 
-      <CardDemo demo="house" className="mx-auto w-fit max-w-full rounded-2xl" />
-      <p className="text-muted-foreground mt-2 text-center text-sm">
-        Not a screenshot: the real card, running right here.
-      </p>
-      <div className="mt-5 mb-12 flex flex-wrap justify-center gap-2">
-        <Button asChild>
-          <a href={HACS_REDIRECT} target="_blank" rel="noopener noreferrer">
-            <Download className="size-4" /> Install in Home Assistant
-          </a>
-        </Button>
-        <Button asChild variant="outline">
-          <Link to={`${BASE_PATH}/playground`}>
-            <Play className="size-4" /> Try it in the playground
-          </Link>
-        </Button>
-      </div>
-
-      <Section title="Why a house?">
-        <div className="grid gap-3 md:grid-cols-2">
-          {BENEFITS.map((benefit) => (
-            <Benefit key={benefit.title} {...benefit} />
-          ))}
-        </div>
-      </Section>
-
-      <Section
-        id="a-day"
-        title="A day on your house"
-        description="The same card through the day. Each one is live; open it in the playground to make it yours."
-      >
-        <div className="grid gap-8 md:grid-cols-2">
-          {houseMoments.map((moment) => (
-            <Moment key={moment.name} moment={moment} />
-          ))}
-        </div>
-      </Section>
-
-      <Section title="Set up in a minute">
-        <Prose>
-          <p>
-            Point it at the sensors you already have: grid, solar, battery and, if you like, the
-            home. Leave one out and the house simply doesn&apos;t draw it.
-          </p>
-        </Prose>
-        <CodeBlock language="yaml" code={MINIMAL_CONFIG} />
-        <Callout variant="tip" title="Already using Power Flow Card Plus?">
-          Home Flow Card reads the same sensors and its nodes take the same options. Change the{" "}
-          <code>type</code>, move <code>grid</code>, <code>solar</code>, <code>battery</code> and{" "}
-          <code>home</code> out of <code>entities</code>, and your house is ready. Individual
-          devices are not drawn yet; keep Power Flow Card Plus for those.
-        </Callout>
-      </Section>
+      <Highlights>
+        <Highlight>Solar on the roof, battery on the wall, grid to the street</Highlight>
+        <Highlight>A pulse along every wire, in the direction of the power</Highlight>
+        <Highlight>Optional electric car, heat pump and generator</Highlight>
+        <Highlight>Greys from your theme, light and dark</Highlight>
+        <Highlight>A dead grid cable and a generator in an outage</Highlight>
+        <Highlight>Visual editor, no YAML needed</Highlight>
+      </Highlights>
 
       <Section title="Compare it">
         <RelatedGuides
@@ -207,61 +96,9 @@ export function OverviewPage() {
         />
       </Section>
 
-      <Section title="What's in this section">
-        <PageLinks
-          links={[
-            {
-              to: `${BASE_PATH}/installation`,
-              title: "Installation",
-              description: "Marketplace, HACS or manual install.",
-            },
-            {
-              to: `${BASE_PATH}/configuration`,
-              title: "Configuration",
-              description: "The nodes and the card's own options.",
-            },
-            {
-              to: `${BASE_PATH}/examples`,
-              title: "Examples",
-              description: "Copy-pastable configs, each shown live.",
-            },
-            {
-              to: `${BASE_PATH}/playground`,
-              title: "Playground",
-              description: "Edit the config and drag the sensors; share the link.",
-            },
-          ]}
-        />
-      </Section>
+      <SectionPages basePath={BASE_PATH} playground />
 
-      <Section title="Source & releases">
-        <Prose>
-          <p>
-            The card is distributed via{" "}
-            <a href={REPO_URL} target="_blank" rel="noopener noreferrer">
-              flixlix/{PKG}
-            </a>
-            , but the source code lives in the monorepo at{" "}
-            <a
-              href="https://github.com/flixlix/flixlix-cards"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              flixlix/flixlix-cards
-            </a>
-            . Issues and feature requests are tracked there.
-          </p>
-        </Prose>
-        <Button asChild variant="outline" size="sm">
-          <a
-            href="https://github.com/flixlix/flixlix-cards"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Github className="size-4" /> View source on GitHub
-          </a>
-        </Button>
-      </Section>
+      <SourceSection repoUrl={REPO_URL} />
 
       <NextPageNav next={{ label: "Installation", to: `${BASE_PATH}/installation` }} />
     </>
