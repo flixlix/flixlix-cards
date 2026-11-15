@@ -365,7 +365,7 @@ function IndexPage() {
         </section>
       ))}
 
-      <section id="guides" className="scroll-mt-20 border-t pt-12">
+      <section id="guides" className="scroll-mt-20 border-t pt-12 pb-12">
         <h2 className="text-[1.75rem] leading-tight font-semibold tracking-[-0.025em]">
           Setup and comparisons
         </h2>
