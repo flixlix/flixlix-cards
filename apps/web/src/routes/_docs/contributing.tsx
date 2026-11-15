@@ -20,6 +20,7 @@ import {
   Prose,
   Section,
 } from "@/components/docs/doc-primitives";
+import { heading } from "@/lib/page-meta";
 import { Button } from "@flixlix-cards/ui/components/button";
 import {
   Card,
@@ -38,7 +39,7 @@ function ContributingPage() {
     <>
       <PageHeader
         eyebrow="Project"
-        title="How to contribute"
+        title={heading("/contributing")}
         description="Thanks for your interest in improving flixlix-cards! This guide walks you through setting up the monorepo, working on a card, and getting your changes merged."
         badges={[{ label: "Monorepo" }, { label: "pnpm" }, { label: "Changesets" }]}
       />

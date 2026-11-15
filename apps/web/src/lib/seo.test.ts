@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
+import { NOT_FOUND_META, PAGE_META_PATHS, pageMeta } from "./page-meta";
 import { INDEXABLE_PAGES, pageHead } from "./seo";
 
 const metaContent = (path: string, key: string) =>
@@ -16,9 +17,36 @@ describe("pageHead", () => {
     );
   });
 
-  it("names the card and the page in the title", () => {
+  it("names the card and Home Assistant in the title", () => {
     expect(pageHead("/power-flow-card-plus/configuration").meta).toContainEqual({
-      title: "Configuration · Power Flow Card Plus | flixlix-cards",
+      title: "Configure Power Flow Card Plus for Home Assistant | flixlix-cards",
+    });
+  });
+
+  it("gives every indexable page a unique description in the snippet range", () => {
+    const descriptions = INDEXABLE_PAGES.map((page) => pageMeta(page.to).description);
+    const titles = INDEXABLE_PAGES.map((page) => pageMeta(page.to).title);
+    const headings = INDEXABLE_PAGES.map((page) => pageMeta(page.to).h1);
+
+    expect(new Set(descriptions).size).toBe(descriptions.length);
+    expect(new Set(titles).size).toBe(titles.length);
+    expect(new Set(headings).size).toBe(headings.length);
+    expect(PAGE_META_PATHS).toEqual(expect.arrayContaining(INDEXABLE_PAGES.map((page) => page.to)));
+    for (const description of descriptions) {
+      expect(description.length).toBeGreaterThanOrEqual(140);
+      expect(description.length).toBeLessThanOrEqual(160);
+    }
+    expect(NOT_FOUND_META.description.length).toBeGreaterThanOrEqual(140);
+    expect(NOT_FOUND_META.description.length).toBeLessThanOrEqual(160);
+  });
+
+  it("fills in the Twitter title and description", () => {
+    expect(metaContent("/home-flow-card", "twitter:title")).toEqual({
+      name: "twitter:title",
+      content: "Home Flow Card: isometric house for Home Assistant | flixlix-cards",
+    });
+    expect(metaContent("/home-flow-card", "twitter:description")).toMatchObject({
+      name: "twitter:description",
     });
   });
 

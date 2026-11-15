@@ -1,11 +1,8 @@
 import { SEARCH_ENTRIES, type SearchEntry } from "@/components/docs/docs-search-index";
 
 import { OG_IMAGE_SIZE, ogImageUrl, type OgImage } from "./og-images";
+import { pageMeta } from "./page-meta";
 import { markdownUrl, SITE_NAME, SITE_URL } from "./site";
-
-const HOME_TITLE = `Solar, battery and grid power flow cards for Home Assistant | ${SITE_NAME}`;
-const HOME_DESCRIPTION =
-  "Free, open-source Lovelace cards that show live solar, battery and grid power flowing through your home: Power Flow Card Plus, Home Flow Card, Energy Flow Card Plus and more.";
 
 export const INDEXABLE_PAGES: SearchEntry[] = SEARCH_ENTRIES.filter(
   (entry) => entry.type === "page" && !isPlayground(entry.to)
@@ -33,25 +30,11 @@ function isCardSection(page: SearchEntry) {
 }
 
 function pageTitle(page: SearchEntry) {
-  if (page.to === "/") {
-    return HOME_TITLE;
-  }
-  if (!isCardSection(page)) {
-    return `${page.title} | ${SITE_NAME}`;
-  }
-  if (page.title === "Overview") {
-    return `${page.breadcrumb} for Home Assistant | ${SITE_NAME}`;
-  }
-  return `${page.title} · ${page.breadcrumb} | ${SITE_NAME}`;
+  return pageMeta(page.to).title;
 }
 
 function pageDescription(page: SearchEntry) {
-  if (page.to === "/" || !page.description) {
-    return HOME_DESCRIPTION;
-  }
-  return isCardSection(page)
-    ? `${page.breadcrumb}, a Home Assistant Lovelace card. ${page.description}`
-    : page.description;
+  return pageMeta(page.to).description;
 }
 
 function ogImage(page: SearchEntry): OgImage {
@@ -64,6 +47,16 @@ function ogImageAlt(page: SearchEntry) {
     : `${SITE_NAME}: Home Assistant energy cards`;
 }
 
+function website() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: SITE_NAME,
+    url: SITE_URL,
+    description: pageMeta("/").description,
+  };
+}
+
 function softwareApplication(page: SearchEntry) {
   return {
     "@context": "https://schema.org",
@@ -72,7 +65,7 @@ function softwareApplication(page: SearchEntry) {
     description: pageDescription(page),
     url: `${SITE_URL}${page.to}`,
     image: ogImageUrl(ogImage(page)),
-    author: { "@type": "Person", name: "flixlix", url: "https://github.com/flixlix" },
+    author: { "@type": "Person", name: "Luca", url: "https://github.com/flixlix" },
     applicationCategory: "UtilitiesApplication",
     operatingSystem: "Home Assistant",
     license: "https://opensource.org/licenses/MIT",
@@ -103,8 +96,11 @@ export function pageHead(path: string) {
     { property: "og:image:height", content: String(OG_IMAGE_SIZE.height) },
     { property: "og:image:alt", content: ogImageAlt(page) },
     { name: "twitter:card", content: "summary_large_image" },
+    { name: "twitter:title", content: title },
+    { name: "twitter:description", content: description },
     { name: "twitter:image", content: image },
     ...(isPlayground(page.to) ? [{ name: "robots", content: "noindex, follow" }] : []),
+    ...(page.to === "/" ? [{ "script:ld+json": website() }] : []),
     ...(isCardSection(page) && page.title === "Overview"
       ? [{ "script:ld+json": softwareApplication(page) }]
       : []),

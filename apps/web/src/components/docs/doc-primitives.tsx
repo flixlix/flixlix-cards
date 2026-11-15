@@ -15,6 +15,52 @@ import { cn } from "cn";
 import { Badge } from "@flixlix-cards/ui/components/badge";
 import { Button } from "@flixlix-cards/ui/components/button";
 
+const CARD_SHOTS = {
+  power: {
+    alt: "Power Flow Card Plus on a Home Assistant dashboard: circles for solar, battery, grid, home and two devices, with power flowing between them.",
+    caption: "Power Flow Card Plus, showing live solar, battery and grid power.",
+  },
+  house: {
+    alt: "Home Flow Card, an isometric house power card for Home Assistant, with solar on the roof, a battery on the wall and the grid cable running to the street.",
+    caption: "Home Flow Card, an isometric house with solar, battery and grid power.",
+  },
+  energy: {
+    alt: "Energy Flow Card Plus on a Home Assistant dashboard: a flow diagram of solar, battery, grid and home energy for the selected period.",
+    caption: "Energy Flow Card Plus, showing energy for the dashboard's selected period.",
+  },
+  breakdown: {
+    alt: "Energy Breakdown Card on a Home Assistant dashboard: a donut of where energy went.",
+    caption: "Energy Breakdown Card, a donut of energy use.",
+  },
+  period: {
+    alt: "Energy Period Selector Plus on a Home Assistant dashboard, with day, week, month and year controls above Energy Flow Card Plus.",
+    caption: "Energy Period Selector Plus, driving Energy Flow Card Plus.",
+  },
+  sortable: {
+    alt: "Sortable List Card on a Home Assistant dashboard: a list you drag into a new order.",
+    caption: "Sortable List Card, a list saved back to Home Assistant.",
+  },
+} as const;
+
+export function DashboardShot({ image }: { image: keyof typeof CARD_SHOTS }) {
+  const shot = CARD_SHOTS[image];
+  return (
+    <figure className="mx-auto my-10 max-w-3xl">
+      <img
+        src={`/og/${image}.png`}
+        alt={shot.alt}
+        width={1200}
+        height={630}
+        loading="lazy"
+        className="bg-card h-auto w-full rounded-xl border"
+      />
+      <figcaption className="text-muted-foreground mt-2 text-center text-sm">
+        {shot.caption}
+      </figcaption>
+    </figure>
+  );
+}
+
 export function PageHeader({
   eyebrow,
   title,

@@ -8,6 +8,7 @@ import {
   Github,
   HeartHandshake,
   House,
+  Scale,
   LayoutGrid,
   ListOrdered,
   Sparkles,
@@ -269,6 +270,36 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarGroupContent>
           </SidebarGroup>
         ))}
+
+        <SidebarGroup className={COLLAPSING_GROUP}>
+          <SidebarGroupLabel>Guides</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {[
+                ["/guides", "Which card"],
+                ["/guides/solar-battery-power-flow", "Solar and battery"],
+                ["/guides/energy-distribution-card-alternative", "Distribution alternative"],
+                ["/guides/power-flow-card-plus-vs-power-flow-card", "Vs original"],
+                ["/guides/power-flow-card-plus-vs-sunsynk", "Vs Sunsynk"],
+                ["/guides/power-flow-card-plus-vs-tesla-style", "Vs Tesla Style"],
+              ].map(([to, label]) => (
+                <SidebarMenuItem key={to}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={pathname === to}
+                    tooltip={label}
+                    className="[&>svg]:text-muted-foreground"
+                  >
+                    <Link to={to}>
+                      <Scale />
+                      <span>{label}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
         <SidebarGroup className={COLLAPSING_GROUP}>
           <SidebarGroupLabel>Project</SidebarGroupLabel>

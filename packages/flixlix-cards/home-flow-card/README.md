@@ -5,7 +5,7 @@
 ![GitHub release](https://img.shields.io/github/v/release/flixlix/home-flow-card?style=flat-square)
 ![GitHub total downloads](https://img.shields.io/github/downloads/flixlix/home-flow-card/total?style=flat-square)
 
-**Your own little isometric home in Home Assistant, with your live power, or your day's energy, flowing through it.**
+**An isometric house power card for Home Assistant: your live power, or your day's energy, flowing through a little house.**
 
 <img width="498" alt="Home Flow Card through a day: a sunny afternoon charging the battery, an evening on the battery, and a grid outage with the generator taking over" src="https://raw.githubusercontent.com/flixlix/flixlix-cards/main/packages/flixlix-cards/home-flow-card/assets/home-flow-card.gif">
 
@@ -13,7 +13,7 @@ Solar sits on the roof, the battery on the wall and the grid runs off to the str
 meeting at the inverter. One look tells you where your power comes from and where it goes.
 
 > [!TIP]
-> 📖 **[Documentation](https://cards.flixlix.com/home-flow-card)** · 🎮 **[Try it live in the playground](https://cards.flixlix.com/home-flow-card/playground)**, no install needed
+> **Canonical docs: [cards.flixlix.com/home-flow-card](https://cards.flixlix.com/home-flow-card).** [Try the isometric house in the playground](https://cards.flixlix.com/home-flow-card/playground), no install needed. [Solar and battery setup](https://cards.flixlix.com/guides/solar-battery-power-flow).
 
 ## Why a house?
 

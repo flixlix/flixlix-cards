@@ -24,6 +24,7 @@ import { trackEvent } from "#/lib/analytics";
 import { CardDemo } from "@/components/card-demo";
 import { CardPreview } from "@/components/card-preview";
 import { type HouseMoment, houseMoments } from "@/components/demos";
+import { heading } from "@/lib/page-meta";
 import { sensor, type StateFixtures } from "@flixlix-cards/shared/preview/fake-hass";
 import { Button } from "@flixlix-cards/ui/components/button";
 
@@ -31,6 +32,7 @@ import { CategorySection } from "./category-section";
 import {
   Callout,
   CodeBlock,
+  DashboardShot,
   NextPageNav,
   type OptionRow,
   PageHeader,
@@ -39,6 +41,7 @@ import {
   Section,
 } from "./doc-primitives";
 import { InstallFromCatalog } from "./install-from-catalog";
+import { RelatedGuides } from "./related-guides";
 import { LiveExample } from "./live-example";
 import { OptionList } from "./option-list";
 import { PageTOC, type TocItem } from "./page-toc";
@@ -136,12 +139,13 @@ export function OverviewPage() {
   return (
     <>
       <PageHeader
-        eyebrow={TITLE}
-        title="Your own little isometric home"
-        description="Home Flow Card draws your live power on a little house: solar on the roof, a battery on the wall and the grid running off to the street. One look tells you where your power comes from and where it goes."
+        eyebrow="Home Assistant"
+        title={heading(BASE_PATH)}
+        description="An isometric house power card for Home Assistant. Solar sits on the roof, the battery on the wall and the grid runs off to the street. One look tells you where your power comes from and where it goes."
         badges={[{ label: "HACS Default" }, { label: "YAML & UI editor" }, { label: "Power" }]}
       />
 
+      <DashboardShot image="house" />
       <CardDemo demo="house" className="mx-auto w-fit max-w-full rounded-2xl" />
       <p className="text-muted-foreground mt-2 text-center text-sm">
         Not a screenshot: the real card, running right here.
@@ -158,6 +162,26 @@ export function OverviewPage() {
           </Link>
         </Button>
       </div>
+
+      <Section id="isometric-house" title="An isometric house power card">
+        <Prose>
+          <p>
+            Home Flow Card is the isometric house in this set of Lovelace cards. Solar is drawn on
+            the roof, the battery on the wall and the grid cable out toward the street, and a pulse
+            runs along each wire in the direction of the power. An optional electric car parks in
+            front, an optional heat pump hangs on the wall, and a generator can take the grid&apos;s
+            place during an outage. Only the parts you configure are drawn.
+          </p>
+          <p>
+            It reads the same live power sensors as{" "}
+            <Link to="/power-flow-card-plus">Power Flow Card Plus</Link>. Individual devices are not
+            drawn on the house; that card draws them as extra circles. Set <code>mode: energy</code>{" "}
+            when the house should show energy for the dashboard&apos;s selected period instead of
+            live watts. The first config is on{" "}
+            <Link to="/guides/solar-battery-power-flow">solar and battery power flow</Link>.
+          </p>
+        </Prose>
+      </Section>
 
       <Section title="Why a house?">
         <div className="grid gap-3 md:grid-cols-2">
@@ -193,6 +217,16 @@ export function OverviewPage() {
           <code>home</code> out of <code>entities</code>, and your house is ready. Individual
           devices are not drawn yet; keep Power Flow Card Plus for those.
         </Callout>
+      </Section>
+
+      <Section title="Compare it">
+        <RelatedGuides
+          paths={[
+            "/guides/solar-battery-power-flow",
+            "/guides",
+            "/guides/energy-distribution-card-alternative",
+          ]}
+        />
       </Section>
 
       <Section title="What's in this section">
@@ -263,7 +297,7 @@ export function InstallationPage() {
     <>
       <PageHeader
         eyebrow={TITLE}
-        title="Installation"
+        title={heading(`${BASE_PATH}/installation`)}
         description="Install it from Home Assistant's Marketplace, or from HACS before 2026.11. Manual installation is also supported."
       />
 
@@ -942,7 +976,7 @@ export function ConfigurationPage() {
       <div className="min-w-0">
         <PageHeader
           eyebrow={TITLE}
-          title="Configuration"
+          title={heading(`${BASE_PATH}/configuration`)}
           description={
             <>
               Every option the card reads, by where it goes in the YAML. Required fields are marked
@@ -1434,7 +1468,7 @@ export function ExamplesPage() {
     <>
       <PageHeader
         eyebrow={TITLE}
-        title="Examples"
+        title={heading(`${BASE_PATH}/examples`)}
         description="Copy-pastable configs for the most common setups, each next to the card it draws."
       />
 

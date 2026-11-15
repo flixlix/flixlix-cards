@@ -17,12 +17,14 @@ import { Button } from "@flixlix-cards/ui/components/button";
 import { Checkbox } from "@flixlix-cards/ui/components/checkbox";
 
 import { CardDemo } from "@/components/card-demo";
+import { heading } from "@/lib/page-meta";
 import { sensor, type StateFixtures } from "@flixlix-cards/shared/preview/fake-hass";
 
 import { CategorySection } from "./category-section";
 import {
   Callout,
   CodeBlock,
+  DashboardShot,
   NextPageNav,
   type OptionRow,
   PageHeader,
@@ -31,6 +33,7 @@ import {
   Section,
 } from "./doc-primitives";
 import { InstallFromLink } from "./install-from-link";
+import { RelatedGuides } from "./related-guides";
 import { LiveExample } from "./live-example";
 import { OptionList } from "./option-list";
 import { PageTOC, type TocItem } from "./page-toc";
@@ -61,11 +64,12 @@ export function OverviewPage() {
     <>
       <PageHeader
         eyebrow={TITLE}
-        title="Overview"
+        title={heading(BASE_PATH)}
         description="A custom Home Assistant Lovelace card that visualizes how your energy use is broken down across sources — as a donut or stacked bar."
         badges={[{ label: "HACS custom" }, { label: "YAML & UI editor" }, { label: "Donut + bar" }]}
       />
 
+      <DashboardShot image="breakdown" />
       <CardDemo demo="breakdown" className="mx-auto w-fit max-w-full rounded-2xl" />
       <p className="text-muted-foreground mt-2 text-center text-sm">
         The real card, live, under Energy Period Selector Plus: pick a period to see it change.
@@ -96,6 +100,10 @@ export function OverviewPage() {
           </HighlightItem>
           <HighlightItem>Optional sync to the Home Assistant energy dashboard period</HighlightItem>
         </ul>
+      </Section>
+
+      <Section title="Compare it">
+        <RelatedGuides paths={["/guides/energy-distribution-card-alternative", "/guides"]} />
       </Section>
 
       <Section title="What's in this section">
@@ -161,7 +169,7 @@ export function InstallationPage() {
     <>
       <PageHeader
         eyebrow={TITLE}
-        title="Installation"
+        title={heading(`${BASE_PATH}/installation`)}
         description="Install it from its link in Home Assistant's Marketplace, or as a custom repository in HACS before 2026.11. Manual installation is also supported."
       />
 
@@ -501,7 +509,7 @@ export function ConfigurationPage() {
       <div className="min-w-0">
         <PageHeader
           eyebrow={TITLE}
-          title="Configuration"
+          title={heading(`${BASE_PATH}/configuration`)}
           description={
             <>
               Every option, what it does, and how to use it. Required fields are marked with{" "}
@@ -822,7 +830,7 @@ export function ExamplesPage() {
     <>
       <PageHeader
         eyebrow={TITLE}
-        title="Examples"
+        title={heading(`${BASE_PATH}/examples`)}
         description="Copy-pastable configs for the most common setups, each next to the card it draws."
       />
 

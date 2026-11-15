@@ -12,6 +12,7 @@ const FAQS: Faq[] = [
     answer:
       "Install Power Flow Card Plus from Home Assistant's Marketplace (or HACS before 2026.11), edit a dashboard, add the card and pick your grid, solar and battery power sensors in its editor. It draws live power moving between them and your home. Home Flow Card reads the same sensors and draws them as a little isometric house.",
     links: [
+      { label: "Solar and battery setup", to: "/guides/solar-battery-power-flow" },
       { label: "Install Power Flow Card Plus", to: "/power-flow-card-plus/installation" },
       { label: "Install Home Flow Card", to: "/home-flow-card/installation" },
     ],
@@ -21,6 +22,10 @@ const FAQS: Faq[] = [
     answer:
       "The built-in card shows energy totals from the Energy dashboard for the selected period. Power Flow Card Plus shows live power from any sensors you choose, and adds up to four individual devices, secondary info on every circle, clickable entities, your own colors and a full visual editor. For period totals with the same extras, use Energy Flow Card Plus.",
     links: [
+      {
+        label: "Energy Distribution alternative",
+        to: "/guides/energy-distribution-card-alternative",
+      },
       { label: "Power Flow Card Plus", to: "/power-flow-card-plus" },
       { label: "Energy Flow Card Plus", to: "/energy-flow-card-plus" },
     ],
@@ -30,6 +35,7 @@ const FAQS: Faq[] = [
     answer:
       "For live watts, Power Flow Card Plus draws the classic circles and Home Flow Card draws a house, which can also show energy over the dashboard's period with `mode: energy`. For kilowatt-hours over a day, week or year, Energy Flow Card Plus draws the flow, Energy Breakdown Card shows which devices used it, and Energy Period Selector Plus picks the period for both.",
     links: [
+      { label: "Which card to use", to: "/guides" },
       { label: "Home Flow Card", to: "/home-flow-card" },
       { label: "Energy Breakdown Card", to: "/energy-breakdown-card" },
       { label: "Energy Period Selector Plus", to: "/energy-period-selector-plus" },
