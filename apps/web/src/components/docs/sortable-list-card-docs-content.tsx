@@ -1,13 +1,20 @@
 import { Link } from "@tanstack/react-router";
-import { Eye, Github, ListOrdered, Save, Settings } from "lucide-react";
+import { Eye, ListOrdered, Save, Settings } from "lucide-react";
 import type * as React from "react";
 
 import { trackEvent } from "#/lib/analytics";
 import { heading } from "@/lib/page-meta";
-import { Button } from "@flixlix-cards/ui/components/button";
-import { Checkbox } from "@flixlix-cards/ui/components/checkbox";
 import { sensor, type StateFixtures } from "@flixlix-cards/shared/preview/fake-hass";
 
+import {
+  CardHero,
+  DemoGallery,
+  Highlight,
+  Highlights,
+  SectionPages,
+  SourceSection,
+} from "./card-overview";
+import { sortableGallery } from "@/components/demos";
 import { CategorySection } from "./category-section";
 import {
   Callout,
@@ -15,7 +22,6 @@ import {
   NextPageNav,
   type OptionRow,
   PageHeader,
-  PageLinks,
   Prose,
   Section,
 } from "./doc-primitives";
@@ -35,136 +41,48 @@ const HACS_REDIRECT =
   "https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=sortable-list-card&category=plugin";
 const RELEASE_URL = "https://github.com/flixlix/sortable-list-card/releases/latest";
 
-function HighlightItem({ children }: { children: React.ReactNode }) {
-  return (
-    <li className="bg-muted/40 flex items-center gap-2 rounded-md border p-3">
-      <Checkbox className="pointer-events-none" checked />
-      {children}
-    </li>
-  );
-}
-
 // ---------- Overview ----------
 
 export function OverviewPage() {
   return (
     <>
-      <PageHeader
-        eyebrow={TITLE}
-        title={heading(BASE_PATH)}
-        description="A generic drag-and-drop reorderable list for Home Assistant. Drag rows (or use the arrows) to reorder, and the new order is saved by calling any service you configure."
-        badges={[{ label: "HACS custom" }, { label: "YAML & UI editor" }, { label: "Any service" }]}
+      <CardHero
+        tags={["HACS custom", "YAML & UI editor", "Any service"]}
+        title={TITLE}
+        demo="sortable"
+        installHref={HACS_REDIRECT}
+      >
+        <PageHeader
+          className="mb-0"
+          title={heading(BASE_PATH)}
+          description="A drag-and-drop list that saves its order through any service."
+        />
+      </CardHero>
+
+      <DemoGallery
+        title="What you can build"
+        description="Each one live; drag a row to reorder it."
+        demos={sortableGallery}
       />
 
-      <Prose className="mt-4">
-        <p>
-          <strong>{TITLE}</strong> turns a plain list of items into an interactive, reorderable
-          list. Each reorder is persisted through a service call of your choosing — by default it
-          writes a comma-separated value to an <code>input_text</code> helper, but you can point it
-          at a script, a <code>number</code>, or any other service.
-        </p>
-        <p>
-          It's deliberately use-case agnostic. The order is stored as a list of <em>keys</em>, and
-          what those keys mean is entirely up to you and your automations.
-        </p>
-      </Prose>
+      <Highlights>
+        <Highlight>Drag-and-drop reordering with a live drop indicator</Highlight>
+        <Highlight>Up and down arrows for precise, accessible reordering</Highlight>
+        <Highlight>
+          Saves through <strong>any service</strong> with <code>{"{value}"}</code> placeholders
+        </Highlight>
+        <Highlight>CSV or JSON value formats</Highlight>
+        <Highlight>Entity-backed items (name, icon, state) with overrides</Highlight>
+        <Highlight>Optimistic updates, plus a full UI editor</Highlight>
+      </Highlights>
 
-      <Section title="What can you build with it?">
-        <Prose>
-          <p>A few things people use a reorderable, persisted list for:</p>
-          <ul>
-            <li>
-              <strong>HEMS load priority</strong> — order battery, EV charger, heating, hot water…
-              so your energy-management automations know which load gets surplus solar first. This
-              is the card's original use case.
-            </li>
-            <li>
-              <strong>Device / room ordering</strong> — let users arrange entity-backed rows
-              (lights, rooms, zones) and feed that order into another dashboard or template.
-            </li>
-            <li>
-              <strong>Priority / triage lists</strong> — chores, a shopping list, a project backlog,
-              or any “most important first” ranking.
-            </li>
-            <li>
-              <strong>Scene / automation sequencing</strong> — decide the order scenes are applied
-              or notifications are sent.
-            </li>
-            <li>
-              <strong>Playlists & queues</strong> — a simple, persisted play order that a media
-              automation consumes.
-            </li>
-          </ul>
-        </Prose>
-      </Section>
-
-      <Section title="Highlights">
-        <ul className="text-foreground/90 grid grid-cols-1 gap-2 text-sm md:grid-cols-2">
-          <HighlightItem>Drag-and-drop reordering with a live drop indicator</HighlightItem>
-          <HighlightItem>Up/down arrow buttons for precise, accessible reordering</HighlightItem>
-          <HighlightItem>
-            Persist via <strong>any service</strong> with <code>{"{value}"}</code> placeholders
-          </HighlightItem>
-          <HighlightItem>CSV or JSON value formats</HighlightItem>
-          <HighlightItem>Entity-backed items (name / icon / state) with overrides</HighlightItem>
-          <HighlightItem>Optimistic updates, plus a full UI editor</HighlightItem>
-        </ul>
-      </Section>
-
-      <Section title="Where it fits">
+      <Section title="Compare it">
         <RelatedGuides paths={["/guides"]} />
       </Section>
 
-      <Section title="What's in this section">
-        <PageLinks
-          links={[
-            {
-              to: `${BASE_PATH}/installation`,
-              title: "Installation",
-              description: "Marketplace, HACS custom repository or manual install.",
-            },
-            {
-              to: `${BASE_PATH}/configuration`,
-              title: "Configuration",
-              description: "Every option, with defaults and types.",
-            },
-            {
-              to: `${BASE_PATH}/examples`,
-              title: "Examples",
-              description: "Copy-pastable configs, including the HEMS list.",
-            },
-          ]}
-        />
-      </Section>
+      <SectionPages basePath={BASE_PATH} />
 
-      <Section title="Source & releases">
-        <Prose>
-          <p>
-            The card is distributed via{" "}
-            <a href={REPO_URL} target="_blank" rel="noopener noreferrer">
-              flixlix/sortable-list-card
-            </a>
-            , but the source code lives in the monorepo at{" "}
-            <a
-              href="https://github.com/flixlix/flixlix-cards"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              flixlix/flixlix-cards
-            </a>
-            . Issues and feature requests are tracked there.
-          </p>
-        </Prose>
-        <Button asChild variant="outline" size="sm">
-          <a
-            href="https://github.com/flixlix/flixlix-cards"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Github className="size-4" /> View source on GitHub
-          </a>
-        </Button>
-      </Section>
+      <SourceSection repoUrl={REPO_URL} />
 
       <NextPageNav next={{ label: "Installation", to: `${BASE_PATH}/installation` }} />
     </>

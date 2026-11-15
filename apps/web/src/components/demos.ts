@@ -326,3 +326,158 @@ export const breakdownDemo: Demo = {
   },
   energy: true,
 };
+
+export type GalleryDemo = { name: string; caption: string; demo: Demo };
+
+const TOPOLOGY_NAMES: Record<string, string> = {
+  standard: "Standard",
+  battery_hub: "Battery hub",
+  isolated_battery: "Isolated battery",
+};
+
+export const topologyGallery = (card: "power" | "energy"): GalleryDemo[] =>
+  topologyDemos(card).map(({ topology, caption, demo }) => ({
+    name: TOPOLOGY_NAMES[topology] ?? topology,
+    caption,
+    demo,
+  }));
+
+export const houseGallery: GalleryDemo[] = houseMoments.map(
+  ({ name, caption, config, states }) => ({
+    name,
+    caption,
+    demo: { configs: [config], states },
+  })
+);
+
+const [, breakdownCard] = breakdownDemo.configs;
+
+const breakdownVariant = (
+  name: string,
+  caption: string,
+  options: Record<string, unknown>
+): GalleryDemo => ({
+  name,
+  caption,
+  demo: {
+    configs: [{ ...breakdownCard, ...options, type: "custom:energy-breakdown-card" }],
+    states: breakdownDemo.states,
+    energy: true,
+  },
+});
+
+export const breakdownGallery: GalleryDemo[] = [
+  breakdownVariant("Just the chart", "A thin ring and its total, without the legend.", {
+    title: "Total",
+    show_legend: false,
+    donut_thickness: 12,
+  }),
+  breakdownVariant("Stacked bar", "The same split as one bar.", {
+    title: "Stacked bar",
+    chart_type: "bar",
+  }),
+  breakdownVariant("Top three", "The biggest loads, the rest grouped as Other.", {
+    title: "Top loads",
+    max_items: 3,
+    group_others: true,
+  }),
+  breakdownVariant("Legend on the right", "Values and shares beside the donut.", {
+    title: "Today",
+    legend_position: "right",
+    show_legend_value: true,
+    show_legend_percentage: true,
+  }),
+];
+
+const selectorVariant = (
+  name: string,
+  caption: string,
+  options: Record<string, unknown>
+): GalleryDemo => ({
+  name,
+  caption,
+  demo: {
+    configs: [{ ...periodSelector, ...options }],
+    states: energyStates,
+    energy: true,
+  },
+});
+
+export const periodGallery: GalleryDemo[] = [
+  selectorVariant("Default", "Day, week, month and year, with previous and next.", {}),
+  selectorVariant("Custom range", "A custom period that opens Home Assistant's calendar.", {
+    period_buttons: ["day", "week", "month", "custom"],
+  }),
+  selectorVariant("Compare", "A compare button to set this period against the last one.", {
+    compare_button_type: "text",
+  }),
+  selectorVariant("Titled", "A title, and just the periods you use.", {
+    title: "Energy",
+    period_buttons: ["day", "month"],
+  }),
+];
+
+const sortableList = (
+  name: string,
+  caption: string,
+  options: Record<string, unknown>,
+  entity: string,
+  order: string
+): GalleryDemo => ({
+  name,
+  caption,
+  demo: {
+    configs: [{ ...options, type: "custom:sortable-list-card", entity }],
+    states: { [entity]: sensor(order, { unit: undefined }) },
+  },
+});
+
+export const sortableGallery: GalleryDemo[] = [
+  sortableList(
+    "Rooms",
+    "An order for another dashboard or template to follow.",
+    {
+      title: "Rooms",
+      show_rank: true,
+      items: [
+        { key: "living", name: "Living room", icon: "mdi:sofa" },
+        { key: "kitchen", name: "Kitchen", icon: "mdi:fridge" },
+        { key: "office", name: "Office", icon: "mdi:desk" },
+      ],
+    },
+    "input_text.room_order",
+    "living,kitchen,office"
+  ),
+  sortableList(
+    "Chores",
+    "A most-important-first list, reordered with the arrows.",
+    {
+      title: "Chores",
+      show_arrows: true,
+      show_handle: false,
+      items: [
+        { key: "dishes", name: "Dishes", icon: "mdi:dishwasher" },
+        { key: "laundry", name: "Laundry", icon: "mdi:washing-machine" },
+        { key: "plants", name: "Water the plants", icon: "mdi:watering-can" },
+      ],
+    },
+    "input_text.chores",
+    "laundry,dishes,plants"
+  ),
+  sortableList(
+    "Scenes",
+    "The order an evening routine applies its scenes in.",
+    {
+      title: "Evening routine",
+      show_rank: true,
+      show_arrows: false,
+      items: [
+        { key: "dim", name: "Dim the lights", icon: "mdi:lightbulb-on-50" },
+        { key: "blinds", name: "Close the blinds", icon: "mdi:blinds" },
+        { key: "music", name: "Play music", icon: "mdi:music" },
+      ],
+    },
+    "input_text.evening_scenes",
+    "blinds,dim,music"
+  ),
+];

@@ -4,11 +4,9 @@ import {
   Battery,
   BookOpen,
   Calculator,
-  Check,
   CircleDot,
   Cpu,
   EyeOff,
-  Github,
   Home,
   Info,
   Layers,
@@ -27,12 +25,19 @@ import * as React from "react";
 
 import { trackEvent } from "#/lib/analytics";
 import type { IssueCard } from "#/lib/issues";
-import { Button } from "@flixlix-cards/ui/components/button";
 
-import { CardDemo } from "@/components/card-demo";
 import { heading } from "@/lib/page-meta";
 import { sensor, type StateFixtures } from "@flixlix-cards/shared/preview/fake-hass";
 
+import {
+  CardHero,
+  DemoGallery,
+  Highlight,
+  Highlights,
+  SectionPages,
+  SourceSection,
+} from "./card-overview";
+import { topologyGallery } from "@/components/demos";
 import { CategorySection } from "./category-section";
 import {
   Callout,
@@ -40,7 +45,6 @@ import {
   NextPageNav,
   type OptionRow,
   PageHeader,
-  PageLinks,
   Prose,
   Section,
 } from "./doc-primitives";
@@ -81,8 +85,7 @@ const VARIANTS: Record<CardKey, Variant> = {
     cardType: "custom:power-flow-card-plus",
     pkgName: "power-flow-card-plus",
     title: "Power Flow Card Plus",
-    tagline:
-      "A highly customizable Home Assistant card visualizing the live (instantaneous) power flow between grid, solar, battery, home, and individual devices.",
+    tagline: "Live power between grid, solar, battery, home and your devices.",
     unit: "W",
     unitLong: "watts",
     unitKilo: "kW",
@@ -109,8 +112,7 @@ const VARIANTS: Record<CardKey, Variant> = {
     cardType: "custom:energy-flow-card-plus",
     pkgName: "energy-flow-card-plus",
     title: "Energy Flow Card Plus",
-    tagline:
-      "A highly customizable Home Assistant card visualizing the accumulated energy distribution for the dashboard's selected period.",
+    tagline: "Where your energy came from and went over the dashboard's selected period.",
     unit: "Wh",
     unitLong: "watt-hours",
     unitKilo: "kWh",
@@ -128,15 +130,6 @@ const VARIANTS: Record<CardKey, Variant> = {
   },
 };
 
-function HighlightsListCheckedItem({ children }: { children: React.ReactNode }) {
-  return (
-    <li className="flex items-start gap-2.5 py-1">
-      <Check aria-hidden className="text-solar-ink mt-0.5 size-4 shrink-0" />
-      {children}
-    </li>
-  );
-}
-
 function variant(key: CardKey): Variant {
   return VARIANTS[key];
 }
@@ -147,59 +140,31 @@ export function OverviewPage({ cardKey }: { cardKey: CardKey }) {
   const v = variant(cardKey);
   return (
     <>
-      <PageHeader
-        eyebrow="Home Assistant"
-        title={heading(v.basePath)}
-        description={v.tagline}
-        badges={[{ label: "HACS Default" }, { label: "YAML & UI editor" }, { label: v.unitKilo }]}
+      <CardHero
+        tags={["HACS Default", "YAML & UI editor", v.unitKilo]}
+        title={v.title}
+        demo={v.demo}
+        installHref={v.hacsRedirect}
+        playgroundTo={`${v.basePath}/playground`}
+      >
+        <PageHeader className="mb-0" title={heading(v.basePath)} description={v.tagline} />
+      </CardHero>
+
+      <DemoGallery
+        title="Three ways to wire it"
+        description="The same readings in each topology, each one live."
+        demos={topologyGallery(v.key)}
+        playgroundTo={`${v.basePath}/playground`}
       />
 
-      <CardDemo demo={v.demo} className="mx-auto w-fit max-w-full rounded-2xl" />
-      <p className="text-muted-foreground mt-2 text-center text-sm">
-        The real card, live.{" "}
-        <Link
-          to={`${v.basePath}/playground`}
-          className="decoration-solar font-medium underline underline-offset-4"
-        >
-          Try it in the playground
-        </Link>
-        .
-      </p>
-
-      <Prose className="mt-4">
-        <p>
-          <strong>{v.title}</strong> is a Home Assistant Lovelace card that draws an animated flow
-          diagram between the major energy sources in your home. It is designed as a drop-in
-          replacement for Home Assistant's built-in distribution card, with a long list of
-          customization options for users who want full control of the visual.
-        </p>
-        <p>
-          <strong>Scope.</strong> {v.scope}
-        </p>
-      </Prose>
-
-      <Section title="Highlights">
-        <ul className="text-foreground/85 grid max-w-3xl grid-cols-1 gap-x-8 gap-y-1 text-[15px] md:grid-cols-2">
-          <HighlightsListCheckedItem>
-            Full UI editor with subpages for each entity
-          </HighlightsListCheckedItem>
-          <HighlightsListCheckedItem>
-            Up to 4 individual devices with custom icons & colors
-          </HighlightsListCheckedItem>
-          <HighlightsListCheckedItem>
-            Bidirectional grid &amp; battery (split or single entity)
-          </HighlightsListCheckedItem>
-          <HighlightsListCheckedItem>
-            Secondary info, templates, and clickable entities
-          </HighlightsListCheckedItem>
-          <HighlightsListCheckedItem>
-            Configurable flow rate model (legacy & new)
-          </HighlightsListCheckedItem>
-          <HighlightsListCheckedItem>
-            Translated to 14+ languages out of the box
-          </HighlightsListCheckedItem>
-        </ul>
-      </Section>
+      <Highlights>
+        <Highlight>Full UI editor with subpages for each entity</Highlight>
+        <Highlight>Up to 4 individual devices with custom icons & colors</Highlight>
+        <Highlight>Bidirectional grid & battery (split or single entity)</Highlight>
+        <Highlight>Secondary info, templates, and clickable entities</Highlight>
+        <Highlight>Configurable flow rate model (legacy & new)</Highlight>
+        <Highlight>Translated to 14+ languages out of the box</Highlight>
+      </Highlights>
 
       <Section title="Compare it">
         <RelatedGuides
@@ -218,58 +183,9 @@ export function OverviewPage({ cardKey }: { cardKey: CardKey }) {
         />
       </Section>
 
-      <Section title="What's in this section">
-        <PageLinks
-          links={[
-            {
-              to: `${v.basePath}/installation`,
-              title: "Installation",
-              description: "HACS or manual install in two minutes.",
-            },
-            {
-              to: `${v.basePath}/configuration`,
-              title: "Configuration",
-              description: "Every option, with defaults and types.",
-            },
-            {
-              to: `${v.basePath}/examples`,
-              title: "Examples",
-              description: "Copy-pastable configs for common setups.",
-            },
-            {
-              to: `${v.basePath}/playground`,
-              title: "Playground",
-              description: "Edit a config and watch the card change; share the link.",
-            },
-          ]}
-        />
-      </Section>
+      <SectionPages basePath={v.basePath} playground />
 
-      <Section title="Source & releases">
-        <Prose>
-          <p>
-            The card is published as <code>{v.pkgName}</code> via HACS and on GitHub. Issues and
-            feature requests are tracked in the{" "}
-            <a
-              href="https://github.com/flixlix/flixlix-cards"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              flixlix-cards monorepo
-            </a>
-            .
-          </p>
-        </Prose>
-        <Button asChild variant="outline" size="sm">
-          <a
-            href="https://github.com/flixlix/flixlix-cards"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Github className="size-4" /> View source on GitHub
-          </a>
-        </Button>
-      </Section>
+      <SourceSection repoUrl={`https://github.com/flixlix/${v.pkgName}`} />
 
       <NextPageNav next={{ label: "Installation", to: `${v.basePath}/installation` }} />
     </>

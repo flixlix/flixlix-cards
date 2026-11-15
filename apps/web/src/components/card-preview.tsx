@@ -252,7 +252,7 @@ export function CardPreview({
       style={bare ? BARE_CARD_VARIABLES : undefined}
       className={cn(!bare && "overflow-hidden rounded-lg p-4", className)}
     >
-      <div className="grid">
+      <div className="grid grid-cols-[minmax(0,1fr)]">
         <div
           ref={host}
           data-card-preview
