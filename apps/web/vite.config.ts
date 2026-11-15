@@ -1,7 +1,6 @@
 import { minifyCardTemplates } from "@flixlix-cards/bundler";
 import { devtools } from "@tanstack/devtools-vite";
 import { defineConfig, lazyPlugins } from "vite-plus";
-import tsconfigPaths from "vite-tsconfig-paths";
 
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 
@@ -17,10 +16,21 @@ const config = defineConfig({
     // https://vitest.dev/guide/migration/#clearmocks-is-enabled-by-default
     clearMocks: false,
   },
+  resolve: { tsconfigPaths: true },
+  build: { chunkSizeWarningLimit: 3000 },
   plugins: lazyPlugins(() => [
-    nitro({ preset: "vercel" }),
+    nitro({
+      preset: "vercel",
+      rolldownConfig: {
+        checks: { pluginTimings: false },
+        onwarn(warning, warn) {
+          if (warning.code !== "MODULE_LEVEL_DIRECTIVE") {
+            warn(warning);
+          }
+        },
+      },
+    }),
     devtools(),
-    tsconfigPaths({ projects: ["./tsconfig.json"] }),
     minifyCardTemplates({
       include: /\/packages\/(flixlix-cards\/[^/]+\/src|shared\/src\/(?!preview\/)).+\.ts$/,
     }),

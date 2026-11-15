@@ -59,7 +59,6 @@
     "playwright": "catalog:packages",
     "typescript": "catalog:",
     "vite": "catalog:packages",
-    "vite-plus": "catalog:packages",
-    "vite-tsconfig-paths": "catalog:"
+    "vite-plus": "catalog:packages"
   }
 }
