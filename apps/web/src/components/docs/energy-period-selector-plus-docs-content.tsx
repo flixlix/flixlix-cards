@@ -47,6 +47,7 @@ export function OverviewPage() {
   return (
     <>
       <CardHero
+        tags={["HACS custom", "YAML & UI editor", "Energy"]}
         title={TITLE}
         demo="period"
         installHref={HACS_REDIRECT}
@@ -57,7 +58,6 @@ export function OverviewPage() {
           eyebrow="Home Assistant"
           title={heading(BASE_PATH)}
           description="Picks the period every energy card on the dashboard shows: day, week, month, year or any range."
-          badges={[{ label: "HACS custom" }, { label: "YAML & UI editor" }, { label: "Energy" }]}
         />
       </CardHero>
 

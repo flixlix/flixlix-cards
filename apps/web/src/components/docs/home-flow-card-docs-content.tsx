@@ -56,6 +56,7 @@ export function OverviewPage() {
   return (
     <>
       <CardHero
+        tags={["HACS Default", "YAML & UI editor", "Power"]}
         title={TITLE}
         demo="house"
         installHref={HACS_REDIRECT}
@@ -66,7 +67,6 @@ export function OverviewPage() {
           eyebrow="Home Assistant"
           title={heading(BASE_PATH)}
           description="Your live power on a little house: solar on the roof, a battery on the wall and the grid running off to the street."
-          badges={[{ label: "HACS Default" }, { label: "YAML & UI editor" }, { label: "Power" }]}
         />
       </CardHero>
 

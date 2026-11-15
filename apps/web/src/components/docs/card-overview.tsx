@@ -20,8 +20,10 @@ export function CardHero({
   demo,
   installHref,
   playgroundTo,
+  tags,
   children,
 }: {
+  tags: string[];
   title: string;
   demo: CardDemoName;
   installHref: string;
@@ -51,6 +53,14 @@ export function CardHero({
             </Button>
           ) : null}
         </div>
+        <ul className="text-muted-foreground -mt-4 flex flex-wrap gap-x-2 text-xs">
+          {tags.map((tag, index) => (
+            <li key={tag} className="flex items-center gap-2">
+              {index > 0 ? <span aria-hidden>·</span> : null}
+              {tag}
+            </li>
+          ))}
+        </ul>
       </div>
       <figure className="mx-auto flex w-fit max-w-full min-w-0 flex-col gap-2 lg:mx-0">
         <CardDemo demo={demo} className="max-w-full rounded-2xl" />

@@ -143,6 +143,7 @@ export function OverviewPage({ cardKey }: { cardKey: CardKey }) {
   return (
     <>
       <CardHero
+        tags={["HACS Default", "YAML & UI editor", v.unitKilo]}
         title={v.title}
         demo={v.demo}
         installHref={v.hacsRedirect}
@@ -153,7 +154,6 @@ export function OverviewPage({ cardKey }: { cardKey: CardKey }) {
           eyebrow="Home Assistant"
           title={heading(v.basePath)}
           description={v.tagline}
-          badges={[{ label: "HACS Default" }, { label: "YAML & UI editor" }, { label: v.unitKilo }]}
         />
       </CardHero>
 

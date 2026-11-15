@@ -46,17 +46,17 @@ const RELEASE_URL = "https://github.com/flixlix/sortable-list-card/releases/late
 export function OverviewPage() {
   return (
     <>
-      <CardHero title={TITLE} demo="sortable" installHref={HACS_REDIRECT}>
+      <CardHero
+        tags={["HACS custom", "YAML & UI editor", "Any service"]}
+        title={TITLE}
+        demo="sortable"
+        installHref={HACS_REDIRECT}
+      >
         <PageHeader
           className="mb-0"
           eyebrow="Home Assistant"
           title={heading(BASE_PATH)}
           description="A drag-and-drop list for Home Assistant that saves its order through any service you choose."
-          badges={[
-            { label: "HACS custom" },
-            { label: "YAML & UI editor" },
-            { label: "Any service" },
-          ]}
         />
       </CardHero>
 

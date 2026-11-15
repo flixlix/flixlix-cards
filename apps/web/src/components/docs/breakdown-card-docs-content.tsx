@@ -56,17 +56,17 @@ const RELEASE_URL = "https://github.com/flixlix/energy-breakdown-card/releases/l
 export function OverviewPage() {
   return (
     <>
-      <CardHero title={TITLE} demo="breakdown" installHref={HACS_REDIRECT}>
+      <CardHero
+        tags={["HACS custom", "YAML & UI editor", "Donut + bar"]}
+        title={TITLE}
+        demo="breakdown"
+        installHref={HACS_REDIRECT}
+      >
         <PageHeader
           className="mb-0"
           eyebrow="Home Assistant"
           title={heading(BASE_PATH)}
           description="Where your energy went, as a donut or a stacked bar."
-          badges={[
-            { label: "HACS custom" },
-            { label: "YAML & UI editor" },
-            { label: "Donut + bar" },
-          ]}
         />
       </CardHero>
 
