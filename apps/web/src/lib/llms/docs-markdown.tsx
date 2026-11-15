@@ -3,6 +3,7 @@ import { prerender } from "react-dom/static";
 import TurndownService from "turndown";
 import { gfm } from "turndown-plugin-gfm";
 
+import { pageMeta } from "@/lib/page-meta";
 import { INDEXABLE_PAGES } from "@/lib/seo";
 import { markdownUrl, SITE_URL } from "@/lib/site";
 
@@ -12,8 +13,8 @@ export type DocsPage = { path: string; title: string; description?: string; sect
 
 export const DOCS_PAGES: DocsPage[] = INDEXABLE_PAGES.map((entry) => ({
   path: entry.to,
-  title: entry.title,
-  description: entry.description,
+  title: pageMeta(entry.to).h1,
+  description: pageMeta(entry.to).description,
   section: entry.breadcrumb,
 }));
 

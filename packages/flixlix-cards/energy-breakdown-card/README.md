@@ -1,6 +1,9 @@
 # Energy Breakdown Card
 
-<img width="2034" height="697" alt="Demo Image" src="https://github.com/user-attachments/assets/c8fe8f63-9680-4507-bccd-8e792322c165" />
+> [!TIP]
+> **Canonical docs: [cards.flixlix.com/energy-breakdown-card](https://cards.flixlix.com/energy-breakdown-card).** Installation, every option and copy-paste examples live there. This README is the offline copy.
+
+<img width="2034" height="697" alt="Energy Breakdown Card, a donut of where home energy went, on a Home Assistant dashboard" src="https://github.com/user-attachments/assets/c8fe8f63-9680-4507-bccd-8e792322c165" />
 
 A custom Home Assistant Lovelace card that visualizes how your energy use is broken down across sources. Built to fit the design language of the latest Lovelace UI: rounded corners, soft shadows, HA color tokens, and a quiet visual presence that adapts to your theme.
 

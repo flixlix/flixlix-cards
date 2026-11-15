@@ -44,6 +44,79 @@ const PAGES: SearchEntry[] = [
   },
 ];
 
+const GUIDES: SearchEntry[] = [
+  {
+    title: "Which card",
+    description: "Live watts, an isometric house, period energy, a donut or a date picker.",
+    to: "/guides",
+    breadcrumb: "Guides",
+    card: "general",
+    type: "page",
+    keywords: [
+      "which card",
+      "power flow card plus vs energy flow card plus",
+      "lovelace custom energy card",
+      "compare",
+    ],
+  },
+  {
+    title: "Solar and battery power flow",
+    description: "Sensors and a first config for live solar, battery and grid power.",
+    to: "/guides/solar-battery-power-flow",
+    breadcrumb: "Guides",
+    card: "general",
+    type: "page",
+    keywords: [
+      "home assistant solar battery power flow",
+      "live power flow dashboard",
+      "lovelace solar card",
+      "solar",
+      "battery",
+      "grid",
+    ],
+  },
+  {
+    title: "Vs the original Power Flow Card",
+    description: "ulic75's Power Flow Card is archived and points here.",
+    to: "/guides/power-flow-card-plus-vs-power-flow-card",
+    breadcrumb: "Guides",
+    card: "general",
+    type: "page",
+    keywords: ["ulic75", "power flow card plus vs power flow card", "original", "archived"],
+  },
+  {
+    title: "Vs Sunsynk Power Flow Card",
+    description: "A circle diagram for any sensors, or an inverter-screen card.",
+    to: "/guides/power-flow-card-plus-vs-sunsynk",
+    breadcrumb: "Guides",
+    card: "general",
+    type: "page",
+    keywords: ["sunsynk", "power flow card plus vs sunsynk", "deye", "inverter"],
+  },
+  {
+    title: "Vs Tesla Style Solar Power Card",
+    description: "How each card expects solar, battery and grid sensors.",
+    to: "/guides/power-flow-card-plus-vs-tesla-style",
+    breadcrumb: "Guides",
+    card: "general",
+    type: "page",
+    keywords: ["tesla style", "tesla", "vs tesla style", "solar power card"],
+  },
+  {
+    title: "Energy Distribution alternative",
+    description: "Live watts, or period energy with more to tune than the built-in card.",
+    to: "/guides/energy-distribution-card-alternative",
+    breadcrumb: "Guides",
+    card: "general",
+    type: "page",
+    keywords: [
+      "energy distribution card alternative",
+      "custom energy distribution card",
+      "built-in",
+    ],
+  },
+];
+
 function cardPages(
   card: "power" | "energy",
   basePath: "/power-flow-card-plus" | "/energy-flow-card-plus",
@@ -866,11 +939,14 @@ function houseEntries(): SearchEntry[] {
   return [
     houseEntry(HOUSE_BASE, HOUSE, "page", "Overview", `What ${HOUSE} is and what it can do.`, [
       "isometric",
+      "isometric house",
+      "isometric house power card",
       "house",
       "solar",
       "battery",
       "inverter",
-      "home",
+      "home assistant",
+      "lovelace",
     ]),
     houseEntry(
       `${HOUSE_BASE}#a-day`,
@@ -1104,6 +1180,7 @@ const CONTRIBUTING_SECTIONS: SearchEntry[] = [
 
 export const SEARCH_ENTRIES: SearchEntry[] = [
   ...PAGES,
+  ...GUIDES,
   ...cardPages("power", "/power-flow-card-plus", POWER),
   {
     title: "Playground",

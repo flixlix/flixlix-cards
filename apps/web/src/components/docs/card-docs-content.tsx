@@ -30,12 +30,14 @@ import type { IssueCard } from "#/lib/issues";
 import { Button } from "@flixlix-cards/ui/components/button";
 
 import { CardDemo } from "@/components/card-demo";
+import { heading } from "@/lib/page-meta";
 import { sensor, type StateFixtures } from "@flixlix-cards/shared/preview/fake-hass";
 
 import { CategorySection } from "./category-section";
 import {
   Callout,
   CodeBlock,
+  DashboardShot,
   NextPageNav,
   type OptionRow,
   PageHeader,
@@ -43,6 +45,7 @@ import {
   Prose,
   Section,
 } from "./doc-primitives";
+import { RelatedGuides } from "./related-guides";
 import { InstallFromCatalog } from "./install-from-catalog";
 import { LiveExample } from "./live-example";
 import { OptionList } from "./option-list";
@@ -146,12 +149,13 @@ export function OverviewPage({ cardKey }: { cardKey: CardKey }) {
   return (
     <>
       <PageHeader
-        eyebrow={v.title}
-        title="Overview"
+        eyebrow="Home Assistant"
+        title={heading(v.basePath)}
         description={v.tagline}
         badges={[{ label: "HACS Default" }, { label: "YAML & UI editor" }, { label: v.unitKilo }]}
       />
 
+      <DashboardShot image={v.key === "power" ? "power" : "energy"} />
       <CardDemo demo={v.demo} className="mx-auto w-fit max-w-full rounded-2xl" />
       <p className="text-muted-foreground mt-2 text-center text-sm">
         The real card, live.{" "}
@@ -197,6 +201,23 @@ export function OverviewPage({ cardKey }: { cardKey: CardKey }) {
             Translated to 14+ languages out of the box
           </HighlightsListCheckedItem>
         </ul>
+      </Section>
+
+      <Section title="Compare it">
+        <RelatedGuides
+          paths={
+            v.key === "power"
+              ? [
+                  "/guides/solar-battery-power-flow",
+                  "/guides/power-flow-card-plus-vs-power-flow-card",
+                  "/guides/power-flow-card-plus-vs-sunsynk",
+                  "/guides/power-flow-card-plus-vs-tesla-style",
+                  "/guides/energy-distribution-card-alternative",
+                  "/guides",
+                ]
+              : ["/guides/energy-distribution-card-alternative", "/guides"]
+          }
+        />
       </Section>
 
       <Section title="What's in this section">
@@ -265,7 +286,7 @@ export function InstallationPage({ cardKey }: { cardKey: CardKey }) {
     <>
       <PageHeader
         eyebrow={v.title}
-        title="Installation"
+        title={heading(`${v.basePath}/installation`)}
         description="Install it from Home Assistant's Marketplace, or from HACS before 2026.11. Manual installation is also supported."
       />
 
@@ -1250,7 +1271,7 @@ export function ConfigurationPage({ cardKey }: { cardKey: CardKey }) {
       <div className="min-w-0">
         <PageHeader
           eyebrow={v.title}
-          title="Configuration"
+          title={heading(`${v.basePath}/configuration`)}
           description={
             <>
               Every option, what it does, and how to use it. Required fields are marked with{" "}
@@ -2036,7 +2057,7 @@ export function ExamplesPage({ cardKey }: { cardKey: CardKey }) {
     <>
       <PageHeader
         eyebrow={v.title}
-        title="Examples"
+        title={heading(`${v.basePath}/examples`)}
         description="Copy-pastable configs for the most common setups, each next to the card it draws."
       />
 

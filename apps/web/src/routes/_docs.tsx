@@ -36,19 +36,26 @@ const SECTION_LABELS: Record<string, string> = {
   installation: "Installation",
   configuration: "Configuration",
   examples: "Examples",
+  guides: "Guides",
+  "solar-battery-power-flow": "Solar and battery power flow",
+  "power-flow-card-plus-vs-power-flow-card": "Vs the original Power Flow Card",
+  "power-flow-card-plus-vs-sunsynk": "Vs Sunsynk",
+  "power-flow-card-plus-vs-tesla-style": "Vs Tesla Style",
+  "energy-distribution-card-alternative": "Energy Distribution alternative",
 };
 
-const CARD_ROOTS = {
+const PARENT_LINKS = {
   "power-flow-card-plus": "/power-flow-card-plus",
   "home-flow-card": "/home-flow-card",
   "energy-flow-card-plus": "/energy-flow-card-plus",
   "energy-breakdown-card": "/energy-breakdown-card",
   "energy-period-selector-plus": "/energy-period-selector-plus",
   "sortable-list-card": "/sortable-list-card",
+  guides: "/guides",
 } as const;
 
-const cardRoot = (segment: string) =>
-  Object.entries(CARD_ROOTS).find(([slug]) => slug === segment)?.[1];
+const parentLink = (segment: string) =>
+  Object.entries(PARENT_LINKS).find(([slug]) => slug === segment)?.[1];
 
 function humanize(part: string): string {
   if (SECTION_LABELS[part]) {
@@ -146,7 +153,7 @@ function DocsLayout() {
 }
 
 function ParentCrumb({ segment }: { segment: string }) {
-  const to = cardRoot(segment);
+  const to = parentLink(segment);
   if (!to) {
     return <span className="text-muted-foreground">{humanize(segment)}</span>;
   }

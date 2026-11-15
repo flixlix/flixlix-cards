@@ -266,7 +266,7 @@ export function CardPreview({
         />
         {fallback === undefined ? null : (
           <div
-            aria-hidden
+            aria-hidden={rendered || undefined}
             className={cn(
               "pointer-events-none transition-opacity duration-300 ease-(--ease-out-strong) [grid-area:1/1] motion-reduce:transition-none",
               rendered && "opacity-0"

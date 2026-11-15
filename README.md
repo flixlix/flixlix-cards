@@ -5,14 +5,18 @@
 This is a monorepo for all my Home Assistant cards, including their source code, release management, and documentation.
 
 > [!TIP]
-> 📖 **Full documentation lives at [cards.flixlix.com](https://cards.flixlix.com)** — installation, configuration reference, an interactive configurator, and copy-pasteable examples for every card.
+> **Canonical documentation: [cards.flixlix.com](https://cards.flixlix.com).** Installation, the full configuration reference, copy-paste examples and a live playground for every card. The per-card GitHub repos are distribution copies; this repository and the docs site are the source.
 
 ## Cards
 
-- **Power Flow Card Plus** — [docs](https://cards.flixlix.com/power-flow-card-plus) · [README](packages/flixlix-cards/power-flow-card-plus/README.md)
-- **Home Flow Card** — [docs](https://cards.flixlix.com/home-flow-card) · [README](packages/flixlix-cards/home-flow-card/README.md)
-- **Energy Flow Card Plus** — [docs](https://cards.flixlix.com/energy-flow-card-plus) · [README](packages/flixlix-cards/energy-flow-card-plus/README.md)
-- **Energy Breakdown Card** — [docs](https://cards.flixlix.com/energy-breakdown-card) · [README](packages/flixlix-cards/energy-breakdown-card/README.md)
+- **[Power Flow Card Plus](https://cards.flixlix.com/power-flow-card-plus)** — live solar, battery and grid power on a Lovelace dashboard. [README](packages/flixlix-cards/power-flow-card-plus/README.md)
+- **[Home Flow Card](https://cards.flixlix.com/home-flow-card)** — the same live power as an isometric house. [README](packages/flixlix-cards/home-flow-card/README.md)
+- **[Energy Flow Card Plus](https://cards.flixlix.com/energy-flow-card-plus)** — solar, battery and grid energy over a day, week or year. [README](packages/flixlix-cards/energy-flow-card-plus/README.md)
+- **[Energy Breakdown Card](https://cards.flixlix.com/energy-breakdown-card)** — a donut or bar of where that energy went. [README](packages/flixlix-cards/energy-breakdown-card/README.md)
+- **[Energy Period Selector Plus](https://cards.flixlix.com/energy-period-selector-plus)** — a custom energy date picker for those cards. [README](packages/flixlix-cards/energy-period-selector-plus/README.md)
+- **[Sortable List Card](https://cards.flixlix.com/sortable-list-card)** — a drag-to-reorder list, including a HEMS load-priority list. [README](packages/flixlix-cards/sortable-list-card/README.md)
+
+Guides on the docs site: [solar and battery power flow](https://cards.flixlix.com/guides/solar-battery-power-flow), [which card to use](https://cards.flixlix.com/guides), [vs the original Power Flow Card](https://cards.flixlix.com/guides/power-flow-card-plus-vs-power-flow-card), [vs Sunsynk](https://cards.flixlix.com/guides/power-flow-card-plus-vs-sunsynk), [vs Tesla Style](https://cards.flixlix.com/guides/power-flow-card-plus-vs-tesla-style), [Energy Distribution alternative](https://cards.flixlix.com/guides/energy-distribution-card-alternative).
 
 ### Home Flow Card
 

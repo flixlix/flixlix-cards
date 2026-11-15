@@ -3,6 +3,7 @@ import { Eye, Github, ListOrdered, Save, Settings } from "lucide-react";
 import type * as React from "react";
 
 import { trackEvent } from "#/lib/analytics";
+import { heading } from "@/lib/page-meta";
 import { Button } from "@flixlix-cards/ui/components/button";
 import { Checkbox } from "@flixlix-cards/ui/components/checkbox";
 import { sensor, type StateFixtures } from "@flixlix-cards/shared/preview/fake-hass";
@@ -11,6 +12,7 @@ import { CategorySection } from "./category-section";
 import {
   Callout,
   CodeBlock,
+  DashboardShot,
   NextPageNav,
   type OptionRow,
   PageHeader,
@@ -20,6 +22,7 @@ import {
 } from "./doc-primitives";
 import { InstallFromLink } from "./install-from-link";
 import { LiveExample } from "./live-example";
+import { RelatedGuides } from "./related-guides";
 import { OptionList } from "./option-list";
 import { PageTOC, type TocItem } from "./page-toc";
 import { SupportLinks } from "./support-links";
@@ -49,10 +52,12 @@ export function OverviewPage() {
     <>
       <PageHeader
         eyebrow={TITLE}
-        title="Overview"
+        title={heading(BASE_PATH)}
         description="A generic drag-and-drop reorderable list for Home Assistant. Drag rows (or use the arrows) to reorder, and the new order is saved by calling any service you configure."
         badges={[{ label: "HACS custom" }, { label: "YAML & UI editor" }, { label: "Any service" }]}
       />
+
+      <DashboardShot image="sortable" />
 
       <Prose className="mt-4">
         <p>
@@ -107,6 +112,10 @@ export function OverviewPage() {
           <HighlightItem>Entity-backed items (name / icon / state) with overrides</HighlightItem>
           <HighlightItem>Optimistic updates, plus a full UI editor</HighlightItem>
         </ul>
+      </Section>
+
+      <Section title="Where it fits">
+        <RelatedGuides paths={["/guides"]} />
       </Section>
 
       <Section title="What's in this section">
@@ -172,7 +181,7 @@ export function InstallationPage() {
     <>
       <PageHeader
         eyebrow={TITLE}
-        title="Installation"
+        title={heading(`${BASE_PATH}/installation`)}
         description="Install it from its link in Home Assistant's Marketplace, or as a custom repository in HACS before 2026.11. Manual installation is also supported."
       />
 
@@ -474,7 +483,7 @@ export function ConfigurationPage() {
       <div className="min-w-0">
         <PageHeader
           eyebrow={TITLE}
-          title="Configuration"
+          title={heading(`${BASE_PATH}/configuration`)}
           description={
             <>
               Every option, what it does, and how to use it. Required fields are marked with{" "}
@@ -661,7 +670,7 @@ export function ExamplesPage() {
     <>
       <PageHeader
         eyebrow={TITLE}
-        title="Examples"
+        title={heading(`${BASE_PATH}/examples`)}
         description="Copy-pastable configs for the most common setups, each next to the card it draws."
       />
 

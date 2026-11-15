@@ -200,7 +200,7 @@ function HouseSnapshot() {
     <>
       <img
         src="/previews/house-afternoon-light.webp"
-        alt=""
+        alt="Home Flow Card, an isometric house: solar on the roof, the battery charging on the wall, and power flowing out to the grid."
         width={460}
         height={357}
         fetchPriority="high"
@@ -208,7 +208,7 @@ function HouseSnapshot() {
       />
       <img
         src="/previews/house-afternoon-dark.webp"
-        alt=""
+        alt="Home Flow Card, an isometric house in dark mode: solar on the roof, the battery charging on the wall, and power flowing out to the grid."
         width={460}
         height={357}
         fetchPriority="high"
@@ -322,8 +322,8 @@ function IndexPage() {
     <div className="pb-8">
       <section className="grid grid-cols-1 items-center gap-x-12 gap-y-10 pt-4 pb-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,30rem)] lg:pt-10 lg:pb-24">
         <div>
-          <h1 className="max-w-[12ch] text-[2.75rem] leading-[1.02] font-semibold tracking-[-0.035em] text-balance md:text-[3.75rem]">
-            Power flow cards for Home Assistant
+          <h1 className="max-w-[16ch] text-[2.4rem] leading-[1.02] font-semibold tracking-[-0.035em] text-balance md:text-[3.25rem]">
+            Solar, battery and grid power flow cards for Home Assistant
           </h1>
           <p className="text-foreground/75 mt-6 max-w-[44ch] text-lg leading-relaxed text-pretty">
             Watch solar, battery and grid power move through your home, live on your dashboard. Free
@@ -364,6 +364,35 @@ function IndexPage() {
           </div>
         </section>
       ))}
+
+      <section id="guides" className="scroll-mt-20 border-t pt-12">
+        <h2 className="text-[1.75rem] leading-tight font-semibold tracking-[-0.025em]">
+          Setup and comparisons
+        </h2>
+        <p className="text-foreground/80 mt-3 max-w-[62ch] text-[15px] leading-relaxed">
+          Pages for the searches that are not a single card: solar and battery power flow, the
+          built-in Energy Distribution card, and the other Lovelace cards people compare.
+        </p>
+        <ul className="mt-6 grid max-w-3xl gap-2 sm:grid-cols-2">
+          {[
+            ["/guides/solar-battery-power-flow", "Solar and battery power flow"],
+            ["/guides", "Which card to use"],
+            ["/guides/energy-distribution-card-alternative", "Energy Distribution alternative"],
+            ["/guides/power-flow-card-plus-vs-power-flow-card", "Vs the original Power Flow Card"],
+            ["/guides/power-flow-card-plus-vs-sunsynk", "Vs the Sunsynk Power Flow Card"],
+            ["/guides/power-flow-card-plus-vs-tesla-style", "Vs Tesla Style Solar Power Card"],
+          ].map(([to, label]) => (
+            <li key={to}>
+              <Link
+                to={to}
+                className="hover:bg-accent block rounded-xl border px-4 py-3 text-sm font-medium"
+              >
+                {label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
 
       <HomeFaq />
 
