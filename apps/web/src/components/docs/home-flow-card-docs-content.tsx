@@ -64,9 +64,8 @@ export function OverviewPage() {
       >
         <PageHeader
           className="mb-0"
-          eyebrow="Home Assistant"
           title={heading(BASE_PATH)}
-          description="Your live power on a little house: solar on the roof, a battery on the wall and the grid running off to the street."
+          description="Your live power, drawn on a little house."
         />
       </CardHero>
 

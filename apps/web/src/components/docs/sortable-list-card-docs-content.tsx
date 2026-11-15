@@ -54,9 +54,8 @@ export function OverviewPage() {
       >
         <PageHeader
           className="mb-0"
-          eyebrow="Home Assistant"
           title={heading(BASE_PATH)}
-          description="A drag-and-drop list for Home Assistant that saves its order through any service you choose."
+          description="A drag-and-drop list that saves its order through any service."
         />
       </CardHero>
 

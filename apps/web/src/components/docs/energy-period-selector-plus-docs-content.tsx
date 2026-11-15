@@ -55,9 +55,8 @@ export function OverviewPage() {
       >
         <PageHeader
           className="mb-0"
-          eyebrow="Home Assistant"
           title={heading(BASE_PATH)}
-          description="Picks the period every energy card on the dashboard shows: day, week, month, year or any range."
+          description="Picks the period every energy card on the dashboard shows."
         />
       </CardHero>
 

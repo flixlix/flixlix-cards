@@ -64,9 +64,8 @@ export function OverviewPage() {
       >
         <PageHeader
           className="mb-0"
-          eyebrow="Home Assistant"
           title={heading(BASE_PATH)}
-          description="Where your energy went, as a donut or a stacked bar."
+          description="Where your energy went, as a donut or a bar."
         />
       </CardHero>
 

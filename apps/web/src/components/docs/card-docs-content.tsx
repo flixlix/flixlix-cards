@@ -85,8 +85,7 @@ const VARIANTS: Record<CardKey, Variant> = {
     cardType: "custom:power-flow-card-plus",
     pkgName: "power-flow-card-plus",
     title: "Power Flow Card Plus",
-    tagline:
-      "A highly customizable Home Assistant card visualizing the live (instantaneous) power flow between grid, solar, battery, home, and individual devices.",
+    tagline: "Live power between grid, solar, battery, home and your devices.",
     unit: "W",
     unitLong: "watts",
     unitKilo: "kW",
@@ -113,8 +112,7 @@ const VARIANTS: Record<CardKey, Variant> = {
     cardType: "custom:energy-flow-card-plus",
     pkgName: "energy-flow-card-plus",
     title: "Energy Flow Card Plus",
-    tagline:
-      "A highly customizable Home Assistant card visualizing the accumulated energy distribution for the dashboard's selected period.",
+    tagline: "Where your energy came from and went over the dashboard's selected period.",
     unit: "Wh",
     unitLong: "watt-hours",
     unitKilo: "kWh",
@@ -149,12 +147,7 @@ export function OverviewPage({ cardKey }: { cardKey: CardKey }) {
         installHref={v.hacsRedirect}
         playgroundTo={`${v.basePath}/playground`}
       >
-        <PageHeader
-          className="mb-0"
-          eyebrow="Home Assistant"
-          title={heading(v.basePath)}
-          description={v.tagline}
-        />
+        <PageHeader className="mb-0" title={heading(v.basePath)} description={v.tagline} />
       </CardHero>
 
       <DemoGallery

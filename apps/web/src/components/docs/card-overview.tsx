@@ -62,12 +62,7 @@ export function CardHero({
           ))}
         </ul>
       </div>
-      <figure className="mx-auto flex w-fit max-w-full min-w-0 flex-col gap-2 lg:mx-0">
-        <CardDemo demo={demo} className="max-w-full rounded-2xl" />
-        <figcaption className="text-muted-foreground w-0 min-w-full text-center text-sm">
-          Not a screenshot: the real card, running right here.
-        </figcaption>
-      </figure>
+      <CardDemo demo={demo} className="mx-auto w-fit max-w-full rounded-2xl lg:mx-0" />
     </div>
   );
 }
