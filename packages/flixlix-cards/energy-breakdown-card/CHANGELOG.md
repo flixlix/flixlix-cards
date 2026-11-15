@@ -1,5 +1,11 @@
 # energy-breakdown-card
 
+## 0.0.5-beta.1
+
+### Patch Changes
+
+- **Docs:** Each card README points at its page on cards.flixlix.com, and the old configurator link now points at the playground. ([#533](https://github.com/flixlix/flixlix-cards/pull/533))
+
 ## 0.0.5-beta.0
 
 ### Patch Changes

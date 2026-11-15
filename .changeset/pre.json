@@ -25,6 +25,7 @@
     "docs-landing-faq",
     "docs-og-images",
     "docs-open-with-agent",
+    "docs-search-pages",
     "editor-header-translation",
     "energy-negative-period",
     "energy-secondary-period",
@@ -39,6 +40,7 @@
     "home-secondary-info-clickable",
     "location-condition-target",
     "negative-unit-scaling",
-    "new-card-from-energy-dashboard"
+    "new-card-from-energy-dashboard",
+    "readme-canonical-docs"
   ]
 }

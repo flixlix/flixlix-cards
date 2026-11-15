@@ -1,5 +1,11 @@
 # @flixlix-cards/web
 
+## 1.2.1-beta.2
+
+### Patch Changes
+
+- **Docs:** Each docs page has its own title, description and heading, and new guides cover solar and battery setup plus comparisons with the original Power Flow Card, Sunsynk, Tesla Style and the built-in Energy Distribution card. ([#533](https://github.com/flixlix/flixlix-cards/pull/533))
+
 ## 1.2.1-beta.1
 
 ## 1.2.1-beta.0
