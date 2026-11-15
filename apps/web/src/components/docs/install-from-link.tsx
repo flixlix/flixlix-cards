@@ -2,6 +2,7 @@ import { Button } from "@flixlix-cards/ui/components/button";
 
 import { trackEvent } from "#/lib/analytics";
 
+import { HomeAssistantIcon } from "./home-assistant-icon";
 import { Callout, Prose, Section } from "./doc-primitives";
 
 /**
@@ -32,6 +33,7 @@ export function InstallFromLink({
           rel="noopener noreferrer"
           onClick={() => trackEvent("Open in Home Assistant", { card: title })}
         >
+          <HomeAssistantIcon />
           Open in Home Assistant
         </a>
       </Button>
