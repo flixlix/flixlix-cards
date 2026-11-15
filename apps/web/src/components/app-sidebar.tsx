@@ -8,7 +8,7 @@ import {
   Github,
   HeartHandshake,
   House,
-  Scale,
+  Compass,
   LayoutGrid,
   ListOrdered,
   Sparkles,
@@ -41,7 +41,7 @@ import {
 } from "@flixlix-cards/ui/components/sidebar";
 
 type DocSection = {
-  group: "Live power" | "Energy over time" | "Beyond energy";
+  group?: "Live power" | "Energy over time" | "Beyond energy";
   label: string;
   to: string;
   icon: React.ComponentType<{ className?: string }>;
@@ -107,8 +107,14 @@ const SECTIONS: DocSection[] = [
     icon: CalendarRange,
     items: [
       { label: "Overview", to: "/energy-period-selector-plus" },
-      { label: "Installation", to: "/energy-period-selector-plus/installation" },
-      { label: "Configuration", to: "/energy-period-selector-plus/configuration" },
+      {
+        label: "Installation",
+        to: "/energy-period-selector-plus/installation",
+      },
+      {
+        label: "Configuration",
+        to: "/energy-period-selector-plus/configuration",
+      },
       { label: "Examples", to: "/energy-period-selector-plus/examples" },
       { label: "Playground", to: "/energy-period-selector-plus/playground" },
     ],
@@ -127,15 +133,99 @@ const SECTIONS: DocSection[] = [
   },
 ];
 
+const GUIDES: DocSection = {
+  label: "Guides",
+  to: "/guides",
+  icon: Compass,
+  items: [
+    { label: "Which card", to: "/guides" },
+    { label: "Solar and battery", to: "/guides/solar-battery-power-flow" },
+    {
+      label: "Distribution alternative",
+      to: "/guides/energy-distribution-card-alternative",
+    },
+    {
+      label: "Vs original",
+      to: "/guides/power-flow-card-plus-vs-power-flow-card",
+    },
+    { label: "Vs Sunsynk", to: "/guides/power-flow-card-plus-vs-sunsynk" },
+    {
+      label: "Vs Tesla Style",
+      to: "/guides/power-flow-card-plus-vs-tesla-style",
+    },
+  ],
+};
+
+const ALL_SECTIONS = [...SECTIONS, GUIDES];
+
 // Collapsed, the group labels slide away; without their padding too, the gap between groups
 // would stay far wider than the gap between icons within one.
 const COLLAPSING_GROUP =
   "transition-[padding] duration-200 ease-linear group-data-[collapsible=icon]:py-0";
 
-const GROUPS: DocSection["group"][] = ["Live power", "Energy over time", "Beyond energy"];
+const GROUPS: NonNullable<DocSection["group"]>[] = [
+  "Live power",
+  "Energy over time",
+  "Beyond energy",
+];
 
 function isSectionActive(pathname: string, sectionTo: string): boolean {
   return pathname === sectionTo || pathname.startsWith(`${sectionTo}/`);
+}
+
+function SectionItem({
+  section,
+  pathname,
+  open,
+  onOpenChange,
+}: {
+  section: DocSection;
+  pathname: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  return (
+    <Collapsible asChild open={open} onOpenChange={onOpenChange}>
+      <SidebarMenuItem>
+        <SidebarMenuButton
+          asChild
+          tooltip={section.label}
+          isActive={isSectionActive(pathname, section.to)}
+          className="[&>svg]:text-muted-foreground data-[active=true]:[&>svg]:text-foreground"
+        >
+          <Link to={section.to}>
+            <section.icon />
+            <span>{section.label}</span>
+          </Link>
+        </SidebarMenuButton>
+        <CollapsibleTrigger asChild>
+          <SidebarMenuAction
+            aria-label={`Show ${section.label} pages`}
+            className="text-muted-foreground hover:text-foreground transition-transform duration-200 ease-(--ease-out-strong) data-[state=open]:rotate-90"
+          >
+            <ChevronRight />
+          </SidebarMenuAction>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down overflow-hidden duration-200 ease-(--ease-out-strong) motion-reduce:animate-none">
+          <SidebarMenuSub className="mr-0 ml-[1.0625rem] py-1 pr-1">
+            {section.items.map((item) => (
+              <SidebarMenuSubItem key={item.to}>
+                <SidebarMenuSubButton
+                  asChild
+                  isActive={pathname === item.to}
+                  className="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground relative overflow-visible hover:bg-transparent data-[active=true]:bg-transparent data-[active=true]:font-medium before:absolute before:inset-y-1 before:-left-[11.5px] before:w-0.5 before:rounded-full data-[active=true]:before:bg-solar"
+                >
+                  <Link to={item.to}>
+                    <span>{item.label}</span>
+                  </Link>
+                </SidebarMenuSubButton>
+              </SidebarMenuSubItem>
+            ))}
+          </SidebarMenuSub>
+        </CollapsibleContent>
+      </SidebarMenuItem>
+    </Collapsible>
+  );
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -144,7 +234,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   // Track which sections are explicitly open. Initial state opens any section
   // that matches the current path so the user lands on an open accordion.
   const [openSections, setOpenSections] = React.useState<Set<string>>(
-    () => new Set(SECTIONS.filter((s) => isSectionActive(pathname, s.to)).map((s) => s.to))
+    () => new Set(ALL_SECTIONS.filter((s) => isSectionActive(pathname, s.to)).map((s) => s.to))
   );
 
   // When the route changes, automatically open the section that contains the
@@ -155,7 +245,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     setPreviousPathname(pathname);
     setOpenSections((prev) => {
       const next = new Set(prev);
-      for (const section of SECTIONS) {
+      for (const section of ALL_SECTIONS) {
         if (isSectionActive(pathname, section.to)) {
           next.add(section.to);
         }
@@ -210,6 +300,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+              <SectionItem
+                section={GUIDES}
+                pathname={pathname}
+                open={openSections.has(GUIDES.to)}
+                onOpenChange={(next) => setSectionOpen(GUIDES.to, next)}
+              />
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -220,86 +316,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarGroupContent>
               <SidebarMenu>
                 {SECTIONS.filter((section) => section.group === group).map((section) => (
-                  <Collapsible
+                  <SectionItem
                     key={section.to}
-                    asChild
+                    section={section}
+                    pathname={pathname}
                     open={openSections.has(section.to)}
                     onOpenChange={(next) => setSectionOpen(section.to, next)}
-                  >
-                    <SidebarMenuItem>
-                      <SidebarMenuButton
-                        asChild
-                        tooltip={section.label}
-                        isActive={isSectionActive(pathname, section.to)}
-                        className="[&>svg]:text-muted-foreground data-[active=true]:[&>svg]:text-foreground"
-                      >
-                        <Link to={section.to}>
-                          <section.icon />
-                          <span>{section.label}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                      <CollapsibleTrigger asChild>
-                        <SidebarMenuAction
-                          aria-label={`Show ${section.label} pages`}
-                          className="text-muted-foreground hover:text-foreground transition-transform duration-200 ease-(--ease-out-strong) data-[state=open]:rotate-90"
-                        >
-                          <ChevronRight />
-                        </SidebarMenuAction>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent className="data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down overflow-hidden duration-200 ease-(--ease-out-strong) motion-reduce:animate-none">
-                        <SidebarMenuSub className="mr-0 ml-[1.0625rem] py-1 pr-1">
-                          {section.items.map((item) => (
-                            <SidebarMenuSubItem key={item.to}>
-                              <SidebarMenuSubButton
-                                asChild
-                                isActive={pathname === item.to}
-                                className="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground relative overflow-visible hover:bg-transparent data-[active=true]:bg-transparent data-[active=true]:font-medium before:absolute before:inset-y-1 before:-left-[11.5px] before:w-0.5 before:rounded-full data-[active=true]:before:bg-solar"
-                              >
-                                <Link to={item.to}>
-                                  <span>{item.label}</span>
-                                </Link>
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                          ))}
-                        </SidebarMenuSub>
-                      </CollapsibleContent>
-                    </SidebarMenuItem>
-                  </Collapsible>
+                  />
                 ))}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
         ))}
-
-        <SidebarGroup className={COLLAPSING_GROUP}>
-          <SidebarGroupLabel>Guides</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {[
-                ["/guides", "Which card"],
-                ["/guides/solar-battery-power-flow", "Solar and battery"],
-                ["/guides/energy-distribution-card-alternative", "Distribution alternative"],
-                ["/guides/power-flow-card-plus-vs-power-flow-card", "Vs original"],
-                ["/guides/power-flow-card-plus-vs-sunsynk", "Vs Sunsynk"],
-                ["/guides/power-flow-card-plus-vs-tesla-style", "Vs Tesla Style"],
-              ].map(([to, label]) => (
-                <SidebarMenuItem key={to}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={pathname === to}
-                    tooltip={label}
-                    className="[&>svg]:text-muted-foreground"
-                  >
-                    <Link to={to}>
-                      <Scale />
-                      <span>{label}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
 
         <SidebarGroup className={COLLAPSING_GROUP}>
           <SidebarGroupLabel>Project</SidebarGroupLabel>
