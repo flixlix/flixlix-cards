@@ -37,7 +37,6 @@ import { CategorySection } from "./category-section";
 import {
   Callout,
   CodeBlock,
-  DashboardShot,
   NextPageNav,
   type OptionRow,
   PageHeader,
@@ -155,7 +154,6 @@ export function OverviewPage({ cardKey }: { cardKey: CardKey }) {
         badges={[{ label: "HACS Default" }, { label: "YAML & UI editor" }, { label: v.unitKilo }]}
       />
 
-      <DashboardShot image={v.key === "power" ? "power" : "energy"} />
       <CardDemo demo={v.demo} className="mx-auto w-fit max-w-full rounded-2xl" />
       <p className="text-muted-foreground mt-2 text-center text-sm">
         The real card, live.{" "}

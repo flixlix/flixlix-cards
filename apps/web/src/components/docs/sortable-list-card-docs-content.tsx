@@ -12,7 +12,6 @@ import { CategorySection } from "./category-section";
 import {
   Callout,
   CodeBlock,
-  DashboardShot,
   NextPageNav,
   type OptionRow,
   PageHeader,
@@ -56,8 +55,6 @@ export function OverviewPage() {
         description="A generic drag-and-drop reorderable list for Home Assistant. Drag rows (or use the arrows) to reorder, and the new order is saved by calling any service you configure."
         badges={[{ label: "HACS custom" }, { label: "YAML & UI editor" }, { label: "Any service" }]}
       />
-
-      <DashboardShot image="sortable" />
 
       <Prose className="mt-4">
         <p>

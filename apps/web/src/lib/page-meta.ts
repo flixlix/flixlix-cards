@@ -159,7 +159,6 @@ const PAGE_META: Record<string, PageMeta> = {
         "Try Home Flow Card live: an isometric house power card for Home Assistant. Move solar, battery and grid, or open a grid outage. Nothing to install.",
     },
     {
-      h1: "Home Flow Card, an isometric house power card for Home Assistant",
       title: withSite("Home Flow Card: isometric house for Home Assistant"),
     }
   ),

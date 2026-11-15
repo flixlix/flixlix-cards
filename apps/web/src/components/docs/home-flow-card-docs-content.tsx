@@ -32,7 +32,6 @@ import { CategorySection } from "./category-section";
 import {
   Callout,
   CodeBlock,
-  DashboardShot,
   NextPageNav,
   type OptionRow,
   PageHeader,
@@ -141,11 +140,10 @@ export function OverviewPage() {
       <PageHeader
         eyebrow="Home Assistant"
         title={heading(BASE_PATH)}
-        description="An isometric house power card for Home Assistant. Solar sits on the roof, the battery on the wall and the grid runs off to the street. One look tells you where your power comes from and where it goes."
+        description="Your live power on a little house: solar on the roof, a battery on the wall and the grid running off to the street."
         badges={[{ label: "HACS Default" }, { label: "YAML & UI editor" }, { label: "Power" }]}
       />
 
-      <DashboardShot image="house" />
       <CardDemo demo="house" className="mx-auto w-fit max-w-full rounded-2xl" />
       <p className="text-muted-foreground mt-2 text-center text-sm">
         Not a screenshot: the real card, running right here.
@@ -162,26 +160,6 @@ export function OverviewPage() {
           </Link>
         </Button>
       </div>
-
-      <Section id="isometric-house" title="An isometric house power card">
-        <Prose>
-          <p>
-            Home Flow Card is the isometric house in this set of Lovelace cards. Solar is drawn on
-            the roof, the battery on the wall and the grid cable out toward the street, and a pulse
-            runs along each wire in the direction of the power. An optional electric car parks in
-            front, an optional heat pump hangs on the wall, and a generator can take the grid&apos;s
-            place during an outage. Only the parts you configure are drawn.
-          </p>
-          <p>
-            It reads the same live power sensors as{" "}
-            <Link to="/power-flow-card-plus">Power Flow Card Plus</Link>. Individual devices are not
-            drawn on the house; that card draws them as extra circles. Set <code>mode: energy</code>{" "}
-            when the house should show energy for the dashboard&apos;s selected period instead of
-            live watts. The first config is on{" "}
-            <Link to="/guides/solar-battery-power-flow">solar and battery power flow</Link>.
-          </p>
-        </Prose>
-      </Section>
 
       <Section title="Why a house?">
         <div className="grid gap-3 md:grid-cols-2">

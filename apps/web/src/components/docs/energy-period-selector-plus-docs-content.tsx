@@ -14,7 +14,6 @@ import { CategorySection } from "./category-section";
 import {
   Callout,
   CodeBlock,
-  DashboardShot,
   NextPageNav,
   type OptionRow,
   PageHeader,
@@ -59,7 +58,6 @@ export function OverviewPage() {
         badges={[{ label: "HACS custom" }, { label: "YAML & UI editor" }, { label: "Energy" }]}
       />
 
-      <DashboardShot image="period" />
       <CardDemo demo="period" className="mx-auto w-fit max-w-full rounded-2xl" />
       <p className="text-muted-foreground mt-2 mb-8 text-center text-sm">
         The real card, live, driving an Energy Flow Card Plus below it.{" "}

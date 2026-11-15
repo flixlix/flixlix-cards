@@ -24,7 +24,6 @@ import { CategorySection } from "./category-section";
 import {
   Callout,
   CodeBlock,
-  DashboardShot,
   NextPageNav,
   type OptionRow,
   PageHeader,
@@ -69,7 +68,6 @@ export function OverviewPage() {
         badges={[{ label: "HACS custom" }, { label: "YAML & UI editor" }, { label: "Donut + bar" }]}
       />
 
-      <DashboardShot image="breakdown" />
       <CardDemo demo="breakdown" className="mx-auto w-fit max-w-full rounded-2xl" />
       <p className="text-muted-foreground mt-2 text-center text-sm">
         The real card, live, under Energy Period Selector Plus: pick a period to see it change.
