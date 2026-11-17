@@ -343,7 +343,9 @@ const hitsAt = (root: ShadowRoot, label: HTMLElement, x: number, y: number) =>
     }
     const drawn = ["polygon", "path"].includes(element.tagName.toLowerCase());
     const ground = element.getAttribute("filter") ?? element.closest(".leader");
-    return drawn && !ground ? [element.closest("g[class]")?.getAttribute("class") ?? element.tagName] : [];
+    return drawn && !ground
+      ? [element.closest("g[class]")?.getAttribute("class") ?? element.tagName]
+      : [];
   });
 
 /** Whether any part of the drawing other than the ground lies under the label. */
