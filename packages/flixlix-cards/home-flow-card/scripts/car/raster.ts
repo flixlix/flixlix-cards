@@ -1,10 +1,10 @@
-import { carToHouse, carTriangles } from "./car-shape";
-import { project, type ScreenPoint } from "./scene";
+import { carToHouse, carTriangles } from "./shape.ts";
+import { project, type ScreenPoint } from "../../src/geometry.ts";
 
 /**
  * Samples the car's body like a tiny 3D renderer: for every sample, the nearest surface's
- * position and normal in car space. An SVG of the same body would need thousands of sorted
- * polygons and still show seams between them.
+ * position and normal in car space. The card draws outlines traced from these samples: the
+ * body's own triangles as SVG would need thousands of sorted polygons and still show seams.
  */
 
 /** Per sample: whether the body covers it, its depth, and position and normal in car space. */
