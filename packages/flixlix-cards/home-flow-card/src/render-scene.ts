@@ -8,7 +8,8 @@ import {
   mdiBatteryOutline,
 } from "@mdi/js";
 import { nothing, svg } from "lit";
-import { CAR_BOX, CAR_PATHS, CAR_SHADOW } from "./car-paths";
+import { outlinePath } from "./car-outline";
+import { CAR_BOX, CAR_OUTLINES, CAR_SHADOW } from "./car-paths";
 import { type Extent } from "./extent";
 import { wiresSvg } from "./render-wires";
 import {
@@ -37,6 +38,21 @@ const BATTERY_ICONS: Record<string, string> = {
   "mdi:battery-outline": mdiBatteryOutline,
 };
 
+type Tone = readonly [share: number, path: string];
+const tonePaths = (tones: readonly Tone[]): Tone[] =>
+  tones.map(([share, outlines]) => [share, outlinePath(outlines)]);
+
+/** The car's outlines as SVG path data, from the corner of its box. */
+const CAR_PATHS = {
+  body: outlinePath(CAR_OUTLINES.body),
+  bodyTones: tonePaths(CAR_OUTLINES.bodyTones),
+  shine: outlinePath(CAR_OUTLINES.shine),
+  glass: outlinePath(CAR_OUTLINES.glass),
+  glassTones: tonePaths(CAR_OUTLINES.glassTones),
+  rail: outlinePath(CAR_OUTLINES.rail),
+  tyres: outlinePath(CAR_OUTLINES.tyres),
+};
+
 /** Fills that are gradients defined in the scene's <defs>; every other fill is a colour token. */
 const GRADIENT_FILLS = ["wall", "gable", "panel", "box-front"];
 const fillOf = (name: string) =>
@@ -57,7 +73,7 @@ const DEFS = svg`<defs>
   </radialGradient>
   <filter id="house-blur" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="8"></feGaussianBlur></filter>
   <filter id="house-car-blur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5"></feGaussianBlur></filter>
-  <filter id="house-car-soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="0.28"></feGaussianBlur></filter>
+  <filter id="house-car-soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="0.36"></feGaussianBlur></filter>
   <filter id="house-car-glass-soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="1.2"></feGaussianBlur></filter>
   <clipPath id="house-car-body"><path d=${CAR_PATHS.body}></path></clipPath>
   <clipPath id="house-car-glass"><path d=${CAR_PATHS.glass}></path></clipPath>
@@ -97,7 +113,7 @@ export const includeCar = (extent: Extent) => {
 };
 
 /** The car in front of the house: its box is held in the extent before its image is drawn. */
-const tones = (list: (typeof CAR_PATHS)["bodyTones"], colour: string) =>
+const tones = (list: readonly Tone[], colour: string) =>
   list.map(
     ([share, d]) =>
       svg`<path d=${d} style="fill: color-mix(in srgb, var(--house-car-${colour}) ${share * 100}%, var(--house-car-${colour}-shade))"></path>`
@@ -112,7 +128,7 @@ const IDLE_FADE = 0.55;
  * is faded towards the ground, without its highlight.
  */
 const carSvg = (car: "active" | "idle") =>
-  svg`<g class="node car ${car}">
+  svg`<g class="node car ${car}" transform="translate(${CAR_BOX.x} ${CAR_BOX.y})">
     <path d=${CAR_PATHS.body} fill="var(--house-car-body-shade)"></path>
     <g clip-path="url(#house-car-body)"><g filter="url(#house-car-soft)" fill="var(--house-car-body)">${tones(CAR_PATHS.bodyTones, "body")}</g></g>
     ${car === "idle" ? nothing : svg`<path d=${CAR_PATHS.shine} fill="var(--house-car-shine)"></path>`}

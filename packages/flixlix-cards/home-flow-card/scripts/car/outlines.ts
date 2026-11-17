@@ -125,28 +125,3 @@ export const simplified = (loop: readonly GridPoint[], tolerance: Tolerance): Gr
     ...fewest([...loop.slice(far), first], tolerance).slice(0, -1),
   ];
 };
-
-const tenths = (value: number) => Math.round(value * 10);
-const text = (inTenths: number) => String(inTenths / 10).replace(/^(-?)0\./, "$1.");
-
-/** Closed outlines as SVG path data: to a tenth of a unit, each point relative to the last. */
-export const pathData = (loops: readonly (readonly GridPoint[])[]): string =>
-  loops
-    .map((loop) => {
-      const points = loop
-        .map(([x, y]) => [tenths(x), tenths(y)] as const)
-        .filter(([x, y], i, all) => {
-          const before = all[(i + all.length - 1) % all.length];
-          return !before || before[0] !== x || before[1] !== y;
-        });
-      return points.length < 3
-        ? ""
-        : `${points
-            .map(([x, y], i) => {
-              const [beforeX, beforeY] = points[i - 1] ?? [0, 0];
-              const [dx, dy] = [text(x - beforeX), text(y - beforeY)];
-              return i === 0 ? `M${dx} ${dy}` : `l${dx}${dy.startsWith("-") ? "" : " "}${dy}`;
-            })
-            .join("")}z`;
-    })
-    .join("");

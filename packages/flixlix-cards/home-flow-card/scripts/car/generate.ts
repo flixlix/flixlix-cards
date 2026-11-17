@@ -11,11 +11,11 @@ import {
   type Field,
   type GridPoint,
   outlines,
-  pathData,
   simplified,
   smoothed,
   type Tolerance,
 } from "./outlines.ts";
+import { type Outline, packOutlines } from "../../src/car-outline.ts";
 import { carScreenBox, type SampleGrid } from "./raster.ts";
 import { BODY, carSurface } from "./shading.ts";
 import { CAR_LABEL_AT, CAR_SHADOW } from "./shape.ts";
@@ -25,18 +25,18 @@ const OUTPUT = fileURLToPath(new URL("../../src/car-paths.ts", import.meta.url))
 /** Samples per screen unit. */
 const PER_UNIT = 24;
 /** How far a crisp outline may stray, in screen units. */
-const EDGE_TOLERANCE = 0.06;
+const EDGE_TOLERANCE = 0.08;
 /**
  * A tone's outline matters where the light changes quickly, at a crease. Across a slow gradient
  * it may stray as far as changes the light by LIGHT_TOLERANCE, within these screen units.
  */
-const LIGHT_TOLERANCE = 0.02;
-const TONE_TOLERANCE = { least: 0.08, most: 0.6 };
+const LIGHT_TOLERANCE = 0.04;
+const TONE_TOLERANCE = { least: 0.12, most: 1 };
 /**
  * Enough tones of paint that a dark theme, where the lit and the shaded paint lie furthest
  * apart, shows no steps between them.
  */
-const BODY_TONES = Array.from({ length: 24 }, (_, i) => (i + 1) / 25);
+const BODY_TONES = Array.from({ length: 16 }, (_, i) => (i + 1) / 17);
 /** The glass has no creases: a few tones, softened into one another by the card. */
 const GLASS_TONES = [0.25, 0.5, 0.75];
 const GLASS_TOLERANCE = 0.3;
@@ -101,13 +101,23 @@ const toneTolerance =
     );
   };
 
-const toScreen = ([x, y]: GridPoint): GridPoint => [grid.x + x / PER_UNIT, grid.y + y / PER_UNIT];
+const tenths = (cells: number) => Math.round((cells / PER_UNIT) * 10);
+
+/** A traced outline in tenths of a screen unit from the car's box, without points that repeat. */
+const inTenths = (loop: readonly GridPoint[]): Outline =>
+  loop
+    .map(([x, y]) => [tenths(x), tenths(y)] as const)
+    .filter(([x, y], i, all) => {
+      const before = all[(i + all.length - 1) % all.length];
+      return !before || before[0] !== x || before[1] !== y;
+    });
 
 const trace = (field: Field, tolerance: Tolerance, smallest: number): string =>
-  pathData(
+  packOutlines(
     outlines(field, width, height)
       .filter((loop) => areaOf(loop) / PER_UNIT ** 2 > smallest)
-      .map((loop) => simplified(smoothed(loop), tolerance).map(toScreen))
+      .map((loop) => inTenths(simplified(smoothed(loop), tolerance)))
+      .filter((outline) => outline.length > 2)
   );
 
 const edge: Tolerance = () => EDGE_TOLERANCE * PER_UNIT;
@@ -190,10 +200,10 @@ export const CAR_LABEL_AT: readonly [number, number, number] = ${JSON.stringify(
   )};
 
 /** The share of a surface's lit colour over its shaded one, and the outline of everything lit at least that much. */
-type Tone = readonly [share: number, path: string];
+type Tone = readonly [share: number, outlines: string];
 
-/** The car's outlines, back to front. */
-export const CAR_PATHS: {
+/** The car's outlines, back to front and packed: see car-outline.ts. */
+export const CAR_OUTLINES: {
   body: string;
   bodyTones: readonly Tone[];
   shine: string;
