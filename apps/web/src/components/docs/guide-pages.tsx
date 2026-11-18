@@ -13,6 +13,7 @@ import {
 import { heading } from "@/lib/page-meta";
 import { sensor, type StateFixtures } from "@flixlix-cards/shared/preview/fake-hass";
 
+import { ConfigMigrator } from "./config-migrator";
 import { PageHeader, Prose, Section } from "./doc-primitives";
 import {
   type CardChoice,
@@ -626,10 +627,28 @@ export function VersusOriginalGuide() {
           <p>
             A config from the original card does not paste across. The original puts a sensor id
             directly on <code>entities.grid</code> and uses <code>battery_charge</code>. Plus nests
-            the sensor under <code>entity</code> and uses <code>state_of_charge</code>. The{" "}
-            <Link to="/power-flow-card-plus/examples">examples</Link> are the starting point, and{" "}
+            the sensor under <code>entity</code> and uses <code>state_of_charge</code>, and{" "}
             <code>invert_state: true</code> on an entity replaces the old inverted-entities list
             when a sensor's sign is backwards.
+          </p>
+          <p>
+            Paste your config below to get it converted. A stack, a view or a whole dashboard works
+            too: every <code>custom:power-flow-card</code> in it is rewritten and the rest is left
+            alone. Nothing leaves your browser.
+          </p>
+        </Prose>
+        <ConfigMigrator />
+        <Prose>
+          <p>
+            The converter also renames <code>w_decimals</code>, <code>kw_decimals</code> and{" "}
+            <code>watt_threshold</code> to <code>base_decimals</code>, <code>kilo_decimals</code>{" "}
+            and <code>kilo_threshold</code>. Gas and water have no circle of their own in Plus, so
+            it leaves them out and says so. The{" "}
+            <Link to="/power-flow-card-plus/configuration" hash="auxiliary">
+              auxiliary circle
+            </Link>{" "}
+            can show one of them, and the <Link to="/power-flow-card-plus/examples">examples</Link>{" "}
+            show what else Plus can do with the same sensors.
           </p>
           <p>
             <Link to="/home-flow-card">Home Flow Card</Link> draws those same live sensors as an
