@@ -20,8 +20,10 @@
     "@flixlix-cards/ui": "0.0.1"
   },
   "changesets": [
+    "car-drawn-as-outlines",
     "classic-dots-on-mali",
     "conditions-home-assistant-2026-10",
+    "docs-guides-live-demos",
     "docs-landing-faq",
     "docs-og-images",
     "docs-open-with-agent",
