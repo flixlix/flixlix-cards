@@ -188,20 +188,14 @@ export function CardPicker({ choices }: { choices: readonly CardChoice[] }) {
   }
   return (
     <figure data-llms-skip className="bg-card mb-10 max-w-4xl overflow-hidden rounded-2xl border">
-      <fieldset className="flex flex-wrap gap-2 border-b p-4">
-        <legend className="sr-only">What do you want to see?</legend>
-        {choices.map((entry) => (
-          <Button
-            key={entry.value}
-            size="sm"
-            variant={entry.value === choice.value ? "secondary" : "outline"}
-            aria-pressed={entry.value === choice.value}
-            onClick={() => setSelected(entry.value)}
-          >
-            {entry.label}
-          </Button>
-        ))}
-      </fieldset>
+      <div className="overflow-x-auto border-b p-4 [scrollbar-width:none]">
+        <SegmentedControl
+          legend="What do you want to see?"
+          options={choices}
+          value={choice.value}
+          onChange={setSelected}
+        />
+      </div>
       <div className="grid grid-cols-1 items-center gap-6 p-4 md:min-h-[30rem] md:grid-cols-[minmax(0,1fr)_auto] md:p-6">
         <figcaption
           key={`${choice.value}-text`}
