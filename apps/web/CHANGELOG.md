@@ -1,5 +1,11 @@
 # @flixlix-cards/web
 
+## 1.2.1-beta.3
+
+### Patch Changes
+
+- **Docs:** The guides show live cards instead of only text: a card picker, sensor moments you can switch, an `invert_state` toggle, side-by-side configs and comparison tables. ([#540](https://github.com/flixlix/flixlix-cards/pull/540))
+
 ## 1.2.1-beta.2
 
 ### Patch Changes
