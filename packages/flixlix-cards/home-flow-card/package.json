@@ -37,6 +37,7 @@
     "start": "vp build --watch",
     "dev": "vp build --watch",
     "typecheck": "tsc --noEmit",
+    "generate:car": "vpx scripts/car/generate.ts && vp fmt src/car-paths.ts",
     "test": "vp test run --coverage && vp test run --config vitest.browser.config.ts --project dom",
     "test:visual": "vp test run --config vitest.browser.config.ts --project visual",
     "test:watch": "vp test"

@@ -1,5 +1,5 @@
 import { type HouseNode } from "@flixlix-cards/shared/card-state";
-import { CAR_LABEL_AT } from "./car-shape";
+import { CAR_LABEL_AT } from "./car-paths";
 import { type Point, project } from "./geometry";
 import {
   FRONT,

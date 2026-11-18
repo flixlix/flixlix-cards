@@ -24,7 +24,6 @@ import { customElement, property, state } from "lit/decorators.js";
 import NumberFlow, { canAnimate } from "number-flow";
 import { version } from "../package.json";
 import { HomeFlowCardEditor } from "./ui-editor/ui-editor";
-import { carImage, type CarImage, carResolution, readCarPalette } from "./car-image";
 import {
   isDarkMode,
   isEnergy,
@@ -88,8 +87,6 @@ export class HomeFlowCard extends LitElement {
   private _cardState?: CardState;
   /** Reads the fixtures' entities as the nodes' are read: in W, or in Wh over the period. */
   private _read: EntityReader = () => null;
-  /** The car, drawn for the current theme and size. */
-  private _carImage: CarImage | null = null;
   private _carStatus: CarStatus = "hidden";
   private _appliedCardState?: CardState;
   private readonly _pulseDurations = new WeakMap<Element, number>();
@@ -184,7 +181,7 @@ export class HomeFlowCard extends LitElement {
       pageHidden: this._pageHidden,
     });
     this.toggleAttribute("dark", isDarkMode(this.hass));
-    this._drawCar();
+    this._carStatus = this._carStatusNow();
   }
 
   private _reader(): EntityReader {
@@ -203,19 +200,10 @@ export class HomeFlowCard extends LitElement {
       : powerReadings(this.hass, this._config);
   }
 
-  /** Draws the car again only when its state, the theme's colours or the card's size change. */
-  private _drawCar() {
+  private _carStatusNow(): CarStatus {
     const car = this._config.car;
     const family = isEnergy(this._config) ? "energy" : "power";
-    const context = this._conditions.context;
-    this._carStatus = car ? carStatus(this.hass, car, this._read, family, context) : "hidden";
-    const palette =
-      this._carStatus !== "hidden" && this.shadowRoot
-        ? readCarPalette(this.shadowRoot, this._carStatus === "idle")
-        : undefined;
-    this._carImage = palette
-      ? (carImage(palette, carResolution(this._width.width), this._carImage ?? undefined) ?? null)
-      : null;
+    return car ? carStatus(this.hass, car, this._read, family, this._conditions.context) : "hidden";
   }
 
   protected render(): TemplateResult | typeof nothing {
@@ -251,7 +239,7 @@ export class HomeFlowCard extends LitElement {
       this._config,
       cardState,
       this.hass,
-      carScene(this.hass, this._config.car, this._carStatus, this._carImage, this._read),
+      carScene(this.hass, this._config.car, this._carStatus, this._read),
       this._read,
       frame
     );
@@ -277,7 +265,6 @@ export class HomeFlowCard extends LitElement {
           templates: this._templates.templates(live),
           width: this._width.width,
           pageHidden: this._pageHidden,
-          carImage: this._carImage,
           conditionContext: this._conditions.context,
         })
       : undefined;

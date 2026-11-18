@@ -10,7 +10,6 @@ import {
 } from "@flixlix-cards/shared/card-state";
 import { getEntityState } from "@flixlix-cards/shared/states/utils/get-entity-state";
 import { type HomeAssistant } from "custom-card-helpers";
-import { type CarImage } from "./car-image";
 import { type CarConfig } from "./labels";
 import { type FlowConfig, type HouseCar } from "./types";
 
@@ -69,8 +68,8 @@ export type CarScene = {
   /** Its power or energy, for its wire: only while it is active. */
   reading: CarReading | undefined;
   label: CarConfig;
-  /** Undefined: nothing drawn. Null: not drawn for the theme yet. */
-  image: CarImage | null | undefined;
+  /** How it is drawn: undefined while it is away. */
+  look: "active" | "idle" | undefined;
   /** A configured car keeps its room in the card, even while hidden. */
   reserve: boolean;
 };
@@ -79,16 +78,15 @@ export const carScene = (
   hass: HomeAssistant,
   car: HouseCar | undefined,
   status: CarStatus,
-  image: CarImage | null,
   read: EntityReader
 ): CarScene => {
   if (!car || status === "hidden") {
-    return { reading: undefined, label: undefined, image: undefined, reserve: Boolean(car) };
+    return { reading: undefined, label: undefined, look: undefined, reserve: Boolean(car) };
   }
   return {
     reading: status === "active" ? { power: read(car.entity) } : undefined,
     label: { ...car, charge: carCharge(hass, car), idle: status === "idle" },
-    image,
+    look: status,
     reserve: true,
   };
 };

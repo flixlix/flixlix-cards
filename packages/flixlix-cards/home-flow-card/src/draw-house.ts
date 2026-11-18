@@ -94,7 +94,7 @@ export const drawHouse = (
     wires,
     severity: batteryOptions(config).severity,
     reserveGenerator,
-    car: car.image,
+    car: car.look,
     layout,
   });
   scene.include(extent);

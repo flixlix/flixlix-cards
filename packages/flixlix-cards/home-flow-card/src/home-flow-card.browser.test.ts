@@ -182,7 +182,7 @@ describe("a car", () => {
   test("is drawn in front of the house, wired to the home's outlet", async () => {
     const { root } = await mountHouse(car, carCharging);
 
-    expect(root.querySelector("image.car")?.getAttribute("href")).toMatch(/^data:image\/png/);
+    expect(root.querySelector(".node.car")?.getBoundingClientRect().width).toBeGreaterThan(40);
     expect(root.querySelector(".power.car .pulse")).not.toBeNull();
   });
 
@@ -193,15 +193,16 @@ describe("a car", () => {
     expect(feeding).not.toBe(charging);
   });
 
-  test("is drawn again for a dark theme", async () => {
+  test("takes a dark theme's colours", async () => {
     const { root, card, setHass } = await mountHouse(car, carCharging);
-    const light = root.querySelector("image.car")?.getAttribute("href");
+    const paint = () => getComputedStyle(root.querySelector(".node.car path") ?? card).fill;
+    const light = paint();
 
     const hass = fakeHass({ states: carCharging });
     await setHass({ ...hass, themes: Object.assign({}, hass.themes, { darkMode: true }) });
 
     expect(card.hasAttribute("dark")).toBe(true);
-    expect(root.querySelector("image.car")?.getAttribute("href")).not.toBe(light);
+    expect(paint()).not.toBe(light);
   });
 
   test("away, it is hidden but keeps its room, so the house does not move", async () => {
@@ -215,7 +216,7 @@ describe("a car", () => {
     const viewBox = atHome.root.querySelector("svg")?.getAttribute("viewBox");
     const { root } = await mountHouse(away, { ...carCharging, "device_tracker.car": "not_home" });
 
-    expect(root.querySelector("image.car")).toBeNull();
+    expect(root.querySelector(".node.car")).toBeNull();
     expect(root.querySelector(".label.car")).toBeNull();
     expect(root.querySelector(".track.car")).toBeNull();
     expect(root.querySelector("svg")?.getAttribute("viewBox")).toBe(viewBox);
@@ -229,10 +230,10 @@ describe("a car", () => {
       },
     };
     const active = await mountHouse(unplugged, { ...carCharging, "binary_sensor.cable": "on" });
-    const activeImage = active.root.querySelector("image.car")?.getAttribute("href");
     const { root } = await mountHouse(unplugged, { ...carCharging, "binary_sensor.cable": "off" });
 
-    expect(root.querySelector("image.car")?.getAttribute("href")).not.toBe(activeImage);
+    expect(active.root.querySelector(".node.car.idle")).toBeNull();
+    expect(root.querySelector(".node.car.idle")).not.toBeNull();
     expect(root.querySelector(".track.car")).toBeNull();
     expect(reading(root, "car")).toBe("64 %");
     expect(labelOf(root, "car").querySelector(".status")).toBeNull();
@@ -251,7 +252,7 @@ describe("a car", () => {
       { ...carCharging, "sensor.car_power": "0" }
     );
 
-    expect(root.querySelector("image.car")).not.toBeNull();
+    expect(root.querySelector(".node.car")).not.toBeNull();
     expect(root.querySelector(".label.car")).toBeNull();
     expect(root.querySelectorAll(".leader")).toHaveLength(root.querySelectorAll(".label").length);
   });
@@ -281,7 +282,7 @@ describe("a car", () => {
   test("is not drawn without one", async () => {
     const { root } = await mountHouse({}, carCharging);
 
-    expect(root.querySelector("image.car")).toBeNull();
+    expect(root.querySelector(".node.car")).toBeNull();
     expect(root.querySelector(".label.car")).toBeNull();
   });
 });
@@ -340,9 +341,11 @@ const hitsAt = (root: ShadowRoot, label: HTMLElement, x: number, y: number) =>
     if (other) {
       return other === label ? [] : [`label ${other.className}`];
     }
-    const drawn = ["polygon", "path", "image"].includes(element.tagName.toLowerCase());
+    const drawn = ["polygon", "path"].includes(element.tagName.toLowerCase());
     const ground = element.getAttribute("filter") ?? element.closest(".leader");
-    return drawn && !ground ? [element.closest("g")?.getAttribute("class") ?? element.tagName] : [];
+    return drawn && !ground
+      ? [element.closest("g[class]")?.getAttribute("class") ?? element.tagName]
+      : [];
   });
 
 /** Whether any part of the drawing other than the ground lies under the label. */

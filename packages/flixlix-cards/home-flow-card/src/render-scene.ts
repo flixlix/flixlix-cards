@@ -8,9 +8,8 @@ import {
   mdiBatteryOutline,
 } from "@mdi/js";
 import { nothing, svg } from "lit";
-import { type CarImage } from "./car-image";
-import { carScreenBox } from "./car-raster";
-import { CAR_SHADOW } from "./car-shape";
+import { outlinePath } from "./car-outline";
+import { CAR_BOX, CAR_OUTLINES, CAR_SHADOW } from "./car-paths";
 import { type Extent } from "./extent";
 import { wiresSvg } from "./render-wires";
 import {
@@ -39,6 +38,21 @@ const BATTERY_ICONS: Record<string, string> = {
   "mdi:battery-outline": mdiBatteryOutline,
 };
 
+type Tone = readonly [share: number, path: string];
+const tonePaths = (tones: readonly Tone[]): Tone[] =>
+  tones.map(([share, outlines]) => [share, outlinePath(outlines)]);
+
+/** The car's outlines as SVG path data, from the corner of its box. */
+const CAR_PATHS = {
+  body: outlinePath(CAR_OUTLINES.body),
+  bodyTones: tonePaths(CAR_OUTLINES.bodyTones),
+  shine: outlinePath(CAR_OUTLINES.shine),
+  glass: outlinePath(CAR_OUTLINES.glass),
+  glassTones: tonePaths(CAR_OUTLINES.glassTones),
+  rail: outlinePath(CAR_OUTLINES.rail),
+  tyres: outlinePath(CAR_OUTLINES.tyres),
+};
+
 /** Fills that are gradients defined in the scene's <defs>; every other fill is a colour token. */
 const GRADIENT_FILLS = ["wall", "gable", "panel", "box-front"];
 const fillOf = (name: string) =>
@@ -59,6 +73,10 @@ const DEFS = svg`<defs>
   </radialGradient>
   <filter id="house-blur" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="8"></feGaussianBlur></filter>
   <filter id="house-car-blur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5"></feGaussianBlur></filter>
+  <filter id="house-car-soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="0.36"></feGaussianBlur></filter>
+  <filter id="house-car-glass-soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="1.2"></feGaussianBlur></filter>
+  <clipPath id="house-car-body"><path d=${CAR_PATHS.body}></path></clipPath>
+  <clipPath id="house-car-glass"><path d=${CAR_PATHS.glass}></path></clipPath>
 </defs>`;
 
 export type SceneInput = {
@@ -70,8 +88,8 @@ export type SceneInput = {
    * does not grow and shrink as the grid goes down and comes back.
    */
   reserveGenerator: boolean;
-  /** A configured car: its image, once drawn for the theme; `null` until then. */
-  car?: CarImage | null;
+  /** A car at home: charging or feeding the home, or parked and faded. */
+  car?: "active" | "idle";
   layout: SceneLayout;
 };
 
@@ -89,16 +107,37 @@ const batteryLook = ({ nodes }: ReadyCardState, severity: ChargeSeverity) => {
 
 /** Room for the car in front of the house, kept while it is away or not yet drawn. */
 export const includeCar = (extent: Extent) => {
-  const box = carScreenBox();
+  const box = CAR_BOX;
   extent.include([box.x, box.y]);
   extent.include([box.x + box.width, box.y + box.height]);
 };
 
 /** The car in front of the house: its box is held in the extent before its image is drawn. */
-const carSvg = (car: CarImage | null) =>
-  car
-    ? svg`<image class="node car" href=${car.href} x=${car.box.x} y=${car.box.y} width=${car.box.width} height=${car.box.height}></image>`
-    : nothing;
+const tones = (list: readonly Tone[], colour: string) =>
+  list.map(
+    ([share, d]) =>
+      svg`<path d=${d} style="fill: color-mix(in srgb, var(--house-car-${colour}) ${share * 100}%, var(--house-car-${colour}-shade))"></path>`
+  );
+
+/** How far an idle car fades towards the ground: there, but quiet. */
+const IDLE_FADE = 0.55;
+
+/**
+ * The car in front of the house: flat outlines, each surface's tones softened into one another
+ * inside its own outline. Without `color-mix` a surface shows its lit colour alone. An idle car
+ * is faded towards the ground, without its highlight.
+ */
+const carSvg = (car: "active" | "idle") =>
+  svg`<g class="node car ${car}" transform="translate(${CAR_BOX.x} ${CAR_BOX.y})">
+    <path d=${CAR_PATHS.body} fill="var(--house-car-body-shade)"></path>
+    <g clip-path="url(#house-car-body)"><g filter="url(#house-car-soft)" fill="var(--house-car-body)">${tones(CAR_PATHS.bodyTones, "body")}</g></g>
+    ${car === "idle" ? nothing : svg`<path d=${CAR_PATHS.shine} fill="var(--house-car-shine)"></path>`}
+    <path d=${CAR_PATHS.glass} fill="var(--house-car-glass-shade)"></path>
+    <g clip-path="url(#house-car-glass)"><g filter="url(#house-car-glass-soft)" fill="var(--house-car-glass)">${tones(CAR_PATHS.glassTones, "glass")}</g></g>
+    <path d=${CAR_PATHS.rail} fill="var(--house-car-rail)"></path>
+    <path d=${CAR_PATHS.tyres} fill="var(--house-car-tyre)"></path>
+    ${car === "idle" ? svg`<path d=${CAR_PATHS.body + CAR_PATHS.tyres} fill="var(--house-car-ground)" opacity=${IDLE_FADE}></path>` : nothing}
+  </g>`;
 
 /** Every face of a group, in screen space, into the extent. */
 const includeFaces = (extent: Extent, group: SceneGroup) =>
