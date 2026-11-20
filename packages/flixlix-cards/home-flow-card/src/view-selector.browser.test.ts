@@ -151,6 +151,23 @@ describe("view selector", () => {
     expect(reading(root, "solar")).toBe("5 kWh");
   });
 
+  test("default_view picks the view the card opens on", async () => {
+    const { root } = await mount({ views: ["today", "live"], default_view: "today" });
+
+    expect(selected(root)).toBe("Today");
+    expect(reading(root, "solar")).toBe("3 kWh");
+  });
+
+  test("a default_view outside views is a config error", () => {
+    const config = {
+      type: "custom:home-flow-card",
+      ...card,
+      views: ["live", "today"],
+      default_view: "week",
+    } as HomeFlowCardConfig;
+    expect(() => new HomeFlowCard().setConfig(config)).toThrow("default_view takes one of views");
+  });
+
   test("an empty views list leaves the plain live card", async () => {
     const { root } = await mount({ views: [] });
 

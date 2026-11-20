@@ -8,6 +8,7 @@ import { defaultValues } from "@flixlix-cards/shared/utils/get-default-config";
 import {
   DEFAULT_STATE_OF_CHARGE_SEVERITY,
   HEAT_PUMP_STATUSES,
+  type HomeFlowCardConfig,
   type HomeFlowMode,
   MODES,
   STATE_OF_CHARGE_POSITIONS,
@@ -184,13 +185,13 @@ const modeField = {
 } as const;
 
 /** The title and what the sensors measure; the date picker to follow only for energy. */
-export const generalSchema = (mode: HomeFlowMode | undefined) =>
+export const generalSchema = ({ mode, views }: Pick<HomeFlowCardConfig, "mode" | "views">) =>
   [
     { name: "title", selector: { text: {} } },
     modeField,
     ...(mode === "energy"
       ? [{ name: "collection_key", selector: { text: {} } }]
-      : [energyEntities]),
+      : [energyEntities(views)]),
   ] as const;
 
 /** Only energy mode has a grid or battery with a value each way. */
