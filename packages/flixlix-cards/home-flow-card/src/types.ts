@@ -131,6 +131,8 @@ type CardOptions = CardKeys<PowerFlowCardPlusConfig> & {
   mode?: HomeFlowMode;
   energy_entities?: HomeFlowEnergyEntities;
   views?: HomeFlowView[];
+  /** The view the card opens on, one of `views`. Defaults to the first of them. */
+  default_view?: HomeFlowView;
   /**
    * With `mode: energy`, the energy date picker to follow, as in Energy Flow Card Plus; without,
    * the dashboard's own.
@@ -218,7 +220,12 @@ export const toFlowConfig = (config: HomeFlowCardConfig): FlowConfig => {
 };
 
 const overPeriod = (config: HomeFlowCardConfig, energy: HomeFlowEnergyEntities) => {
-  const { energy_entities: _energy, views: _views, ...options } = config;
+  const {
+    energy_entities: _energy,
+    views: _views,
+    default_view: _defaultView,
+    ...options
+  } = config;
   const { grid, solar, battery, home, generator, car, heat_pump: heatPump } = energy;
   return toFlowConfig({
     ...options,
@@ -240,6 +247,7 @@ export type HomeFlowViews = {
   live: FlowConfig;
   period: FlowConfig;
   views: readonly HomeFlowView[];
+  initial: HomeFlowView;
 };
 
 const isSet = (entity: NodeEntity | undefined) =>
@@ -263,8 +271,8 @@ const selectorViews = (views: unknown[] | undefined): readonly HomeFlowView[] =>
 };
 
 export const toFlowViews = (config: HomeFlowCardConfig): HomeFlowViews | null => {
-  if (config.mode === "energy" && (config.energy_entities || config.views)) {
-    throw new Error("energy_entities and views only work with mode: power");
+  if (config.mode === "energy" && (config.energy_entities || config.views || config.default_view)) {
+    throw new Error("energy_entities, views and default_view only work with mode: power");
   }
   const energy = setEnergyEntities(config.energy_entities);
   if (!energy) {
@@ -274,11 +282,16 @@ export const toFlowViews = (config: HomeFlowCardConfig): HomeFlowViews | null =>
   if (views.every((view) => view === "live")) {
     return null;
   }
-  const { energy_entities: _energy, views: _views, ...live } = config;
+  const initial = config.default_view ?? views[0] ?? "live";
+  if (!views.includes(initial)) {
+    throw new Error(`default_view takes one of views: ${views.join(", ")}`);
+  }
+  const { energy_entities: _energy, views: _views, default_view: _defaultView, ...live } = config;
   return {
     live: toFlowConfig({ ...live, mode: "power" }),
     period: overPeriod(config, energy),
     views,
+    initial,
   };
 };
 

@@ -245,6 +245,17 @@ const CARD_OPTIONS: OptionRow[] = [
     ),
   },
   {
+    name: "default_view",
+    type: "string",
+    default: "first of views",
+    description: (
+      <>
+        The view the card opens on, one of <code>views</code>, for example <code>today</code> with{" "}
+        <code>views: [live, today]</code>.
+      </>
+    ),
+  },
+  {
     name: "grid / solar / battery / home",
     type: "object",
     description: (

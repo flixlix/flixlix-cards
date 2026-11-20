@@ -35,6 +35,7 @@ const topLevel = (schema: unknown): string[] =>
 
 const selectorFields = [
   "views",
+  "default_view",
   "consumption",
   "production",
   "solar",
@@ -98,6 +99,7 @@ describe("editor", () => {
 
     expect(topLevel(isGroup(selector) ? selector.schema : [])).toEqual([
       "views",
+      "default_view",
       "energy_entities",
     ]);
   });
@@ -140,6 +142,26 @@ describe("editor", () => {
       { type: "custom:home-flow-card", views: ["live", "today", "yesterday", "month"] },
       { type: "custom:home-flow-card" },
     ]);
+  });
+
+  test("the view the card opens on is asked only with two or more views", async () => {
+    const { data, fields, change, changes } = await mountEditor({ views: ["live", "today"] });
+
+    expect(data()).toMatchObject({ default_view: "live" });
+
+    change({ type: "custom:home-flow-card", views: ["live", "today"], default_view: "today" });
+    change({ type: "custom:home-flow-card", views: ["today", "live"], default_view: "live" });
+    change({ type: "custom:home-flow-card", views: ["live", "week"], default_view: "today" });
+
+    expect(changes).toEqual([
+      { type: "custom:home-flow-card", default_view: "today" },
+      { type: "custom:home-flow-card" },
+      { type: "custom:home-flow-card", views: ["live", "week"] },
+    ]);
+
+    const single = await mountEditor({ views: ["today"] });
+    expect(single.fields()).not.toContain("default_view");
+    expect(fields()).toContain("default_view");
   });
 
   test("the main page holds the title and a link per node, then advanced", async () => {
