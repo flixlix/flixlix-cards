@@ -38,13 +38,14 @@ cards; a browser in another time zone sees day boundaries shifted.
 
 ## Dashboards
 
-| Dashboard           | What it holds                                                                                                    |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `/power-flow`       | Combined vs split entities, outage with generator, tolerance 10 W, six individuals, plus every knob and scenario |
-| `/energy-flow`      | `energy-date-selection`, energy-flow-card-plus, a breakdown, and HA's own energy distribution for comparison     |
-| `/energy-breakdown` | Energy donut and bar over the selected period, and a live power donut driven by the device sliders               |
-| `/sortable-list`    | A list saved to `input_text.device_priority`, and a plain-key list                                               |
-| `/card-editors`     | Storage dashboard the editor tests overwrite; free to play with                                                  |
+| Dashboard                 | What it holds                                                                                                                            |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `/power-flow`             | Combined vs split entities, outage with generator, tolerance 10 W, six individuals, plus every knob and scenario                         |
+| `/energy-flow`            | `energy-date-selection`, energy-flow-card-plus, a breakdown, and HA's own energy distribution for comparison                             |
+| `/energy-breakdown`       | Energy donut and bar over the selected period, and a live power donut driven by the device sliders                                       |
+| `/sortable-list`          | A list saved to `input_text.device_priority`, and a plain-key list                                                                       |
+| `/card-editors`           | Storage dashboard the editor tests overwrite; free to play with                                                                          |
+| `/period-selector-editor` | Storage dashboard seeded once with Energy Period Selector Plus configs: billing cycles, quarters, rolling windows; try its visual editor |
 
 Config lives in `.hass_dev/`: `configuration.yaml`, `lovelace.yaml` (resources and dashboards),
 `dashboards/*.yaml`, and `packages/` with the entities.

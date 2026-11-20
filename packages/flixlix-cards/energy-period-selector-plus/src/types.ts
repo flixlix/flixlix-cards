@@ -1,7 +1,13 @@
 import { type LovelaceCardConfig } from "custom-card-helpers";
-import { type SelectedPeriod } from "@flixlix-cards/shared/states/utils/selected-period";
+import {
+  type PeriodDefinition,
+  type SelectedPeriod,
+} from "@flixlix-cards/shared/states/utils/selected-period";
 
 export type ButtonStyle = "icon" | "text";
+
+/** A built-in period, or one the user defines, e.g. a billing cycle. */
+export type PeriodButton = SelectedPeriod | PeriodDefinition;
 
 export interface EnergyPeriodSelectorPlusConfig extends LovelaceCardConfig {
   title?: string;
@@ -14,6 +20,6 @@ export interface EnergyPeriodSelectorPlusConfig extends LovelaceCardConfig {
   compare_button_type?: ButtonStyle | "";
   compare_button_label?: string;
   today_button_type?: ButtonStyle | false;
-  period_buttons?: SelectedPeriod[];
+  period_buttons?: PeriodButton[];
   custom_period_label?: string;
 }
