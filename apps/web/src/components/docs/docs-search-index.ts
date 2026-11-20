@@ -877,16 +877,19 @@ function periodConfigOptions(): SearchEntry[] {
       "month",
       "year",
       "custom",
+      "billing",
+      "duration",
+      "starts",
     ]),
     periodOption("custom_period_label", "Label of the custom button.", "buttons"),
     periodOption("prev_next_buttons", "Show the previous and next buttons.", "buttons"),
-    periodOption("today_button_type", "Style of the today button, or hide it.", "buttons"),
-    periodOption("date_picker", "Open HA's calendar from the date in every period.", "buttons", [
+    periodOption("today_button_type", "Today in the period menu, or hide it.", "buttons"),
+    periodOption("date_picker", "HA's calendar button in every period.", "buttons", [
       "calendar",
       "range",
     ]),
-    periodOption("compare_button_type", "Show a compare button.", "compare"),
-    periodOption("compare_button_label", "Label of the text compare button.", "compare"),
+    periodOption("compare_button_type", "Show a compare checkbox in the period menu.", "compare"),
+    periodOption("compare_button_label", "Label of the compare checkbox.", "compare"),
   ];
 }
 
@@ -903,6 +906,11 @@ function periodExamples(): SearchEntry[] {
   return [
     periodExample("minimal", "On a card", "Default buttons on a card background."),
     periodExample("icons", "Icons, compare and custom periods", "Icon buttons and custom ranges."),
+    periodExample(
+      "own-periods",
+      "Billing cycles and your own periods",
+      "Billing cycle, last 30 days."
+    ),
     periodExample("date-picker", "Pick any range from the date", "date_picker in every period."),
     periodExample("with-energy-flow", "With Energy Flow Card Plus", "Drive energy_date_selection."),
   ];

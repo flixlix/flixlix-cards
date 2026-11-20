@@ -4,6 +4,16 @@ import { energyCollection, fakeHass } from "@flixlix-cards/shared/testing/fake-h
 import { mountCard } from "@flixlix-cards/shared/testing/mount-card";
 import { EnergyPeriodSelectorPlus } from "./energy-period-selector-plus";
 
+/** Stands in for HA's `ha-dropdown`: like the real one, only its trigger shows until opened. */
+class FakeDropdown extends HTMLElement {
+  connectedCallback() {
+    this.attachShadow({ mode: "open" }).innerHTML = '<slot name="trigger"></slot>';
+  }
+}
+if (!customElements.get("ha-dropdown")) {
+  customElements.define("ha-dropdown", FakeDropdown);
+}
+
 const mountSelector = (config: object, start: Date, end: Date) =>
   mountCard(
     EnergyPeriodSelectorPlus,

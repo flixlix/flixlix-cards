@@ -215,7 +215,7 @@ const BUTTON_OPTIONS: OptionRow[] = [
     description: (
       <>
         Period buttons and their order. Add <code>custom</code> to pick any range in HA&apos;s
-        calendar.
+        calendar, or <a href="#own-periods">your own periods</a>, like a billing cycle.
       </>
     ),
   },
@@ -241,7 +241,8 @@ const BUTTON_OPTIONS: OptionRow[] = [
     default: "text",
     description: (
       <>
-        Style of the today button; <code>false</code> hides it.
+        Today, in the period menu; <code>false</code> hides it. <code>text</code> and{" "}
+        <code>icon</code> look the same.
       </>
     ),
   },
@@ -251,7 +252,7 @@ const BUTTON_OPTIONS: OptionRow[] = [
     default: "false",
     description: (
       <>
-        Click the date to pick any range in HA&apos;s calendar, in every period (always on for{" "}
+        Show HA&apos;s calendar button next to the period in every period (always on for{" "}
         <code>custom</code>).
       </>
     ),
@@ -262,13 +263,13 @@ const COMPARE_OPTIONS: OptionRow[] = [
   {
     name: "compare_button_type",
     type: "text | icon",
-    description: "Show a button that compares with the previous period.",
+    description: "Show a compare checkbox in the period menu, to compare with the previous period.",
   },
   {
     name: "compare_button_label",
     type: "string",
     default: 'HA\'s "Compare data"',
-    description: "Label of the text compare button.",
+    description: "Label of the compare checkbox.",
   },
 ];
 
@@ -466,11 +467,41 @@ period_buttons: [month, year, custom]`}
         />
       </Section>
 
+      <Section id="own-periods" title="Billing cycles and your own periods">
+        <Prose>
+          <p>
+            A <code>period_buttons</code> entry can be a period of your own: a <code>label</code>, a{" "}
+            <code>duration</code> in <code>days</code>, <code>weeks</code>, <code>months</code> or{" "}
+            <code>years</code>, and optionally a day one of the periods <code>starts</code> on. The
+            periods repeat from that day in both directions; on the 29th to 31st, shorter months
+            start on their last day. Without <code>starts</code>, the period ends today. Previous
+            and next step by one period.
+          </p>
+        </Prose>
+        <LiveExample
+          states={EXAMPLE_STATES}
+          energy
+          code={`type: ${CARD_TYPE}
+card_background: true
+period_buttons:
+  - day
+  - month
+  - label: Bill
+    duration: { months: 1 }
+    starts: 2026-01-08 # every 8th to the 7th
+  - label: Contract
+    duration: { years: 1 }
+    starts: 2025-04-01
+  - label: 30 days
+    duration: { days: 30 } # ends today`}
+        />
+      </Section>
+
       <Section id="date-picker" title="Pick any range from the date">
         <Prose>
           <p>
-            With <code>date_picker</code>, clicking the date opens HA&apos;s calendar in every
-            period, not only in <code>custom</code>.
+            With <code>date_picker</code>, HA&apos;s calendar button sits next to the period in
+            every period, not only in <code>custom</code>.
           </p>
         </Prose>
         <LiveExample
