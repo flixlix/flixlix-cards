@@ -6,7 +6,7 @@
 ![ko-fi support](https://img.shields.io/badge/support-me-ff5e5b?style=flat-square&logo=ko-fi)
 ![GitHub total downloads](https://img.shields.io/github/downloads/flixlix/energy-period-selector-plus/total?style=flat-square)
 
-<img width="516" alt="Energy Period Selector Plus with the month selected, above Energy Flow Card Plus showing that month" src="https://raw.githubusercontent.com/flixlix/flixlix-cards/main/packages/flixlix-cards/energy-period-selector-plus/assets/demo.png">
+<img width="512" alt="Energy Period Selector Plus with a billing period from November 8 to December 7 selected, above Energy Flow Card Plus showing that period" src="https://raw.githubusercontent.com/flixlix/flixlix-cards/main/packages/flixlix-cards/energy-period-selector-plus/assets/demo.png">
 
 Picks the period shown by Home Assistant's energy cards (and Energy Flow Card Plus /
 Energy Breakdown Card with `energy_date_selection: true`) on the same dashboard. Like HA's
@@ -60,6 +60,8 @@ period_buttons: [month, year, custom]
 ## Your own periods
 
 A `period_buttons` entry can be a period of your own, like a billing cycle:
+
+<img width="512" alt="The period menu open, listing day, week, month, a Bill period, last 30 days, year and custom, then now and compare data" src="https://raw.githubusercontent.com/flixlix/flixlix-cards/main/packages/flixlix-cards/energy-period-selector-plus/assets/custom-periods.png">
 
 | Name       | Type   | Description                                                                                         |
 | ---------- | ------ | --------------------------------------------------------------------------------------------------- |
