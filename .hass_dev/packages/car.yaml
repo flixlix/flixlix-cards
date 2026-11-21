@@ -1,0 +1,131 @@
+# An electric car for the Home Flow Card: its charging power and battery level, where it is and
+# whether its cable is in. The scripts set every knob, so they can run in any order.
+input_number:
+  car_power:
+    name: Car Charging Power
+    icon: mdi:ev-station
+    min: -11000
+    max: 11000
+    step: 100
+    initial: 7400
+    unit_of_measurement: W
+  car_soc:
+    name: Car Battery
+    icon: mdi:car-battery
+    min: 0
+    max: 100
+    step: 1
+    initial: 64
+    unit_of_measurement: "%"
+
+input_select:
+  car_location:
+    name: Car Location
+    icon: mdi:map-marker
+    options:
+      - home
+      - not_home
+      - work
+    initial: home
+
+input_boolean:
+  car_plugged_in:
+    name: Car Plugged In
+    icon: mdi:power-plug
+    initial: true
+  car_available:
+    name: Car Sensor Available
+    icon: mdi:car-connected
+    initial: true
+
+template:
+  - sensor:
+      - name: Car Power
+        unique_id: e2e_car_power
+        icon: mdi:ev-station
+        device_class: power
+        unit_of_measurement: W
+        state_class: measurement
+        state: "{{ states('input_number.car_power') }}"
+        availability: "{{ is_state('input_boolean.car_available', 'on') }}"
+      - name: Car Battery
+        unique_id: e2e_car_soc
+        device_class: battery
+        unit_of_measurement: "%"
+        state_class: measurement
+        state: "{{ states('input_number.car_soc') }}"
+  - binary_sensor:
+      - name: Car Plugged In
+        unique_id: e2e_car_plugged_in
+        device_class: plug
+        state: "{{ is_state('input_boolean.car_plugged_in', 'on') }}"
+
+script:
+  car_charging:
+    alias: "Car: charging at home"
+    icon: mdi:ev-station
+    sequence:
+      - action: input_select.select_option
+        target: { entity_id: input_select.car_location }
+        data: { option: home }
+      - action: input_boolean.turn_on
+        target: { entity_id: [input_boolean.car_plugged_in, input_boolean.car_available] }
+      - action: input_number.set_value
+        target: { entity_id: input_number.car_power }
+        data: { value: 7400 }
+  car_plugged_in_full:
+    alias: "Car: plugged in, done charging (0 W)"
+    icon: mdi:battery-check
+    sequence:
+      - action: input_select.select_option
+        target: { entity_id: input_select.car_location }
+        data: { option: home }
+      - action: input_boolean.turn_on
+        target: { entity_id: [input_boolean.car_plugged_in, input_boolean.car_available] }
+      - action: input_number.set_value
+        target: { entity_id: input_number.car_power }
+        data: { value: 0 }
+  car_unplugged:
+    alias: "Car: home, unplugged"
+    icon: mdi:power-plug-off
+    sequence:
+      - action: input_select.select_option
+        target: { entity_id: input_select.car_location }
+        data: { option: home }
+      - action: input_boolean.turn_off
+        target: { entity_id: input_boolean.car_plugged_in }
+      - action: input_boolean.turn_on
+        target: { entity_id: input_boolean.car_available }
+      - action: input_number.set_value
+        target: { entity_id: input_number.car_power }
+        data: { value: 0 }
+  car_away:
+    alias: "Car: away"
+    icon: mdi:map-marker-off
+    sequence:
+      - action: input_select.select_option
+        target: { entity_id: input_select.car_location }
+        data: { option: work }
+      - action: input_boolean.turn_off
+        target: { entity_id: input_boolean.car_plugged_in }
+      - action: input_number.set_value
+        target: { entity_id: input_number.car_power }
+        data: { value: 0 }
+  car_feeding_home:
+    alias: "Car: feeding the home (V2H)"
+    icon: mdi:home-import-outline
+    sequence:
+      - action: input_select.select_option
+        target: { entity_id: input_select.car_location }
+        data: { option: home }
+      - action: input_boolean.turn_on
+        target: { entity_id: [input_boolean.car_plugged_in, input_boolean.car_available] }
+      - action: input_number.set_value
+        target: { entity_id: input_number.car_power }
+        data: { value: -3000 }
+  car_sensor_unavailable:
+    alias: "Car: power sensor unavailable"
+    icon: mdi:alert-circle-outline
+    sequence:
+      - action: input_boolean.turn_off
+        target: { entity_id: input_boolean.car_available }

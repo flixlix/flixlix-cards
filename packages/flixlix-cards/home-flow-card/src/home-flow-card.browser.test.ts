@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vite-plus/test";
 import { userEvent } from "vite-plus/test/browser/context";
 import {
+  energyCollection,
   fakeHass,
   sensor,
   type StateFixtures,
@@ -53,6 +54,27 @@ const reading = (root: ShadowRoot, node: string) => {
   return `${value ?? "—"} ${labelOf(root, node).querySelector(".unit")?.textContent ?? ""}`.trim();
 };
 
+/** How thick a wire's path is on screen, in px. */
+const wirePxOf = (root: ShadowRoot, selector: string) => {
+  const svg = root.querySelector("svg");
+  const path = root.querySelector(selector);
+  if (!svg || !path) {
+    return 0;
+  }
+  const pxPerUnit = svg.getBoundingClientRect().width / svg.viewBox.baseVal.width;
+  // Chrome serializes a calc() stroke width as calc(2px)
+  const units = /[\d.]+/.exec(getComputedStyle(path).strokeWidth)?.[0];
+  return Number(units) * pxPerUnit;
+};
+
+const fontSizeOf = (root: ShadowRoot, selector: string) => {
+  const element = root.querySelector(selector);
+  return element ? Number.parseFloat(getComputedStyle(element).fontSize) : 0;
+};
+
+const intersects = (a: DOMRect, b: DOMRect) =>
+  a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+
 const startOf = (d: string) => d.match(/^M([\d.-]+ [\d.-]+)/)?.[1];
 const endOf = (d: string) => d.match(/L([\d.-]+ [\d.-]+)$/)?.[1];
 
@@ -66,9 +88,9 @@ const wordOf = (element: Element) => {
   return text === "" ? undefined : text;
 };
 
-/** The battery label's status line: its state of charge and direction, numbers as they read. */
-const batteryLine = (root: ShadowRoot) => {
-  const line = labelOf(root, "battery").querySelector(".status");
+/** A battery's or a car's status line: its state of charge and direction, numbers as they read. */
+const batteryLine = (root: ShadowRoot, node = "battery") => {
+  const line = labelOf(root, node).querySelector(".status");
   const charge = line?.querySelector(".number");
   const percent =
     charge instanceof NumberFlow
@@ -77,6 +99,28 @@ const batteryLine = (root: ShadowRoot) => {
   const direction = line?.querySelector(".direction");
   return [percent, direction ? wordOf(direction) : undefined].filter(Boolean).join(" · ");
 };
+
+/** The animation and dash of a node's pulse, which follow its wire's flow rate and intensity. */
+const pulseStyle = (root: ShadowRoot, node: string) =>
+  root.querySelector(`.power.${node} .pulse`)?.getAttribute("style");
+
+const housePulse = async (options: Partial<HomeFlowCardConfig>) =>
+  pulseStyle((await mountHouse(options)).root, "battery");
+
+/** A label's value line as it reads: each number with its unit, in order. */
+const valueLine = (root: ShadowRoot, node = "battery") =>
+  [...labelOf(root, node).querySelectorAll(".value .number")]
+    .map((number) => {
+      const text =
+        number instanceof NumberFlow
+          ? `${number.value}${number.numberSuffix ?? ""}`
+          : number.textContent?.trim();
+      const unit = number.nextElementSibling?.classList.contains("unit")
+        ? ` ${number.nextElementSibling.getAttribute("data-word")}`
+        : "";
+      return `${text}${unit}`;
+    })
+    .join(" · ");
 
 /** The path of the battery's icon for a state of charge. */
 const iconOf = async (soc: string) => {
@@ -107,14 +151,361 @@ const outageStates = (outage: string) => ({
   "sensor.generator": "1200",
 });
 
+/** Noon, with a car charging off the solar surplus. */
+const carCharging: StateFixtures = {
+  "sensor.solar": "9000",
+  "sensor.battery": "0",
+  "sensor.grid": "-200",
+  "sensor.battery_soc": sensor("80", { unit: "%" }),
+  "sensor.car_power": sensor("7.4", { unit: "kW" }),
+  "sensor.car_soc": sensor("64", { unit: "%" }),
+};
+
+const car = { car: { entity: "sensor.car_power", state_of_charge: "sensor.car_soc" } };
+
+/** Where the car's pulse starts, for a car drawing `power`. */
+const carPulseStart = async (power: string) => {
+  const { root } = await mountHouse(car, { ...carCharging, "sensor.car_power": power });
+  return startOf(root.querySelector(".power.car .pulse")?.getAttribute("d") ?? "");
+};
+
+describe("a car", () => {
+  test("charging: its power, and its state of charge without the battery's words", async () => {
+    const { root } = await mountHouse(car, carCharging);
+
+    expect(reading(root, "car")).toBe("7.4 kW");
+    expect(batteryLine(root, "car")).toBe("64 %");
+    expect(labelOf(root, "car").querySelector(".charging, .discharging")).toBeNull();
+    expect(labelOf(root, "car").querySelector(".name")?.textContent).toBe("Car");
+  });
+
+  test("is drawn in front of the house, wired to the home's outlet", async () => {
+    const { root } = await mountHouse(car, carCharging);
+
+    expect(root.querySelector(".node.car")?.getBoundingClientRect().width).toBeGreaterThan(40);
+    expect(root.querySelector(".power.car .pulse")).not.toBeNull();
+  });
+
+  test("feeding the home, its power runs back to the outlet", async () => {
+    const charging = await carPulseStart("7400");
+    const feeding = await carPulseStart("-3000");
+
+    expect(feeding).not.toBe(charging);
+  });
+
+  test("takes a dark theme's colours", async () => {
+    const { root, card, setHass } = await mountHouse(car, carCharging);
+    const paint = () => getComputedStyle(root.querySelector(".node.car path") ?? card).fill;
+    const light = paint();
+
+    const hass = fakeHass({ states: carCharging });
+    await setHass({ ...hass, themes: Object.assign({}, hass.themes, { darkMode: true }) });
+
+    expect(card.hasAttribute("dark")).toBe(true);
+    expect(paint()).not.toBe(light);
+  });
+
+  test("away, it is hidden but keeps its room, so the house does not move", async () => {
+    const away = {
+      car: {
+        ...car.car,
+        visibility: [{ condition: "state" as const, entity: "device_tracker.car", state: "home" }],
+      },
+    };
+    const atHome = await mountHouse(away, { ...carCharging, "device_tracker.car": "home" });
+    const viewBox = atHome.root.querySelector("svg")?.getAttribute("viewBox");
+    const { root } = await mountHouse(away, { ...carCharging, "device_tracker.car": "not_home" });
+
+    expect(root.querySelector(".node.car")).toBeNull();
+    expect(root.querySelector(".label.car")).toBeNull();
+    expect(root.querySelector(".track.car")).toBeNull();
+    expect(root.querySelector("svg")?.getAttribute("viewBox")).toBe(viewBox);
+  });
+
+  test("idle, it is drawn faded without its cable, its charge as its value", async () => {
+    const unplugged = {
+      car: {
+        ...car.car,
+        idle: [{ condition: "state" as const, entity: "binary_sensor.cable", state: "off" }],
+      },
+    };
+    const active = await mountHouse(unplugged, { ...carCharging, "binary_sensor.cable": "on" });
+    const { root } = await mountHouse(unplugged, { ...carCharging, "binary_sensor.cable": "off" });
+
+    expect(active.root.querySelector(".node.car.idle")).toBeNull();
+    expect(root.querySelector(".node.car.idle")).not.toBeNull();
+    expect(root.querySelector(".track.car")).toBeNull();
+    expect(reading(root, "car")).toBe("64 %");
+    expect(labelOf(root, "car").querySelector(".status")).toBeNull();
+  });
+
+  test("without idle conditions, it is idle while it draws no power", async () => {
+    const { root } = await mountHouse(car, { ...carCharging, "sensor.car_power": "0" });
+
+    expect(root.querySelector(".track.car")).toBeNull();
+    expect(reading(root, "car")).toBe("64 %");
+  });
+
+  test("idle without a state of charge, it is only the car: no label, no leader", async () => {
+    const { root } = await mountHouse(
+      { car: { entity: "sensor.car_power" } },
+      { ...carCharging, "sensor.car_power": "0" }
+    );
+
+    expect(root.querySelector(".node.car")).not.toBeNull();
+    expect(root.querySelector(".label.car")).toBeNull();
+    expect(root.querySelectorAll(".leader")).toHaveLength(root.querySelectorAll(".label").length);
+  });
+
+  test("leaves the house exactly where it is without a car", async () => {
+    const plain = await mountHouse({}, carCharging);
+    const { root } = await mountHouse(car, carCharging);
+
+    expect(root.querySelector("svg")?.getAttribute("viewBox")).toBe(
+      plain.root.querySelector("svg")?.getAttribute("viewBox")
+    );
+  });
+
+  test("without its entity it is ignored, as when cleared in the editor", async () => {
+    const plain = await mountHouse({}, carCharging);
+    const { root } = await mountHouse(
+      { car: { entity: "", state_of_charge: "sensor.car_soc" } },
+      carCharging
+    );
+
+    expect(root.querySelector(".label.car")).toBeNull();
+    expect(root.querySelector("svg")?.getAttribute("viewBox")).toBe(
+      plain.root.querySelector("svg")?.getAttribute("viewBox")
+    );
+  });
+
+  test("is not drawn without one", async () => {
+    const { root } = await mountHouse({}, carCharging);
+
+    expect(root.querySelector(".node.car")).toBeNull();
+    expect(root.querySelector(".label.car")).toBeNull();
+  });
+});
+
+/** An evening with the heat pump heating towards its target. */
+const heatPumpHeating: StateFixtures = {
+  ...evening,
+  "sensor.heat_pump_power": "1350",
+  "climate.heat_pump": sensor("heat", {
+    unit: undefined,
+    attributes: { hvac_action: "heating", current_temperature: 38, temperature: 45 },
+  }),
+};
+
+/** The heat pump's own readings, kept when other fixtures are spread over them. */
+const heatPumpStates: StateFixtures = {
+  "sensor.heat_pump_power": "1350",
+  "climate.heat_pump": heatPumpHeating["climate.heat_pump"] ?? "heat",
+};
+
+const heatPump = (
+  options: Partial<NonNullable<HomeFlowCardConfig["heat_pump"]>> = {}
+): Partial<HomeFlowCardConfig> => ({
+  heat_pump: { entity: "sensor.heat_pump_power", climate: "climate.heat_pump", ...options },
+});
+
+/** The heat pump's status line as it reads. */
+const statusOf = (root: ShadowRoot, node: string) =>
+  [...(labelOf(root, node).querySelector(".status")?.children ?? [])]
+    .map((part) => {
+      const number = part.querySelector(".number");
+      if (number instanceof NumberFlow) {
+        return `${number.value}${number.numberSuffix ?? ""}`;
+      }
+      return part.classList.contains("direction") ? wordOf(part) : part.textContent?.trim();
+    })
+    .filter(Boolean)
+    .join(" ");
+
+/** The heat pump's faces as drawn, in the scene's own coordinates. */
+const heatPumpPointsOf = (root: ShadowRoot) =>
+  [...root.querySelectorAll(".node.heat_pump polygon")].map((face) => face.getAttribute("points"));
+
+/** The heat pump's lowest point in the scene's coordinates, larger further down. */
+const heatPumpBottomOf = (root: ShadowRoot) =>
+  Math.max(
+    ...heatPumpPointsOf(root)
+      .flatMap((points) => (points ?? "").split(" ").filter((_, index) => index % 2 === 1))
+      .map(Number)
+  );
+
+/** What lies under a point of `label`: other labels, and drawn parts other than the ground. */
+const hitsAt = (root: ShadowRoot, label: HTMLElement, x: number, y: number) =>
+  root.elementsFromPoint(x, y).flatMap((element) => {
+    const other = element.closest(".label");
+    if (other) {
+      return other === label ? [] : [`label ${other.className}`];
+    }
+    const drawn = ["polygon", "path"].includes(element.tagName.toLowerCase());
+    const ground = element.getAttribute("filter") ?? element.closest(".leader");
+    return drawn && !ground
+      ? [element.closest("g[class]")?.getAttribute("class") ?? element.tagName]
+      : [];
+  });
+
+/** Whether any part of the drawing other than the ground lies under the label. */
+const drawnUnder = (root: ShadowRoot, label: HTMLElement) => {
+  const rect = label.getBoundingClientRect();
+  const hits = new Set<string>();
+  for (let x = rect.left + 1; x < rect.right; x += 2) {
+    for (let y = rect.top + 1; y < rect.bottom; y += 2) {
+      hitsAt(root, label, x, y).forEach((hit) => hits.add(hit));
+    }
+  }
+  return [...hits];
+};
+
+describe("a heat pump", () => {
+  test("its power, what it is doing and its name", async () => {
+    const { root } = await mountHouse(heatPump(), heatPumpHeating);
+
+    expect(reading(root, "heat_pump")).toBe("1.4 kW");
+    expect(statusOf(root, "heat_pump")).toBe("Heating");
+    expect(labelOf(root, "heat_pump").querySelector(".heating")).not.toBeNull();
+    expect(labelOf(root, "heat_pump").querySelector(".name")?.textContent).toBe("Heat pump");
+  });
+
+  test("shows its temperature instead of its state when asked, never both", async () => {
+    const current = await mountHouse(heatPump({ status: "temperature" }), heatPumpHeating);
+    const both = await mountHouse(heatPump({ status: "temperature_and_target" }), heatPumpHeating);
+
+    expect(statusOf(current.root, "heat_pump")).toBe("38 °C");
+    expect(statusOf(both.root, "heat_pump")).toBe("38 °C → 45 °C");
+    expect(labelOf(both.root, "heat_pump").querySelector(".heating")).toBeNull();
+  });
+
+  test("without a climate entity it shows only its power", async () => {
+    const { root } = await mountHouse(heatPump({ climate: undefined }), heatPumpHeating);
+
+    expect(reading(root, "heat_pump")).toBe("1.4 kW");
+    expect(labelOf(root, "heat_pump").querySelector(".status")).toBeNull();
+  });
+
+  test("tapping it opens its climate entity, or its power sensor without one", async () => {
+    const opened: unknown[] = [];
+    const listen = (card: HTMLElement) =>
+      card.addEventListener("hass-more-info", (event) => {
+        opened.push(event instanceof CustomEvent ? event.detail : undefined);
+      });
+    const withClimate = await mountHouse(heatPump(), heatPumpHeating);
+    listen(withClimate.card);
+    await userEvent.click(labelOf(withClimate.root, "heat_pump"));
+    const withoutClimate = await mountHouse(heatPump({ climate: undefined }), heatPumpHeating);
+    listen(withoutClimate.card);
+    await userEvent.click(labelOf(withoutClimate.root, "heat_pump"));
+
+    expect(opened).toEqual([
+      { entityId: "climate.heat_pump" },
+      { entityId: "sensor.heat_pump_power" },
+    ]);
+  });
+
+  test("hangs on the front wall, wired to the home's outlet", async () => {
+    const { root } = await mountHouse(heatPump(), heatPumpHeating);
+
+    expect(root.querySelector(".node.heat_pump")).not.toBeNull();
+    expect(root.querySelector(".power.heat_pump .pulse")).not.toBeNull();
+  });
+
+  test("comes down the wall without a car, and stays put while a configured car is away", async () => {
+    const away = {
+      ...car.car,
+      visibility: [{ condition: "state" as const, entity: "device_tracker.car", state: "home" }],
+    };
+    const states = { ...heatPumpHeating, ...carCharging, ...heatPumpStates };
+    const alone = heatPumpBottomOf((await mountHouse(heatPump(), states)).root);
+    const home = (
+      await mountHouse({ ...heatPump(), car: away }, { ...states, "device_tracker.car": "home" })
+    ).root;
+    const [homeBottom, homePoints] = [heatPumpBottomOf(home), heatPumpPointsOf(home)];
+    const gone = (
+      await mountHouse(
+        { ...heatPump(), car: away },
+        { ...states, "device_tracker.car": "not_home" }
+      )
+    ).root;
+
+    expect(alone).toBeGreaterThan(homeBottom);
+    expect(heatPumpPointsOf(gone)).toEqual(homePoints);
+  });
+
+  test.each([
+    ["without a car", 500, {}],
+    ["with a car", 500, car],
+    ["without a car, narrow", 340, {}],
+    ["with a car, narrow", 340, car],
+  ])("its label covers nothing %s", async (_, width, options) => {
+    const { root } = await mountHouse(
+      { ...heatPump({ status: "temperature_and_target" }), ...options },
+      { ...heatPumpHeating, ...carCharging, ...heatPumpStates },
+      width
+    );
+    const label = labelOf(root, "heat_pump");
+    const stage = root.querySelector(".stage")?.getBoundingClientRect();
+
+    expect(drawnUnder(root, label)).toEqual([]);
+    expect(stage && label.getBoundingClientRect().left).toBeGreaterThanOrEqual(stage?.left ?? 0);
+  });
+
+  test.each([
+    ["without a car", 500, {}],
+    ["with a car", 500, car],
+    ["without a car, wide", 800, {}],
+    ["with a car, wide", 800, car],
+  ])(
+    "its label hangs in the room left of the house, which keeps its size %s",
+    async (_, width, options) => {
+      const states = { ...heatPumpHeating, ...carCharging, ...heatPumpStates };
+      const houseWidth = async (config: Partial<HomeFlowCardConfig>) =>
+        (await mountHouse(config, states, width)).root
+          .querySelector(".node.home")
+          ?.getBoundingClientRect().width ?? 0;
+      const without = await houseWidth(options);
+
+      expect(await houseWidth({ ...heatPump(), ...options })).toBeGreaterThan(without * 0.98);
+    }
+  );
+
+  test("its fan turns while it runs, and stands still while it is off", async () => {
+    const running = await mountHouse(heatPump(), heatPumpHeating);
+    const off = await mountHouse(heatPump(), { ...heatPumpHeating, "sensor.heat_pump_power": "0" });
+
+    expect(running.root.querySelector(".node.heat_pump .spin")).not.toBeNull();
+    expect(off.root.querySelector(".node.heat_pump .spin")).toBeNull();
+    expect(off.root.querySelector(".power.heat_pump")).toBeNull();
+  });
+
+  test("disable_dots keeps its fan still", async () => {
+    const { root } = await mountHouse({ ...heatPump(), disable_dots: true }, heatPumpHeating);
+
+    expect(root.querySelector(".node.heat_pump .spin")).toBeNull();
+  });
+
+  test("without its entity it is ignored, as when cleared in the editor", async () => {
+    const { root } = await mountHouse(
+      { heat_pump: { entity: "", climate: "climate.heat_pump" } },
+      heatPumpHeating
+    );
+
+    expect(root.querySelector(".node.heat_pump")).toBeNull();
+    expect(root.querySelector(".label.heat_pump")).toBeNull();
+  });
+});
+
 describe("home flow card", () => {
   test("labels every configured node with its value", async () => {
     const { root } = await mountHouse();
 
     expect(reading(root, "solar")).toBe("800 W");
     expect(reading(root, "home")).toBe("2.6 kW");
+    expect(reading(root, "grid")).toBe("0 W");
     expect(reading(root, "battery")).toBe("1.8 kW");
-    expect(batteryLine(root)).toBe("22 % · discharging");
+    expect(batteryLine(root)).toBe("22 % · Discharging");
   });
 
   test("draws only what is configured", async () => {
@@ -129,7 +520,7 @@ describe("home flow card", () => {
     const labelled = [...root.querySelectorAll(".label")].map((label) =>
       nodes.find((node) => label.classList.contains(node))
     );
-    expect(labelled).toEqual(["home"]);
+    expect(labelled).toEqual(["home", "grid"]);
     expect(root.querySelector(".track.grid")).not.toBeNull();
     expect(root.querySelector(".power.grid .pulse")).not.toBeNull();
     expect(root.querySelector(".node.solar")).toBeNull();
@@ -155,7 +546,36 @@ describe("home flow card", () => {
     expect(startOf(charging)).toBe(endOf(discharging));
     expect(
       batteryLine((await mountHouse({}, { ...evening, "sensor.battery": "-1800" })).root)
-    ).toBe("22 % · charging");
+    ).toBe("22 % · Charging");
+  });
+
+  test("labels follow the card's width after it is taken out and put back", async () => {
+    // Home Assistant moves cards around while a dashboard loads
+    const { root, card, resize } = await mountHouse();
+    const size = () => fontSizeOf(root, ".label.home .value");
+    const atFull = size();
+    const container = card.parentElement;
+    card.remove();
+    container?.append(card);
+    await card.updateComplete;
+
+    await resize(900);
+
+    expect(size()).toBeGreaterThan(atFull * 1.2);
+  });
+
+  test("min_expected_value and max_expected_value set the pulses, as min_expected_power and max_expected_power still do", async () => {
+    const generic = await housePulse({ min_expected_value: 0, max_expected_value: 1800 });
+
+    expect(generic).not.toBe(await housePulse({}));
+    expect(await housePulse({ min_expected_power: 0, max_expected_power: 1800 })).toBe(generic);
+    expect(
+      await housePulse({
+        min_expected_value: 0,
+        max_expected_value: 1800,
+        max_expected_power: 9000,
+      })
+    ).toBe(generic);
   });
 
   test("a pulse keeps its place in its cycle when its speed changes", async () => {
@@ -208,7 +628,55 @@ describe("home flow card", () => {
 
     const after = labelOf(root, "battery").querySelector(".direction");
     expect(after).toBe(before);
-    expect(after ? wordOf(after) : undefined).toBe("charging");
+    expect(after ? wordOf(after) : undefined).toBe("Charging");
+  });
+
+  test.each([
+    [undefined, "1.8 kW", "22 % · Discharging"],
+    ["below_value", "1.8 kW", "22 % · Discharging"],
+    ["above_value", "22 %", "1.8 kW · Discharging"],
+    ["after_value", "1.8 kW · 22 %", "Discharging"],
+    ["before_value", "22 % · 1.8 kW", "Discharging"],
+    ["below_power", "1.8 kW", "22 % · Discharging"],
+    ["above_power", "22 %", "1.8 kW · Discharging"],
+    ["after_power", "1.8 kW · 22 %", "Discharging"],
+    ["before_power", "22 % · 1.8 kW", "Discharging"],
+  ] as const)("state_of_charge_position %s: %s, then %s", async (position, value, status) => {
+    const { root } = await mountHouse({
+      battery: {
+        ...allNodes.battery,
+        entity: "sensor.battery",
+        state_of_charge_position: position,
+      },
+    });
+
+    expect(valueLine(root)).toBe(value);
+    expect(batteryLine(root)).toBe(status);
+  });
+
+  test("an idle battery with its state of charge beside its power has no status line", async () => {
+    const { root } = await mountHouse(
+      {
+        battery: {
+          ...allNodes.battery,
+          entity: "sensor.battery",
+          state_of_charge_position: "after_value",
+        },
+      },
+      { ...evening, "sensor.battery": "0" }
+    );
+
+    expect(valueLine(root)).toBe("0 W · 22 %");
+    expect(labelOf(root, "battery").querySelector(".status")).toBeNull();
+  });
+
+  test("without a state of charge, every position shows the power as its value", async () => {
+    const { root } = await mountHouse({
+      battery: { entity: "sensor.battery", state_of_charge_position: "above_value" },
+    });
+
+    expect(valueLine(root)).toBe("1.8 kW");
+    expect(batteryLine(root)).toBe("Discharging");
   });
 
   test("an idle battery shows only its state of charge", async () => {
@@ -254,6 +722,41 @@ describe("home flow card", () => {
 
     expect(root.querySelector(".track.grid")).not.toBeNull();
     expect(root.querySelector(".power.grid")).toBeNull();
+    expect(reading(root, "grid")).toBe("—");
+    expect(labelOf(root, "grid").querySelector(".outage")?.textContent).toBe("Power Outage");
+  });
+
+  test("the card keeps its size as the grid goes down and comes back", async () => {
+    // grid only: nothing but the house and the grid's own label sets the card's size
+    const { root, card, setHass } = await mountHouse(
+      {
+        grid: { entity: "sensor.grid", power_outage: { entity: "binary_sensor.outage" } },
+        solar: undefined,
+        battery: undefined,
+      },
+      outageStates("off")
+    );
+    const viewBox = () => root.querySelector(".stage > svg")?.getAttribute("viewBox");
+    const gridUp = viewBox();
+
+    await setHass(withStates(card.hass ?? fakeHass(), outageStates("on")));
+
+    expect(labelOf(root, "grid").querySelector(".outage")).not.toBeNull();
+    expect(viewBox()).toBe(gridUp);
+  });
+
+  test("the outage alert is the grid's label_alert when it has one", async () => {
+    const { root } = await mountHouse(
+      {
+        grid: {
+          entity: "sensor.grid",
+          power_outage: { entity: "binary_sensor.outage", label_alert: "Blackout" },
+        },
+      },
+      { ...evening, "binary_sensor.outage": sensor("on", { unit: undefined }) }
+    );
+
+    expect(labelOf(root, "grid").querySelector(".outage")?.textContent).toBe("Blackout");
   });
 
   test("in an outage a generator feeds the inverter, never the grid cable", async () => {
@@ -271,6 +774,8 @@ describe("home flow card", () => {
 
     expect(root.querySelector(".node.generator")).not.toBeNull();
     expect(reading(root, "generator")).toBe("1.2 kW");
+    // the generator's label takes the grid's place
+    expect(root.querySelector(".label.grid")).toBeNull();
     expect(root.querySelector(".power.generator .pulse")).not.toBeNull();
     expect(root.querySelector(".power.grid")).toBeNull();
   });
@@ -288,6 +793,7 @@ describe("home flow card", () => {
 
     expect(root.querySelector(".node.generator")).toBeNull();
     expect(root.querySelector(".label.generator")).toBeNull();
+    expect(root.querySelector(".label.grid")).not.toBeNull();
     expect(viewBox()).toBe(inOutage);
   });
 
@@ -298,7 +804,7 @@ describe("home flow card", () => {
   });
 
   test("tapping a label opens its entity's more-info dialog", async () => {
-    const { root, card } = await mountHouse({ clickable_entities: true });
+    const { root, card } = await mountHouse();
     const opened: unknown[] = [];
     card.addEventListener("hass-more-info", (event) => {
       opened.push(event instanceof CustomEvent ? event.detail : undefined);
@@ -309,8 +815,28 @@ describe("home flow card", () => {
     expect(opened).toEqual([{ entityId: "sensor.solar" }]);
   });
 
-  test("labels are not buttons unless entities are clickable", async () => {
-    const { root } = await mountHouse();
+  test("a short label is still easy to tap beside its text", async () => {
+    const { root, card } = await mountHouse({}, { ...evening, "sensor.solar": "0" }, 400);
+    const opened: unknown[] = [];
+    card.addEventListener("hass-more-info", (event) => {
+      opened.push(event instanceof CustomEvent ? event.detail : undefined);
+    });
+    const label = labelOf(root, "solar");
+    const rect = label.getBoundingClientRect();
+    expect(rect.width).toBeLessThan(44);
+
+    // just right of "Solar", where a thumb aimed at it lands
+    const x = rect.right + 6;
+    const y = rect.bottom - 4;
+    const target = root.elementFromPoint(x, y);
+    expect(target instanceof HTMLElement && label.contains(target)).toBe(true);
+    await userEvent.click(label, { position: { x: x - rect.left, y: y - rect.top } });
+
+    expect(opened).toEqual([{ entityId: "sensor.solar" }]);
+  });
+
+  test("labels are not buttons with clickable_entities: false", async () => {
+    const { root } = await mountHouse({ clickable_entities: false });
 
     expect(labelOf(root, "solar").getAttribute("role")).toBeNull();
   });
@@ -325,6 +851,81 @@ describe("home flow card", () => {
     expect(card.hasAttribute("dark")).toBe(true);
   });
 
+  test("label text stays readable on a narrow card and stops growing on a wide one", async () => {
+    const narrow = await mountHouse({}, evening, 330);
+    expect(fontSizeOf(narrow.root, ".label.home .name")).toBeGreaterThanOrEqual(12);
+    expect(fontSizeOf(narrow.root, ".label.battery .status")).toBeGreaterThanOrEqual(12);
+    expect(fontSizeOf(narrow.root, ".label.home .value")).toBeGreaterThanOrEqual(21);
+
+    const wide = await mountHouse({}, evening, 1300);
+    expect(fontSizeOf(wide.root, ".label.home .value")).toBeLessThanOrEqual(34);
+    expect(fontSizeOf(wide.root, ".label.home .name")).toBeLessThanOrEqual(19);
+  });
+
+  test.each([250, 300, 360, 430, 600, 900, 1300])(
+    "at %ipx every label stays inside the card, clear of the others",
+    async (width) => {
+      const { root } = await mountHouse(
+        {
+          battery: {
+            ...allNodes.battery,
+            entity: "sensor.battery",
+            state_of_charge_position: "after_value",
+          },
+          ...car,
+        },
+        carCharging,
+        width
+      );
+      const stage = root.querySelector(".stage")?.getBoundingClientRect();
+      const labels = [...root.querySelectorAll(".label")].map((label) => ({
+        node: label.className,
+        box: label.getBoundingClientRect(),
+      }));
+      expect(labels.length).toBe(5);
+      labels.forEach(({ node, box }) => {
+        expect({
+          node,
+          inside:
+            stage !== undefined &&
+            box.left >= stage.left - 0.5 &&
+            box.right <= stage.right + 0.5 &&
+            box.top >= stage.top - 0.5 &&
+            box.bottom <= stage.bottom + 0.5,
+        }).toEqual({ node, inside: true });
+      });
+      labels.forEach((a, i) =>
+        labels.slice(i + 1).forEach((b) => {
+          expect({ pair: [a.node, b.node], overlap: intersects(a.box, b.box) }).toEqual({
+            pair: [a.node, b.node],
+            overlap: false,
+          });
+        })
+      );
+    }
+  );
+
+  test("wires stay about as thick on a narrow card as on a wide one", async () => {
+    const narrow = wirePxOf((await mountHouse({}, evening, 330)).root, ".battery .flow");
+    const wide = wirePxOf((await mountHouse({}, evening, 1300)).root, ".battery .flow");
+
+    expect(narrow).toBeGreaterThanOrEqual(1.5);
+    expect(wide).toBeLessThanOrEqual(2.4 + 0.01);
+    expect(wide / narrow).toBeLessThan(1.6);
+  });
+
+  test("wire_width draws every wire that many times thicker", async () => {
+    const wires = [".track.battery", ".battery .flow", ".battery .pulse"];
+    const measure = async (options: Partial<HomeFlowCardConfig>) => {
+      const { root } = await mountHouse(options, evening, 600);
+      return wires.map((selector) => wirePxOf(root, selector));
+    };
+    const thin = await measure({});
+    const thick = await measure({ wire_width: 2 });
+
+    thick.forEach((px, i) => expect(px / (thin[i] ?? 0)).toBeCloseTo(2, 1));
+  });
+
   test("labels grow and shrink with the card", async () => {
     const { root, resize } = await mountHouse({}, evening, 600);
     const size = () => {
@@ -336,5 +937,264 @@ describe("home flow card", () => {
     await resize(300);
 
     expect(size()).toBeLessThan(wide);
+  });
+});
+
+const day = (date: number) => ({
+  start: new Date(2026, 0, date, 0, 0, 0),
+  end: new Date(2026, 0, date, 23, 59, 59),
+});
+
+describe("energy mode", () => {
+  const energyNodes: Partial<HomeFlowCardConfig> = {
+    mode: "energy",
+    grid: { entity: { consumption: "sensor.grid_import", production: "sensor.grid_export" } },
+    solar: { entity: "sensor.solar" },
+    battery: {
+      entity: { consumption: "sensor.battery_out", production: "sensor.battery_in" },
+      state_of_charge: "sensor.battery_soc",
+    },
+  };
+  /** A day: 3 kWh of solar, 2 kWh into the battery and 0.5 kWh back, 1.2 kWh bought. */
+  const aDay = {
+    "sensor.grid_import": 1200,
+    "sensor.grid_export": 0,
+    "sensor.solar": 3000,
+    "sensor.battery_in": 2000,
+    "sensor.battery_out": 500,
+  };
+  const mountEnergy = (
+    options: Partial<HomeFlowCardConfig> = {},
+    hass = fakeHass({
+      states: { "sensor.battery_soc": sensor("64", { unit: "%" }) },
+      statistics: aDay,
+      energyCollection: energyCollection(day(1).start, day(1).end),
+    })
+  ) => mountCard(HomeFlowCard, { type: "custom:home-flow-card", ...energyNodes, ...options }, hass);
+
+  test("each node shows its energy over the dashboard's period", async () => {
+    const { root } = await mountEnergy();
+
+    expect(reading(root, "solar")).toBe("3 kWh");
+    expect(reading(root, "grid")).toBe("1.2 kWh");
+    expect(reading(root, "home")).toBe("2.7 kWh");
+  });
+
+  test("a node that ran both ways gets a parallel line and a value each way", async () => {
+    const { root } = await mountEnergy(
+      {},
+      fakeHass({
+        states: { "sensor.battery_soc": sensor("64", { unit: "%" }) },
+        statistics: { ...aDay, "sensor.grid_export": 400 },
+        energyCollection: energyCollection(day(1).start, day(1).end),
+      })
+    );
+
+    expect(valueLine(root, "battery")).toBe("500 Wh · 2 kWh");
+    expect(valueLine(root, "grid")).toBe("1.2 kWh · 400 Wh");
+    for (const node of ["battery", "grid"]) {
+      const lines = [...root.querySelectorAll(`.power.${node} .flow`)].map(
+        (path) => path.getAttribute("d") ?? ""
+      );
+      expect(lines).toHaveLength(2);
+      expect(startOf(lines[0] ?? "")).not.toBe(endOf(lines[1] ?? ""));
+    }
+  });
+
+  test("two_way_value_size shrinks only the values of a node that ran both ways", async () => {
+    const { root } = await mountEnergy(
+      { two_way_value_size: 0.75 },
+      fakeHass({
+        states: { "sensor.battery_soc": sensor("64", { unit: "%" }) },
+        statistics: { ...aDay, "sensor.grid_export": 400 },
+        energyCollection: energyCollection(day(1).start, day(1).end),
+      })
+    );
+    const sizeOf = (node: string) =>
+      Number.parseFloat(getComputedStyle(root.querySelector(`.label.${node} .value`)!).fontSize);
+
+    expect(sizeOf("grid")).toBeCloseTo(sizeOf("solar") * 0.75);
+    expect(sizeOf("battery")).toBeCloseTo(sizeOf("solar") * 0.75);
+    expect(sizeOf("home")).toBe(sizeOf("solar"));
+  });
+
+  const energyPulse = async (options: Partial<HomeFlowCardConfig>) =>
+    pulseStyle((await mountEnergy(options)).root, "solar");
+
+  test("an expected range in Wh sets the pulses; the older one in W does not", async () => {
+    const sharedOut = await energyPulse({});
+
+    expect(await energyPulse({ max_expected_value: 6000 })).not.toBe(sharedOut);
+    expect(await energyPulse({ max_expected_power: 6000 })).toBe(sharedOut);
+  });
+
+  test("a node that ran one way keeps a single line", async () => {
+    const { root } = await mountEnergy();
+
+    expect(root.querySelectorAll(".power.grid")).toHaveLength(1);
+    expect(valueLine(root, "grid")).toBe("1.2 kWh");
+  });
+
+  test("the battery shows its state of charge, but not what it is doing now", async () => {
+    const { root } = await mountEnergy();
+
+    expect(batteryLine(root)).toBe("64 %");
+    expect(root.querySelector(".power.battery .pulse")).not.toBeNull();
+  });
+
+  test("shows loading until the period's statistics arrive", async () => {
+    let deliver: ((growth: Record<string, number>) => void) | undefined;
+    const statistics = new Promise<Record<string, number>>((resolve) => {
+      deliver = resolve;
+    });
+    const { settle, root, text } = await mountEnergy(
+      {},
+      fakeHass({
+        statistics: () => statistics,
+        energyCollection: energyCollection(day(1).start, day(1).end),
+      })
+    );
+    expect(text(".card-content")).toBe("Loading…");
+
+    deliver?.(aDay);
+    await settle();
+    expect(reading(root, "solar")).toBe("3 kWh");
+  });
+
+  test("changing the dashboard's period shows that period", async () => {
+    const collection = energyCollection(day(1).start, day(1).end);
+    const { settle, root } = await mountEnergy(
+      {},
+      fakeHass({
+        statistics: (window) => (window.start.getDate() === 1 ? aDay : { "sensor.solar": 500 }),
+        energyCollection: collection,
+      })
+    );
+    collection.setPeriod(day(2).start, day(2).end);
+    await settle();
+
+    expect(reading(root, "solar")).toBe("500 Wh");
+  });
+
+  test("with collection_key, follows that dashboard's date picker", async () => {
+    const { root } = await mountEnergy(
+      { collection_key: "energy_garage" },
+      fakeHass({
+        statistics: (window) => (window.start.getDate() === 2 ? aDay : {}),
+        energyCollection: energyCollection(day(1).start, day(1).end),
+        energyCollections: { energy_garage: energyCollection(day(2).start, day(2).end) },
+      })
+    );
+
+    expect(reading(root, "solar")).toBe("3 kWh");
+  });
+
+  test("the car and the heat pump show their energy over the period", async () => {
+    const { root } = await mountEnergy(
+      { car: { entity: "sensor.car_energy" }, heat_pump: { entity: "sensor.heat_pump_energy" } },
+      fakeHass({
+        statistics: { ...aDay, "sensor.car_energy": 7400, "sensor.heat_pump_energy": 1400 },
+        energyCollection: energyCollection(day(1).start, day(1).end),
+      })
+    );
+
+    expect(reading(root, "car")).toBe("7.4 kWh");
+    expect(reading(root, "heat_pump")).toBe("1.4 kWh");
+  });
+
+  test("a live outage leaves the period's grid energy alone", async () => {
+    const { root } = await mountEnergy(
+      {
+        grid: {
+          entity: { consumption: "sensor.grid_import", production: "sensor.grid_export" },
+          power_outage: { entity: "binary_sensor.outage" },
+        },
+      },
+      fakeHass({
+        states: { "binary_sensor.outage": sensor("on", { unit: undefined }) },
+        statistics: aDay,
+        energyCollection: energyCollection(day(1).start, day(1).end),
+      })
+    );
+
+    expect(reading(root, "grid")).toBe("1.2 kWh");
+    expect(labelOf(root, "grid").querySelector(".outage")).toBeNull();
+  });
+
+  test("a generator that ran is drawn beside the grid, and the home gets its energy", async () => {
+    const generator = { generator: { entity: "sensor.generator_energy" } };
+    const ran = await mountEnergy(
+      generator,
+      fakeHass({
+        statistics: { ...aDay, "sensor.generator_energy": 800 },
+        energyCollection: energyCollection(day(1).start, day(1).end),
+      })
+    );
+    const idle = await mountEnergy(
+      generator,
+      fakeHass({
+        statistics: { ...aDay, "sensor.generator_energy": 0 },
+        energyCollection: energyCollection(day(1).start, day(1).end),
+      })
+    );
+
+    expect(reading(ran.root, "generator")).toBe("800 Wh");
+    expect(reading(ran.root, "grid")).toBe("1.2 kWh");
+    expect(reading(ran.root, "home")).toBe("3.5 kWh");
+    expect(
+      intersects(
+        labelOf(ran.root, "grid").getBoundingClientRect(),
+        labelOf(ran.root, "generator").getBoundingClientRect()
+      )
+    ).toBe(false);
+    expect(idle.root.querySelector(".node.generator")).toBeNull();
+  });
+
+  test("a car that charged over the period is wired, even if unplugged now", async () => {
+    const { root } = await mountEnergy(
+      {
+        car: {
+          entity: "sensor.car_energy",
+          idle: [{ condition: "state", entity: "binary_sensor.cable", state: "off" }],
+        },
+      },
+      fakeHass({
+        states: { "binary_sensor.cable": sensor("off", { unit: undefined }) },
+        statistics: { ...aDay, "sensor.car_energy": 7400 },
+        energyCollection: energyCollection(day(1).start, day(1).end),
+      })
+    );
+
+    expect(reading(root, "car")).toBe("7.4 kWh");
+    expect(root.querySelector(".power.car")).not.toBeNull();
+  });
+
+  test("the heat pump's fan stands still, since it would say it is running now", async () => {
+    const { root } = await mountEnergy(
+      { heat_pump: { entity: "sensor.heat_pump_energy" } },
+      fakeHass({
+        statistics: { ...aDay, "sensor.heat_pump_energy": 1400 },
+        energyCollection: energyCollection(day(1).start, day(1).end),
+      })
+    );
+
+    expect(root.querySelector(".power.heat_pump")).not.toBeNull();
+    expect(root.querySelector(".node.heat_pump .spin")).toBeNull();
+  });
+
+  test("without a date picker on the dashboard, still shows a period's energy", async () => {
+    const { root } = await mountEnergy({}, fakeHass({ statistics: aDay }));
+
+    expect(reading(root, "solar")).toBe("3 kWh");
+  });
+
+  test("in power mode, the card fetches no statistics", async () => {
+    const hass = fakeHass({
+      states: evening,
+      energyCollection: energyCollection(day(1).start, day(1).end),
+    });
+    await mountCard(HomeFlowCard, { type: "custom:home-flow-card", ...allNodes }, hass);
+
+    expect(hass.callWS).not.toHaveBeenCalled();
   });
 });

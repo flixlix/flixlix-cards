@@ -1,39 +1,36 @@
 import { Link } from "@tanstack/react-router";
-import {
-  ArrowRight,
-  BookOpen,
-  Eye,
-  Github,
-  ListOrdered,
-  Package,
-  Save,
-  Settings,
-  Wrench,
-} from "lucide-react";
+import { Eye, ListOrdered, Save, Settings } from "lucide-react";
 import type * as React from "react";
 
-import { Button } from "@flixlix-cards/ui/components/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@flixlix-cards/ui/components/card";
-import { Checkbox } from "@flixlix-cards/ui/components/checkbox";
+import { trackEvent } from "#/lib/analytics";
+import { heading } from "@/lib/page-meta";
+import { sensor, type StateFixtures } from "@flixlix-cards/shared/preview/fake-hass";
 
+import {
+  CardHero,
+  DemoGallery,
+  Highlight,
+  Highlights,
+  SectionPages,
+  SourceSection,
+} from "./card-overview";
+import { sortableGallery } from "@/components/demos";
 import { CategorySection } from "./category-section";
 import {
   Callout,
   CodeBlock,
   NextPageNav,
+  type OptionRow,
   PageHeader,
   Prose,
   Section,
-  type OptionRow,
 } from "./doc-primitives";
+import { InstallFromLink } from "./install-from-link";
+import { LiveExample } from "./live-example";
+import { RelatedGuides } from "./related-guides";
 import { OptionList } from "./option-list";
 import { PageTOC, type TocItem } from "./page-toc";
+import { SupportLinks } from "./support-links";
 
 const TITLE = "Sortable List Card";
 const PKG = "sortable-list-card";
@@ -41,163 +38,51 @@ const CARD_TYPE = "custom:sortable-list-card";
 const BASE_PATH = "/sortable-list-card";
 const REPO_URL = "https://github.com/flixlix/sortable-list-card";
 const HACS_REDIRECT =
-  "https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=sortable-list-card&category=Dashboard";
+  "https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=sortable-list-card&category=plugin";
 const RELEASE_URL = "https://github.com/flixlix/sortable-list-card/releases/latest";
-
-function HighlightItem({ children }: { children: React.ReactNode }) {
-  return (
-    <li className="bg-muted/40 flex items-center gap-2 rounded-md border p-3">
-      <Checkbox className="pointer-events-none" checked />
-      {children}
-    </li>
-  );
-}
 
 // ---------- Overview ----------
 
 export function OverviewPage() {
   return (
     <>
-      <PageHeader
-        eyebrow={TITLE}
-        title="Overview"
-        description="A generic drag-and-drop reorderable list for Home Assistant. Drag rows (or use the arrows) to reorder, and the new order is saved by calling any service you configure."
-        badges={[{ label: "HACS custom" }, { label: "YAML & UI editor" }, { label: "Any service" }]}
+      <CardHero
+        tags={["HACS custom", "YAML & UI editor", "Any service"]}
+        title={TITLE}
+        demo="sortable"
+        installHref={HACS_REDIRECT}
+      >
+        <PageHeader
+          className="mb-0"
+          title={heading(BASE_PATH)}
+          description="A drag-and-drop list that saves its order through any service."
+        />
+      </CardHero>
+
+      <DemoGallery
+        title="What you can build"
+        description="Each one live; drag a row to reorder it."
+        demos={sortableGallery}
       />
 
-      <Prose className="mt-4">
-        <p>
-          <strong>{TITLE}</strong> turns a plain list of items into an interactive, reorderable
-          list. Each reorder is persisted through a service call of your choosing — by default it
-          writes a comma-separated value to an <code>input_text</code> helper, but you can point it
-          at a script, a <code>number</code>, or any other service.
-        </p>
-        <p>
-          It's deliberately use-case agnostic. The order is stored as a list of <em>keys</em>, and
-          what those keys mean is entirely up to you and your automations.
-        </p>
-      </Prose>
+      <Highlights>
+        <Highlight>Drag-and-drop reordering with a live drop indicator</Highlight>
+        <Highlight>Up and down arrows for precise, accessible reordering</Highlight>
+        <Highlight>
+          Saves through <strong>any service</strong> with <code>{"{value}"}</code> placeholders
+        </Highlight>
+        <Highlight>CSV or JSON value formats</Highlight>
+        <Highlight>Entity-backed items (name, icon, state) with overrides</Highlight>
+        <Highlight>Optimistic updates, plus a full UI editor</Highlight>
+      </Highlights>
 
-      <Section title="What can you build with it?">
-        <Prose>
-          <p>A few things people use a reorderable, persisted list for:</p>
-          <ul>
-            <li>
-              <strong>HEMS load priority</strong> — order battery, EV charger, heating, hot water…
-              so your energy-management automations know which load gets surplus solar first. This
-              is the card's original use case.
-            </li>
-            <li>
-              <strong>Device / room ordering</strong> — let users arrange entity-backed rows
-              (lights, rooms, zones) and feed that order into another dashboard or template.
-            </li>
-            <li>
-              <strong>Priority / triage lists</strong> — chores, a shopping list, a project backlog,
-              or any “most important first” ranking.
-            </li>
-            <li>
-              <strong>Scene / automation sequencing</strong> — decide the order scenes are applied
-              or notifications are sent.
-            </li>
-            <li>
-              <strong>Playlists & queues</strong> — a simple, persisted play order that a media
-              automation consumes.
-            </li>
-          </ul>
-        </Prose>
+      <Section title="Compare it">
+        <RelatedGuides paths={["/guides"]} />
       </Section>
 
-      <Section title="Highlights">
-        <ul className="text-foreground/90 grid grid-cols-1 gap-2 text-sm md:grid-cols-2">
-          <HighlightItem>Drag-and-drop reordering with a live drop indicator</HighlightItem>
-          <HighlightItem>Up/down arrow buttons for precise, accessible reordering</HighlightItem>
-          <HighlightItem>
-            Persist via <strong>any service</strong> with <code>{"{value}"}</code> placeholders
-          </HighlightItem>
-          <HighlightItem>CSV or JSON value formats</HighlightItem>
-          <HighlightItem>Entity-backed items (name / icon / state) with overrides</HighlightItem>
-          <HighlightItem>Optimistic updates, plus a full UI editor</HighlightItem>
-        </ul>
-      </Section>
+      <SectionPages basePath={BASE_PATH} />
 
-      <Section title="What's in this section">
-        <div className="grid gap-3 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Package className="size-4" /> Installation
-              </CardTitle>
-              <CardDescription>HACS custom repository or manual install.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button asChild size="sm" variant="outline">
-                <Link to={`${BASE_PATH}/installation`}>
-                  Open <ArrowRight className="size-3.5" />
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <BookOpen className="size-4" /> Configuration
-              </CardTitle>
-              <CardDescription>Every option, with defaults and types.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button asChild size="sm" variant="outline">
-                <Link to={`${BASE_PATH}/configuration`}>
-                  Open <ArrowRight className="size-3.5" />
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Wrench className="size-4" /> Examples
-              </CardTitle>
-              <CardDescription>Copy-pastable configs, including the HEMS list.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button asChild size="sm" variant="outline">
-                <Link to={`${BASE_PATH}/examples`}>
-                  Open <ArrowRight className="size-3.5" />
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </Section>
-
-      <Section title="Source & releases">
-        <Prose>
-          <p>
-            The card is distributed via{" "}
-            <a href={REPO_URL} target="_blank" rel="noopener noreferrer">
-              flixlix/sortable-list-card
-            </a>
-            , but the source code lives in the monorepo at{" "}
-            <a
-              href="https://github.com/flixlix/flixlix-cards"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              flixlix/flixlix-cards
-            </a>
-            . Issues and feature requests are tracked there.
-          </p>
-        </Prose>
-        <Button asChild variant="outline" size="sm">
-          <a
-            href="https://github.com/flixlix/flixlix-cards"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Github className="size-4" /> View source on GitHub
-          </a>
-        </Button>
-      </Section>
+      <SourceSection repoUrl={REPO_URL} />
 
       <NextPageNav next={{ label: "Installation", to: `${BASE_PATH}/installation` }} />
     </>
@@ -211,54 +96,22 @@ export function InstallationPage() {
     <>
       <PageHeader
         eyebrow={TITLE}
-        title="Installation"
-        description="This card is not in the default HACS store — you need to add it as a custom repository first. Manual installation is also supported."
+        title={heading(`${BASE_PATH}/installation`)}
+        description="Install it from its link in Home Assistant's Marketplace, or as a custom repository in HACS before 2026.11. Manual installation is also supported."
       />
 
-      <Callout variant="info" title="Custom repository required">
-        <strong>{TITLE}</strong> is not part of the default HACS index. Add the repository URL below
-        as a <em>Custom repository</em> in HACS to install it.
-      </Callout>
-
-      <Section title="HACS (custom repository)" id="hacs">
-        <Prose>
-          <ol>
-            <li>
-              In Home Assistant, open <strong>HACS</strong>.
-            </li>
-            <li>
-              Click the <strong>⋮</strong> menu in the top-right and choose{" "}
-              <strong>Custom repositories</strong>.
-            </li>
-            <li>
-              Add the repository URL <code>{REPO_URL}</code> with category{" "}
-              <strong>Dashboard</strong>, then click <strong>Add</strong>.
-            </li>
-            <li>
-              Search for <strong>{TITLE}</strong> in HACS and click <strong>Download</strong>.
-            </li>
-            <li>Reload your dashboard / clear browser cache.</li>
-          </ol>
-          <p>
-            The button below opens the repository inside HACS and pre-fills the dialog if you have{" "}
-            <a href="https://my.home-assistant.io" target="_blank" rel="noopener noreferrer">
-              My Home Assistant
-            </a>{" "}
-            set up.
-          </p>
-        </Prose>
-        <Button asChild variant="outline" size="sm">
-          <a href={HACS_REDIRECT} target="_blank" rel="noopener noreferrer">
-            Open in HACS
-          </a>
-        </Button>
-      </Section>
+      <InstallFromLink title={TITLE} repoUrl={REPO_URL} redirect={HACS_REDIRECT} />
 
       <Section title="Manual installation" id="manual">
         <Prose>
           <p>
             Download <code>{PKG}.js</code> from the{" "}
-            <a href={RELEASE_URL} target="_blank" rel="noopener noreferrer">
+            <a
+              href={RELEASE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackEvent("Download release", { card: TITLE })}
+            >
               latest release
             </a>{" "}
             and copy it into <code>config/www/</code>.
@@ -280,12 +133,16 @@ export function InstallationPage() {
           </p>
         </Prose>
         <CodeBlock language="text" code={`/local/${PKG}.js`} />
-        <Callout variant="tip" title="HACS users">
-          When installed via HACS the path becomes{" "}
+        <Callout variant="tip" title="Installed from the Marketplace or HACS?">
+          It registers the resource for you. The Marketplace serves it from
+          <code>
+            /local/community/{PKG}/{PKG}.js
+          </code>
+          ; HACS used
           <code>
             /hacsfiles/{PKG}/{PKG}.js
           </code>
-          . HACS usually registers it automatically.
+          , which keeps working.
         </Callout>
       </Section>
 
@@ -512,6 +369,7 @@ function ConfigShortcut({
   return (
     <a
       href={to}
+      data-llms-skip
       className="group bg-card hover:border-foreground/20 flex items-start gap-3 rounded-lg border p-3 transition-colors"
     >
       <div className={`flex size-8 shrink-0 items-center justify-center rounded-md ${accent}`}>
@@ -540,7 +398,7 @@ export function ConfigurationPage() {
       <div className="min-w-0">
         <PageHeader
           eyebrow={TITLE}
-          title="Configuration"
+          title={heading(`${BASE_PATH}/configuration`)}
           description={
             <>
               Every option, what it does, and how to use it. Required fields are marked with{" "}
@@ -693,6 +551,7 @@ save_action:
           <OptionList rows={ITEM_OPTIONS} />
         </CategorySection>
 
+        <SupportLinks card="Sortable List Card" />
         <NextPageNav
           prev={{ label: "Installation", to: `${BASE_PATH}/installation` }}
           next={{ label: "Examples", to: `${BASE_PATH}/examples` }}
@@ -710,13 +569,24 @@ save_action:
 
 // ---------- Examples ----------
 
+const text = (state: string, name?: string) => sensor(state, { unit: undefined, name });
+
+const EXAMPLE_STATES: StateFixtures = {
+  "input_text.my_order": text("beta,alpha,gamma"),
+  "input_text.hems_priority": text("battery,ev,heating,water_heater"),
+  "input_text.room_order": text('["light.living_room","light.kitchen","light.bedroom"]'),
+  "light.kitchen": text("on", "Kitchen"),
+  "light.living_room": text("off", "Living room"),
+  "light.bedroom": text("on", "Bedroom"),
+};
+
 export function ExamplesPage() {
   return (
     <>
       <PageHeader
         eyebrow={TITLE}
-        title="Examples"
-        description="Copy-pastable configs for the most common setups."
+        title={heading(`${BASE_PATH}/examples`)}
+        description="Copy-pastable configs for the most common setups, each next to the card it draws."
       />
 
       <Callout variant="info" title="Don't forget!">
@@ -732,8 +602,8 @@ export function ExamplesPage() {
             <code>input_text</code> helper.
           </p>
         </Prose>
-        <CodeBlock
-          language="yaml"
+        <LiveExample
+          states={EXAMPLE_STATES}
           code={`type: ${CARD_TYPE}
 title: My order
 entity: input_text.my_order
@@ -755,8 +625,8 @@ items:
             to decide who gets surplus solar.
           </p>
         </Prose>
-        <CodeBlock
-          language="yaml"
+        <LiveExample
+          states={EXAMPLE_STATES}
           code={`type: ${CARD_TYPE}
 title: Load priority
 entity: input_text.hems_priority
@@ -794,8 +664,8 @@ items:
             stored as JSON and handed to a script as a real list.
           </p>
         </Prose>
-        <CodeBlock
-          language="yaml"
+        <LiveExample
+          states={EXAMPLE_STATES}
           code={`type: ${CARD_TYPE}
 title: Rooms
 show_state: true
@@ -819,8 +689,8 @@ items:
             and just fire a service on each reorder.
           </p>
         </Prose>
-        <CodeBlock
-          language="yaml"
+        <LiveExample
+          states={EXAMPLE_STATES}
           code={`type: ${CARD_TYPE}
 title: Notification order
 save_action:
@@ -844,8 +714,8 @@ items:
         <Prose>
           <p>Hide the chrome for a cleaner, drag-only list.</p>
         </Prose>
-        <CodeBlock
-          language="yaml"
+        <LiveExample
+          states={EXAMPLE_STATES}
           code={`type: ${CARD_TYPE}
 entity: input_text.my_order
 show_handle: false
@@ -859,6 +729,7 @@ items:
         />
       </Section>
 
+      <SupportLinks card="Sortable List Card" />
       <NextPageNav prev={{ label: "Configuration", to: `${BASE_PATH}/configuration` }} />
     </>
   );

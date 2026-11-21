@@ -40,7 +40,8 @@ const consumptionShown = (grid: GridObject, displayState: DisplayState): boolean
 export const gridElement = (
   main: CardMainContext,
   config: FlowCardPlusConfig,
-  grid: GridObject
+  grid: GridObject,
+  showLabel = true
 ) => {
   const { entities } = config;
   const displayState = entities.grid?.display_state;
@@ -159,6 +160,6 @@ export const gridElement = (
           : nothing
       }
     </div>
-    <span class="label">${grid.name}</span>
+    <span class="label">${showLabel ? grid.name : nothing}</span>
   </div>`;
 };

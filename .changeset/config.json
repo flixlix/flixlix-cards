@@ -1,6 +1,9 @@
 {
   "$schema": "https://unpkg.com/@changesets/config@2.0.0/schema.json",
-  "changelog": ["@changesets/changelog-github", { "repo": "flixlix/flixlix-cards" }],
+  "changelog": [
+    "@flixlix-cards/release-notes/changelog",
+    { "repo": "flixlix/flixlix-cards", "maintainers": ["flixlix"] }
+  ],
   "baseBranch": "main",
   "commit": false,
   "fixed": [],

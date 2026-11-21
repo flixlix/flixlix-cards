@@ -61,13 +61,15 @@ Each package contains its source code, changelogs, and relevant scripts.
 The repo uses [Vite+](https://viteplus.dev) (`vp`): Oxfmt for formatting, Oxlint (type-aware) for linting and Vitest for tests. Configuration lives in the root [`vite.config.ts`](vite.config.ts); repo-specific lint rules live in [`packages/tooling/lint-rules`](packages/tooling/lint-rules/).
 
 ```bash
-pnpm check      # format check + lint + type-aware checks
+pnpm check      # format check + lint + type errors (tsgolint)
 pnpm format     # apply formatting
-pnpm typecheck  # tsc per package
+pnpm typecheck  # tsc per package; optional, pnpm check already reports type errors
 pnpm test       # Vitest per package: node tests, then browser tests in Chromium
 ```
 
-CI runs the same commands; a pull request must pass all of them with zero lint errors.
+CI runs the same commands except `pnpm typecheck`; a pull request must pass all of them with zero lint errors.
+
+The Vite+ docs ship locally at `node_modules/vite-plus/docs`.
 
 ### Browser and visual tests
 
@@ -96,9 +98,28 @@ This monorepo uses [Changesets](https://github.com/changesets/changesets) to man
   pnpm changeset
   ```
 
-  Follow the prompts to create a changeset. Write a clear summary of what changed in the generated markdown file.
+  Follow the prompts to create a changeset. Pick `patch` as the bump, also for new options and features: the cards are still on 0.x, where `minor` is kept for very large features (on the scale of multiple batteries) and nothing gets `major` before 1.0. When in doubt, choose `patch` and say so in the PR. Then write its summary for someone using the card: one paragraph of at most 280 characters, starting with its type. The type picks the section of the release notes:
 
-- **Release notes and versioning** will be handled automatically during the release process.
+  | Type        | Section             |
+  | ----------- | ------------------- |
+  | `breaking:` | ⚠️ Breaking changes |
+  | `feat:`     | ✨ New              |
+  | `fix:`      | 🐛 Fixes            |
+  | `perf:`     | ⚡ Performance      |
+  | `docs:`     | 📖 Docs             |
+  | `chore:`    | 🧰 Maintenance      |
+
+  ```md
+  ---
+  "home-flow-card": patch
+  ---
+
+  feat: the battery's label can show its state of charge before, after or above its power with `battery.state_of_charge_position`.
+  ```
+
+  Say what changed for the user; leave the how, examples and tables to the README and docs. `pnpm check` and the pre-commit hook reject a changeset without a type, with more than one paragraph or over 280 characters. `pnpm install` sets up the hook; if your global git config sets `core.hooksPath`, point this repository at it once with `git config core.hooksPath .vite-hooks/_ && pnpm exec vp hooks enable`.
+
+- **Release notes and versioning** are handled automatically. Each card's GitHub release groups its changesets by type and ends with the support links and a link to the full changelog (`packages/tooling/release-notes`).
 
 ## Questions & Help
 

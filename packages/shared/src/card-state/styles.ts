@@ -19,6 +19,7 @@ type StyledNodes = {
   solar: SolarObject;
   battery: BatteryObject;
   nonFossil: NonFossilObject;
+  auxiliary: IndividualObject;
 };
 
 const PRIMARY_TEXT = "var(--primary-text-color)";
@@ -26,6 +27,7 @@ const GRID_IN = "var(--energy-grid-consumption-color)";
 const GRID_OUT = "var(--energy-grid-return-color)";
 const BATTERY_IN = "var(--energy-battery-in-color)";
 const BATTERY_OUT = "var(--energy-battery-out-color)";
+const GREYED_OUT = "var(--greyed-out--line-color)";
 
 export const HOME_SOURCE_COLORS: Record<HomeRing["largestSource"], string> = {
   battery: BATTERY_OUT,
@@ -48,6 +50,23 @@ const homeColor = (colorType: boolean | string | undefined, largest: HomeRing["l
   return source ? source[1] : PRIMARY_TEXT;
 };
 
+const isIdle = (...directions: (number | null)[]) =>
+  directions.every((value) => (value ?? 0) === 0);
+
+const greysIdleCircles = (config: FlowCardPlusConfig): boolean => {
+  const lines = config.display_zero_lines;
+  return !!lines?.grey_out_circles && (lines.mode === "grey_out" || lines.mode === "custom");
+};
+
+/** The node's own idle colour wins over the greyed-out line colour; undefined keeps the usual one. */
+const idleCircleColor = (color: ColorValue | undefined, greyIdle: boolean): string | undefined => {
+  const own = color === undefined ? "" : cssColor(color, "");
+  if (own !== "") {
+    return own;
+  }
+  return greyIdle ? GREYED_OUT : undefined;
+};
+
 /** `color_dynamically`-style choice between a node's two directions. */
 const directional = (
   type: unknown,
@@ -65,13 +84,16 @@ const directional = (
   return dynamic === "" ? fallback : dynamic;
 };
 
-const gridVars = ({ grid }: StyledNodes, entities: ConfigEntities): CssVars => {
+const gridVars = ({ grid }: StyledNodes, entities: ConfigEntities, greyIdle: boolean): CssVars => {
   const importing = (grid.state.fromGrid ?? 0) >= (grid.state.toGrid ?? 0);
   const dynamic = importing ? GRID_IN : GRID_OUT;
   const iconType = grid.color.icon_type;
   const circleType = grid.color.circle_type;
   const secondaryType = grid.secondary.color.type;
   const colorValue = entities.grid?.color_value !== false;
+  const idle = isIdle(grid.state.fromGrid, grid.state.toGrid)
+    ? idleCircleColor(grid.color.idle, greyIdle)
+    : undefined;
   return {
     "--icon-grid-color": directional(
       iconType,
@@ -80,13 +102,9 @@ const gridVars = ({ grid }: StyledNodes, entities: ConfigEntities): CssVars => {
       iconType === "color_dynamically" ? dynamic : "",
       PRIMARY_TEXT
     ),
-    "--circle-grid-color": directional(
-      circleType,
-      GRID_IN,
-      GRID_OUT,
-      circleType === "no_color" ? "" : dynamic,
-      GRID_IN
-    ),
+    "--circle-grid-color":
+      idle ??
+      directional(circleType, GRID_IN, GRID_OUT, circleType === "no_color" ? "" : dynamic, GRID_IN),
     ...(grid.color.fromGrid === undefined
       ? {}
       : { "--energy-grid-consumption-color": cssColor(grid.color.fromGrid, "#a280db") }),
@@ -102,7 +120,14 @@ const gridVars = ({ grid }: StyledNodes, entities: ConfigEntities): CssVars => {
     ),
     "--text-grid-consumption-color": colorValue ? GRID_IN : PRIMARY_TEXT,
     "--text-grid-return-color": colorValue ? GRID_OUT : PRIMARY_TEXT,
+    ...outageVars(grid),
   };
+};
+
+const outageVars = ({ powerOutage }: GridObject): CssVars => {
+  const color =
+    powerOutage.isOutage && powerOutage.color !== undefined ? cssColor(powerOutage.color, "") : "";
+  return color === "" ? {} : { "--icon-grid-color": color, "--text-grid-outage-color": color };
 };
 
 const solarVars = (entities: ConfigEntities): CssVars => {
@@ -118,13 +143,20 @@ const solarVars = (entities: ConfigEntities): CssVars => {
   };
 };
 
-const batteryVars = ({ battery }: StyledNodes, entities: ConfigEntities): CssVars => {
+const batteryVars = (
+  { battery }: StyledNodes,
+  entities: ConfigEntities,
+  greyIdle: boolean
+): CssVars => {
   const dynamic =
     (battery.state.fromBattery ?? 0) >= (battery.state.toBattery ?? 0) ? BATTERY_OUT : BATTERY_IN;
   const iconType = entities.battery?.color_icon;
   const socType = entities.battery?.color_state_of_charge_value;
   const circleType = battery.color.circle_type;
   const colorValue = entities.battery?.color_value !== false;
+  const idle = isIdle(battery.state.fromBattery, battery.state.toBattery)
+    ? idleCircleColor(battery.color.idle, greyIdle)
+    : undefined;
   return {
     ...(battery.color.fromBattery === undefined
       ? {}
@@ -146,13 +178,15 @@ const batteryVars = ({ battery }: StyledNodes, entities: ConfigEntities): CssVar
       socType === "color_dynamically" ? dynamic : "",
       PRIMARY_TEXT
     ),
-    "--circle-battery-color": directional(
-      circleType,
-      BATTERY_IN,
-      BATTERY_OUT,
-      circleType === "no_color" ? "" : dynamic,
-      BATTERY_IN
-    ),
+    "--circle-battery-color":
+      idle ??
+      directional(
+        circleType,
+        BATTERY_IN,
+        BATTERY_OUT,
+        circleType === "no_color" ? "" : dynamic,
+        BATTERY_IN
+      ),
     "--text-battery-in-color": colorValue ? BATTERY_IN : PRIMARY_TEXT,
     "--text-battery-out-color": colorValue ? BATTERY_OUT : PRIMARY_TEXT,
   };
@@ -186,7 +220,8 @@ const nonFossilAndHomeVars = (
 const lineVars = ({ grid }: StyledNodes, config: FlowCardPlusConfig) => {
   const zeroLines = config.display_zero_lines;
   const transparency = zeroLines?.mode === "transparency" ? zeroLines.transparency : undefined;
-  const greyColor = zeroLines?.mode === "grey_out" ? zeroLines.grey_color : "";
+  const greys = zeroLines?.mode === "grey_out" || zeroLines?.mode === "custom";
+  const greyColor = greys ? zeroLines.grey_color : "";
   const vars: CssVars = {
     "--battery-grid-line": (grid.state.toBattery ?? 0) > 0 ? GRID_IN : GRID_OUT,
     "--transparency-unused-lines": transparency ? transparency.toString() : "0",
@@ -205,9 +240,20 @@ const lineVars = ({ grid }: StyledNodes, config: FlowCardPlusConfig) => {
 const INDIVIDUAL_SLOTS = ["left-top", "left-bottom", "right-top", "right-bottom"] as const;
 const INDIVIDUAL_COLORS = ["#d0cc5b", "#964cb5", "#b54c9d", "#5bd0cc"] as const;
 
-const individualVars = (individuals: IndividualObject[]): CssVars => {
+const idleIndividualCircleVars = (shown: IndividualObject[], greyIdle: boolean): CssVars =>
+  Object.fromEntries(
+    shown.flatMap((individual, index) => {
+      const idle = isIdle(individual.state)
+        ? idleCircleColor(individual.field?.color_idle, greyIdle)
+        : undefined;
+      const slot = INDIVIDUAL_SLOTS[index] ?? "left-top";
+      return idle === undefined ? [] : [[`--circle-individual-${slot}-color`, idle]];
+    })
+  );
+
+const individualVars = (individuals: IndividualObject[], greyIdle: boolean): CssVars => {
   const shown = individuals.filter((individual) => individual.has).slice(0, 4);
-  return Object.fromEntries(
+  const colorVars: CssVars = Object.fromEntries(
     shown.flatMap((individual, index) => {
       const field: Partial<IndividualDeviceType> = individual.field ?? {};
       const slot = INDIVIDUAL_SLOTS[index] ?? "left-top";
@@ -227,6 +273,23 @@ const individualVars = (individuals: IndividualObject[]): CssVars => {
       ];
     })
   );
+  return { ...colorVars, ...idleIndividualCircleVars(shown, greyIdle) };
+};
+
+const AUXILIARY_COLOR = "#a1887f";
+
+const auxiliaryVars = ({ auxiliary }: StyledNodes, greyIdle: boolean): CssVars => {
+  const field: Partial<IndividualDeviceType> = auxiliary.field ?? {};
+  const color = "var(--auxiliary-color)";
+  const idle = isIdle(auxiliary.state) ? idleCircleColor(field.color_idle, greyIdle) : undefined;
+  return {
+    "--auxiliary-color":
+      field.color === undefined ? AUXILIARY_COLOR : cssColor(field.color, AUXILIARY_COLOR),
+    "--icon-auxiliary-color": field.color_icon !== false ? color : PRIMARY_TEXT,
+    "--text-auxiliary-color": field.color_value ? color : PRIMARY_TEXT,
+    "--secondary-text-auxiliary-color": field.secondary_info?.color_value ? color : PRIMARY_TEXT,
+    ...(idle === undefined ? {} : { "--circle-auxiliary-color": idle }),
+  };
 };
 
 const DEFAULT_ORBIT_COLOR = "#964cb5";
@@ -269,13 +332,16 @@ export const computeCssVars = (
   individuals: IndividualObject[]
 ): CssVars => {
   const { entities } = config;
+  const greyIdle = greysIdleCircles(config);
   return {
     "--clickable-cursor": config.clickable_entities ? "pointer" : "default",
-    ...gridVars(nodes, entities),
+    "--clickable-pointer-events": config.clickable_entities ? "auto" : "none",
+    ...gridVars(nodes, entities, greyIdle),
     ...solarVars(entities),
-    ...batteryVars(nodes, entities),
+    ...batteryVars(nodes, entities, greyIdle),
     ...nonFossilAndHomeVars(nodes, entities, largestHomeSource),
     ...lineVars(nodes, config),
-    ...individualVars(individuals),
+    ...individualVars(individuals, greyIdle),
+    ...auxiliaryVars(nodes, greyIdle),
   };
 };

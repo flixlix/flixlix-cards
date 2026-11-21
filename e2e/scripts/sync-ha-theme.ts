@@ -46,8 +46,23 @@ const light = await themeVars("light");
 const dark = await themeVars("dark");
 await browser.close();
 
+/**
+ * A custom property's value can be almost anything, so Home Assistant's own CSS can leak into one
+ * (a rule after a missing semicolon). Written into the inline style, its unclosed brackets would
+ * swallow every declaration after it.
+ */
+const wellFormed = (value: string) =>
+  !value.includes("@") &&
+  (value.match(/[({[]/g) ?? []).length === (value.match(/[)}\]]/g) ?? []).length;
+
 const block = (vars: Vars) =>
   Object.entries(vars)
+    .filter(([name, value]) => {
+      if (!wellFormed(value)) {
+        console.warn(`Skipped ${name}, its value is not well-formed CSS: ${value}`);
+      }
+      return wellFormed(value);
+    })
     .toSorted(([a], [b]) => a.localeCompare(b))
     .map(([name, value]) => `  ${name}: ${value.replaceAll("`", "\\`")};`)
     .join("\n");

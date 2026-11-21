@@ -1,6 +1,7 @@
 import { type FossilEnergyConsumption } from "@flixlix-cards/shared/states/utils/energy-period";
 import {
   type BatteryObject,
+  type DotAnimationOption,
   type EnergyFlowCardPlusConfig,
   type GridObject,
   type HomeObject,
@@ -11,7 +12,7 @@ import {
   type TemplatesObj,
 } from "@flixlix-cards/shared/types";
 import { type HomeAssistant } from "custom-card-helpers";
-import { type OrbitGeometry } from "./orbit";
+import { type ConditionContext } from "./conditions";
 
 /**
  * What a reading measures. It picks the display units (W or Wh) and which direction a single
@@ -20,6 +21,9 @@ import { type OrbitGeometry } from "./orbit";
 export type UnitFamily = "power" | "energy";
 
 export type Readings = { status: "loading" } | ReadyReadings;
+
+/** An entity's reading in W or Wh, or null while it is unavailable or has no value. */
+export type EntityReader = (entity?: string) => number | null;
 
 /**
  * A grid or battery reading as read from its entities: one entity for both directions, or one
@@ -43,6 +47,12 @@ export type ReadyReadings = {
   generator: number | null;
   /** Reading of each configured individual device, in config order. */
   individuals: (number | null)[];
+  auxiliary: number | null;
+  /**
+   * Each device's secondary entity read over the energy period, in Wh. Null, or left out, shows
+   * the secondary entity's live state instead.
+   */
+  periodSecondaries?: { individuals: (number | null)[]; auxiliary: number | null };
   fossilEnergyConsumption?: FossilEnergyConsumption;
 };
 
@@ -52,6 +62,8 @@ export type CardStateInput = {
   hass: HomeAssistant;
   readings: Readings;
   templates: TemplatesObj;
+  /** The screen and the time, for an individual device's `visibility` conditions. */
+  conditionContext: ConditionContext;
   /** Card content width in pixels. */
   width: number;
   /** Dots are not animated while the page is hidden. */
@@ -71,6 +83,7 @@ export type FlowName =
 
 export type Flow = {
   value: number;
+  /** Seconds a dot takes along a line of `REFERENCE_LINE_LENGTH`; see `lineDuration`. */
   durationSeconds: number;
   /** Whether the line is drawn at all. */
   visible: boolean;
@@ -78,7 +91,7 @@ export type Flow = {
   lineClass: string;
 };
 
-export type Flows = Record<FlowName, Flow> & { individual: Flow[] };
+export type Flows = Record<FlowName, Flow> & { individual: Flow[]; auxiliary: Flow };
 
 export type IndividualSlot = { node: IndividualObject; flow: Flow };
 
@@ -107,14 +120,27 @@ export type HomeRing = {
 };
 
 export type CardLayout = {
+  /**
+   * Off only without a grid and an auxiliary entity, so a node hidden at zero keeps its column and
+   * nothing shifts.
+   */
+  hasGridColumn: boolean;
+  /**
+   * How far the columns move right, in distances between columns, so the group looks centred:
+   * negative moves left. Only a card with two columns moves.
+   */
+  opticalShift: number;
   showTopRow: boolean;
   showBottomRow: boolean;
   hasRightIndividual: boolean;
   showHomeLabel: boolean;
+  /** Off while the auxiliary line runs up into the grid, through where its label sits. */
+  showGridLabel: boolean;
 };
 
 export type ReadyCardState = {
   status: "ready";
+  family: UnitFamily;
   nodes: {
     grid: GridObject;
     solar: SolarObject;
@@ -123,6 +149,7 @@ export type ReadyCardState = {
     nonFossil: NonFossilObject;
     /** Visible individual devices, sorted when configured. */
     individuals: IndividualObject[];
+    auxiliary: IndividualObject;
   };
   /** Set instead of the slots when the card has no grid, solar or battery. */
   orbit?: OrbitState;
@@ -141,6 +168,8 @@ export type ReadyCardState = {
   flows: Flows;
   /** Whether flow dots are animated. */
   animate: boolean;
+  /** How flow dots move; `auto` is resolved in the browser (`resolveDotAnimation`). */
+  dotAnimation: DotAnimationOption;
   cssVars: Record<`--${string}`, string>;
   layout: CardLayout;
 };

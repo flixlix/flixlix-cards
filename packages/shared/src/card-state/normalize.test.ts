@@ -1,6 +1,6 @@
 import * as fc from "fast-check";
 import { describe, expect, test } from "vite-plus/test";
-import { fakeConfig, fakeEntity, fakeHass } from "../testing/fixtures";
+import { fakeConditionContext, fakeConfig, fakeEntity, fakeHass } from "../testing/fixtures";
 import { type FlowCardPlusConfig } from "../types";
 import { normalize } from "./normalize";
 import { solve } from "./solve";
@@ -18,6 +18,7 @@ const readings = (overrides: Partial<ReadyReadings> = {}): ReadyReadings => ({
   battery: none,
   home: null,
   generator: null,
+  auxiliary: null,
   individuals: [],
   ...overrides,
 });
@@ -26,6 +27,7 @@ const grid = { entity: "sensor.grid", power_outage: { entity: "binary_sensor.out
 
 const input = (entities: FlowCardPlusConfig["entities"], states: Record<string, string> = {}) => ({
   config: fakeConfig({ entities }),
+  conditionContext: fakeConditionContext,
   hass: fakeHass({
     states: Object.fromEntries(
       Object.entries(states).map(([id, state]) => [id, fakeEntity(id, state)])
@@ -44,10 +46,13 @@ const measured = (override: boolean) =>
     readings({ grid: single(300), home: 420 })
   ).totals.measuredHome;
 
-const fraction = (percentage: string) =>
+const fraction = (percentage: string, invert_state?: boolean) =>
   normalize(
     input(
-      { grid, fossil_fuel_percentage: { entity: "sensor.fossil", secondary_info: {} } },
+      {
+        grid,
+        fossil_fuel_percentage: { entity: "sensor.fossil", invert_state, secondary_info: {} },
+      },
       { "sensor.fossil": percentage, "binary_sensor.outage": "off" }
     ),
     readings({ grid: single(100) })
@@ -189,6 +194,12 @@ describe("tolerance, outage and hidden nodes", () => {
     expect(fraction("30")).toBeCloseTo(0.7, 10);
     expect(fraction("140")).toBe(0);
   });
+
+  test("invert_state reads the entity as the low-carbon percentage", () => {
+    expect(fraction("30", true)).toBeCloseTo(0.3, 10);
+    expect(fraction("140", true)).toBe(1);
+    expect(fraction("-20", true)).toBe(0);
+  });
 });
 
 const reading = fc.oneof(
@@ -303,112 +314,24 @@ describe("normalize properties", () => {
   });
 });
 
-const deviceOnly = (entities: FlowCardPlusConfig["entities"]) => ({
-  ...input(entities),
-  deviceOnly: true,
-});
-
-describe("device-only mode (no grid, solar or battery)", () => {
-  const plugs = [{ entity: "sensor.a" }, { entity: "sensor.b", display_zero: false }];
-
-  test("measured home is the home entity's reading, even without override_state", () => {
-    const totals = normalize(
-      deviceOnly({ home: { entity: "sensor.home" }, individual: plugs }),
-      readings({ home: 420, individuals: [100, 50] })
-    ).totals;
-    expect(totals.measuredHome).toBe(420);
-  });
-
-  test("without a home entity it is the sum of the shown devices", () => {
-    const totals = normalize(
-      deviceOnly({ individual: plugs }),
-      readings({ individuals: [100, 0] })
-    ).totals;
-    expect(totals.measuredHome).toBe(100);
-  });
-
-  test("an unavailable home entity is not replaced by the sum of the devices", () => {
-    const totals = normalize(
-      deviceOnly({ home: { entity: "sensor.home" }, individual: plugs }),
-      readings({ home: null, individuals: [100, 30] })
-    ).totals;
-    expect(totals.measuredHome).toBeUndefined();
-  });
-
-  describe("devices that feed power into the home", () => {
-    const devices = [
-      { entity: "sensor.oven" },
-      { entity: "sensor.washer" },
-      { entity: "sensor.dryer" },
-      { entity: "sensor.balcony", accept_negative: true },
-    ];
-
-    test("are taken off the sum of the devices", () => {
-      const totals = normalize(
-        deviceOnly({ individual: devices }),
-        readings({ individuals: [1100, 600, 300, -200] })
-      ).totals;
-      expect(totals.measuredHome).toBe(1800);
-    });
-
-    test("never take the sum below zero", () => {
-      const totals = normalize(
-        deviceOnly({ individual: devices }),
-        readings({ individuals: [100, 0, 0, -700] })
-      ).totals;
-      expect(totals.measuredHome).toBe(0);
-    });
-
-    test("count as a load when they are positive", () => {
-      const totals = normalize(
-        deviceOnly({ individual: devices }),
-        readings({ individuals: [1100, 600, 300, 200] })
-      ).totals;
-      expect(totals.measuredHome).toBe(2200);
-    });
-
-    test("without accept_negative a negative reading counts as a load", () => {
-      const totals = normalize(
-        deviceOnly({ individual: [{ entity: "sensor.a" }, { entity: "sensor.b" }] }),
-        readings({ individuals: [100, -200] })
-      ).totals;
-      expect(totals.measuredHome).toBe(300);
-    });
-  });
-
-  test("a source keeps the old rule: measured only with override_state", () => {
-    expect(measured(true)).toBe(420);
-    expect(measured(false)).toBeUndefined();
-    const withGrid = normalize(
-      input({ grid, home: { entity: "sensor.home" } }),
-      readings({ grid: single(300), home: 420 })
-    ).totals;
-    expect(withGrid.measuredHome).toBeUndefined();
-  });
-
-  test("devices at 0 W stay shown by default: there are no slots to save", () => {
+describe("presence", () => {
+  test("a node with an empty entity, as left by clearing it in the editor, is not drawn", () => {
     const { presence } = normalize(
-      deviceOnly({ individual: [{ entity: "sensor.on" }, { entity: "sensor.off" }] }),
-      readings({ individuals: [50, 0] })
-    );
-    expect(presence.individuals).toEqual([true, true]);
-  });
-
-  test("display_zero: false still hides a device at 0 W", () => {
-    const { presence } = normalize(
-      deviceOnly({
-        individual: [{ entity: "sensor.on" }, { entity: "sensor.off", display_zero: false }],
+      input({
+        grid: { entity: "" },
+        solar: { entity: "" },
+        battery: { entity: { consumption: "", production: "" } },
       }),
-      readings({ individuals: [50, 0] })
+      readings({ grid: single(400), solar: { total: 800, secondary: 0 }, battery: single(200) })
     );
-    expect(presence.individuals).toEqual([true, false]);
+    expect(presence).toMatchObject({ grid: false, solar: false, battery: false });
   });
 
-  test("nothing flows from sources, so balanced home is 0", () => {
-    const { totals } = normalize(
-      deviceOnly({ individual: plugs }),
-      readings({ individuals: [100, 50] })
+  test("split entities count with one side set", () => {
+    const { presence } = normalize(
+      input({ grid: { entity: { consumption: "sensor.import", production: "" } } }),
+      readings({ grid: { kind: "split", into: 0, outOf: 400 } })
     );
-    expect(solve(totals).home).toBe(0);
+    expect(presence.grid).toBe(true);
   });
 });

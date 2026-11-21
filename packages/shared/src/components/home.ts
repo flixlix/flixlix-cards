@@ -14,7 +14,7 @@ export const homeElement = (
   { home, ring, showLabel }: { home: HomeObject; ring: HomeRing; showLabel: boolean }
 ) => {
   const { entities } = config;
-  const isHomeEntityDefined = entities.home?.entity !== undefined;
+  const isHomeEntityDefined = !!entities.home?.entity;
   const noActionSet = new Set(["none", undefined]);
   const staticAction =
     !noActionSet.has(entities.home?.tap_action?.action) ||
@@ -56,7 +56,7 @@ export const homeElement = (
         <ha-ripple .disabled=${disableEntityClick}></ha-ripple>
         ${generalSecondarySpan(main, home.secondary, "home")}
         ${home.icon !== " " ? html`<ha-icon id="home-icon" .icon=${home.icon}></ha-icon>` : nothing}
-        ${ring.usageText}
+        <span class="home">${ring.usageText}</span>
         <svg class="home-circle-sections">
           <circle
             class="solar"

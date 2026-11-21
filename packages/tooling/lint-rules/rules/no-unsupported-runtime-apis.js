@@ -23,7 +23,7 @@ const noUnsupportedRuntimeApis = defineRule({
     type: "problem",
     docs: {
       description:
-        "Disallow runtime APIs newer than the cards' browser targets; Babel only transpiles syntax, so these throw on older browsers and the card renders blank.",
+        "Disallow runtime APIs newer than the cards' browser targets; the build only transpiles syntax, so these throw on older browsers and the card renders blank.",
     },
     messages: {
       unsupported:

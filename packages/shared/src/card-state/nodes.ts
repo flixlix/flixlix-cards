@@ -12,6 +12,7 @@ import {
   type SecondaryInfoObject,
   type SecondaryInfoType,
   type SolarObject,
+  type Topology,
 } from "@flixlix-cards/shared/types";
 import {
   computeFieldIcon,
@@ -27,7 +28,7 @@ import { type NodeFlows } from "./solve";
 import { type CardStateInput, type ReadyReadings } from "./types";
 
 /** Node totals and presence with the flows solved from them. */
-export type Balance = Normalized & Readonly<{ flows: NodeFlows }>;
+export type Balance = Normalized & Readonly<{ flows: NodeFlows; topology: Topology }>;
 
 type NodeContext = {
   input: CardStateInput;
@@ -50,7 +51,7 @@ const secondaryInfo = (
   templateResult: string | undefined
 ): SecondaryInfoObject => {
   const state = secondaryState(input.hass, info?.entity);
-  const has = info?.entity !== undefined;
+  const has = !!info?.entity;
   const accept_negative = info?.accept_negative ?? false;
   return {
     entity: info?.entity,
@@ -98,10 +99,11 @@ type GridConfig = ConfigEntities["grid"];
 const gridPowerOutage = (grid: GridConfig, outage: boolean): GridObject["powerOutage"] => {
   const powerOutage = grid?.power_outage;
   return {
-    has: powerOutage?.entity !== undefined,
+    has: !!powerOutage?.entity,
     isOutage: outage,
     icon: powerOutage?.icon_alert?.length ? powerOutage.icon_alert : "mdi:transmission-tower-off",
     name: powerOutage?.label_alert ?? html`Power<br />Outage`,
+    color: powerOutage?.color_alert,
     entityGenerator: powerOutage?.entity_generator,
   };
 };
@@ -109,6 +111,7 @@ const gridPowerOutage = (grid: GridConfig, outage: boolean): GridObject["powerOu
 const gridColor = (grid: GridConfig): GridObject["color"] => ({
   fromGrid: grid?.color?.consumption,
   toGrid: grid?.color?.production,
+  idle: grid?.color?.idle,
   icon_type: toGridIconType(grid?.color_icon),
   circle_type: grid?.color_circle,
 });
@@ -282,6 +285,7 @@ export const batteryNode = ({ input, balance, format }: NodeContext): BatteryObj
     color: {
       fromBattery: battery?.color?.consumption,
       toBattery: battery?.color?.production,
+      idle: battery?.color?.idle,
       icon_type: undefined,
       circle_type: battery?.color_circle,
     },
@@ -293,7 +297,7 @@ export const homeNode = (context: NodeContext, label: string): HomeObject => {
   const home = config.entities.home;
   return {
     entity: home?.entity,
-    has: home?.entity !== undefined,
+    has: !!home?.entity,
     state: null,
     icon: computeFieldIcon(hass, home, "mdi:home"),
     name: computeFieldName(hass, home, label),

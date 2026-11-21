@@ -1,106 +1,103 @@
 import {
   computeCardState,
   type CardState,
-  houseWires,
-  type ReadyCardState,
+  energyReader,
+  energyReadings,
+  type EntityReader,
   powerReadings,
+  type Readings,
   watchedEntities,
+  wattsReader,
 } from "@flixlix-cards/shared/card-state";
 import { EntityActions } from "@flixlix-cards/shared/utils/entity-actions";
 import { applyCardState } from "@flixlix-cards/shared/utils/apply-card-state";
-import {
-  assertRenderableFlowCardConfig,
-  displayZeroLinesWithDefaults,
-} from "@flixlix-cards/shared/utils/flow-card-config";
-import { defaultValues, getDefaultConfig } from "@flixlix-cards/shared/utils/get-default-config";
+import { EnergyPeriodController } from "@flixlix-cards/shared/utils/energy-period-controller";
+import { getDefaultConfig } from "@flixlix-cards/shared/utils/get-default-config";
 import { registerCustomCard } from "@flixlix-cards/shared/utils/register-custom-card";
 import { cardShouldUpdate } from "@flixlix-cards/shared/utils/relevant-change";
 import { SecondaryTemplates } from "@flixlix-cards/shared/utils/secondary-templates";
-import { coerceNumber } from "@flixlix-cards/shared/utils/utils";
+import { ServerConditionsController } from "@flixlix-cards/shared/utils/server-conditions";
+import { WidthController } from "@flixlix-cards/shared/utils/width-controller";
 import { type HomeAssistant, type LovelaceCardEditor } from "custom-card-helpers";
 import { html, LitElement, nothing, type PropertyValues, type TemplateResult } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import NumberFlow, { canAnimate } from "number-flow";
-import packageJson from "../package.json" with { type: "json" };
-import { Extent } from "./extent";
-import { houseLabels } from "./labels";
-import { includeLabel, labelsHtml, leaderSvg } from "./render-labels";
-import { sceneSvg } from "./render-scene";
-import { gridFade, keepPulsePhase } from "./render-wires";
-import { HOUSE_SPAN, project } from "./scene";
+import { version } from "../package.json";
+import { HomeFlowCardEditor } from "./ui-editor/ui-editor";
+import {
+  isDarkMode,
+  isEnergy,
+  isPageHidden,
+  prefersReducedMotion,
+  statisticIds,
+} from "./card-environment";
+import { carEntities, carScene, type CarStatus, carStatus, houseConditions } from "./car-node";
+import { drawHouse } from "./draw-house";
+import { withDefaults } from "./flow-defaults";
+import { heatPumpEntities } from "./heat-pump-node";
+import { liveHouse } from "./live-house";
+import { stageHtml } from "./render-stage";
+import { keepPulsePhase } from "./render-wires";
+import { type SceneLayout } from "./scene";
 import { styles } from "./styles";
 import {
-  DEFAULT_STATE_OF_CHARGE_SEVERITY,
   type FlowConfig,
   fromEntities,
   type HomeFlowCardConfig,
   toFlowConfig,
+  toFlowViews,
 } from "./types";
 import { unitSlide } from "./unit-slide";
+import { ViewController } from "./view-controller";
+import { viewDropdownStyles } from "./view-dropdown";
+import { viewSelectorStyles } from "./view-selector";
 import { morphWord } from "./word-morph";
 
 registerCustomCard({
   type: "home-flow-card",
   name: "Home Flow Card",
   description:
-    "Power flows drawn on an isometric house: solar on the roof, a battery on the wall and every wire running through the inverter.",
-  version: packageJson.version,
+    "Power or energy flows drawn on an isometric house: solar on the roof, a battery on the wall and every wire running through the inverter.",
+  version: version,
 });
-
-/** Home Assistant's `hass.themes.darkMode`, which custom-card-helpers' types leave out. */
-const isDarkMode = (hass: HomeAssistant): boolean => {
-  const themes: unknown = hass.themes;
-  return (
-    typeof themes === "object" &&
-    themes !== null &&
-    "darkMode" in themes &&
-    themes.darkMode === true
-  );
-};
-
-const prefersReducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-const isPageHidden = () => typeof document !== "undefined" && document.visibilityState === "hidden";
-
-/** The house's middle, which the viewBox leans towards so the scene reads as centred. */
-const HOUSE_MIDDLE = (project(HOUSE_SPAN[0])[0] + project(HOUSE_SPAN[1])[0]) / 2;
-
-/** The scene, its leaders and labels, and the viewBox that holds them all. */
-const drawHouse = (config: FlowConfig, cardState: ReadyCardState, language: string) => {
-  const wires = houseWires(config, cardState);
-  const labels = houseLabels(cardState, wires, config.generator, language);
-  const extent = new Extent();
-  const reserveGenerator = Boolean(config.entities.grid?.power_outage?.entity_generator);
-  const scene = sceneSvg({
-    cardState,
-    wires,
-    extent,
-    severity: config.entities.battery?.state_of_charge_severity ?? DEFAULT_STATE_OF_CHARGE_SEVERITY,
-    reserveGenerator,
-  });
-  const leaders = labels.map((label) => leaderSvg(label, extent));
-  if (reserveGenerator) {
-    includeLabel(extent, "generator", false);
-  }
-  return { labels, scene, leaders, box: extent.viewBox(10, HOUSE_MIDDLE) };
-};
 
 @customElement("home-flow-card")
 export class HomeFlowCard extends LitElement {
   @property({ attribute: false }) public hass!: HomeAssistant;
   /** The config in the `entities` shape the shared pipeline reads, with defaults filled in. */
   @state() private _config!: FlowConfig;
-  @state() private _width = 0;
+  private readonly _views = new ViewController(this, (config) => {
+    this._config = config;
+    void this._energy.refresh();
+  });
+  private readonly _width = new WidthController(this, ".stage > svg");
+  private readonly _energy = new EnergyPeriodController(this, () => {
+    const config =
+      this._views.views?.period ?? (this._config && isEnergy(this._config) && this._config);
+    return config
+      ? {
+          hass: this.hass,
+          collectionKey: config.collection_key,
+          period: this._views.period,
+          statisticIds: statisticIds(config),
+        }
+      : null;
+  });
   @state() private _pageHidden = isPageHidden();
   private _cardState?: CardState;
+  /** Reads the fixtures' entities as the nodes' are read: in W, or in Wh over the period. */
+  private _read: EntityReader = () => null;
+  private _carStatus: CarStatus = "hidden";
   private _appliedCardState?: CardState;
-  private _resizeObserver?: ResizeObserver;
-  private _observedScene?: Element;
   private readonly _pulseDurations = new WeakMap<Element, number>();
   private _unitSlide?: ReturnType<typeof unitSlide>;
   private readonly _actions = new EntityActions(this, () => ({
     hass: this.hass,
     clickableEntities: this._config.clickable_entities,
+  }));
+  private readonly _conditions = new ServerConditionsController(this, () => ({
+    hass: this.hass,
+    conditions: [this._config, this._views.views?.live].flatMap(houseConditions),
   }));
   private readonly _templates = new SecondaryTemplates(this, () => ({
     hass: this.hass,
@@ -111,19 +108,11 @@ export class HomeFlowCard extends LitElement {
   };
 
   setConfig(cardConfig: HomeFlowCardConfig): void {
-    const config = toFlowConfig(cardConfig);
-    assertRenderableFlowCardConfig(config);
-    this._config = {
-      ...config,
-      min_flow_rate: coerceNumber(config.min_flow_rate, defaultValues.minFlowRate),
-      max_flow_rate: coerceNumber(config.max_flow_rate, defaultValues.maxFlowRate),
-      base_decimals: coerceNumber(config.base_decimals, defaultValues.baseDecimals),
-      kilo_decimals: coerceNumber(config.kilo_decimals, defaultValues.kiloDecimals),
-      kilo_threshold: coerceNumber(config.kilo_threshold, defaultValues.kiloThreshold),
-      max_expected_power: coerceNumber(config.max_expected_power, defaultValues.maxExpectedPower),
-      min_expected_power: coerceNumber(config.min_expected_power, defaultValues.minExpectedPower),
-      display_zero_lines: displayZeroLinesWithDefaults(config.display_zero_lines),
-    };
+    const views = toFlowViews(cardConfig);
+    this._views.configure(
+      views && { ...views, live: withDefaults(views.live), period: withDefaults(views.period) }
+    );
+    this._config = this._views.config ?? withDefaults(toFlowConfig(cardConfig));
   }
 
   public connectedCallback() {
@@ -134,22 +123,18 @@ export class HomeFlowCard extends LitElement {
   }
 
   public disconnectedCallback() {
-    this._resizeObserver?.disconnect();
-    this._resizeObserver = undefined;
-    this._observedScene = undefined;
     if (typeof document !== "undefined") {
       document.removeEventListener("visibilitychange", this._handleVisibilityChange);
     }
     super.disconnectedCallback();
   }
 
-  public static async getConfigElement(): Promise<LovelaceCardEditor> {
-    await import("./ui-editor/ui-editor");
-    return document.createElement("home-flow-card-editor");
+  public static getConfigElement(): LovelaceCardEditor {
+    return new HomeFlowCardEditor();
   }
 
-  public static getStubConfig(hass: HomeAssistant): object {
-    return fromEntities(getDefaultConfig(hass, "power"));
+  public static async getStubConfig(hass: HomeAssistant): Promise<object> {
+    return fromEntities(await getDefaultConfig(hass, "power"));
   }
 
   public getCardSize(): number {
@@ -157,10 +142,17 @@ export class HomeFlowCard extends LitElement {
   }
 
   protected shouldUpdate(changedProps: PropertyValues<this>): boolean {
+    this._energy.subscribe();
     return cardShouldUpdate(
       changedProps,
       this.hass,
-      this._config ? watchedEntities(this._config) : []
+      this._config
+        ? [
+            ...watchedEntities(this._config),
+            ...carEntities(this._config.car),
+            ...heatPumpEntities(this._config.heat_pump),
+          ]
+        : []
     );
   }
 
@@ -174,47 +166,112 @@ export class HomeFlowCard extends LitElement {
       this.shadowRoot && this._animatesNumbers() && !prefersReducedMotion()
         ? unitSlide(this.shadowRoot)
         : undefined;
+    if (changedProps.has("_config")) {
+      void this._energy.refresh();
+    }
+    this._read = this._reader();
+    this._conditions.sync();
     this._cardState = computeCardState({
       config: this._config,
       hass: this.hass,
-      readings: powerReadings(this.hass, this._config),
+      readings: this._readings(),
       templates: this._templates.templates(this._config),
-      width: this._width,
+      conditionContext: this._conditions.context,
+      width: this._width.width,
       pageHidden: this._pageHidden,
     });
+    this.toggleAttribute("dark", isDarkMode(this.hass));
+    this._carStatus = this._carStatusNow();
+  }
+
+  private _reader(): EntityReader {
+    return isEnergy(this._config)
+      ? energyReader(this.hass, this._energy.growthMap ?? {}, true)
+      : wattsReader(this.hass);
+  }
+
+  private _readings(): Readings {
+    return isEnergy(this._config)
+      ? energyReadings(
+          this.hass,
+          { ...this._config, energy_date_selection: true },
+          this._energy.growthMap
+        )
+      : powerReadings(this.hass, this._config);
+  }
+
+  private _carStatusNow(): CarStatus {
+    const car = this._config.car;
+    const family = isEnergy(this._config) ? "energy" : "power";
+    return car ? carStatus(this.hass, car, this._read, family, this._conditions.context) : "hidden";
   }
 
   protected render(): TemplateResult | typeof nothing {
-    const cardState = this._cardState;
-    if (!this._config || !this.hass || cardState?.status !== "ready") {
+    if (!this._config || !this.hass) {
       return nothing;
     }
-    const { labels, scene, leaders, box } = drawHouse(
+    const live = this._liveHouse();
+    const house = this._house(live?.layout) ?? live;
+    if (!house) {
+      return isEnergy(this._config) ? this._energyPlaceholder() : nothing;
+    }
+    return stageHtml({
+      house,
+      boxFor: live?.boxFor ?? house.boxFor,
+      width: this._width.width,
+      config: this._config,
+      context: {
+        actions: this._actions,
+        clickable: this._config.clickable_entities,
+        animateNumbers: this._animatesNumbers(),
+        locale: this.hass.locale,
+      },
+      selector: this._views.render(this._language()),
+    });
+  }
+
+  private _house(frame?: SceneLayout) {
+    const cardState = this._cardState;
+    if (cardState?.status !== "ready" || (isEnergy(this._config) && !this._energy.window)) {
+      return undefined;
+    }
+    return drawHouse(
       this._config,
       cardState,
-      this.hass.locale?.language ?? "en"
+      this.hass,
+      carScene(this.hass, this._config.car, this._carStatus, this._read),
+      this._read,
+      frame
     );
-    const unit = this._width > 0 ? this._width / box.width : 1;
-    const context = {
-      actions: this._actions,
-      clickable: this._config.clickable_entities ?? false,
-      animateNumbers: this._animatesNumbers(),
-      locale: this.hass.locale,
-    };
-    return html`
-      <ha-card .header=${this._config.title}>
-        <div class="stage ${this._config.title ? "titled" : ""}" style=${`--house-unit: ${unit}px`}>
-          <svg
-            viewBox="${box.x} ${box.y} ${box.width} ${box.height}"
-            role="img"
-            aria-label=${labels.map((label) => label.name).join(", ")}
-          >
-            ${gridFade(box)} ${scene} ${leaders}
-          </svg>
-          ${labelsHtml(labels, box, context)}
-        </div>
-      </ha-card>
-    `;
+  }
+
+  /** Home Assistant's own words while the period loads, or without a date picker to follow. */
+  private _energyPlaceholder(): TemplateResult {
+    const key = this._energy.window ? "loading" : "no_data";
+    return html`<ha-card .header=${this._config.title}>
+      <div class="card-content ${this._views.views ? "with-views" : ""}">
+        ${this.hass.localize(`ui.panel.lovelace.cards.energy.${key}`)}
+        ${this._views.render(this._language())}
+      </div>
+    </ha-card>`;
+  }
+
+  private _liveHouse() {
+    const live = this._views.views?.live;
+    return live && this._config !== live
+      ? liveHouse({
+          config: live,
+          hass: this.hass,
+          templates: this._templates.templates(live),
+          width: this._width.width,
+          pageHidden: this._pageHidden,
+          conditionContext: this._conditions.context,
+        })
+      : undefined;
+  }
+
+  private _language() {
+    return this.hass.locale?.language ?? "en";
   }
 
   protected updated(changedProps: PropertyValues): void {
@@ -222,8 +279,6 @@ export class HomeFlowCard extends LitElement {
     if (!this._config || !this.hass || !this.shadowRoot) {
       return;
     }
-    this._observeWidth();
-    this.toggleAttribute("dark", isDarkMode(this.hass));
     const cardState = this._cardState;
     if (cardState?.status === "ready" && cardState !== this._appliedCardState) {
       applyCardState(this, cardState);
@@ -246,24 +301,7 @@ export class HomeFlowCard extends LitElement {
     return this._config.animate_numbers !== false && canAnimate;
   }
 
-  /** The scene's rendered width sets the label size, so labels scale with the drawing. */
-  private _observeWidth() {
-    const scene = this.shadowRoot?.querySelector(".stage > svg");
-    if (!scene || scene === this._observedScene) {
-      return;
-    }
-    this._observedScene = scene;
-    this._resizeObserver?.disconnect();
-    this._resizeObserver ??= new ResizeObserver(([entry]) => {
-      if (entry) {
-        this._width = Math.round(entry.target.getBoundingClientRect().width);
-      }
-    });
-    this._resizeObserver.observe(scene);
-    this._width = Math.round(scene.getBoundingClientRect().width);
-  }
-
-  static styles = styles;
+  static styles = [styles, viewSelectorStyles, viewDropdownStyles];
 }
 
 declare global {

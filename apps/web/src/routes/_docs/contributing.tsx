@@ -20,6 +20,7 @@ import {
   Prose,
   Section,
 } from "@/components/docs/doc-primitives";
+import { heading } from "@/lib/page-meta";
 import { Button } from "@flixlix-cards/ui/components/button";
 import {
   Card,
@@ -38,7 +39,7 @@ function ContributingPage() {
     <>
       <PageHeader
         eyebrow="Project"
-        title="How to contribute"
+        title={heading("/contributing")}
         description="Thanks for your interest in improving flixlix-cards! This guide walks you through setting up the monorepo, working on a card, and getting your changes merged."
         badges={[{ label: "Monorepo" }, { label: "pnpm" }, { label: "Changesets" }]}
       />
@@ -237,9 +238,10 @@ pnpm test           # Vitest via vp test`}
         <CodeBlock language="bash" code={`pnpm changeset`} />
         <Prose>
           <p>
-            Pick the affected packages, pick the bump type (<code>patch</code>, <code>minor</code>,
-            or <code>major</code>) and write a clear summary. The summary appears in the next
-            release notes.
+            Pick the affected packages and choose <code>patch</code> as the bump, also for new
+            options and features. The cards are still on 0.x, so <code>minor</code> is kept for very
+            large features (on the scale of multiple batteries) and nothing gets <code>major</code>{" "}
+            before 1.0. Then write a clear summary; it appears in the next release notes.
           </p>
         </Prose>
       </Section>

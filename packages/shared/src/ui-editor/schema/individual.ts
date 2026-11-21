@@ -84,15 +84,35 @@ export const individualSchema = [
   },
   mainSchema,
   {
-    name: "color",
-    label: "Color",
-    selector: { color_rgb: {} },
+    name: "",
+    type: "grid",
+    column_min_width: "200px",
+    schema: [
+      {
+        name: "color",
+        label: "Color",
+        selector: { color_rgb: {} },
+      },
+      {
+        name: "color_idle",
+        label: "Idle Color",
+        selector: { color_rgb: {} },
+      },
+    ],
   },
   {
     title: localize("editor.secondary_info"),
     name: "secondary_info",
     type: "expandable",
-    schema: secondaryInfoSchema,
+    schema: [
+      ...secondaryInfoSchema,
+      {
+        name: "sum_total",
+        label: "Sum Total",
+        translation_key: "sum_total_individual",
+        selector: { boolean: {} },
+      },
+    ],
   },
   {
     title: localize("editor.action"),
@@ -101,3 +121,14 @@ export const individualSchema = [
     schema: actionSchema,
   },
 ] as const;
+
+/**
+ * The device's visibility conditions as YAML, should Home Assistant's own conditions editor not
+ * be there: it is defined while a dashboard is being edited, but it is not a public API.
+ */
+export const individualVisibilityAsYaml = {
+  title: localize("editor.advanced"),
+  name: "",
+  type: "expandable",
+  schema: [{ name: "visibility", selector: { object: {} } }],
+} as const;

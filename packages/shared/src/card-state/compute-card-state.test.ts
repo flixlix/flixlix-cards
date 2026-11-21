@@ -1,3 +1,4 @@
+import { fakeConditionContext } from "@flixlix-cards/shared/testing/fixtures";
 import { CIRCLE_CIRCUMFERENCE } from "@flixlix-cards/shared/const/circle";
 import {
   type FlowCardPlusConfig,
@@ -9,6 +10,7 @@ import * as fc from "fast-check";
 import { describe, expect, test } from "vite-plus/test";
 import { computeCardState } from "./compute-card-state";
 import { energyReadings } from "./readings/energy";
+import { powerReadings } from "./readings/power";
 import {
   type CardState,
   type CardStateInput,
@@ -48,6 +50,7 @@ const noTemplates: TemplatesObj = {
   solarSecondary: undefined,
   homeSecondary: undefined,
   nonFossilFuelSecondary: undefined,
+  auxiliarySecondary: undefined,
   individual: [],
 };
 
@@ -74,6 +77,7 @@ const readings = (overrides: ReadingsOverrides = {}): ReadyReadings => ({
   home: overrides.home ?? null,
   generator: overrides.generator ?? null,
   individuals: overrides.individuals ?? [],
+  auxiliary: overrides.auxiliary ?? null,
   fossilEnergyConsumption: overrides.fossilEnergyConsumption,
 });
 
@@ -108,6 +112,7 @@ const compute = (
     hass: hassWith(),
     readings: readings(),
     templates: noTemplates,
+    conditionContext: fakeConditionContext,
     width: 400,
     ...input,
   });
@@ -119,12 +124,37 @@ const ready = (state: CardState): ReadyCardState => {
   return state;
 };
 
+const car = (state: ReadyCardState) =>
+  state.nodes.individuals.find((individual) => individual.entity === "sensor.car");
+
 const fossilHass = (percentage: string) =>
   hassWith({ "sensor.fossil": percentage, "binary_sensor.outage": "off" });
 
 const withFossil = config({
   entities: { fossil_fuel_percentage: { entity: "sensor.fossil", secondary_info: {} } },
 });
+
+/** The non-fossil node of 1000 W grid import with a fossil entity at "30" read as low-carbon. */
+const greenShare = (
+  state_type: "power" | "percentage",
+  fossilEnergyConsumption?: ReadyReadings["fossilEnergyConsumption"]
+) =>
+  ready(
+    compute({
+      config: config({
+        entities: {
+          fossil_fuel_percentage: {
+            entity: "sensor.fossil",
+            invert_state: true,
+            state_type,
+            secondary_info: {},
+          },
+        },
+      }),
+      hass: fossilHass("30"),
+      readings: readings({ grid: { fromGrid: 1000 }, fossilEnergyConsumption }),
+    })
+  ).nodes.nonFossil;
 
 const energy = (overrides: ReadingsOverrides) => readings({ family: "energy", ...overrides });
 
@@ -160,6 +190,10 @@ const gridImportText = (family: "power" | "energy") =>
 const solarText = (total: number) =>
   ready(compute({ readings: readings({ family: "energy", solar: { total } }) })).nodes.solar
     .display;
+
+const powerSolarText = (total: number, overrides: Partial<FlowCardPlusConfig>, hass = hassWith()) =>
+  ready(compute({ config: config(overrides), hass, readings: readings({ solar: { total } }) }))
+    .nodes.solar.display;
 
 const idleLine = (mode: NonNullable<FlowCardPlusConfig["display_zero_lines"]>["mode"]) =>
   ready(compute({ config: config({ display_zero_lines: { mode, transparency: 30 } }) })).flows
@@ -358,6 +392,12 @@ describe("energy distribution", () => {
     expect(nodes.nonFossil.state.power).toBe(800);
     expect(nodes.nonFossil.display).toBe(`800${thinSpace}Wh`);
   });
+
+  test("an inverted fossil entity is read as the low-carbon share of grid import", () => {
+    expect(greenShare("power").state.power).toBeCloseTo(300, 10);
+    expect(greenShare("percentage").display).toBe(`30${thinSpace}%`);
+    expect(greenShare("power", { coal: 0.2 }).state.power).toBe(800);
+  });
 });
 
 describe("zero tolerance and display_zero", () => {
@@ -420,6 +460,58 @@ describe("zero tolerance and display_zero", () => {
       "sensor.large",
       "sensor.idle",
     ]);
+  });
+
+  describe("an individual device with visibility conditions (#332)", () => {
+    const carConfig = config({
+      entities: {
+        home: { entity: "sensor.home", subtract_individual: true },
+        individual: [
+          {
+            entity: "sensor.car",
+            display_zero: true,
+            visibility: [{ condition: "state", entity: "binary_sensor.car_plugged", state: "on" }],
+          },
+          { entity: "sensor.heater" },
+        ],
+      },
+    });
+    const carState = (plugged: string, carPower: number) =>
+      ready(
+        compute({
+          config: carConfig,
+          hass: hassWith({ "binary_sensor.car_plugged": plugged }),
+          readings: readings({ grid: { fromGrid: 1000 }, individuals: [carPower, 200] }),
+        })
+      );
+
+    test("is hidden while they fail: no circle, no flow, nothing subtracted from home", () => {
+      const state = carState("off", 300);
+
+      expect(car(state)).toBeUndefined();
+      expect(Object.values(state.individualSlots).map((slot) => slot?.node.entity)).toEqual([
+        "sensor.heater",
+        undefined,
+        undefined,
+        undefined,
+      ]);
+      expect(state.flows.individual.map((flow) => flow.value)).toEqual([0, 200]);
+      expect(state.homeRing.usageText).toBe(`800${thinSpace}W`);
+    });
+
+    test("shows while they hold, even drawing nothing, as display_zero still applies", () => {
+      expect(car(carState("on", 300))).toMatchObject({ has: true, state: 300 });
+      expect(carState("on", 300).homeRing.usageText).toBe(`500${thinSpace}W`);
+      expect(car(carState("on", 0))).toMatchObject({ has: true, state: 0 });
+    });
+
+    test("is hidden while the condition's entity is missing", () => {
+      const state = ready(
+        compute({ config: carConfig, readings: readings({ individuals: [300] }) })
+      );
+
+      expect(car(state)).toBeUndefined();
+    });
   });
 });
 
@@ -530,10 +622,16 @@ describe("device-only mode", () => {
 });
 
 describe("home ring", () => {
-  test("has no NaN segments when nothing is consumed", () => {
+  test("bug #449: draws a full grid ring, without NaN segments, when nothing is consumed", () => {
     const { homeRing } = ready(compute({}));
 
-    expect(homeRing).toMatchObject({ battery: 0, solar: 0, grid: 0, nonFossil: 0 });
+    expect(homeRing).toMatchObject({
+      battery: 0,
+      solar: 0,
+      grid: CIRCLE_CIRCUMFERENCE,
+      nonFossil: 0,
+      largestSource: "grid",
+    });
     expect(homeRing.usageText).toBe(`0${thinSpace}W`);
   });
 
@@ -887,6 +985,55 @@ describe("display units", () => {
 
     expect(nodes.grid.secondary.text).toBe(`12.5${thinSpace}kWh`);
   });
+
+  test("show every configured decimal, also beyond two", () => {
+    const watts = { kilo_threshold: 0, kilo_decimals: 3 };
+
+    expect(powerSolarText(2356, watts)).toBe(`2.356${thinSpace}kW`);
+    expect(powerSolarText(1560, watts)).toBe(`1.56${thinSpace}kW`);
+  });
+});
+
+describe("keep_trailing_zeros", () => {
+  const keep = { keep_trailing_zeros: true };
+
+  test("pads a value with zeros to the decimals of its scale", () => {
+    expect(powerSolarText(1000, keep)).toBe(`1.0${thinSpace}kW`);
+    expect(powerSolarText(300, { ...keep, base_decimals: 2 })).toBe(`300.00${thinSpace}W`);
+    expect(powerSolarText(2_000_000, { ...keep, mega_decimals: 2 })).toBe(`2.00${thinSpace}MW`);
+  });
+
+  test("shows watt-level precision in kW from zero up", () => {
+    const watts = { ...keep, kilo_threshold: 0, kilo_decimals: 3 };
+
+    expect(powerSolarText(0, watts)).toBe(`0.000${thinSpace}kW`);
+    expect(powerSolarText(392, watts)).toBe(`0.392${thinSpace}kW`);
+    expect(powerSolarText(1560, watts)).toBe(`1.560${thinSpace}kW`);
+  });
+
+  test("pads to a node's own decimals", () => {
+    const solarWithDecimals = { entities: { solar: { entity: "sensor.solar", decimals: 2 } } };
+
+    expect(powerSolarText(1500, { ...keep, ...solarWithDecimals })).toBe(`1.50${thinSpace}kW`);
+  });
+
+  test("keeps the locale's decimal separator", () => {
+    const hass = hassWith();
+    hass.locale = { ...hass.locale, number_format: NumberFormat.decimal_comma };
+
+    expect(powerSolarText(1000, keep, hass)).toBe(`1,0${thinSpace}kW`);
+  });
+
+  test("pads without a number format", () => {
+    const hass = hassWith();
+    hass.locale = { ...hass.locale, number_format: NumberFormat.none };
+
+    expect(powerSolarText(1000, { ...keep, kilo_decimals: 2 }, hass)).toBe(`1.00${thinSpace}kW`);
+  });
+
+  test("drops trailing zeros when off", () => {
+    expect(powerSolarText(1000, {})).toBe(`1${thinSpace}kW`);
+  });
 });
 
 describe("zero lines", () => {
@@ -925,6 +1072,96 @@ describe("zero lines", () => {
 
     expect(transparency["--transparency-unused-lines"]).toBe("30");
     expect(grey["--greyed-out--line-color"]).toBe("#010203");
+  });
+});
+
+const cssVarsFor = (
+  overrides: Partial<FlowCardPlusConfig>,
+  readingsOverrides: ReadingsOverrides = {}
+) => ready(compute({ config: config(overrides), readings: readings(readingsOverrides) })).cssVars;
+
+describe("idle circles", () => {
+  const charger = { entity: "sensor.charger", display_zero: true, color_idle: "#999999" };
+
+  test("take the node's idle colour while nothing flows", () => {
+    const cssVars = cssVarsFor({
+      entities: {
+        grid: { ...gridEntity, color: { idle: [1, 2, 3] } },
+        battery: { entity: "sensor.battery", color: { idle: "#123456" } },
+        individual: [charger],
+      },
+    });
+
+    expect(cssVars["--circle-grid-color"]).toBe("#010203");
+    expect(cssVars["--circle-battery-color"]).toBe("#123456");
+    expect(cssVars["--circle-individual-left-top-color"]).toBe("#999999");
+  });
+
+  test("keep their direction colour while power flows", () => {
+    const cssVars = cssVarsFor(
+      {
+        entities: {
+          grid: { ...gridEntity, color: { idle: "#010203" } },
+          battery: { entity: "sensor.battery", color: { idle: "#123456" } },
+          individual: [charger],
+        },
+      },
+      { grid: { toGrid: 100 }, battery: { fromBattery: 50 }, individuals: [40] }
+    );
+
+    expect(cssVars["--circle-grid-color"]).toBe("var(--energy-grid-return-color)");
+    expect(cssVars["--circle-battery-color"]).toBe("var(--energy-battery-out-color)");
+    expect(cssVars["--circle-individual-left-top-color"]).toBeUndefined();
+  });
+
+  test("count readings below the display zero tolerance as idle", () => {
+    const cssVars = cssVarsFor(
+      {
+        entities: {
+          grid: { ...gridEntity, display_zero_tolerance: 10, color: { idle: "#010203" } },
+        },
+      },
+      { grid: { fromGrid: 5 } }
+    );
+
+    expect(cssVars["--circle-grid-color"]).toBe("#010203");
+  });
+
+  test("without an idle colour keep the consumption colour, as before", () => {
+    expect(cssVarsFor({})["--circle-grid-color"]).toBe("var(--energy-grid-consumption-color)");
+    expect(cssVarsFor({ display_zero_lines: { mode: "grey_out" } })["--circle-grid-color"]).toBe(
+      "var(--energy-grid-consumption-color)"
+    );
+  });
+
+  test.each(["grey_out", "custom"] as const)(
+    "with grey_out_circles in %s mode take the greyed-out line colour",
+    (mode) => {
+      const cssVars = cssVarsFor({
+        display_zero_lines: { mode, grey_color: [1, 2, 3], grey_out_circles: true },
+        entities: { individual: [{ entity: "sensor.charger", display_zero: true }] },
+      });
+
+      expect(cssVars["--greyed-out--line-color"]).toBe("#010203");
+      expect(cssVars["--circle-grid-color"]).toBe("var(--greyed-out--line-color)");
+      expect(cssVars["--circle-battery-color"]).toBe("var(--greyed-out--line-color)");
+      expect(cssVars["--circle-individual-left-top-color"]).toBe("var(--greyed-out--line-color)");
+    }
+  );
+
+  test("prefer the node's idle colour over grey_out_circles", () => {
+    const cssVars = cssVarsFor({
+      display_zero_lines: { mode: "grey_out", grey_out_circles: true },
+      entities: { grid: { ...gridEntity, color: { idle: "#010203" } } },
+    });
+
+    expect(cssVars["--circle-grid-color"]).toBe("#010203");
+  });
+
+  test("ignore grey_out_circles when lines are not greyed out", () => {
+    const cssVars = cssVarsFor({ display_zero_lines: { mode: "hide", grey_out_circles: true } });
+
+    expect(cssVars["--circle-grid-color"]).toBe("var(--energy-grid-consumption-color)");
   });
 });
 
@@ -1013,16 +1250,16 @@ const totalsReadings = fc.record({
 });
 
 describe("card state properties", () => {
-  test("home ring segments sum to the circumference, or are all 0", () => {
+  test("home ring segments always sum to the circumference", () => {
     fc.assert(
       fc.property(totalsReadings, (overrides) => {
-        const { homeRing, homeBalance } = ready(
+        const { homeRing } = ready(
           compute({ config: withFossil, hass: fossilHass("40"), readings: readings(overrides) })
         );
         const segments = [homeRing.battery, homeRing.solar, homeRing.grid, homeRing.nonFossil];
         const sum = segments.reduce((total, segment) => total + segment, 0);
         expect(segments.every((segment) => segment >= 0)).toBe(true);
-        expect(sum).toBeCloseTo(homeBalance.balanced === 0 ? 0 : CIRCLE_CIRCUMFERENCE, 9);
+        expect(sum).toBeCloseTo(CIRCLE_CIRCUMFERENCE, 9);
       }),
       RUNS
     );
@@ -1125,4 +1362,205 @@ const individualSecondaryShownAt = (state: string) =>
 test("individual secondary info hides numbers below its tolerance", () => {
   expect(individualSecondaryShownAt("5")).toBe(false);
   expect(individualSecondaryShownAt("50")).toBe(true);
+});
+
+const chargerConfig = (sumTotal: boolean) =>
+  config({
+    entities: {
+      home: { entity: "sensor.home", subtract_individual: true },
+      individual: [
+        {
+          entity: "sensor.charger",
+          secondary_info: { entity: "sensor.charger_2", sum_total: sumTotal },
+        },
+      ],
+    },
+  });
+const chargerHass = hassWith({
+  "sensor.grid": "9000",
+  "sensor.charger": "0",
+  "sensor.charger_2": "7200",
+  "binary_sensor.outage": "off",
+});
+const chargerState = (sumTotal: boolean) =>
+  ready(
+    compute({
+      config: chargerConfig(sumTotal),
+      hass: chargerHass,
+      readings: powerReadings(chargerHass, chargerConfig(sumTotal)),
+    })
+  );
+
+describe("an individual with secondary_info.sum_total", () => {
+  test("shows and flows the summed value while the secondary line keeps its own reading", () => {
+    const device = chargerState(true).individualSlots.leftTop;
+
+    expect(device?.node.displayState).toBe(`7.2${thinSpace}kW`);
+    expect(device?.flow.visible).toBe(true);
+    expect(device?.flow.durationSeconds).toBe(0.75);
+    expect(device?.node.secondary.text).toBe(`7${thinSpace}kW`);
+  });
+
+  test("is subtracted from the home in full by subtract_individual", () => {
+    expect(chargerState(true).homeRing.usageText).toBe(`1.8${thinSpace}kW`);
+  });
+
+  test("without sum_total, a device at 0 W is hidden", () => {
+    expect(chargerState(false).individualSlots.leftTop).toBeUndefined();
+  });
+});
+
+const withAuxiliary = (
+  auxiliary: NonNullable<FlowCardPlusConfig["entities"]["auxiliary"]>,
+  entities: Partial<FlowCardPlusConfig["entities"]> = {}
+) => config({ entities: { auxiliary, ...entities } });
+const flowing = readings({
+  grid: { fromGrid: 600 },
+  solar: { total: 1000 },
+  battery: { toBattery: 300 },
+  auxiliary: 450,
+});
+const auxiliaryState = (cardConfig: FlowCardPlusConfig, cardReadings = flowing) =>
+  ready(compute({ config: cardConfig, readings: cardReadings }));
+
+const auxiliaryLine = (connect_to?: "grid" | "battery" | "none") =>
+  auxiliaryState(withAuxiliary({ entity: "sensor.gas", connect_to })).flows.auxiliary.visible;
+
+describe("the auxiliary node", () => {
+  test("is display-only: flows, home and home ring do not change with it", () => {
+    const without = auxiliaryState(config());
+    const withIt = auxiliaryState(withAuxiliary({ entity: "sensor.gas" }));
+
+    expect(withIt.nodes.auxiliary.displayState).toBe(`450${thinSpace}W`);
+    expect(withIt.homeBalance).toEqual(without.homeBalance);
+    expect(withIt.homeRing).toEqual(without.homeRing);
+    expect({ ...withIt.flows, auxiliary: undefined }).toEqual({
+      ...without.flows,
+      auxiliary: undefined,
+    });
+  });
+
+  test("connects to the grid unless connect_to picks the battery or no line", () => {
+    expect(auxiliaryLine()).toBe(true);
+    expect(auxiliaryLine("grid")).toBe(true);
+    expect(auxiliaryLine("battery")).toBe(true);
+    expect(auxiliaryLine("none")).toBe(false);
+  });
+
+  test("hides the grid's label while its line runs up into the grid", () => {
+    const gridLabel = (connect_to?: "grid" | "battery" | "none") =>
+      auxiliaryState(withAuxiliary({ entity: "sensor.gas", connect_to })).layout.showGridLabel;
+
+    expect(gridLabel()).toBe(false);
+    expect(gridLabel("battery")).toBe(true);
+    expect(gridLabel("none")).toBe(true);
+    expect(auxiliaryState(config()).layout.showGridLabel).toBe(true);
+  });
+
+  test("draws no line while the node it connects to is hidden", () => {
+    const state = auxiliaryState(
+      withAuxiliary({ entity: "sensor.gas", connect_to: "battery" }, { battery: undefined })
+    );
+
+    expect(state.nodes.auxiliary.has).toBe(true);
+    expect(state.flows.auxiliary.visible).toBe(false);
+  });
+
+  test("keeps the left column and the bottom row without a grid or battery", () => {
+    const { layout } = auxiliaryState(
+      withAuxiliary(
+        { entity: "sensor.gas", connect_to: "none" },
+        { grid: undefined, battery: undefined }
+      )
+    );
+
+    expect(layout.hasGridColumn).toBe(true);
+    expect(layout.showBottomRow).toBe(true);
+  });
+
+  test("a negative reading with accept_negative flows towards the node it connects to", () => {
+    const state = auxiliaryState(
+      withAuxiliary({ entity: "sensor.virtual_battery", accept_negative: true }),
+      readings({ grid: { fromGrid: 600 }, auxiliary: -450 })
+    );
+
+    expect(state.nodes.auxiliary.invertAnimation).toBe(true);
+    expect(state.nodes.auxiliary.displayState).toBe(`-450${thinSpace}W`);
+    expect(state.flows.auxiliary.value).toBe(450);
+  });
+
+  test("a negative reading scales to kW like a positive one", () => {
+    const state = auxiliaryState(
+      withAuxiliary({ entity: "sensor.virtual_battery", accept_negative: true }),
+      readings({ grid: { fromGrid: 600 }, auxiliary: -1200 })
+    );
+
+    expect(state.nodes.auxiliary.displayState).toBe(`-1.2${thinSpace}kW`);
+  });
+
+  test("below its tolerance it is hidden unless display_zero is set", () => {
+    const idle = readings({ grid: { fromGrid: 600 }, auxiliary: 4 });
+    const field = { entity: "sensor.gas", display_zero_tolerance: 5 };
+
+    expect(auxiliaryState(withAuxiliary(field), idle).nodes.auxiliary.has).toBe(false);
+    expect(
+      auxiliaryState(withAuxiliary({ ...field, display_zero: true }), idle).nodes.auxiliary.has
+    ).toBe(true);
+  });
+
+  test("in energy mode, a net meter that ran backwards over the period reads negative", () => {
+    const hass = hassWith({ "binary_sensor.outage": "off" });
+    const cardConfig = withAuxiliary({ entity: "sensor.virtual_battery", accept_negative: true });
+    const state = ready(
+      compute({
+        config: cardConfig,
+        hass,
+        readings: energyReadings(
+          hass,
+          { ...cardConfig, type: "custom:energy-flow-card-plus" },
+          {
+            "sensor.virtual_battery": -3300,
+          }
+        ),
+      })
+    );
+
+    expect(state.nodes.auxiliary.displayState).toBe(`-3.3${thinSpace}kWh`);
+    expect(state.nodes.auxiliary.invertAnimation).toBe(true);
+  });
+
+  test("in energy mode, its secondary energy meter shows the period's growth", () => {
+    const hass = hassWith({ "binary_sensor.outage": "off", "sensor.export": "859" });
+    hass.states["sensor.export"]!.attributes = { unit_of_measurement: "kWh" };
+    const cardConfig = withAuxiliary({
+      entity: "sensor.virtual_battery",
+      secondary_info: { entity: "sensor.export", unit_of_measurement: "kWh", decimals: 1 },
+    });
+    const state = ready(
+      compute({
+        config: cardConfig,
+        hass,
+        readings: energyReadings(
+          hass,
+          { ...cardConfig, type: "custom:energy-flow-card-plus" },
+          {
+            "sensor.virtual_battery": 1000,
+            "sensor.export": 5200,
+          }
+        ),
+      })
+    );
+
+    expect(state.nodes.auxiliary.secondary.text).toBe(`5.2${thinSpace}kWh`);
+  });
+
+  test("reads its entity's power", () => {
+    const hass = hassWith({ "sensor.gas": "1200", "binary_sensor.outage": "off" });
+    const cardConfig = withAuxiliary({ entity: "sensor.gas" });
+    const state = ready(
+      compute({ config: cardConfig, hass, readings: powerReadings(hass, cardConfig) })
+    );
+
+    expect(state.nodes.auxiliary.displayState).toBe(`1.2${thinSpace}kW`);
+  });
 });

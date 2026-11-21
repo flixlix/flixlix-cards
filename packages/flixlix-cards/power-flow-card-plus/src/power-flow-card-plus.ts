@@ -3,14 +3,19 @@ import {
   computeCardState,
   type CardState,
   powerReadings,
+  visibilityConditions,
   watchedEntities,
 } from "@flixlix-cards/shared/card-state";
-import { flowCard } from "@flixlix-cards/shared/components/flow-card";
+import { flowCard, flowCardGridOptions } from "@flixlix-cards/shared/components/flow-card";
 import { styles } from "@flixlix-cards/shared/style";
-import { type PowerFlowCardPlusConfig } from "@flixlix-cards/shared/types";
+import {
+  type LovelaceGridOptions,
+  type PowerFlowCardPlusConfig,
+} from "@flixlix-cards/shared/types";
 import { applyCardState } from "@flixlix-cards/shared/utils/apply-card-state";
 import {
   assertRenderableFlowCardConfig,
+  clickableEntitiesWithDefault,
   displayZeroLinesWithDefaults,
   isDeviceOnly,
   withoutEmptyEntities,
@@ -20,18 +25,21 @@ import { defaultValues, getDefaultConfig } from "@flixlix-cards/shared/utils/get
 import { registerCustomCard } from "@flixlix-cards/shared/utils/register-custom-card";
 import { cardShouldUpdate } from "@flixlix-cards/shared/utils/relevant-change";
 import { SecondaryTemplates } from "@flixlix-cards/shared/utils/secondary-templates";
+import { ServerConditionsController } from "@flixlix-cards/shared/utils/server-conditions";
 import { coerceNumber } from "@flixlix-cards/shared/utils/utils";
+import { WidthController } from "@flixlix-cards/shared/utils/width-controller";
 import { type HomeAssistant, type LovelaceCardEditor } from "custom-card-helpers";
 import { LitElement, nothing, type PropertyValues, type TemplateResult } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import packageJson from "../package.json" with { type: "json" };
+import { version } from "../package.json";
+import { PowerFlowCardPlusEditor } from "./ui-editor/ui-editor";
 
 registerCustomCard({
   type: "power-flow-card-plus",
   name: "Power Flow Card Plus",
   description:
     "An extended version of the power flow card with richer options, advanced features and a few small UI enhancements. Inspired by the Energy Dashboard.",
-  version: packageJson.version,
+  version: version,
 });
 
 const isPageHidden = () => typeof document !== "undefined" && document.visibilityState === "hidden";
@@ -40,18 +48,19 @@ const isPageHidden = () => typeof document !== "undefined" && document.visibilit
 export class PowerFlowCardPlus extends LitElement {
   @property({ attribute: false }) public hass!: HomeAssistant;
   @state() private _config!: PowerFlowCardPlusConfig;
-  @state() private _width = 0;
-  private _deviceOnly = false;
+  private readonly _width = new WidthController(this, "#power-flow-card-plus");
   @state() private _pageHidden = isPageHidden();
   private _cardState?: CardState;
   private _appliedCardState?: CardState;
-  private _resizeObserver?: ResizeObserver;
-  private _observedContent?: HTMLElement;
   private readonly _actions = new EntityActions(this, () => ({
     hass: this.hass,
     clickableEntities: this._config.clickable_entities,
   }));
   private readonly _flowLayout = new FlowLayoutController(this, "power-flow-card-plus");
+  private readonly _conditions = new ServerConditionsController(this, () => ({
+    hass: this.hass,
+    conditions: this._config ? visibilityConditions(this._config) : [],
+  }));
   private readonly _templates = new SecondaryTemplates(this, () => ({
     hass: this.hass,
     config: this._config,
@@ -74,6 +83,7 @@ export class PowerFlowCardPlus extends LitElement {
       max_expected_power: coerceNumber(config.max_expected_power, defaultValues.maxExpectedPower),
       min_expected_power: coerceNumber(config.min_expected_power, defaultValues.minExpectedPower),
       display_zero_lines: displayZeroLinesWithDefaults(config.display_zero_lines),
+      clickable_entities: clickableEntitiesWithDefault(config.clickable_entities),
     };
   }
 
@@ -87,26 +97,26 @@ export class PowerFlowCardPlus extends LitElement {
   }
 
   public disconnectedCallback() {
-    this._resizeObserver?.disconnect();
-    this._resizeObserver = undefined;
-    this._observedContent = undefined;
     if (typeof document !== "undefined") {
       document.removeEventListener("visibilitychange", this._handleVisibilityChange);
     }
     super.disconnectedCallback();
   }
 
-  public static async getConfigElement(): Promise<LovelaceCardEditor> {
-    await import("./ui-editor/ui-editor");
-    return document.createElement("power-flow-card-plus-editor");
+  public static getConfigElement(): LovelaceCardEditor {
+    return new PowerFlowCardPlusEditor();
   }
 
-  public static getStubConfig(hass: HomeAssistant): object {
+  public static getStubConfig(hass: HomeAssistant): Promise<object> {
     return getDefaultConfig(hass, "power");
   }
 
   public getCardSize(): Promise<number> | number {
     return 3;
+  }
+
+  public getGridOptions(): LovelaceGridOptions {
+    return flowCardGridOptions();
   }
 
   protected shouldUpdate(changedProps: PropertyValues<this>): boolean {
@@ -122,12 +132,14 @@ export class PowerFlowCardPlus extends LitElement {
     if (!this._config || !this.hass) {
       return;
     }
+    this._conditions.sync();
     this._cardState = computeCardState({
       config: this._config,
       hass: this.hass,
       readings: powerReadings(this.hass, this._config, this._deviceOnly),
       templates: this._templates.templates(this._config),
-      width: this._width,
+      conditionContext: this._conditions.context,
+      width: this._width.width,
       pageHidden: this._pageHidden,
       deviceOnly: this._deviceOnly,
     });
@@ -153,28 +165,11 @@ export class PowerFlowCardPlus extends LitElement {
     if (!this._config || !this.hass) {
       return;
     }
-    this._observeWidth();
     const cardState = this._cardState;
     if (cardState?.status === "ready" && cardState !== this._appliedCardState) {
       applyCardState(this, cardState);
       this._appliedCardState = cardState;
     }
-  }
-
-  private _observeWidth() {
-    const content = this.shadowRoot?.querySelector<HTMLElement>("#power-flow-card-plus");
-    if (!content || content === this._observedContent) {
-      return;
-    }
-    this._observedContent = content;
-    this._resizeObserver?.disconnect();
-    this._resizeObserver ??= new ResizeObserver(([entry]) => {
-      if (entry) {
-        this._width = Math.round(entry.target.getBoundingClientRect().width);
-      }
-    });
-    this._resizeObserver.observe(content);
-    this._width = Math.round(content.getBoundingClientRect().width);
   }
 
   static styles = styles;

@@ -6,6 +6,7 @@ import {
   validatePlaygroundSearch,
 } from "@/components/docs/card-playground";
 import { PageHeader } from "@/components/docs/doc-primitives";
+import { heading } from "@/lib/page-meta";
 
 export const Route = createFileRoute("/_docs/energy-period-selector-plus/playground")({
   validateSearch: validatePlaygroundSearch,
@@ -18,7 +19,7 @@ function Playground() {
     <>
       <PageHeader
         eyebrow="Energy Period Selector Plus"
-        title="Playground"
+        title={heading("/energy-period-selector-plus/playground")}
         description="The real card driving an Energy Flow Card Plus, as on a Home Assistant dashboard. Edit the selector's config and pick periods; the URL keeps your setup, so you can share it."
       />
       <CardPlayground kind="period" initial={s ?? defaultPlayground("period")} />

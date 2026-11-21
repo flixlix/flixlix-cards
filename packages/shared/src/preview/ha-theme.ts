@@ -936,7 +936,6 @@ export const haThemeDark = `
   --wa-color-warning-on-quiet: #ff9342;
   --wa-form-control-background-color: #1c1c1c;
   --wa-form-control-border-color: #5e5e5e;
-  --wa-form-control-padding-inline: 12px@layer wa-utilities{@supports (scrollbar-gutter;
   --wa-form-control-placeholder-color: #ccc;
   --wa-form-control-value-color: #e1e1e1;
   --wa-shadow-l: 0 6px 12px -3px #0006, 0 16px 32px -6px #0000008c;

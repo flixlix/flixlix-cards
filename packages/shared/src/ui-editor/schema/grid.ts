@@ -1,7 +1,7 @@
 import localize from "@flixlix-cards/shared/i18n";
 import {
   actionSchema,
-  customColorsSchema,
+  directionalColorsSchema,
   getBaseMainConfigSchema,
   getEntityCombinedSelectionSchema,
   getEntitySeparatedSelectionSchema,
@@ -48,6 +48,7 @@ const powerOutageGridSchema = [
       { name: "entity_generator", label: "Generator Entity", selector: { entity: {} } },
       { name: "label_alert", label: "Outage Label", selector: { text: {} } },
       { name: "icon_alert", label: "Outage Icon", selector: { icon: {} } },
+      { name: "color_alert", label: "Outage Color", selector: { color_rgb: {} } },
       { name: "state_alert", label: "Outage State", selector: { text: {} } },
     ],
   },
@@ -57,7 +58,7 @@ export const gridSchema = [
   getEntityCombinedSelectionSchema(),
   getEntitySeparatedSelectionSchema(),
   mainSchema,
-  customColorsSchema,
+  directionalColorsSchema,
   {
     title: localize("editor.secondary_info"),
     name: "secondary_info",

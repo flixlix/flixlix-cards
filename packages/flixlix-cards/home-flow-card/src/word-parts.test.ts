@@ -5,6 +5,7 @@ describe("wordParts", () => {
   test.each([
     ["discharging", "charging", ["", "dis", "charging"]],
     ["charging", "discharging", ["", "", "charging"]],
+    ["Discharging", "Charging", ["", "Disc", "harging"]],
     ["entlädt", "lädt", ["", "ent", "lädt"]],
     ["en décharge", "en charge", ["en ", "dé", "charge"]],
     ["laddar ur", "laddar", ["laddar", " ur", ""]],

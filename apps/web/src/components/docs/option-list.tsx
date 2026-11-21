@@ -63,6 +63,10 @@ function OptionItem({ row }: { row: OptionRow }) {
   return (
     <div
       id={anchor}
+      data-option={row.name}
+      data-option-type={row.type}
+      data-option-default={row.default}
+      data-option-required={row.required ? "" : undefined}
       className="hover:bg-accent/40 group relative scroll-mt-24 rounded-lg px-3 py-3.5 transition-colors"
     >
       <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
@@ -84,12 +88,15 @@ function OptionItem({ row }: { row: OptionRow }) {
           </span>
         ) : null}
         {row.required ? (
-          <span className="border-destructive/30 bg-destructive/10 text-destructive ml-auto rounded-full border px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide">
-            required
-          </span>
+          <span className="text-destructive ml-auto text-xs font-medium">Required</span>
         ) : null}
       </div>
-      <div className="text-foreground/80 mt-1.5 text-[13px] leading-relaxed">{row.description}</div>
+      <div
+        data-option-description
+        className="text-foreground/80 mt-1.5 text-[13px] leading-relaxed"
+      >
+        {row.description}
+      </div>
     </div>
   );
 }
@@ -110,7 +117,7 @@ export function OptionList({
   className?: string;
 }) {
   return (
-    <div className={cn("bg-card overflow-hidden rounded-lg border shadow-sm", className)}>
+    <div className={cn("bg-card overflow-hidden rounded-xl border", className)}>
       <div className="divide-border divide-y">
         {rows.map((row) => (
           <OptionItem key={row.name} row={row} />
@@ -120,21 +127,19 @@ export function OptionList({
           <Collapsible className="group/advanced">
             <CollapsibleTrigger className="bg-muted/40 hover:bg-muted/70 text-muted-foreground hover:text-foreground flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left text-sm font-medium transition-colors">
               <span className="flex flex-wrap items-center gap-2">
-                <span className="bg-background text-muted-foreground rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide">
-                  Advanced
-                </span>
-                <span className="text-foreground/80">
-                  {advanced.rows.length} more option{advanced.rows.length === 1 ? "" : "s"}
+                <span className="text-foreground/85">
+                  {advanced.rows.length} advanced option{advanced.rows.length === 1 ? "" : "s"}
                 </span>
                 {advanced.hint ? (
-                  <span className="text-muted-foreground/80 hidden text-xs font-normal sm:inline">
-                    · {advanced.hint}
+                  <span className="text-muted-foreground hidden text-xs font-normal sm:inline">
+                    {advanced.hint}
                   </span>
                 ) : null}
               </span>
               <ChevronDown className="size-4 shrink-0 transition-transform group-data-[state=open]/advanced:rotate-180" />
             </CollapsibleTrigger>
-            <CollapsibleContent className="overflow-hidden">
+            {/* Mounted while closed so the server HTML, search engines and llms.txt see every option. */}
+            <CollapsibleContent forceMount className="overflow-hidden">
               <div className="divide-border border-border divide-y border-t">
                 {advanced.rows.map((row) => (
                   <OptionItem key={row.name} row={row} />

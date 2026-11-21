@@ -39,6 +39,62 @@ views:
       - type: grid
         cards:
           - type: heading
+            heading: Live or over a period
+            icon: mdi:toggle-switch-outline
+          - type: custom:home-flow-card
+            title: Live or today
+            grid:
+              entity:
+                consumption: sensor.grid_import_power
+                production: sensor.grid_export_power
+            solar:
+              entity: sensor.solar_power
+            battery:
+              entity:
+                consumption: sensor.battery_discharge_power
+                production: sensor.battery_charge_power
+              state_of_charge: sensor.battery_soc
+            energy_entities:
+              grid:
+                consumption: sensor.grid_import_energy
+                production: sensor.grid_export_energy
+              solar: sensor.solar_energy
+              battery:
+                consumption: sensor.battery_discharge_energy
+                production: sensor.battery_charge_energy
+          - type: custom:home-flow-card
+            title: Live or any period, car and heat pump
+            views: [live, today, yesterday, week, month, year]
+            grid:
+              entity:
+                consumption: sensor.grid_import_power
+                production: sensor.grid_export_power
+            solar:
+              entity: sensor.solar_power
+            battery:
+              entity:
+                consumption: sensor.battery_discharge_power
+                production: sensor.battery_charge_power
+              state_of_charge: sensor.battery_soc
+            car:
+              entity: sensor.car_power
+              state_of_charge: sensor.car_battery
+            heat_pump:
+              entity: sensor.heat_pump_power
+              climate: climate.heat_pump
+            energy_entities:
+              grid:
+                consumption: sensor.grid_import_energy
+                production: sensor.grid_export_energy
+              solar: sensor.solar_energy
+              battery:
+                consumption: sensor.battery_discharge_energy
+                production: sensor.battery_charge_energy
+              car: sensor.ev_charger_energy
+              heat_pump: sensor.heat_pump_energy
+      - type: grid
+        cards:
+          - type: heading
             heading: Solar, battery and grid
             icon: mdi:home-lightning-bolt
           - type: custom:home-flow-card
@@ -72,6 +128,123 @@ views:
                 consumption: sensor.battery_discharge_power
                 production: sensor.battery_charge_power
               state_of_charge: sensor.battery_soc
+      - type: grid
+        cards:
+          - type: heading
+            heading: State of charge position
+            icon: mdi:battery-arrow-up-outline
+          - type: custom:home-flow-card
+            title: Under the value (default)
+            grid:
+              entity: sensor.grid_power
+            solar:
+              entity: sensor.solar_power
+            battery:
+              entity: sensor.battery_power
+              state_of_charge: sensor.battery_soc
+              state_of_charge_position: below_value
+          - type: custom:home-flow-card
+            title: Swapped with the value
+            grid:
+              entity: sensor.grid_power
+            solar:
+              entity: sensor.solar_power
+            battery:
+              entity: sensor.battery_power
+              state_of_charge: sensor.battery_soc
+              state_of_charge_position: above_value
+          - type: custom:home-flow-card
+            title: After the value
+            grid:
+              entity: sensor.grid_power
+            solar:
+              entity: sensor.solar_power
+            battery:
+              entity: sensor.battery_power
+              state_of_charge: sensor.battery_soc
+              state_of_charge_position: after_value
+          - type: custom:home-flow-card
+            title: Before the value
+            grid:
+              entity: sensor.grid_power
+            solar:
+              entity: sensor.solar_power
+            battery:
+              entity: sensor.battery_power
+              state_of_charge: sensor.battery_soc
+              state_of_charge_position: before_value
+      - type: grid
+        cards:
+          - type: heading
+            heading: Older option names
+            icon: mdi:history
+          - type: custom:home-flow-card
+            title: "Older names: after_power, expected power"
+            grid:
+              entity: sensor.grid_power
+            solar:
+              entity: sensor.solar_power
+            battery:
+              entity: sensor.battery_power
+              state_of_charge: sensor.battery_soc
+              state_of_charge_position: after_power
+            min_expected_power: 0
+            max_expected_power: 1000
+          - type: custom:home-flow-card
+            title: "Generic names: after_value, expected value"
+            grid:
+              entity: sensor.grid_power
+            solar:
+              entity: sensor.solar_power
+            battery:
+              entity: sensor.battery_power
+              state_of_charge: sensor.battery_soc
+              state_of_charge_position: after_value
+            min_expected_value: 0
+            max_expected_value: 1000
+      - type: grid
+        cards:
+          - type: heading
+            heading: Energy over the period
+            icon: mdi:calendar
+          - type: energy-date-selection
+          - type: custom:home-flow-card
+            title: Energy over the period
+            mode: energy
+            two_way_value_size: 0.8
+            max_expected_value: 20000
+            grid:
+              entity:
+                consumption: sensor.grid_import_energy
+                production: sensor.grid_export_energy
+            solar:
+              entity: sensor.solar_energy
+            battery:
+              entity:
+                consumption: sensor.battery_discharge_energy
+                production: sensor.battery_charge_energy
+              state_of_charge: sensor.battery_soc
+              state_of_charge_position: after_value
+            car:
+              entity: sensor.ev_charger_energy
+            heat_pump:
+              entity: sensor.heat_pump_energy
+          - type: custom:home-flow-card
+            title: "Energy, older names: a range in W does not apply"
+            mode: energy
+            max_expected_power: 20000
+            grid:
+              entity:
+                consumption: sensor.grid_import_energy
+                production: sensor.grid_export_energy
+            solar:
+              entity: sensor.solar_energy
+            battery:
+              entity:
+                consumption: sensor.battery_discharge_energy
+                production: sensor.battery_charge_energy
+              state_of_charge: sensor.battery_soc
+              state_of_charge_position: after_power
       - type: grid
         cards:
           - type: heading
@@ -136,3 +309,161 @@ views:
             title: Battery without state of charge
             battery:
               entity: sensor.battery_power
+      - type: grid
+        cards:
+          - type: heading
+            heading: Car
+            icon: mdi:car-electric
+          - type: entities
+            title: Run a car scenario
+            show_header_toggle: false
+            entities:
+              - script.car_charging
+              - script.car_plugged_in_full
+              - script.car_unplugged
+              - script.car_away
+              - script.car_feeding_home
+              - script.car_sensor_unavailable
+          - type: entities
+            title: Car knobs
+            show_header_toggle: false
+            entities:
+              - input_number.car_power
+              - input_number.car_soc
+              - input_select.car_location
+              - input_boolean.car_plugged_in
+              - input_boolean.car_available
+          - type: custom:home-flow-card
+            title: "Car: shown while home, idle while unplugged"
+            grid:
+              entity: sensor.grid_power
+            solar:
+              entity: sensor.solar_power
+            battery:
+              entity: sensor.battery_power
+              state_of_charge: sensor.battery_soc
+            car:
+              entity: sensor.car_power
+              state_of_charge: sensor.car_battery
+              visibility:
+                - condition: state
+                  entity: input_select.car_location
+                  state: home
+              idle:
+                - condition: state
+                  entity: binary_sensor.car_plugged_in
+                  state: "off"
+          - type: custom:home-flow-card
+            title: "Car: conditions as Home Assistant 2026.10 writes them"
+            grid:
+              entity: sensor.grid_power
+            solar:
+              entity: sensor.solar_power
+            car:
+              entity: sensor.car_power
+              state_of_charge: sensor.car_battery
+              visibility:
+                - condition: template
+                  value_template: "{{ is_state('input_select.car_location', 'home') }}"
+              idle:
+                - condition: state
+                  entity_id: binary_sensor.car_plugged_in
+                  state:
+                    - "off"
+          - type: custom:home-flow-card
+            title: "Car: shown while the viewer is home (location by zone)"
+            grid:
+              entity: sensor.grid_power
+            car:
+              entity: sensor.car_power
+              visibility:
+                - condition: location
+                  target:
+                    entity_id: zone.home
+                  match_mode: any_zone
+          - type: custom:home-flow-card
+            title: "Car: no conditions (idle at 0 W)"
+            grid:
+              entity: sensor.grid_power
+            solar:
+              entity: sensor.solar_power
+            car:
+              entity: sensor.car_power
+              state_of_charge: sensor.car_battery
+              name: Model Y
+          - type: custom:home-flow-card
+            title: "Car: no battery level, idle below 500 W"
+            grid:
+              entity: sensor.grid_power
+            car:
+              entity: sensor.car_power
+              idle:
+                - condition: numeric_state
+                  entity: sensor.car_power
+                  above: -500
+                  below: 500
+      - type: grid
+        cards:
+          - type: heading
+            heading: Heat pump
+            icon: mdi:heat-pump
+          - type: entities
+            title: Run a heat pump scenario
+            show_header_toggle: false
+            entities:
+              - script.heat_pump_heating
+              - script.heat_pump_reached_target
+              - script.heat_pump_off
+          - type: entities
+            title: Heat pump knobs
+            show_header_toggle: false
+            entities:
+              - climate.heat_pump
+              - input_number.heat_pump_power
+              - input_number.heat_pump_flow_temperature
+          - type: custom:home-flow-card
+            title: "Heat pump: its state, no car (low, further along the wall)"
+            grid:
+              entity: sensor.grid_power
+            solar:
+              entity: sensor.solar_power
+            battery:
+              entity: sensor.battery_power
+              state_of_charge: sensor.battery_soc
+            heat_pump:
+              entity: sensor.heat_pump_power
+              climate: climate.heat_pump
+          - type: custom:home-flow-card
+            title: "Heat pump: temperature and target, above the car"
+            grid:
+              entity: sensor.grid_power
+            solar:
+              entity: sensor.solar_power
+            car:
+              entity: sensor.car_power
+              state_of_charge: sensor.car_battery
+              visibility:
+                - condition: state
+                  entity: input_select.car_location
+                  state: home
+            heat_pump:
+              entity: sensor.heat_pump_power
+              climate: climate.heat_pump
+              status: temperature_and_target
+          - type: custom:home-flow-card
+            title: "Heat pump: current temperature only"
+            grid:
+              entity: sensor.grid_power
+            heat_pump:
+              entity: sensor.heat_pump_power
+              climate: climate.heat_pump
+              status: temperature
+          - type: custom:home-flow-card
+            title: "Heat pump: no climate entity"
+            grid:
+              entity: sensor.grid_power
+            solar:
+              entity: sensor.solar_power
+            heat_pump:
+              entity: sensor.heat_pump_power
+              name: Wärmepumpe

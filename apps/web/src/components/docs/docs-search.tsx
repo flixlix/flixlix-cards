@@ -14,6 +14,7 @@ import {
 import * as React from "react";
 import { createPortal } from "react-dom";
 
+import { trackEvent } from "#/lib/analytics";
 import { setThemeMode } from "#/lib/theme";
 import { cn } from "cn";
 
@@ -231,6 +232,7 @@ function CommandMenu({ onClose }: { onClose: () => void }) {
 
   function navigateTo(entry: SearchEntry) {
     const [pathname, hash] = entry.to.split("#");
+    trackEvent("Open search result", { result: entry.to });
     void router.navigate({ to: pathname, hash: hash ?? undefined });
     onClose();
   }
@@ -334,7 +336,7 @@ function CommandMenu({ onClose }: { onClose: () => void }) {
           ) : (
             groups.map((group, gi) => (
               <div key={group.label} className="px-1 py-1">
-                <div className="text-muted-foreground flex items-center gap-1.5 px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider">
+                <div className="text-muted-foreground flex items-center gap-1.5 px-3 pb-1 pt-2 text-xs font-medium">
                   {!query && gi === 0 ? <Sparkles className="size-3" /> : null}
                   {group.label}
                 </div>
@@ -371,7 +373,7 @@ function CommandMenu({ onClose }: { onClose: () => void }) {
                               <span className="truncate font-medium">
                                 {highlight(title, query)}
                               </span>
-                              <span className="text-muted-foreground shrink-0 text-[10px] uppercase tracking-wide">
+                              <span className="text-muted-foreground shrink-0 text-xs">
                                 {typeLabel}
                               </span>
                             </div>

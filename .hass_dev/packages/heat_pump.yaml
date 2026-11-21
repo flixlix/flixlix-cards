@@ -1,0 +1,82 @@
+# A climate entity for the Home Flow Card's heat pump, from the generic thermostat, so hvac_action,
+# current_temperature and temperature behave as an integration's do. Its power is power.yaml's
+# sensor.heat_pump_power, which the scripts set to match what it is doing.
+input_number:
+  heat_pump_flow_temperature:
+    name: Heat Pump Flow Temperature
+    icon: mdi:thermometer-water
+    min: 15
+    max: 65
+    step: 0.5
+    initial: 38
+    unit_of_measurement: °C
+
+input_boolean:
+  heat_pump_compressor:
+    name: Heat Pump Compressor
+    icon: mdi:heat-pump-outline
+    initial: true
+
+template:
+  - sensor:
+      - name: Heat Pump Flow Temperature
+        unique_id: e2e_heat_pump_flow_temperature
+        device_class: temperature
+        unit_of_measurement: °C
+        state_class: measurement
+        state: "{{ states('input_number.heat_pump_flow_temperature') }}"
+
+climate:
+  - platform: generic_thermostat
+    name: Heat Pump
+    unique_id: e2e_heat_pump
+    heater: input_boolean.heat_pump_compressor
+    target_sensor: sensor.heat_pump_flow_temperature
+    min_temp: 20
+    max_temp: 60
+    target_temp: 45
+    cold_tolerance: 0.5
+    hot_tolerance: 0.5
+    initial_hvac_mode: heat
+    precision: 0.5
+
+script:
+  heat_pump_heating:
+    alias: "Heat pump: heating towards 45 °C"
+    icon: mdi:fire
+    sequence:
+      - action: climate.set_hvac_mode
+        target: { entity_id: climate.heat_pump }
+        data: { hvac_mode: heat }
+      - action: climate.set_temperature
+        target: { entity_id: climate.heat_pump }
+        data: { temperature: 45 }
+      - action: input_number.set_value
+        target: { entity_id: input_number.heat_pump_flow_temperature }
+        data: { value: 38 }
+      - action: input_number.set_value
+        target: { entity_id: input_number.heat_pump_power }
+        data: { value: 1350 }
+  heat_pump_reached_target:
+    alias: "Heat pump: target reached, idle"
+    icon: mdi:thermometer-check
+    sequence:
+      - action: climate.set_hvac_mode
+        target: { entity_id: climate.heat_pump }
+        data: { hvac_mode: heat }
+      - action: input_number.set_value
+        target: { entity_id: input_number.heat_pump_flow_temperature }
+        data: { value: 46 }
+      - action: input_number.set_value
+        target: { entity_id: input_number.heat_pump_power }
+        data: { value: 0 }
+  heat_pump_off:
+    alias: "Heat pump: off"
+    icon: mdi:power
+    sequence:
+      - action: climate.set_hvac_mode
+        target: { entity_id: climate.heat_pump }
+        data: { hvac_mode: "off" }
+      - action: input_number.set_value
+        target: { entity_id: input_number.heat_pump_power }
+        data: { value: 0 }

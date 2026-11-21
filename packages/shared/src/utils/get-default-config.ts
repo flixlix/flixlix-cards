@@ -1,6 +1,11 @@
-import { type DisplayZeroLinesMode } from "@flixlix-cards/shared/types";
+import { type ConfigEntities, type DisplayZeroLinesMode } from "@flixlix-cards/shared/types";
 import { type HomeAssistant } from "custom-card-helpers";
-import { getFirstEntityName } from "../states/utils/mutli-entity";
+import {
+  energyDashboardEntities,
+  fetchEnergyPreferences,
+  type UnitFamily,
+} from "./energy-dashboard-entities";
+import { withEntitiesByName } from "./entities-by-name";
 
 export const defaultValues = {
   maxFlowRate: 6,
@@ -19,86 +24,26 @@ export const defaultValues = {
   },
 };
 
-export function getDefaultConfig(hass: HomeAssistant, cardType: "power" | "energy" = "power") {
-  function checkStrings(entiyId: string, testStrings: string[]): boolean {
-    const firstId = getFirstEntityName(entiyId);
-    const friendlyName = hass.states[firstId]?.attributes.friendly_name;
-    return testStrings.some((str) => firstId.includes(str) || friendlyName?.includes(str));
-  }
-  const isEnergyCard = cardType === "energy";
-  let optionEntities: string[];
-
-  if (isEnergyCard) {
-    const energyEntities = Object.keys(hass.states).filter((entityId) => {
-      const stateObj = hass.states[getFirstEntityName(entityId)];
-      const isAvailable =
-        (!!stateObj?.state && stateObj.attributes?.device_class === "energy") ||
-        stateObj?.entity_id.includes("energy") === true;
-      return isAvailable;
-    });
-    optionEntities = energyEntities;
-  } else {
-    const powerEntities = Object.keys(hass.states).filter((entityId) => {
-      const stateObj = hass.states[getFirstEntityName(entityId)];
-      const isAvailable =
-        (!!stateObj?.state && stateObj.attributes?.device_class === "power") ||
-        stateObj?.entity_id.includes("power") === true;
-      return isAvailable;
-    });
-    optionEntities = powerEntities;
-  }
-
-  const gridTestString = ["grid", "utility", "net", "meter"];
-  const solarTestString = ["solar", "pv", "photovoltaic", "inverter"];
-  const batteryTestString = ["battery"];
-  const batteryPercentTestString = [
-    "battery_percent",
-    "battery_level",
-    "state_of_charge",
-    "soc",
-    "percentage",
-  ];
-  const firstGridEntity = optionEntities.find((entityId) => checkStrings(entityId, gridTestString));
-  const firstSolarEntity = optionEntities.find((entityId) =>
-    checkStrings(entityId, solarTestString)
+/**
+ * Entities for a new card: what the user set up in the energy dashboard, then a guess from entity
+ * names for whatever it leaves out.
+ */
+const suggestedEntities = async (
+  hass: HomeAssistant,
+  family: UnitFamily
+): Promise<ConfigEntities> => {
+  const preferences = await fetchEnergyPreferences(hass);
+  return withEntitiesByName(
+    hass,
+    family,
+    preferences ? energyDashboardEntities(hass, preferences, family) : {}
   );
-  const firstBatteryEntity = optionEntities.find((entityId) =>
-    checkStrings(entityId, batteryTestString)
-  );
+};
 
-  const percentageEntities = Object.keys(hass.states).filter((entityId) => {
-    const stateObj = hass.states[entityId];
-    const isAvailable =
-      stateObj &&
-      stateObj.state &&
-      stateObj.attributes &&
-      stateObj.attributes.unit_of_measurement === "%";
-    return isAvailable;
-  });
-
-  const firstBatteryPercentageEntity = percentageEntities.find((entityId) =>
-    checkStrings(entityId, batteryPercentTestString)
-  );
-  return {
-    entities: {
-      battery: {
-        entity: firstBatteryEntity ?? "",
-        state_of_charge: firstBatteryPercentageEntity ?? "",
-      },
-      grid: firstGridEntity ? { entity: firstGridEntity } : undefined,
-      solar: firstSolarEntity ? { entity: firstSolarEntity, display_zero_state: true } : undefined,
-    },
-    clickable_entities: true,
-    display_zero_lines: true,
-    base_decimals: defaultValues.baseDecimals,
-    kilo_decimals: defaultValues.kiloDecimals,
-    min_flow_rate: defaultValues.minFlowRate,
-    max_flow_rate: defaultValues.maxFlowRate,
-    max_expected_power: defaultValues.maxExpectedPower,
-    min_expected_power: defaultValues.minExpectedPower,
-    kilo_threshold: defaultValues.kiloThreshold,
-    mega_threshold: defaultValues.megaThreshold,
-    transparency_zero_lines: defaultValues.transparencyZeroLines,
-    sort_individual_devices: true,
-  };
+/** A new card's config: just its entities, since every other option already has a default. */
+export async function getDefaultConfig(
+  hass: HomeAssistant,
+  family: UnitFamily = "power"
+): Promise<{ entities: ConfigEntities }> {
+  return { entities: await suggestedEntities(hass, family) };
 }

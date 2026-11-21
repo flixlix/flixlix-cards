@@ -1,6 +1,9 @@
 # Energy Breakdown Card
 
-<img width="2034" height="697" alt="Demo Image" src="https://github.com/user-attachments/assets/c8fe8f63-9680-4507-bccd-8e792322c165" />
+> [!TIP]
+> **Canonical docs: [cards.flixlix.com/energy-breakdown-card](https://cards.flixlix.com/energy-breakdown-card).** Installation, every option and copy-paste examples live there. This README is the offline copy.
+
+<img width="2034" height="697" alt="Energy Breakdown Card, a donut of where home energy went, on a Home Assistant dashboard" src="https://github.com/user-attachments/assets/c8fe8f63-9680-4507-bccd-8e792322c165" />
 
 A custom Home Assistant Lovelace card that visualizes how your energy use is broken down across sources. Built to fit the design language of the latest Lovelace UI: rounded corners, soft shadows, HA color tokens, and a quiet visual presence that adapts to your theme.
 
@@ -13,19 +16,21 @@ Both variants support an optional **legend** (names + values + percentages) and 
 
 ## Installation
 
-### HACS (custom repository)
+### Marketplace or HACS (from its link)
 
-This card is **not yet in the default HACS store** — you need to add it as a custom repository first.
+This card is **not yet in the default catalog**: install it from its link. The button opens it in your Home Assistant, in the Marketplace on 2026.11 and newer or in HACS before that.
 
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=energy-breakdown-card&category=Dashboard)
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=energy-breakdown-card&category=plugin)
+
+**Marketplace (Home Assistant 2026.11 and newer):** go to **Settings → Marketplace**, select **Add from link**, enter `https://github.com/flixlix/energy-breakdown-card`, then open **Energy Breakdown Card** and select **Install**.
+
+**HACS (Home Assistant 2026.10 and older):**
 
 1. In Home Assistant, open **HACS**.
 2. Click the **⋮** menu in the top-right → **Custom repositories**.
 3. Add the repository URL `https://github.com/flixlix/energy-breakdown-card` with category **Dashboard**, then click **Add**.
 4. Search for **Energy Breakdown Card** in HACS and click **Download**.
 5. Reload the dashboard / clear browser cache.
-
-The button above pre-fills steps 2–4 for you if you have [My Home Assistant](https://my.home-assistant.io) set up.
 
 <details>
 <summary>Manual install</summary>

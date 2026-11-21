@@ -1,3 +1,5 @@
+import { type AuxiliaryConnection } from "@flixlix-cards/shared/types";
+
 /**
  * The flow lines in pixels: today's line shapes (a straight leg, one curve, a straight leg, sized in
  * units of `scale`), placed on the measured node circles and cut where they meet each ring.
@@ -21,6 +23,8 @@ export type FlowLayout = {
   battery?: Ring;
   rightTop?: Ring;
   rightBottom?: Ring;
+  /** Under the grid, left of the battery. */
+  auxiliary?: Ring;
 };
 
 export type LayoutNodes = {
@@ -29,6 +33,7 @@ export type LayoutNodes = {
   battery: boolean;
   /** Individuals in the right column, beside the home. */
   right: boolean;
+  auxiliary?: boolean;
 };
 
 /**
@@ -54,6 +59,7 @@ export const nominalLayout = (width: number, nodes: LayoutNodes): FlowLayout => 
     battery: nodes.battery ? nominalRing(slotX(1), bottom) : undefined,
     rightTop: nodes.right ? nominalRing(slotX(3), top) : undefined,
     rightBottom: nodes.right ? nominalRing(slotX(3), bottom) : undefined,
+    auxiliary: nodes.auxiliary ? nominalRing(slotX(0), bottom) : undefined,
   };
 };
 
@@ -212,6 +218,8 @@ export type FlowPaths = {
   batteryToGrid?: FlowLine;
   rightTopToHome?: FlowLine;
   rightBottomToHome?: FlowLine;
+  /** From the auxiliary node to the node it connects to. */
+  auxiliary?: FlowLine;
 };
 
 const flowLine = (path: Path): FlowLine => ({ d: toD(path), reversed: toD(reverse(path)) });
@@ -319,10 +327,31 @@ const rightLines = (
   };
 };
 
+/** Circles closer than this, as on a card squeezed below its 80px columns, get no line. */
+const MIN_GAP = 2 * MIN_STRAIGHT;
+
+const gapBetween = (a: Ring, b: Ring) => Math.hypot(a.cx - b.cx, a.cy - b.cy) - a.r - b.r;
+
+/** Straight up its axis into the grid, or straight across its axis into the battery. */
+const auxiliaryLines = (
+  { auxiliary, grid, battery }: FlowLayout,
+  connectTo: AuxiliaryConnection
+): Lines => {
+  const target = { grid, battery, none: undefined }[connectTo];
+  if (!auxiliary || !target || gapBetween(auxiliary, target) < MIN_GAP) {
+    return {};
+  }
+  const axis = connectTo === "grid" ? { x: auxiliary.cx } : { y: auxiliary.cy };
+  return { auxiliary: straightLine(auxiliary, target, axis) };
+};
+
 /** Every flow line the layout has nodes for, as SVG path data in the overlay's pixels. */
 export const flowPaths = (
   layout: FlowLayout,
-  { hasBottomRow }: { hasBottomRow: boolean }
+  {
+    hasBottomRow,
+    auxiliaryConnection = "grid",
+  }: { hasBottomRow: boolean; auxiliaryConnection?: AuxiliaryConnection }
 ): FlowPaths => {
   const scale = flowScale(layout);
   return {
@@ -331,5 +360,6 @@ export const flowPaths = (
     ...gridLines(layout, scale),
     ...batteryLines(layout, scale),
     ...rightLines(layout, scale, hasBottomRow),
+    ...auxiliaryLines(layout, auxiliaryConnection),
   };
 };

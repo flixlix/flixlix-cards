@@ -1,8 +1,10 @@
 import { Link, Outlet, createFileRoute, useRouterState } from "@tanstack/react-router";
-import { Github, Heart } from "lucide-react";
+import { Github } from "lucide-react";
 
 import { AppSidebar } from "@/components/app-sidebar";
 import { DocsSearch } from "@/components/docs/docs-search";
+import { OpenWithAgent } from "@/components/docs/open-with-agent";
+import { pageHead } from "@/lib/seo";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -20,6 +22,7 @@ import {
 } from "@flixlix-cards/ui/components/sidebar";
 
 export const Route = createFileRoute("/_docs")({
+  head: ({ matches }) => pageHead(matches.at(-1)?.pathname ?? "/"),
   component: DocsLayout,
 });
 
@@ -33,7 +36,26 @@ const SECTION_LABELS: Record<string, string> = {
   installation: "Installation",
   configuration: "Configuration",
   examples: "Examples",
+  guides: "Guides",
+  "solar-battery-power-flow": "Solar and battery power flow",
+  "power-flow-card-plus-vs-power-flow-card": "Vs the original Power Flow Card",
+  "power-flow-card-plus-vs-sunsynk": "Vs Sunsynk",
+  "power-flow-card-plus-vs-tesla-style": "Vs Tesla Style",
+  "energy-distribution-card-alternative": "Energy Distribution alternative",
 };
+
+const PARENT_LINKS = {
+  "power-flow-card-plus": "/power-flow-card-plus",
+  "home-flow-card": "/home-flow-card",
+  "energy-flow-card-plus": "/energy-flow-card-plus",
+  "energy-breakdown-card": "/energy-breakdown-card",
+  "energy-period-selector-plus": "/energy-period-selector-plus",
+  "sortable-list-card": "/sortable-list-card",
+  guides: "/guides",
+} as const;
+
+const parentLink = (segment: string) =>
+  Object.entries(PARENT_LINKS).find(([slug]) => slug === segment)?.[1];
 
 function humanize(part: string): string {
   if (SECTION_LABELS[part]) {
@@ -72,7 +94,7 @@ function DocsLayout() {
                       {isLast ? (
                         <BreadcrumbPage>{humanize(segment)}</BreadcrumbPage>
                       ) : (
-                        <span className="text-muted-foreground">{humanize(segment)}</span>
+                        <ParentCrumb segment={segment} />
                       )}
                     </BreadcrumbItem>
                     {!isLast ? <BreadcrumbSeparator /> : null}
@@ -83,6 +105,7 @@ function DocsLayout() {
           </Breadcrumb>
           <div className="ml-auto flex flex-1 items-center justify-end gap-2 lg:flex-none">
             <DocsSearch className="lg:w-80" />
+            <OpenWithAgent />
             <Button asChild size="sm" variant="ghost">
               <a
                 href="https://github.com/flixlix/flixlix-cards"
@@ -96,23 +119,20 @@ function DocsLayout() {
             </Button>
           </div>
         </header>
-        <main className="flex-1 px-4 py-6 md:px-8 lg:px-12">
+        <main className="flex-1 overflow-x-clip px-4 py-6 md:px-8 lg:px-12">
           <div className="mx-auto w-full max-w-5xl xl:max-w-7xl">
             <Outlet />
           </div>
         </main>
         <footer className="mt-auto border-t px-4 py-6 md:px-8 lg:px-12">
           <div className="text-muted-foreground mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-3 text-xs xl:max-w-7xl">
-            <p className="inline-flex items-center gap-1">
-              Built with <Heart aria-label="love" className="size-3 fill-current text-rose-500" />{" "}
-              for the Home Assistant community
-            </p>
+            <p>Made by Luca, in the hope that these cards make your dashboard a little nicer.</p>
             <p className="inline-flex flex-wrap items-center gap-x-3 gap-y-1">
               <a
                 href="https://github.com/flixlix/flixlix-cards/blob/main/LICENSE"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-foreground hover:text-primary font-medium transition-colors"
+                className="text-foreground decoration-solar font-medium underline-offset-4 hover:underline"
               >
                 MIT License
               </a>
@@ -120,7 +140,7 @@ function DocsLayout() {
                 href="https://github.com/flixlix"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-foreground hover:text-primary font-medium transition-colors"
+                className="text-foreground decoration-solar font-medium underline-offset-4 hover:underline"
               >
                 @flixlix
               </a>
@@ -129,5 +149,17 @@ function DocsLayout() {
         </footer>
       </SidebarInset>
     </SidebarProvider>
+  );
+}
+
+function ParentCrumb({ segment }: { segment: string }) {
+  const to = parentLink(segment);
+  if (!to) {
+    return <span className="text-muted-foreground">{humanize(segment)}</span>;
+  }
+  return (
+    <BreadcrumbLink asChild>
+      <Link to={to}>{humanize(segment)}</Link>
+    </BreadcrumbLink>
   );
 }

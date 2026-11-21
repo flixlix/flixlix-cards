@@ -24,7 +24,9 @@ body:
         - Power Flow Card Plus
         - Home Flow Card
         - Energy Flow Card Plus
+        - Energy Breakdown Card
         - Energy Period Selector Plus
+        - Sortable List Card
     validations:
       required: true
   - type: textarea

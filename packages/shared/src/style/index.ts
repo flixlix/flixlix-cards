@@ -7,6 +7,7 @@ export const styles = css`
     --size-circle-entity: 79.99px;
     --mdc-icon-size: 24px;
     --clickable-cursor: pointer;
+    --clickable-pointer-events: auto;
     --individual-left-bottom-color: #d0cc5b;
     --individual-left-top-color: #964cb5;
     --individual-right-top-color: #b54c9d;
@@ -47,10 +48,11 @@ export const styles = css`
 
   ha-card {
     overflow: hidden;
-  }
-
-  ha-card.full-size {
+    /* Keeps the z-index of the circles inside the card, under overlays like a floating nav bar. */
+    isolation: isolate;
     height: 100%;
+    display: flex;
+    flex-direction: column;
   }
 
   .card-content.full-size {
@@ -60,6 +62,20 @@ export const styles = css`
   .card-content {
     position: relative;
     margin: 0 auto;
+    flex-grow: 1;
+    /* Auto margins keep a flex item from stretching; fill the card like a block, padding outside. */
+    width: -webkit-fill-available;
+    width: -moz-available;
+    width: stretch;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  /* At most the room columns get between them at the content's max width, so a tall card keeps the diagram's proportions and centres it. */
+  .row-gap {
+    flex: 1 1 0;
+    max-height: 85px;
   }
 
   .circle {
@@ -122,6 +138,7 @@ export const styles = css`
   .row {
     display: flex;
     justify-content: space-between;
+    width: 100%;
     max-width: 500px;
     margin: 0 auto;
   }
@@ -150,6 +167,11 @@ export const styles = css`
   }
   .spacer {
     width: var(--size-circle-entity);
+  }
+  /* Without the grid column, two columns keep the spacing they have among three. */
+  .card-content.no-grid .row:not(:has(> :nth-child(3))) {
+    max-width: calc((100% + var(--size-circle-entity)) / 2);
+    translate: calc((100% - var(--size-circle-entity)) * var(--optical-shift, 0));
   }
 
   .circle-container .circle {
@@ -207,7 +229,10 @@ export const styles = css`
     left: 0;
   }
 
+  /* A circle with nothing to open (a home without an entity) turns off pointer events, which
+     its secondary info inherits even though it opens an entity of its own. */
   span.secondary-info {
+    pointer-events: var(--clickable-pointer-events);
     color: var(--primary-text-color);
     font-size: 12px;
     max-width: 60px;
@@ -249,18 +274,18 @@ export const styles = css`
     fill: var(--individual-left-bottom-color);
   }
   .individual-top .circle {
-    border-color: var(--individual-left-top-color);
+    border-color: var(--circle-individual-left-top-color, var(--individual-left-top-color));
   }
   .individual-bottom path,
   .individual-bottom circle {
     stroke: var(--individual-left-bottom-color);
   }
   .individual-bottom .circle {
-    border-color: var(--individual-left-bottom-color);
+    border-color: var(--circle-individual-left-bottom-color, var(--individual-left-bottom-color));
   }
 
   .individual-right-top .circle {
-    border-color: var(--individual-right-top-color);
+    border-color: var(--circle-individual-right-top-color, var(--individual-right-top-color));
   }
 
   circle.individual-right-top .circle {
@@ -272,7 +297,7 @@ export const styles = css`
     stroke: var(--individual-right-top-color);
   }
   .individual-right-bottom .circle {
-    border-color: var(--individual-right-bottom-color);
+    border-color: var(--circle-individual-right-bottom-color, var(--individual-right-bottom-color));
   }
 
   circle.individual-right-bottom .circle {
@@ -282,6 +307,32 @@ export const styles = css`
   .individual-right-bottom path,
   .individual-right-bottom circle {
     stroke: var(--individual-right-bottom-color);
+  }
+
+  .circle-container.auxiliary {
+    height: 110px;
+    justify-content: flex-end;
+  }
+  .auxiliary .circle {
+    border-color: var(--circle-auxiliary-color, var(--auxiliary-color));
+    color: var(--text-auxiliary-color);
+  }
+  #auxiliary-icon {
+    color: var(--icon-auxiliary-color);
+  }
+  span.auxiliary {
+    color: var(--text-auxiliary-color);
+  }
+  span.secondary-info.auxiliary {
+    color: var(--secondary-text-auxiliary-color);
+  }
+  .auxiliary path,
+  circle.auxiliary {
+    stroke: var(--auxiliary-color);
+  }
+  circle.auxiliary {
+    stroke-width: 4;
+    fill: var(--auxiliary-color);
   }
 
   .circle-container.low-carbon {
@@ -401,6 +452,9 @@ export const styles = css`
   .grid ha-icon:not(.small) {
     color: var(--icon-grid-color);
   }
+  .grid span.power-outage {
+    color: var(--text-grid-outage-color);
+  }
   .home .circle {
     border-width: 0;
     border-color: var(--primary-color);
@@ -502,6 +556,8 @@ export const styles = css`
 
   .card-actions {
     display: flex;
+    flex-wrap: wrap;
+    gap: var(--ha-space-2, 8px);
     justify-content: space-between;
     align-items: center;
   }

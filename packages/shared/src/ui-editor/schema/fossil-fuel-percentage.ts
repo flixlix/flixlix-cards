@@ -19,6 +19,11 @@ const mainSchema = {
       },
     },
     {
+      name: "invert_state",
+      translation_key: "invert_state_non_fossil",
+      selector: { boolean: {} },
+    },
+    {
       name: "color_value",
       label: "Color Value",
       selector: { boolean: {} },

@@ -5,6 +5,8 @@ import { type HomeAssistant } from "custom-card-helpers";
 /** The part of an ha-form schema entry that ha-form hands to `computeLabel`. */
 export interface HaFormLabelSchema {
   name: string;
+  /** Our `editor.*` translation key, for a field whose name is labelled differently on another node. */
+  translation_key?: string;
 }
 
 /** `value-changed` as fired by ha-form and ha-entity-picker. */
@@ -16,4 +18,4 @@ export const computeEditorLabel = (
   schema: HaFormLabelSchema
 ): string =>
   nonEmpty(hass?.localize(`ui.panel.lovelace.editor.card.generic.${schema.name}`)) ??
-  localize(`editor.${schema.name}`);
+  localize(`editor.${schema.translation_key ?? schema.name}`);

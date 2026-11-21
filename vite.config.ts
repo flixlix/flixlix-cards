@@ -66,6 +66,7 @@ export default defineConfig({
       "flixlix/cognitive-complexity": ["error", { max: 15 }],
       "flixlix/no-index-fallback": "error",
       "flixlix/no-identity-arithmetic": "error",
+      "flixlix/no-entity-undefined-check": "error",
       "flixlix/no-reactive-mutation": "error",
       "flixlix/no-card-type-sniffing": "error",
       "flixlix/no-camelcase-event-binding": "error",
@@ -104,6 +105,12 @@ export default defineConfig({
         files: ["packages/shared/src/**", "packages/flixlix-cards/*/src/**"],
         excludeFiles: ["**/*.test.ts", "packages/shared/src/testing/**"],
         rules: { "flixlix/no-unsupported-runtime-apis": "error" },
+      },
+      {
+        // Cards watch their width through the shared WidthController, which owns the observer.
+        files: ["packages/flixlix-cards/*/src/**"],
+        excludeFiles: ["**/*.test.ts"],
+        rules: { "flixlix/no-card-resize-observer": "error" },
       },
       {
         files: ["apps/web/**", "packages/ui/**"],
@@ -162,6 +169,12 @@ export default defineConfig({
             { max: 80, skipBlankLines: true, skipComments: true },
           ],
         },
+      },
+      {
+        // links people follow to install a card; the rule's own tests hold bad links on purpose
+        files: ["**/*"],
+        excludeFiles: ["packages/tooling/lint-rules/**"],
+        rules: { "flixlix/hacs-link-category": "error" },
       },
       {
         files: ["packages/shared/src/utils/logging.ts"],

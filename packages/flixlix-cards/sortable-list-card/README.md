@@ -1,5 +1,8 @@
 # Sortable List Card
 
+> [!TIP]
+> **Canonical docs: [cards.flixlix.com/sortable-list-card](https://cards.flixlix.com/sortable-list-card).** Installation, options and examples, including the HEMS load-priority list, are on that page.
+
 A generic drag-and-drop **reorderable list** for Home Assistant. Drag rows or use the
 up/down arrows to reorder, and the new order is persisted by calling **any service** you
 configure. Items can be plain config entries or backed by entities (pulling their name,

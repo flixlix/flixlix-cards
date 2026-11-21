@@ -44,6 +44,79 @@ const PAGES: SearchEntry[] = [
   },
 ];
 
+const GUIDES: SearchEntry[] = [
+  {
+    title: "Which card",
+    description: "Live watts, an isometric house, period energy, a donut or a date picker.",
+    to: "/guides",
+    breadcrumb: "Guides",
+    card: "general",
+    type: "page",
+    keywords: [
+      "which card",
+      "power flow card plus vs energy flow card plus",
+      "lovelace custom energy card",
+      "compare",
+    ],
+  },
+  {
+    title: "Solar and battery power flow",
+    description: "Sensors and a first config for live solar, battery and grid power.",
+    to: "/guides/solar-battery-power-flow",
+    breadcrumb: "Guides",
+    card: "general",
+    type: "page",
+    keywords: [
+      "home assistant solar battery power flow",
+      "live power flow dashboard",
+      "lovelace solar card",
+      "solar",
+      "battery",
+      "grid",
+    ],
+  },
+  {
+    title: "Vs the original Power Flow Card",
+    description: "ulic75's Power Flow Card is archived and points here.",
+    to: "/guides/power-flow-card-plus-vs-power-flow-card",
+    breadcrumb: "Guides",
+    card: "general",
+    type: "page",
+    keywords: ["ulic75", "power flow card plus vs power flow card", "original", "archived"],
+  },
+  {
+    title: "Vs Sunsynk Power Flow Card",
+    description: "A circle diagram for any sensors, or an inverter-screen card.",
+    to: "/guides/power-flow-card-plus-vs-sunsynk",
+    breadcrumb: "Guides",
+    card: "general",
+    type: "page",
+    keywords: ["sunsynk", "power flow card plus vs sunsynk", "deye", "inverter"],
+  },
+  {
+    title: "Vs Tesla Style Solar Power Card",
+    description: "How each card expects solar, battery and grid sensors.",
+    to: "/guides/power-flow-card-plus-vs-tesla-style",
+    breadcrumb: "Guides",
+    card: "general",
+    type: "page",
+    keywords: ["tesla style", "tesla", "vs tesla style", "solar power card"],
+  },
+  {
+    title: "Energy Distribution alternative",
+    description: "Live watts, or period energy with more to tune than the built-in card.",
+    to: "/guides/energy-distribution-card-alternative",
+    breadcrumb: "Guides",
+    card: "general",
+    type: "page",
+    keywords: [
+      "energy distribution card alternative",
+      "custom energy distribution card",
+      "built-in",
+    ],
+  },
+];
+
 function cardPages(
   card: "power" | "energy",
   basePath: "/power-flow-card-plus" | "/energy-flow-card-plus",
@@ -118,7 +191,7 @@ function configSections(
     make(
       "entities",
       "Entities object",
-      "Grid, solar, battery, individual, home, fossil_fuel_percentage."
+      "Grid, solar, battery, individual, auxiliary, home, fossil_fuel_percentage."
     ),
     make(
       "grid",
@@ -127,17 +200,15 @@ function configSections(
     ),
     make("solar", "Solar configuration", "Solar entity, name, icon, color options."),
     make("battery", "Battery configuration", "Battery entity, state_of_charge, color options."),
+    make("individual", "Individual devices", "Up to 4 extra circles (car, EV, etc)."),
     make(
-      "individual",
-      "Individual devices",
-      card === "power"
-        ? "Extra circles (car, EV, etc). Up to 4 around a source, all of them with no grid, solar or battery."
-        : "Up to 4 extra circles (car, EV, etc).",
-      card === "power" ? ["device-only", "no grid", "no solar", "no battery", "ring"] : undefined
+      "auxiliary",
+      "Auxiliary",
+      "Display-only circle under the grid: wind share, gas, virtual battery."
     ),
     make("home", "Home configuration", "Home entity, subtract_individual, override_state."),
     make("fossil-fuel", "Fossil fuel / low-carbon", "Fossil fuel percentage circle config."),
-    make("color-object", "Color object", "Production / consumption HEX colors."),
+    make("color-object", "Color object", "Production / consumption / idle HEX colors."),
     make("split-entities", "Split entities", "Separate sensors for production and consumption."),
     make("secondary-info", "Secondary info", "Extra value next to a circle, supports templates."),
     make("power-outage", "Power outage", "Configure outage detection and generator entity."),
@@ -146,7 +217,26 @@ function configSections(
       "Display zero lines",
       "show / hide / transparency / grey_out / custom."
     ),
-    make("flow-formula", "Flow formulas", "Legacy vs new (absolute) flow rate model."),
+    make(
+      "topology",
+      "Topology",
+      "standard / battery_hub / isolated_battery: which wires the card draws."
+    ),
+    make(
+      "card-height",
+      "Card height",
+      "Taller cards in a sections dashboard spread the rows: grid_options rows."
+    ),
+    make(
+      "custom-css",
+      "Custom CSS",
+      "card-mod selectors for each circle's value, icon and secondary info."
+    ),
+    make(
+      "flow-formula",
+      "Flow formulas",
+      "Flow rate models, and how durations scale with line length."
+    ),
   ];
   if (card === "energy") {
     sections.push(
@@ -183,15 +273,22 @@ function configOptions(
     make("type", "Card type identifier (required)."),
     make("entities", "Entities object (required)."),
     make("title", "Title shown above the card."),
-    make("dashboard_link", "URL to a dashboard, shown as a link."),
+    make("dashboard_link", "Legacy link to a dashboard; use buttons instead."),
+    make(
+      "buttons",
+      "Buttons at the bottom of the card, each with a name, icon and actions.",
+      "buttons",
+      ["button", "link", "navigate", "action"]
+    ),
     make("kilo_decimals", `Decimals shown when ${card === "power" ? "kW" : "kWh"} are displayed.`),
     make("base_decimals", `Decimals shown when ${card === "power" ? "W" : "Wh"} are displayed.`),
+    make("keep_trailing_zeros", "Keep trailing zeros, e.g. 1.0 instead of 1."),
     make(
       "kilo_threshold",
       `${card === "power" ? "Watts" : "Watt-hours"} before switching to ${card === "power" ? "kW" : "kWh"}.`
     ),
-    make("min_flow_rate", "Time (s) for the fastest dot to travel a line."),
-    make("max_flow_rate", "Time (s) for the slowest dot to travel a line."),
+    make("min_flow_rate", "Time (s) for the fastest dot to travel 175px of line."),
+    make("max_flow_rate", "Time (s) for the slowest dot to travel 175px of line."),
     make("clickable_entities", "Open the entity's more-info dialog when clicking a circle."),
     ...(card === "energy"
       ? []
@@ -228,6 +325,12 @@ function configOptions(
         ]),
     make("sort_individual_devices", "Sort individual devices by value, then id, then name."),
     make("allow_layout_break", "Force showing up to 4 individual devices."),
+    make("topology", "Which wires exist: standard, battery_hub or isolated_battery.", "topology", [
+      "standard",
+      "battery_hub",
+      "isolated_battery",
+      "power station",
+    ]),
     make("tap_action", "Action triggered on tap.", "actions"),
     make("hold_action", "Action triggered on long press.", "actions"),
     make("double_tap_action", "Action triggered on double tap.", "actions"),
@@ -241,6 +344,7 @@ function configOptions(
     make("color_value", "Coloring of the value text.", "grid"),
     make("display_zero_tolerance", "Treat states below this number as zero.", "grid"),
     make("power_outage", "Configure outage detection.", "power-outage"),
+    make("color_alert", "Color of the outage icon and label.", "power-outage", ["outage", "red"]),
     make("invert_state", "Invert the production/consumption sign convention.", "grid"),
     make("state_of_charge", "Battery state of charge sensor (required).", "battery"),
     make("state_of_charge_unit", "Unit for the SoC.", "battery"),
@@ -250,11 +354,18 @@ function configOptions(
     make("override_state", "Use the home entity state directly.", "home"),
     make("state_type", "fossil_fuel_percentage state type, power or percentage.", "fossil-fuel"),
     make(
+      "invert_state",
+      "fossil_fuel_percentage entity reports the green / low-carbon percentage (100 minus the state).",
+      "fossil-fuel",
+      ["green energy", "renewable"]
+    ),
+    make(
       "calculate_flow_rate",
       "Calculated rate by default; false = fixed pace, number = seconds.",
       "fossil-fuel"
     ),
     make("inverted_animation", "Reverse dot direction for an individual device.", "individual"),
+    make("connect_to", "Auxiliary line to the grid, the battery or none.", "auxiliary"),
     make("decimals", "Decimals for a grid, solar, battery or individual device value.", "grid"),
     make(
       "unit_of_measurement",
@@ -263,13 +374,22 @@ function configOptions(
     ),
     make("unit_white_space", "Whitespace between value and unit.", "grid"),
     make("display_zero", "Show device when state is 0 / unavailable.", "individual"),
+    make(
+      "visibility",
+      "Show an individual device only while conditions hold, e.g. the car is plugged in.",
+      "individual"
+    ),
     make("template", "HA template evaluated reactively (secondary info).", "secondary-info"),
     make(
       "accept_negative",
       "Show negative values as-is; on an individual device, flip its dots when it feeds the home.",
       "secondary-info"
     ),
-    make("sum_total", "Sum solar's secondary info into the main entity.", "secondary-info"),
+    make(
+      "sum_total",
+      "Add the secondary entity to the main entity of solar or an individual device.",
+      "secondary-info"
+    ),
   ];
   if (card === "energy") {
     opts.push(make("collection_key", "Bind to a specific energy collection.", "collection-key"));
@@ -321,12 +441,12 @@ function breakdownPages(): SearchEntry[] {
     },
     {
       title: "Installation",
-      description: "HACS custom repository and manual installation instructions.",
+      description: "Marketplace, HACS custom repository and manual installation instructions.",
       to: `${BREAKDOWN_BASE}/installation`,
       breadcrumb: BREAKDOWN,
       card: "breakdown",
       type: "page",
-      keywords: ["hacs", "custom repository", "install", "resource", "lovelace"],
+      keywords: ["marketplace", "hacs", "custom repository", "install", "resource", "lovelace"],
     },
     {
       title: "Configuration",
@@ -524,12 +644,20 @@ function sortablePages(): SearchEntry[] {
     },
     {
       title: "Installation",
-      description: "HACS custom repository and manual installation instructions.",
+      description: "Marketplace, HACS custom repository and manual installation instructions.",
       to: `${SORTABLE_BASE}/installation`,
       breadcrumb: SORTABLE,
       card: "sortable",
       type: "page",
-      keywords: ["hacs", "custom repository", "install", "resource", "lovelace", "input_text"],
+      keywords: [
+        "marketplace",
+        "hacs",
+        "custom repository",
+        "install",
+        "resource",
+        "lovelace",
+        "input_text",
+      ],
     },
     {
       title: "Configuration",
@@ -687,8 +815,8 @@ function periodPages(): SearchEntry[] {
       PERIOD,
       "page",
       "Installation",
-      "HACS custom repository and manual installation instructions.",
-      ["hacs", "custom repository", "install", "resource", "lovelace"]
+      "Marketplace, HACS custom repository and manual installation instructions.",
+      ["marketplace", "hacs", "custom repository", "install", "resource", "lovelace"]
     ),
     periodEntry(
       `${PERIOD_BASE}/configuration`,
@@ -811,25 +939,37 @@ function houseEntries(): SearchEntry[] {
   return [
     houseEntry(HOUSE_BASE, HOUSE, "page", "Overview", `What ${HOUSE} is and what it can do.`, [
       "isometric",
+      "isometric house",
+      "isometric house power card",
       "house",
       "solar",
       "battery",
       "inverter",
+      "home assistant",
+      "lovelace",
     ]),
+    houseEntry(
+      `${HOUSE_BASE}#a-day`,
+      HOUSE,
+      "section",
+      "A day on your house",
+      "The card live through a day: afternoon, evening, night and a grid outage.",
+      ["demo", "live", "scenario", "outage", "generator", "night", "evening"]
+    ),
     houseEntry(
       `${HOUSE_BASE}/installation`,
       HOUSE,
       "page",
       "Installation",
-      "HACS custom repository and manual installation instructions.",
-      ["hacs", "custom repository", "install", "resource", "lovelace"]
+      "Marketplace, HACS and manual installation instructions.",
+      ["marketplace", "hacs", "install", "resource", "lovelace"]
     ),
     houseEntry(
       `${HOUSE_BASE}/configuration`,
       HOUSE,
       "page",
       "Configuration",
-      "The card's own options.",
+      "Every option the card reads.",
       ["yaml", "options", "reference"]
     ),
     houseEntry(`${HOUSE_BASE}/examples`, HOUSE, "page", "Examples", "Copy-pastable configs.", [
@@ -856,21 +996,101 @@ function houseEntries(): SearchEntry[] {
     ]),
     option("clickable_entities", "Tap a value to open its entity.", "card-options"),
     option("disable_dots", "Keep the wires still.", "card-options", ["pulses"]),
-    option("generator", "A generator on the inverter during a grid outage.", "card-options", [
+    ...(
+      [
+        ["grid", "Grid", "Import and export sensors, power outage, colours, actions."],
+        ["solar", "Solar", "The solar sensor, name, colour, actions."],
+        ["battery", "Battery", "Power and state of charge, charge bar thresholds, icon, colours."],
+        ["home", "Home", "The home's own sensor and override_state."],
+        ["generator", "Generator", "A generator on the inverter during a grid outage."],
+        ["car", "Car", "An electric car, its charge, visibility and idle conditions."],
+        ["conditions", "Conditions", "Conditions for the car's visibility and idle state."],
+        ["actions", "Actions", "Tap, hold and double-tap actions on a label."],
+      ] as const
+    ).map(([id, title, description]) =>
+      houseEntry(`${HOUSE_BASE}/configuration#${id}`, configuration, "section", title, description)
+    ),
+    option("wire_width", "Draw the wires thicker.", "card-options", ["lines", "thickness"]),
+    option(
+      "two_way_value_size",
+      "Shrink the two values of a grid or battery that ran both ways.",
+      "card-options",
+      ["energy", "font", "text size", "smaller"]
+    ),
+    option("mode", "Live power, or energy over the dashboard's period.", "card-options", [
+      "energy",
+      "kWh",
+      "period",
+      "date picker",
+    ]),
+    option("collection_key", "The energy date picker to follow.", "card-options", ["energy"]),
+    option("energy_entities", "Energy sensors for a live / today selector.", "card-options", [
+      "energy",
+      "selector",
+      "today",
+    ]),
+    option(
+      "views",
+      "The selector's choices: two side by side, more in a dropdown.",
+      "card-options",
+      ["selector", "today", "yesterday", "week", "month", "year"]
+    ),
+    option("min_expected_value", "Where the pulses run their slowest.", "numbers", [
+      "min_expected_power",
+      "pulse speed",
+    ]),
+    option("max_expected_value", "Where the pulses run their fastest.", "numbers", [
+      "max_expected_power",
+      "pulse speed",
+    ]),
+    option("power_outage", "The grid's outage sensor and alert.", "grid", ["outage", "blackout"]),
+    option("override_state", "Show the home sensor's own reading.", "home"),
+    option("visibility", "When the car is drawn.", "car", ["car", "conditions", "home"]),
+    option("idle", "When the car is parked and unplugged.", "car", ["car", "plugged", "faded"]),
+    option("generator", "A generator on the inverter during a grid outage.", "generator", [
       "outage",
       "backup",
     ]),
-    option("state_of_charge_severity", "Battery charge bar colours.", "card-options", [
+    option("state_of_charge_severity", "Battery charge bar colours.", "battery", [
       "battery",
       "red",
       "yellow",
       "threshold",
     ]),
-    option("kilo_threshold", "From how many watts values are in kW.", "numbers"),
-    option("kilo_decimals", "Decimals of values in kW.", "numbers"),
+    option("state_of_charge_position", "Where the battery label shows its charge.", "battery", [
+      "battery",
+      "inline",
+      "swap",
+      "percent",
+    ]),
+    option("kilo_threshold", "From how many W (Wh) values are in kW (kWh).", "numbers"),
+    option("kilo_decimals", "Decimals of values in kW (kWh).", "numbers"),
+    option("mega_threshold", "From how many W (Wh) values are in MW (MWh).", "numbers", ["MWh"]),
+    option("mega_decimals", "Decimals of values in MW (MWh).", "numbers", ["MWh"]),
     example("solar-battery", "Solar and a battery", "The full house."),
-    example("split", "Separate import and export sensors", "Split entities and power outage."),
+    example(
+      "split",
+      "Separate sensors, an outage and a generator",
+      "Split entities, the grid's outage sensor and a generator."
+    ),
+    example(
+      "thresholds",
+      "Your own battery thresholds",
+      "state_of_charge_severity red and yellow."
+    ),
+    example(
+      "charge-position",
+      "The state of charge beside the value",
+      "state_of_charge_position after_value."
+    ),
+    example("energy", "Energy over the day", "mode energy with energy sensors."),
+    example(
+      "live-or-today",
+      "Live power or the day so far",
+      "energy_entities adds a live / today selector."
+    ),
     example("grid-only", "Grid only", "No solar or battery."),
+    example("wire-width", "Thicker wires", "wire_width 2."),
     example("still", "Still numbers and wires", "animate_numbers and disable_dots off."),
   ];
 }
@@ -909,7 +1129,7 @@ const CONTRIBUTING_SECTIONS: SearchEntry[] = [
     breadcrumb: "How to contribute",
     card: "general",
     type: "section",
-    keywords: ["pnpm dev", "rollup", "watch"],
+    keywords: ["pnpm dev", "vite", "watch"],
   },
   {
     title: "Working on the docs site",
@@ -960,6 +1180,7 @@ const CONTRIBUTING_SECTIONS: SearchEntry[] = [
 
 export const SEARCH_ENTRIES: SearchEntry[] = [
   ...PAGES,
+  ...GUIDES,
   ...cardPages("power", "/power-flow-card-plus", POWER),
   {
     title: "Playground",
@@ -969,6 +1190,15 @@ export const SEARCH_ENTRIES: SearchEntry[] = [
     card: "power",
     type: "page",
     keywords: ["demo", "live", "preview", "try", "scenario"],
+  },
+  {
+    title: "Playground",
+    description: "Try the house live: pick a moment of the day, move the sensors.",
+    to: "/home-flow-card/playground",
+    breadcrumb: "Home Flow Card",
+    card: "house",
+    type: "page",
+    keywords: ["demo", "live", "preview", "try", "scenario", "outage", "generator"],
   },
   ...cardPages("energy", "/energy-flow-card-plus", ENERGY),
   {
@@ -1011,6 +1241,22 @@ export const SEARCH_ENTRIES: SearchEntry[] = [
   ...CONTRIBUTING_SECTIONS,
 ];
 
+const CARD_NAMES_BY_OVERVIEW: Record<string, string> = {
+  "/power-flow-card-plus": POWER,
+  "/energy-flow-card-plus": ENERGY,
+  [BREAKDOWN_BASE]: BREAKDOWN,
+  [PERIOD_BASE]: PERIOD,
+  [HOUSE_BASE]: HOUSE,
+  [SORTABLE_BASE]: SORTABLE,
+};
+
+const TYPE_RANK: Record<SearchEntry["type"], number> = {
+  page: 0,
+  section: 1,
+  option: 2,
+  example: 3,
+};
+
 /** Exact match beats prefix match beats substring match. */
 function matchScore(value: string, q: string, weight: number): number {
   if (!value) {
@@ -1023,6 +1269,20 @@ function matchScore(value: string, q: string, weight: number): number {
     return weight * 2;
   }
   return value.includes(q) ? weight : 0;
+}
+
+/** Every query word starts a word of the card's name, so "energy card" names all energy cards. */
+function namesCard(query: string, entry: SearchEntry): boolean {
+  const cardName = CARD_NAMES_BY_OVERVIEW[entry.to];
+  if (!cardName) {
+    return false;
+  }
+  const words = cardName.toLowerCase().split(/\s+/);
+  return query
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean)
+    .every((token) => words.some((word) => word.startsWith(token)));
 }
 
 function score(query: string, entry: SearchEntry): number {
@@ -1051,11 +1311,6 @@ function score(query: string, entry: SearchEntry): number {
     } // multi-word queries require all tokens to match
   }
 
-  // boost type
-  if (entry.type === "page" && total > 0) {
-    total += 1;
-  }
-
   return total;
 }
 
@@ -1064,9 +1319,14 @@ export function searchDocs(query: string, max = 8): SearchEntry[] {
   if (!q) {
     return [];
   }
-  return SEARCH_ENTRIES.map((entry) => ({ entry, s: score(q, entry) }))
+  return SEARCH_ENTRIES.map((entry) => ({ entry, card: namesCard(q, entry), s: score(q, entry) }))
     .filter(({ s }) => s > 0)
-    .toSorted((a, b) => b.s - a.s)
+    .toSorted(
+      (a, b) =>
+        Number(b.card) - Number(a.card) ||
+        b.s - a.s ||
+        TYPE_RANK[a.entry.type] - TYPE_RANK[b.entry.type]
+    )
     .slice(0, max)
     .map(({ entry }) => entry);
 }

@@ -1,7 +1,7 @@
 import { type FlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { defaultValues } from "@flixlix-cards/shared/utils/get-default-config";
 import { isNumberValue, nonEmpty, round } from "@flixlix-cards/shared/utils/utils";
-import { formatNumber } from "@flixlix-cards/shared/utils/format-number";
+import { formatNumber, fractionDigitsFor } from "@flixlix-cards/shared/utils/format-number";
 import { powerUnitFactor } from "@flixlix-cards/shared/states/utils/unit-prefix";
 import { type HomeAssistant } from "custom-card-helpers";
 import { type UnitFamily } from "./types";
@@ -57,7 +57,8 @@ const scaleFor = (
     return explicitScale(config, unit, reading === true);
   }
   const base = { divisor: 1, unit: baseUnit, decimals: config.base_decimals, fallbackDecimals: 0 };
-  if (value >= (config.mega_threshold ?? defaultValues.megaThreshold)) {
+  const size = Math.abs(value);
+  if (size >= (config.mega_threshold ?? defaultValues.megaThreshold)) {
     return {
       divisor: 1000000,
       unit: `M${baseUnit}`,
@@ -65,7 +66,7 @@ const scaleFor = (
       fallbackDecimals: 2,
     };
   }
-  if (value >= (config.kilo_threshold ?? defaultValues.kiloThreshold)) {
+  if (size >= (config.kilo_threshold ?? defaultValues.kiloThreshold)) {
     return {
       divisor: 1000,
       unit: `k${baseUnit}`,
@@ -116,7 +117,11 @@ const displayValue = (
   }
 
   const reading = scaledReading(config, family, Number(value), options);
-  const v = formatNumber(accept_negative ? reading.value : Math.abs(reading.value), hass.locale);
+  const v = formatNumber(
+    accept_negative ? reading.value : Math.abs(reading.value),
+    hass.locale,
+    fractionDigitsFor(reading.decimals, config.keep_trailing_zeros === true)
+  );
 
   return `${v}${whiteSpace}${reading.unit}`;
 };

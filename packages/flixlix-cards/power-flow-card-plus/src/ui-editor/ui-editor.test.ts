@@ -1,7 +1,15 @@
-import { type PowerFlowCardPlusConfig } from "@flixlix-cards/shared/types";
+import { type PowerFlowCardPlusConfig, TOPOLOGIES } from "@flixlix-cards/shared/types";
+import {
+  computeEditorLabel,
+  type HaFormLabelSchema,
+} from "@flixlix-cards/shared/ui-editor/ha-form";
+import { nonFossilSchema } from "@flixlix-cards/shared/ui-editor/schema/fossil-fuel-percentage";
+import { individualSchema } from "@flixlix-cards/shared/ui-editor/schema/individual";
+import { solarSchema } from "@flixlix-cards/shared/ui-editor/schema/solar";
 import { type HomeAssistant } from "custom-card-helpers";
 import { LitElement } from "lit";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vite-plus/test";
+import { advancedOptionsSchema } from "./schema/_schema-all";
 import { PowerFlowCardPlusEditor } from "./ui-editor";
 
 const { loadHaFormMock } = vi.hoisted(() => ({
@@ -12,7 +20,15 @@ vi.mock("@flixlix-cards/shared/ui-editor/utils/load-ha-form", () => ({
   loadHaForm: loadHaFormMock,
 }));
 
-const hass: Partial<HomeAssistant> = { localize: () => "" };
+const isToggle = (field: unknown) =>
+  typeof field === "object" &&
+  field !== null &&
+  "selector" in field &&
+  typeof field.selector === "object" &&
+  field.selector !== null &&
+  "boolean" in field.selector;
+
+const hass: Partial<HomeAssistant> = { localize: () => "", states: {} };
 
 const editorConfig = (options: Record<string, unknown>) =>
   ({ type: "custom:power-flow-card-plus", ...options }) as PowerFlowCardPlusConfig;
@@ -43,13 +59,18 @@ async function openAdvanced(options: Record<string, unknown>) {
   return { ...mounted, form: query(mounted.editor, "ha-form") };
 }
 
-async function openEntityPage(page: string, entities: Record<string, unknown>) {
-  const mounted = await mountEditor({ entities });
-  query(mounted.editor, `link-subpage[path="${page}"]`).dispatchEvent(
+/** Opens the individual devices page and the first device's form. */
+async function editDevice(device: Record<string, unknown>) {
+  const mounted = await mountEditor({ entities: { individual: [device] } });
+  query(mounted.editor, 'link-subpage[path="individual"]').dispatchEvent(
     new CustomEvent("open-sub-element-editor", { detail: { open: true } })
   );
   await mounted.editor.updateComplete;
-  return mounted;
+  const devices = await rendered(mounted.editor, "individual-devices-editor");
+  const rows = await rendered(devices, "individual-row-editor");
+  query(rows, ".edit-icon").click();
+  await rendered(devices, "individual-row-editor");
+  return { ...mounted, rows };
 }
 
 function query(root: Element, selector: string): HTMLElement {
@@ -118,6 +139,26 @@ function fieldDefault(schema: unknown, name: string): unknown {
     }
   }
   return undefined;
+}
+
+/** Opens the buttons page and, like Home Assistant, feeds every config the editor writes back in. */
+async function openButtons(options: Record<string, unknown>) {
+  const mounted = await mountEditor({ entities: {}, ...options });
+  const { editor, lastConfig } = mounted;
+  query(editor, 'link-subpage[path="buttons"]').dispatchEvent(
+    new CustomEvent("open-sub-element-editor", { detail: { open: true } })
+  );
+  await editor.updateComplete;
+  const list = await rendered(editor, "buttons-editor");
+  const roundTrip = async () => {
+    const config = lastConfig();
+    if (config) {
+      editor.setConfig(config);
+    }
+    await editor.updateComplete;
+    await rendered(editor, "buttons-editor");
+  };
+  return { ...mounted, list, roundTrip };
 }
 
 describe("power flow ui editor", () => {
@@ -388,6 +429,126 @@ describe("power flow ui editor", () => {
     expect(lastConfig()?.entities.individual).toEqual([{ entity: "sensor.b", name: "B" }]);
   });
 
+  test("adding a button writes it and opens its form, whose edits land on that button", async () => {
+    const { list, lastConfig, roundTrip } = await openButtons({
+      buttons: [{ name: "Solar", tap_action: { action: "navigate", navigation_path: "/solar" } }],
+    });
+
+    query(list, ".add-button").click();
+    await roundTrip();
+    expect(lastConfig()?.buttons).toEqual([
+      { name: "Solar", tap_action: { action: "navigate", navigation_path: "/solar" } },
+      { icon: "mdi:gesture-tap-button" },
+    ]);
+
+    const battery = {
+      name: "Battery",
+      icon: "mdi:battery",
+      tap_action: { action: "navigate", navigation_path: "/battery" },
+    };
+    query(list, "ha-form").dispatchEvent(
+      new CustomEvent("value-changed", { detail: { value: battery } })
+    );
+    expect(lastConfig()?.buttons).toEqual([
+      { name: "Solar", tap_action: { action: "navigate", navigation_path: "/solar" } },
+      battery,
+    ]);
+  });
+
+  test("the button form offers a name, an icon, an entity and the three actions", async () => {
+    const { editor, list } = await openButtons({ buttons: [{ name: "Solar" }] });
+
+    query(list, ".edit-icon").click();
+    const form = query(await rendered(editor, "buttons-editor"), "ha-form");
+
+    expect(ownFieldNames("schema" in form ? form.schema : undefined)).toEqual([
+      "name",
+      "icon",
+      "entity",
+      "tap_action",
+      "hold_action",
+      "double_tap_action",
+    ]);
+  });
+
+  test("removing a button keeps the others in order, and the last one drops buttons from the config", async () => {
+    const { editor, list, lastConfig, roundTrip } = await openButtons({
+      buttons: [{ name: "Solar" }, { name: "Battery" }],
+    });
+
+    query(list, ".remove-icon").click();
+    expect(lastConfig()?.buttons).toEqual([{ name: "Battery" }]);
+    await roundTrip();
+
+    query(await rendered(editor, "buttons-editor"), ".remove-icon").click();
+    expect(lastConfig()).toEqual({ type: "custom:power-flow-card-plus", entities: {} });
+  });
+
+  test("the buttons list shows each button by its name, else its entity", async () => {
+    const { list } = await openButtons({ buttons: [{ name: "Solar" }, { entity: "sensor.grid" }] });
+
+    expect(
+      [...(list.shadowRoot?.querySelectorAll(".button-label") ?? [])].map((label) =>
+        label.textContent?.trim()
+      )
+    ).toEqual(["Solar", "sensor.grid"]);
+  });
+
+  test("setConfig accepts buttons and rejects an unknown button option so HA falls back to YAML", () => {
+    const editor = new PowerFlowCardPlusEditor();
+    const button = { name: "Solar", icon: "mdi:solar-power", entity: "sensor.solar" };
+
+    expect(() => editor.setConfig(editorConfig({ entities: {}, buttons: [button] }))).not.toThrow();
+    expect(() =>
+      editor.setConfig(editorConfig({ entities: {}, buttons: [{ ...button, colour: "red" }] }))
+    ).toThrow(/colour/);
+  });
+
+  test("converting dashboard links puts them in front of the buttons and drops the legacy keys", async () => {
+    const { editor, lastConfig } = await mountEditor({
+      title: "Home",
+      entities: {},
+      dashboard_link: "/energy",
+      second_dashboard_link: "https://example.com/solar",
+      second_dashboard_link_label: "Inverter",
+      buttons: [{ name: "Battery", icon: "mdi:home-battery" }],
+    });
+    editor.hass = { ...hass, localize: () => "Go to the energy dashboard" } as HomeAssistant;
+
+    query(editor, ".dashboard-links-alert .legacy-fields-alert-button").click();
+
+    expect(lastConfig()).toEqual({
+      type: "custom:power-flow-card-plus",
+      title: "Home",
+      entities: {},
+      buttons: [
+        {
+          name: "Go to the energy dashboard",
+          tap_action: { action: "navigate", navigation_path: "/energy" },
+        },
+        { name: "Inverter", tap_action: { action: "url", url_path: "https://example.com/solar" } },
+        { name: "Battery", icon: "mdi:home-battery" },
+      ],
+    });
+    await editor.updateComplete;
+    expect(editor.shadowRoot?.querySelector(".dashboard-links-alert")).toBeNull();
+  });
+
+  test("without dashboard links there is nothing to convert", async () => {
+    const { editor } = await mountEditor({ entities: {}, buttons: [{ name: "Solar" }] });
+
+    expect(editor.shadowRoot?.querySelector(".dashboard-links-alert")).toBeNull();
+  });
+
+  test("the advanced form no longer offers the dashboard link", async () => {
+    const { form } = await openAdvanced({});
+
+    const fields = ownFieldNames("schema" in form ? form.schema : undefined);
+
+    expect(fields).not.toContain("dashboard_link");
+    expect(fields).not.toContain("dashboard_link_label");
+  });
+
   test.each(["grid", "solar", "battery"])(
     "the %s page edits its own unit, unit white space and decimals",
     async (page) => {
@@ -428,6 +589,53 @@ describe("power flow ui editor", () => {
     await rendered(devices, "individual-row-editor");
 
     expect(shownBoolean(query(rows, "ha-form"), "display_zero")).toBe(false);
+  });
+
+  describe("an individual device's visibility conditions (#332)", () => {
+    const pluggedIn = { condition: "state", entity: "binary_sensor.ev_plugged", state: "on" };
+
+    // runs first: the next test defines Home Assistant's editor for the rest of the file
+    test("without Home Assistant's conditions editor, they are a YAML field under Advanced", async () => {
+      const { rows } = await editDevice({ entity: "sensor.ev" });
+      const form = query(rows, "ha-form");
+      const schema = "schema" in form && Array.isArray(form.schema) ? form.schema : [];
+
+      expect(schema.at(-1)).toMatchObject({
+        type: "expandable",
+        schema: [{ name: "visibility", selector: { object: {} } }],
+      });
+      expect(rows.shadowRoot?.querySelector("ha-card-conditions-editor")).toBeNull();
+    });
+
+    test("with Home Assistant's conditions editor, they need no YAML", async () => {
+      // stands in for Home Assistant's own, defined while a dashboard is being edited
+      customElements.define(
+        "ha-card-conditions-editor",
+        class extends HTMLElement {
+          conditions: unknown[] = [];
+        }
+      );
+      const { rows, lastConfig } = await editDevice({
+        entity: "sensor.ev",
+        visibility: [pluggedIn],
+      });
+      const form = query(rows, "ha-form");
+      const conditions = query(rows, "ha-card-conditions-editor");
+
+      expect(ownFieldNames("schema" in form ? form.schema : undefined)).not.toContain("visibility");
+      expect(Reflect.get(conditions, "conditions")).toEqual([pluggedIn]);
+
+      const home = { condition: "state", entity: "device_tracker.ev", state: "home" };
+      conditions.dispatchEvent(
+        new CustomEvent("value-changed", { detail: { value: [pluggedIn, home] } })
+      );
+      expect(lastConfig()?.entities.individual).toEqual([
+        { entity: "sensor.ev", visibility: [pluggedIn, home] },
+      ]);
+
+      conditions.dispatchEvent(new CustomEvent("value-changed", { detail: { value: [] } }));
+      expect(lastConfig()?.entities.individual).toEqual([{ entity: "sensor.ev" }]);
+    });
   });
 
   test("the non-fossil page without display_zero shows the toggle off, as the card hides it at zero", async () => {
@@ -496,4 +704,116 @@ describe("power flow ui editor", () => {
       /not_an_option/
     );
   });
+  test("the grid page edits the outage colour", async () => {
+    const { editor, lastConfig } = await mountEditor({
+      entities: { grid: { entity: "sensor.grid", power_outage: { entity: "binary_sensor.down" } } },
+    });
+
+    query(editor, 'link-subpage[path="grid"]').dispatchEvent(
+      new CustomEvent("open-sub-element-editor", { detail: { open: true } })
+    );
+    await editor.updateComplete;
+    const form = query(editor, "ha-form");
+    const sections: unknown[] = "schema" in form && Array.isArray(form.schema) ? form.schema : [];
+    const outage = sections.find(
+      (item): item is { schema: unknown } =>
+        typeof item === "object" && item !== null && "name" in item && item.name === "power_outage"
+    );
+    const outageFields = ownFieldNames(outage?.schema);
+    form.dispatchEvent(
+      new CustomEvent("value-changed", {
+        detail: {
+          value: {
+            entity: "sensor.grid",
+            power_outage: { entity: "binary_sensor.down", color_alert: [255, 0, 0] },
+          },
+        },
+      })
+    );
+
+    expect(outageFields).toContain("color_alert");
+    expect(computeEditorLabel(hass as HomeAssistant, { name: "color_alert" })).toBe(
+      "Color for Alert"
+    );
+    expect(lastConfig()?.entities.grid?.power_outage?.color_alert).toEqual([255, 0, 0]);
+  });
+
+  test.each(TOPOLOGIES)("setConfig accepts topology %s", (topology) => {
+    const editor = new PowerFlowCardPlusEditor();
+
+    expect(() => editor.setConfig(editorConfig({ entities: {}, topology }))).not.toThrow();
+  });
+
+  test("setConfig rejects an unknown topology so HA falls back to YAML", () => {
+    const editor = new PowerFlowCardPlusEditor();
+
+    expect(() => editor.setConfig(editorConfig({ entities: {}, topology: "mesh" }))).toThrow(
+      /topology/
+    );
+  });
+
+  test("the advanced form offers topology", async () => {
+    const { form } = await openAdvanced({});
+
+    expect(ownFieldNames("schema" in form ? form.schema : undefined)).toContain("topology");
+  });
+
+  test("the advanced form offers keep_trailing_zeros, which setConfig accepts", async () => {
+    const { form } = await openAdvanced({ keep_trailing_zeros: true });
+
+    expect(ownFieldNames("schema" in form ? form.schema : undefined)).toContain(
+      "keep_trailing_zeros"
+    );
+  });
+  // HA's ha-form grid top-aligns its cells, so a toggle next to a taller field sits off-centre.
+  test("every row of the advanced grids pairs toggles with toggles and fields with fields", () => {
+    const grids = advancedOptionsSchema("show").filter((item) => "column_min_width" in item);
+    const mixedRows = grids.flatMap((grid) => {
+      const fields: unknown[] = "schema" in grid && Array.isArray(grid.schema) ? grid.schema : [];
+      const kinds = fields.map((field) => (isToggle(field) ? "toggle" : "field"));
+      return Array.from({ length: Math.ceil(kinds.length / 2) }, (_, row) =>
+        kinds.slice(row * 2, row * 2 + 2)
+      ).filter((row) => new Set(row).size > 1);
+    });
+
+    expect(grids.length).toBeGreaterThan(0);
+    expect(mixedRows).toEqual([]);
+  });
+});
+
+const secondaryInfoField = (schema: readonly unknown[], name: string): HaFormLabelSchema => {
+  const secondaryInfo = schema.find(
+    (item): item is { schema: readonly HaFormLabelSchema[] } =>
+      typeof item === "object" && item !== null && "name" in item && item.name === "secondary_info"
+  );
+  const field = secondaryInfo?.schema.find((item) => item.name === name);
+  if (!field) {
+    throw new Error(`secondary_info.${name} not in schema`);
+  }
+  return field;
+};
+
+const sumTotalLabel = (schema: readonly unknown[]) =>
+  computeEditorLabel(hass as HomeAssistant, secondaryInfoField(schema, "sum_total"));
+
+test("the sum_total toggle is labelled after the node it sums into", () => {
+  expect(sumTotalLabel(solarSchema)).toBe("Sum solar and secondary");
+  expect(sumTotalLabel(individualSchema)).toBe("Sum device and secondary");
+});
+
+test("the non-fossil invert_state toggle says the entity reports the low-carbon share", () => {
+  const field = (nonFossilSchema as readonly unknown[])
+    .filter(
+      (item): item is { schema: readonly HaFormLabelSchema[] } =>
+        typeof item === "object" && item !== null && "schema" in item
+    )
+    .flatMap((item) => item.schema)
+    .find((item) => item.name === "invert_state");
+  if (!field) {
+    throw new Error("invert_state not in the non-fossil schema");
+  }
+
+  expect(computeEditorLabel(hass as HomeAssistant, field)).toBe(
+    "Entity reports the low-carbon % (invert)"
+  );
 });

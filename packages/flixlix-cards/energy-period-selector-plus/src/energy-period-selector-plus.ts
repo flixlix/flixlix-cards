@@ -29,14 +29,15 @@ import {
 } from "custom-card-helpers";
 import { css, html, LitElement, nothing, type PropertyValues, svg } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import packageJson from "../package.json" with { type: "json" };
+import { version } from "../package.json";
+import { EnergyPeriodSelectorPlusEditor } from "./ui-editor/ui-editor";
 import { type EnergyPeriodSelectorPlusConfig } from "./types";
 
 registerCustomCard({
   type: "energy-period-selector-plus",
   name: "Energy Period Selector Plus",
   description: "Pick the period shown by the energy cards on this dashboard.",
-  version: packageJson.version,
+  version: version,
 });
 
 const PERIODS: readonly SelectedPeriod[] = ["day", "week", "month", "year", "custom"];
@@ -95,9 +96,8 @@ export class EnergyPeriodSelectorPlus extends LitElement implements LovelaceCard
   private _datePickerRequested = false;
   private _creatorTimer?: ReturnType<typeof setTimeout>;
 
-  public static async getConfigElement(): Promise<LovelaceCardEditor> {
-    await import("./ui-editor/ui-editor");
-    return document.createElement("energy-period-selector-plus-editor");
+  public static getConfigElement(): LovelaceCardEditor {
+    return new EnergyPeriodSelectorPlusEditor();
   }
 
   public static getStubConfig(): EnergyPeriodSelectorPlusConfig {

@@ -7,8 +7,10 @@ import {
   sensor,
   withStates,
 } from "@flixlix-cards/shared/testing/fake-hass";
+import { dotLoop } from "@flixlix-cards/shared/testing/dot-loop";
 import { expectFlowCard } from "@flixlix-cards/shared/testing/expect-flow-card";
 import { flowScenarios } from "@flixlix-cards/shared/testing/flow-scenarios";
+import { gpuLayersWithAndWithoutDots } from "@flixlix-cards/shared/testing/gpu-layers";
 import { type MountedCard, mountCard } from "@flixlix-cards/shared/testing/mount-card";
 import { PowerFlowCardPlus } from "./power-flow-card-plus";
 
@@ -48,12 +50,12 @@ const gridMoreInfo = [
 const opensGridMoreInfo = ({ detail }: HaEvent) =>
   gridMoreInfo.some((matcher) => matcher.asymmetricMatch(detail) === true);
 
-const mountGrid = async (grid: object = {}) => {
+const mountGrid = async (grid: object = {}, options: object = { clickable_entities: true }) => {
   const mounted = await mountCard(
     PowerFlowCardPlus,
     {
       type: "custom:power-flow-card-plus",
-      clickable_entities: true,
+      ...options,
       entities: { grid: { entity: "sensor.grid", ...grid }, solar: { entity: "sensor.solar" } },
     },
     fakeHass({ states: { "sensor.grid": "300", "sensor.solar": "100" } })
@@ -76,6 +78,13 @@ describe("node actions", () => {
     const { circle, events } = await mountGrid();
     await userEvent.click(circle);
     expect(events).toEqual([{ type: "hass-more-info", detail: { entityId: "sensor.grid" } }]);
+  });
+
+  test("nodes are clickable when the config leaves clickable_entities out", async () => {
+    const { circle, events } = await mountGrid({}, {});
+    await userEvent.click(circle);
+    expect(events).toHaveLength(1);
+    expect(events.every(opensGridMoreInfo)).toBe(true);
   });
 
   test("a configured tap action is handed to Home Assistant", async () => {
@@ -143,10 +152,173 @@ describe("node actions", () => {
   test("nodes are not focusable when entities are not clickable", async () => {
     const { root } = await mountCard(
       PowerFlowCardPlus,
-      { type: "custom:power-flow-card-plus", entities: { grid: { entity: "sensor.grid" } } },
+      {
+        type: "custom:power-flow-card-plus",
+        clickable_entities: false,
+        entities: { grid: { entity: "sensor.grid" } },
+      },
       fakeHass({ states: { "sensor.grid": "300" } })
     );
     expect(root.querySelector(".grid .circle")?.hasAttribute("tabindex")).toBe(false);
+  });
+
+  test("the home's secondary info opens its entity when the home has no entity", async () => {
+    const { card, root } = await mountCard(
+      PowerFlowCardPlus,
+      {
+        type: "custom:power-flow-card-plus",
+        entities: {
+          grid: { entity: "sensor.grid" },
+          home: { secondary_info: { entity: "sensor.price" } },
+        },
+      },
+      fakeHass({ states: { "sensor.grid": "300", "sensor.price": "0.25" } })
+    );
+    const events = recordHaEvents(card);
+    const secondary = root.querySelector<HTMLElement>(".home .secondary-info");
+    if (!secondary) {
+      throw new Error("home secondary info not rendered");
+    }
+    await userEvent.click(secondary);
+    expect(events).toEqual([{ type: "hass-more-info", detail: { entityId: "sensor.price" } }]);
+  });
+
+  test("secondary info is not clickable when entities are not clickable", async () => {
+    const { root } = await mountCard(
+      PowerFlowCardPlus,
+      {
+        type: "custom:power-flow-card-plus",
+        clickable_entities: false,
+        entities: {
+          grid: { entity: "sensor.grid", secondary_info: { entity: "sensor.price" } },
+        },
+      },
+      fakeHass({ states: { "sensor.grid": "300", "sensor.price": "0.25" } })
+    );
+    const secondary = root.querySelector(".grid .secondary-info");
+    if (!secondary) {
+      throw new Error("grid secondary info not rendered");
+    }
+    expect(getComputedStyle(secondary).pointerEvents).toBe("none");
+  });
+});
+
+const mountButtons = async (options: object) => {
+  const mounted = await mountCard(
+    PowerFlowCardPlus,
+    {
+      type: "custom:power-flow-card-plus",
+      ...options,
+      entities: { grid: { entity: "sensor.grid" } },
+    },
+    fakeHass({ states: { "sensor.grid": sensor("300", { name: "Grid meter" }) } })
+  );
+  const row = mounted.root.querySelector(".card-actions");
+  return {
+    ...mounted,
+    events: recordHaEvents(mounted.card),
+    buttons: () => [...(row?.querySelectorAll<HTMLElement>("ha-button") ?? [])],
+  };
+};
+
+describe("buttons", () => {
+  test("without dashboard links or buttons, the card has no button row", async () => {
+    const { root } = await mountButtons({});
+    expect(root.querySelector(".card-actions")).toBeNull();
+  });
+
+  test("the dashboard links keep their place before the buttons and still link by href", async () => {
+    const { buttons } = await mountButtons({
+      dashboard_link: "/energy",
+      dashboard_link_label: "Energy",
+      second_dashboard_link: "/battery",
+      buttons: [{ name: "Solar", tap_action: { action: "navigate", navigation_path: "/solar" } }],
+    });
+    expect(
+      buttons().map((button) => [button.textContent?.trim(), button.getAttribute("href")])
+    ).toEqual([
+      ["Energy", "/energy"],
+      ["Go to the energy dashboard", "/battery"],
+      ["Solar", null],
+    ]);
+  });
+
+  test("tapping a button hands its tap action to Home Assistant", async () => {
+    const { buttons, events } = await mountButtons({
+      buttons: [
+        { name: "Solar", tap_action: { action: "navigate", navigation_path: "/solar" } },
+        { name: "Battery", tap_action: { action: "navigate", navigation_path: "/battery" } },
+      ],
+    });
+    const battery = buttons()[1];
+    if (!battery) {
+      throw new Error("second button not rendered");
+    }
+    await userEvent.click(battery);
+    expect(events).toEqual([
+      {
+        type: "hass-action",
+        detail: expect.objectContaining({
+          action: "tap",
+          config: expect.objectContaining({
+            tap_action: { action: "navigate", navigation_path: "/battery" },
+          }),
+        }),
+      },
+    ]);
+  });
+
+  test("holding a button runs its hold action", async () => {
+    const { buttons, events } = await mountButtons({
+      buttons: [
+        {
+          entity: "sensor.grid",
+          tap_action: { action: "none" },
+          hold_action: { action: "toggle" },
+        },
+      ],
+    });
+    const [button] = buttons();
+    if (!button) {
+      throw new Error("button not rendered");
+    }
+    await holdFor(button, 600);
+    expect(events.map((event) => event.detail)).toEqual([
+      expect.objectContaining({
+        action: "hold",
+        config: expect.objectContaining({ entity: "sensor.grid" }),
+      }),
+    ]);
+  });
+
+  test("a button with an entity and no action opens the entity's more-info, named after it", async () => {
+    const { buttons, events } = await mountButtons({ buttons: [{ entity: "sensor.grid" }] });
+    const [button] = buttons();
+    if (!button) {
+      throw new Error("button not rendered");
+    }
+    expect(button.textContent?.trim()).toBe("Grid meter");
+    await userEvent.click(button);
+    expect(events.map((event) => event.detail)).toEqual([
+      expect.objectContaining({
+        action: "tap",
+        config: expect.objectContaining({
+          entity: "sensor.grid",
+          tap_action: { action: "more-info" },
+        }),
+      }),
+    ]);
+  });
+
+  test("an icon-only button shows the icon and keeps a name for screen readers", async () => {
+    const { buttons } = await mountButtons({
+      buttons: [{ entity: "sensor.grid", icon: "mdi:transmission-tower" }],
+    });
+    const [button] = buttons();
+    const icon = button?.querySelector("ha-icon");
+    expect(icon && "icon" in icon ? icon.icon : undefined).toBe("mdi:transmission-tower");
+    expect(button?.textContent?.trim()).toBe("");
+    expect(button?.getAttribute("aria-label")).toBe("Grid meter");
   });
 });
 
@@ -195,6 +367,23 @@ describe("labels", () => {
   });
 });
 
+const solarHomeCircles = async (entities: object) => {
+  const { root } = await mountCard(
+    PowerFlowCardPlus,
+    { type: "custom:power-flow-card-plus", entities },
+    fakeHass({ states: { "sensor.grid": "100", "sensor.solar": "300", "sensor.battery": "0" } }),
+    { width: 500 }
+  );
+  return {
+    content: centerOf(root.querySelector(".card-content")),
+    solar: centerOf(root.querySelector(".solar .circle")),
+    battery: root.querySelector(".battery .circle")
+      ? centerOf(root.querySelector(".battery .circle"))
+      : undefined,
+    home: centerOf(root.querySelector(".home .circle")),
+  };
+};
+
 describe("layout", () => {
   test("resizing between narrow and wide moves individuals in and out of the right slots", async () => {
     const individual = [1, 2, 3, 4].map((index) => ({ entity: `sensor.device_${index}` }));
@@ -235,6 +424,114 @@ describe("layout", () => {
 
     expect(rtl[".grid .circle"]?.x).toBeLessThan(rtl[".home .circle"]?.x ?? 0);
     expect(rtl).toEqual(ltr);
+  });
+
+  test("without a grid, solar and home keep the spacing they have with one", async () => {
+    const solarAndBattery = {
+      solar: { entity: "sensor.solar" },
+      battery: { entity: "sensor.battery" },
+    };
+    const withGrid = await solarHomeCircles({
+      grid: { entity: "sensor.grid" },
+      ...solarAndBattery,
+    });
+    const withoutGrid = await solarHomeCircles(solarAndBattery);
+
+    expect(withoutGrid.home.x - withoutGrid.solar.x).toBeCloseTo(
+      withGrid.home.x - withGrid.solar.x,
+      0
+    );
+    expect(withoutGrid.battery?.x).toBeCloseTo(withoutGrid.solar.x, 0);
+  });
+
+  test("without a grid, solar and battery beside a lone home move right to look centred", async () => {
+    const { content, solar, home } = await solarHomeCircles({
+      solar: { entity: "sensor.solar" },
+      battery: { entity: "sensor.battery" },
+    });
+    const pitch = home.x - solar.x;
+    const centroid = (2 * solar.x + home.x) / 3;
+
+    expect((solar.x + home.x) / 2 - content.x).toBeCloseTo(pitch / 9, 0);
+    expect(content.x - centroid).toBeCloseTo(pitch / 18, 0);
+  });
+
+  test("without a grid, solar and home alone balance and stay centred", async () => {
+    const { content, solar, home } = await solarHomeCircles({ solar: { entity: "sensor.solar" } });
+
+    expect((solar.x + home.x) / 2).toBeCloseTo(content.x, 0);
+  });
+
+  test("stays under a fixed overlay earlier on the page, like a floating nav bar", async () => {
+    const { circle } = await mountGrid();
+    const overlay = document.createElement("div");
+    overlay.style.cssText = "position: fixed; inset: 0; z-index: 1;";
+    document.body.prepend(overlay);
+    onTestFinished(() => overlay.remove());
+
+    const box = circle.getBoundingClientRect();
+    const hit = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2);
+    expect(hit).toBe(overlay);
+  });
+});
+
+/** A card with solar, grid and battery: a node in each row. */
+const mountThreeRows = async () => {
+  const mounted = await mountCard(
+    PowerFlowCardPlus,
+    {
+      type: "custom:power-flow-card-plus",
+      entities: {
+        grid: { entity: "sensor.grid" },
+        solar: { entity: "sensor.solar" },
+        battery: { entity: "sensor.battery" },
+      },
+    },
+    fakeHass({
+      states: { "sensor.grid": "300", "sensor.solar": "100", "sensor.battery": "50" },
+    }),
+    { width: 500 }
+  );
+  const setHeight = async (height: number) => {
+    const container = mounted.card.parentElement;
+    if (!container) {
+      throw new Error("mounted card has no container");
+    }
+    container.style.height = `${height}px`;
+    await mounted.settle();
+  };
+  const circles = () => ({
+    card: centerOf(mounted.root.querySelector("ha-card")),
+    grid: centerOf(mounted.root.querySelector(".grid .circle")),
+    solar: centerOf(mounted.root.querySelector(".solar .circle")),
+    home: centerOf(mounted.root.querySelector(".home .circle")),
+    battery: centerOf(mounted.root.querySelector(".battery .circle")),
+  });
+  return { mounted, setHeight, circles };
+};
+
+describe("height (#507)", () => {
+  test("a taller card spreads its rows apart and the lines follow the circles", async () => {
+    const { mounted, setHeight, circles } = await mountThreeRows();
+    const natural = circles();
+
+    await setHeight(450);
+    const tall = circles();
+
+    expect(tall.home.y - tall.solar.y).toBeGreaterThan(natural.home.y - natural.solar.y);
+    expect(tall.battery.y - tall.home.y).toBeCloseTo(tall.home.y - tall.solar.y, 0);
+    expectFlowCard(mounted, {});
+  });
+
+  test("rows spread no further apart than the columns, then the diagram stays centred", async () => {
+    const { mounted, setHeight, circles } = await mountThreeRows();
+
+    await setHeight(1200);
+    const { card, grid, solar, home } = circles();
+
+    expect(home.y - solar.y).toBeCloseTo((home.x - grid.x) / 2, -1);
+    expect(home.y).toBeCloseTo(card.y, 0);
+    expectFlowCard(mounted, {});
   });
 });
 
@@ -375,6 +672,66 @@ describe("individual direction", () => {
   });
 });
 
+const mountAuxiliary = async (auxiliary: object, reading = "450") =>
+  mountCard(
+    PowerFlowCardPlus,
+    {
+      type: "custom:power-flow-card-plus",
+      entities: {
+        grid: { entity: "sensor.grid" },
+        battery: { entity: "sensor.battery" },
+        auxiliary: { entity: "sensor.auxiliary", name: "Gas", ...auxiliary },
+      },
+    },
+    fakeHass({
+      states: { "sensor.grid": "1000", "sensor.battery": "200", "sensor.auxiliary": reading },
+    }),
+    { width: 500 }
+  );
+
+const auxiliaryDot = '.flow-dot[data-path="auxiliary-line"]';
+
+describe("auxiliary node", () => {
+  test("sits under the grid, left of the battery", async () => {
+    const { root, text } = await mountAuxiliary({});
+    const auxiliary = centerOf(root.querySelector(".auxiliary .circle"));
+    const grid = centerOf(root.querySelector(".grid .circle"));
+    const battery = centerOf(root.querySelector(".battery .circle"));
+    expect(auxiliary.x).toBeCloseTo(grid.x, 0);
+    expect(auxiliary.y).toBeCloseTo(battery.y, 0);
+    expect(text(".circle-container.auxiliary .label")).toBe("Gas");
+    expect(text("span.auxiliary")).toBe("450 W");
+  });
+
+  test("its dot runs from the grid, or from the battery with connect_to: battery", async () => {
+    const grid = await mountAuxiliary({});
+    expect(runsTowards(grid.root, auxiliaryDot, ".auxiliary .circle")).toBe(true);
+    expect(runsTowards(grid.root, auxiliaryDot, ".grid .circle")).toBe(false);
+
+    const battery = await mountAuxiliary({ connect_to: "battery" });
+    expect(runsTowards(battery.root, auxiliaryDot, ".auxiliary .circle")).toBe(true);
+    expect(runsTowards(battery.root, auxiliaryDot, ".battery .circle")).toBe(false);
+  });
+
+  test("with accept_negative, a negative reading flows into the node it connects to", async () => {
+    const { root } = await mountAuxiliary({ accept_negative: true }, "-450");
+    expect(runsTowards(root, auxiliaryDot, ".grid .circle")).toBe(true);
+  });
+
+  test("the grid keeps its label slot but drops its name while the line runs up into it", async () => {
+    const toGrid = await mountAuxiliary({});
+    expect(toGrid.text(".circle-container.grid > .label")).toBe("");
+    const toBattery = await mountAuxiliary({ connect_to: "battery" });
+    expect(toBattery.text(".circle-container.grid > .label")).toBe("Grid");
+  });
+
+  test("connect_to: none draws no line", async () => {
+    const { root } = await mountAuxiliary({ connect_to: "none" });
+    expect(root.querySelector(".auxiliary .circle")).not.toBeNull();
+    expect(root.querySelector("#auxiliary-line")).toBeNull();
+  });
+});
+
 const priceTemplate = "{{ states('sensor.cost') }}";
 
 const watchedConfig = {
@@ -404,6 +761,39 @@ const toggleKitchenLight = async (card: MountedCard, hass: HomeAssistant, times:
   await card.card.updateComplete;
   await toggleKitchenLight(card, next, times - 1);
 };
+
+describe("individual visibility (#332)", () => {
+  test("a device shows only while its conditions hold, following the entity they read", async () => {
+    const hass = fakeHass({
+      states: { "sensor.grid": "300", "sensor.ev": "0", "binary_sensor.ev_plugged": "off" },
+    });
+    const { root, setHass, text } = await mountCard(
+      PowerFlowCardPlus,
+      {
+        type: "custom:power-flow-card-plus",
+        entities: {
+          grid: { entity: "sensor.grid" },
+          individual: [
+            {
+              entity: "sensor.ev",
+              display_zero: true,
+              visibility: [{ condition: "state", entity: "binary_sensor.ev_plugged", state: "on" }],
+            },
+          ],
+        },
+      },
+      hass
+    );
+    expect(root.querySelector("span.individual-left-top")).toBeNull();
+
+    const pluggedIn = withStates(hass, { "binary_sensor.ev_plugged": "on" });
+    await setHass(pluggedIn);
+    expect(text("span.individual-left-top")).toBe("0 W");
+
+    await setHass(withStates(pluggedIn, { "binary_sensor.ev_plugged": "off" }));
+    expect(root.querySelector("span.individual-left-top")).toBeNull();
+  });
+});
 
 describe("updates", () => {
   test("changes to an entity the card does not show neither compute nor render", async () => {
@@ -441,6 +831,83 @@ describe("updates", () => {
     card.setConfig({ ...watchedConfig, entities: { ...watchedConfig.entities, solar } });
     await setHass(withStates(hass, { "sensor.roof": "400" }));
     expect(text(".solar .solar")).toBe("400 W");
+  });
+
+  test("a greyed-out idle circle takes its colour back when power returns", async () => {
+    const hass = fakeHass({ states: { "sensor.grid": "300", "sensor.ev": "0" } });
+    const { root, setHass } = await mountCard(
+      PowerFlowCardPlus,
+      {
+        type: "custom:power-flow-card-plus",
+        display_zero_lines: {
+          mode: "grey_out",
+          grey_color: [200, 200, 200],
+          grey_out_circles: true,
+        },
+        entities: {
+          grid: { entity: "sensor.grid" },
+          individual: [{ entity: "sensor.ev", display_zero: true }],
+        },
+      },
+      hass
+    );
+    const borderColor = () => {
+      const circle = root.querySelector(".individual-top .circle");
+      if (!circle) {
+        throw new Error("individual circle not rendered");
+      }
+      return getComputedStyle(circle).borderTopColor;
+    };
+    expect(borderColor()).toBe("rgb(200, 200, 200)");
+    await setHass(withStates(hass, { "sensor.ev": "106" }));
+    expect(borderColor()).toBe("rgb(208, 204, 91)");
+  });
+});
+
+const colorOf = (root: ParentNode, selector: string) => {
+  const element = root.querySelector(selector);
+  if (!element) {
+    throw new Error(`${selector} not rendered`);
+  }
+  return getComputedStyle(element).color;
+};
+
+describe("power outage", () => {
+  const outageHass = fakeHass({
+    states: { "sensor.grid": "300", "binary_sensor.grid_down": "on" },
+  });
+  const mountOutage = (powerOutage: object) =>
+    mountCard(
+      PowerFlowCardPlus,
+      {
+        type: "custom:power-flow-card-plus",
+        entities: {
+          grid: {
+            entity: "sensor.grid",
+            power_outage: { entity: "binary_sensor.grid_down", ...powerOutage },
+          },
+        },
+      },
+      outageHass
+    );
+
+  test("color_alert colours the outage icon and label", async () => {
+    const { root } = await mountOutage({ color_alert: [255, 0, 0] });
+    expect(colorOf(root, "#grid-icon")).toBe("rgb(255, 0, 0)");
+    expect(colorOf(root, ".power-outage")).toBe("rgb(255, 0, 0)");
+  });
+
+  test("without color_alert the outage looks as before", async () => {
+    const { root } = await mountOutage({});
+    const primaryText = colorOf(root, ".card-content");
+    expect(colorOf(root, "#grid-icon")).toBe(primaryText);
+    expect(colorOf(root, ".power-outage")).toBe(primaryText);
+  });
+
+  test("the icon takes its usual colour back when the power returns", async () => {
+    const { root, setHass } = await mountOutage({ color_alert: "#ff0000" });
+    await setHass(withStates(outageHass, { "binary_sensor.grid_down": "off" }));
+    expect(colorOf(root, "#grid-icon")).toBe(colorOf(root, ".card-content"));
   });
 });
 
@@ -504,5 +971,181 @@ describe("entity names", () => {
       Object.assign({ ...hass }, { entities: {}, formatEntityName: nameFormatter("Basement") })
     );
     expect(text(".grid .label")).toBe("Basement Grid power");
+  });
+});
+
+describe("dot speed", () => {
+  test("at the same power, loop time follows the square root of line length", async () => {
+    const { root } = await mountCard(
+      PowerFlowCardPlus,
+      {
+        type: "custom:power-flow-card-plus",
+        entities: {
+          grid: { entity: "sensor.grid" },
+          individual: [{ entity: "sensor.device" }],
+        },
+      },
+      fakeHass({ states: { "sensor.grid": "1000", "sensor.device": "1000" } }),
+      { width: 500 }
+    );
+    const grid = '.flow-dot[data-path="grid"]';
+    const device = '.flow-dot[data-path="individual-top"]';
+    expect(root.querySelector(grid)?.getAttribute("data-duration")).toBe(
+      root.querySelector(device)?.getAttribute("data-duration")
+    );
+    const short = dotLoop(root, device);
+    const long = dotLoop(root, grid);
+    expect(short.pixels).toBeLessThan(long.pixels / 2);
+    expect(short.seconds / long.seconds).toBeCloseTo(Math.sqrt(short.pixels / long.pixels), 1);
+  });
+});
+
+const gridDot = '.flow-dot[data-path="grid"]';
+
+const motionOf = (root: ShadowRoot, selector: string) => {
+  const [animation] = root.querySelector(selector)?.getAnimations() ?? [];
+  if (!animation) {
+    throw new Error(`${selector} is not a moving dot`);
+  }
+  return animation;
+};
+
+describe("dot motion across updates", () => {
+  test("an update that leaves a dot's speed alone keeps its motion untouched", async () => {
+    const { root, hass, card, text } = await mountWatched();
+    const before = motionOf(root, gridDot);
+    before.currentTime = 1234;
+    emitTemplate(hass, priceTemplate, "1.25 €");
+    await card.updateComplete;
+    expect(text(".home .secondary-info")).toBe("1.25 €");
+    const after = motionOf(root, gridDot);
+    expect(after).toBe(before);
+    expect(after.currentTime).toBe(1234);
+  });
+
+  test("a new speed carries on from where the dot is, with the same motion", async () => {
+    const { root, hass, setHass } = await mountWatched();
+    const before = motionOf(root, gridDot);
+    const slow = dotLoop(root, gridDot).seconds;
+    await setHass(withStates(hass, { "sensor.grid": "3000" }));
+    expect(motionOf(root, gridDot)).toBe(before);
+    expect(dotLoop(root, gridDot).seconds).toBeLessThan(slow);
+  });
+});
+
+type Point = { x: number; y: number };
+
+const pointsOf = (text: string): Point[] =>
+  [...text.matchAll(/(-?[\d.]+)[ ,px]+(-?[\d.]+)/g)].map(([, x, y]) => ({
+    x: Number(x),
+    y: Number(y),
+  }));
+
+type Ends = [Point | undefined, Point | undefined];
+
+/** Where a dot starts and ends its loop, in its own pixels. */
+const endsOf = (dot: SVGSVGElement): Ends => {
+  const motion = dot.querySelector("animateMotion");
+  if (motion) {
+    const points = pointsOf(motion.getAttribute("path") ?? "");
+    return [points.at(0), points.at(-1)];
+  }
+  const effect = dot.getAnimations()[0]?.effect;
+  const frames = effect instanceof KeyframeEffect ? effect.getKeyframes() : [];
+  const first = pointsOf(String(frames.at(0)?.transform))[0];
+  const last = pointsOf(String(frames.at(-1)?.transform))[0];
+  return effect?.getTiming().direction === "reverse" ? [last, first] : [first, last];
+};
+
+/** Each dot's loop ends, keyed by the line it runs along. */
+const dotEnds = (root: ShadowRoot): Map<string, Ends> =>
+  new Map(
+    [...root.querySelectorAll<SVGSVGElement>("svg.flow-dot")].map((dot) => [
+      dot.dataset.path ?? "",
+      endsOf(dot),
+    ])
+  );
+
+const mountScenario = (scenario: (typeof flowScenarios)[number], options: object = {}) =>
+  mountCard(
+    PowerFlowCardPlus,
+    {
+      type: "custom:power-flow-card-plus",
+      ...scenario.options,
+      ...options,
+      entities: scenario.entities,
+    },
+    fakeHass({ states: scenario.states, templates: scenario.templates }),
+    { width: scenario.width }
+  );
+
+/** How far through its loop a classic dot is at `time` seconds of its own timeline. */
+const classicProgress = (motion: Element, time: number) => {
+  const loops =
+    (time - Number.parseFloat(motion.getAttribute("begin") ?? "0")) /
+    Number.parseFloat(motion.getAttribute("dur") ?? "1");
+  return loops - Math.floor(loops);
+};
+
+describe("classic dots (dot_animation: classic)", () => {
+  test.for(flowScenarios)(
+    "$name: they run the same way along the same lines as GPU dots, with no GPU layer",
+    async (scenario) => {
+      const gpu = dotEnds((await mountScenario(scenario, { dot_animation: "gpu" })).root);
+      const { root } = await mountScenario(scenario, { dot_animation: "classic" });
+      expect(root.getAnimations()).toEqual([]);
+      const classic = dotEnds(root);
+      expect([...classic.keys()]).toEqual([...gpu.keys()]);
+      for (const [path, ends] of classic) {
+        ends.forEach((point, index) => {
+          const expected = gpu.get(path)?.[index];
+          expect(point?.x).toBeCloseTo(Number(expected?.x), 1);
+          expect(point?.y).toBeCloseTo(Number(expected?.y), 1);
+        });
+      }
+      const layers = await gpuLayersWithAndWithoutDots(root);
+      expect(layers.with).toEqual(layers.without);
+    }
+  );
+
+  test("a new speed carries on from where the dot is", async () => {
+    const hass = fakeHass({
+      states: { "sensor.grid": "300", "sensor.solar": "100", "light.kitchen": "off" },
+      templates: { [priceTemplate]: "1.20 €" },
+    });
+    const { root, setHass } = await mountCard(
+      PowerFlowCardPlus,
+      { ...watchedConfig, dot_animation: "classic" },
+      hass
+    );
+    const dot = root.querySelector<SVGSVGElement>(gridDot);
+    // A still clock gives one moment to compare the old and the new motion at.
+    dot?.pauseAnimations();
+    const before = dot?.querySelector("animateMotion")?.cloneNode();
+    await setHass(withStates(hass, { "sensor.grid": "3000" }));
+    const after = dot?.querySelector("animateMotion");
+    if (!dot || !(before instanceof Element) || !after) {
+      throw new Error("grid dot has no classic motion");
+    }
+    const now = dot.getCurrentTime();
+    expect(Number.parseFloat(after.getAttribute("dur") ?? "")).toBeLessThan(
+      Number.parseFloat(before.getAttribute("dur") ?? "")
+    );
+    expect(classicProgress(after, now)).toBeCloseTo(classicProgress(before, now), 2);
+  });
+});
+
+const homeValue = ".home span.home:not(.secondary-info)";
+
+describe("custom CSS", () => {
+  test("styles the home's value apart from its icon and secondary info, like the other circles", async () => {
+    const { root, text } = await mountWatched();
+    const custom = new CSSStyleSheet();
+    custom.replaceSync(`${homeValue} { color: rgb(255, 0, 0); }`);
+    root.adoptedStyleSheets = [...root.adoptedStyleSheets, custom];
+    expect(text(homeValue)).toBe("400 W");
+    expect(colorOf(root, homeValue)).toBe("rgb(255, 0, 0)");
+    expect(colorOf(root, ".home .secondary-info")).not.toBe("rgb(255, 0, 0)");
+    expect(colorOf(root, "#home-icon")).not.toBe("rgb(255, 0, 0)");
   });
 });

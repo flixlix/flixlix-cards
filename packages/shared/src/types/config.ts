@@ -1,16 +1,34 @@
 import {
+  type ActionConfigSet,
   type BaseConfigEntity,
   type ColorValue,
-  type ComboEntity,
+  type DirectionalColors,
   type GridPowerOutage,
   type IndividualDeviceType,
   type LovelaceCardConfig,
   type SecondaryInfoType,
+  type SummableSecondaryInfoType,
 } from "./type";
 
 /** How a flow's value maps to seconds per dot; see the flow formula docs. */
 export const FLOW_RATE_MODELS = ["duration", "speed", "relative"] as const;
 export type FlowRateModel = (typeof FLOW_RATE_MODELS)[number];
+
+/** Which wires exist between grid, solar, battery and home; see the topology docs. */
+export const TOPOLOGIES = ["standard", "battery_hub", "isolated_battery"] as const;
+export type Topology = (typeof TOPOLOGIES)[number];
+
+/** Which node the auxiliary bubble's line runs to; `none` draws no line. */
+export const AUXILIARY_CONNECTIONS = ["grid", "battery", "none"] as const;
+export type AuxiliaryConnection = (typeof AUXILIARY_CONNECTIONS)[number];
+
+/** One of the buttons in the row at the bottom of the card, after the dashboard links. */
+export interface CardButton extends ActionConfigSet {
+  name?: string;
+  icon?: string;
+  /** The entity a `more-info` or `toggle` action works on. */
+  entity?: string;
+}
 
 export type DisplayZeroLinesMode = "show" | "grey_out" | "transparency" | "hide" | "custom";
 
@@ -19,6 +37,7 @@ interface mainConfigOptions {
   dashboard_link_label?: string;
   second_dashboard_link?: string;
   second_dashboard_link_label?: string;
+  buttons?: CardButton[];
   min_flow_rate: number;
   max_flow_rate: number;
   clickable_entities: boolean;
@@ -32,18 +51,29 @@ interface mainConfigOptions {
   kilo_threshold: number;
   mega_decimals: number;
   mega_threshold: number;
+  /** Pad values with zeros to the decimals they are rounded to, e.g. `1.0 kW` instead of `1 kW`. */
+  keep_trailing_zeros?: boolean;
   full_size?: boolean;
   style_ha_card?: string;
   style_card_content?: string;
   disable_dots?: boolean;
+  /**
+   * How flow dots move: `gpu` (Web Animations, off the main thread), `classic` (SVG
+   * `<animateMotion>`, on the main thread as before 0.4.0) or `auto`, the default, which picks
+   * `classic` on GPUs known to draw `gpu` dots wrong.
+   */
+  dot_animation?: DotAnimationOption;
   no_labels?: boolean;
   display_zero_lines?: {
     mode?: DisplayZeroLinesMode;
     transparency?: number;
     grey_color?: string | number[];
+    /** Also grey out grid, battery and individual circles while nothing flows through them. */
+    grey_out_circles?: boolean;
   };
   sort_individual_devices?: boolean;
   allow_layout_break?: boolean;
+  topology?: Topology;
   /* LEGACY - JUST TO AVOID ERRORS */
   w_threshold?: number;
   w_decimals?: number;
@@ -66,6 +96,8 @@ export interface PowerFlowCardPlusConfig extends LovelaceCardConfig, mainConfigO
 export interface EnergyFlowCardPlusConfig extends LovelaceCardConfig, mainConfigOptions {
   entities: ConfigEntities;
   collection_key?: string;
+  /** `false` reads each entity's own state instead of its growth over the selected period. */
+  energy_date_selection?: boolean;
 }
 
 export type IndividualField = IndividualDeviceType[];
@@ -80,7 +112,7 @@ interface Battery extends BaseConfigEntity {
   color_state_of_charge_value?: "no_color" | "color_dynamically" | "production" | "consumption";
   color_circle?: "color_dynamically" | "production" | "consumption" | "no_color";
   color_value?: boolean;
-  color?: ComboEntity;
+  color?: DirectionalColors;
 }
 
 interface Grid extends BaseConfigEntity {
@@ -89,7 +121,7 @@ interface Grid extends BaseConfigEntity {
   display_zero?: boolean;
   color_circle?: "color_dynamically" | "production" | "consumption" | "no_color";
   color_value?: boolean;
-  color?: ComboEntity;
+  color?: DirectionalColors;
 }
 
 interface Solar extends BaseConfigEntity {
@@ -98,9 +130,7 @@ interface Solar extends BaseConfigEntity {
   color_icon?: boolean;
   color_value?: boolean;
   color_label?: boolean;
-  secondary_info?: SecondaryInfoType & {
-    sum_total?: boolean;
-  };
+  secondary_info?: SummableSecondaryInfoType;
   display_zero?: boolean;
   display_zero_state?: boolean;
 }
@@ -120,6 +150,8 @@ interface FossilFuelPercentage extends BaseConfigEntity {
   entity: string;
   color?: string;
   state_type?: "percentage" | "power";
+  /** The entity reports the low-carbon share (100 - fossil percentage), e.g. a "green energy %". */
+  invert_state?: boolean;
   color_icon?: boolean;
   display_zero?: boolean;
   display_zero_state?: boolean;
@@ -131,6 +163,14 @@ interface FossilFuelPercentage extends BaseConfigEntity {
   secondary_info: SecondaryInfoType;
 }
 
+/**
+ * A display-only node under the grid and left of the battery. Its reading never enters the
+ * solver or home consumption.
+ */
+export type Auxiliary = Omit<IndividualDeviceType, "visibility"> & {
+  connect_to?: AuxiliaryConnection;
+};
+
 export type ConfigEntities = {
   battery?: Battery;
   grid?: Grid;
@@ -138,6 +178,7 @@ export type ConfigEntities = {
   home?: Home;
   fossil_fuel_percentage?: FossilFuelPercentage;
   individual?: IndividualField;
+  auxiliary?: Auxiliary;
   individual1?: IndividualField;
   individual2?: IndividualField;
 };
@@ -149,3 +190,5 @@ export type ConfigEntity =
   | Home
   | FossilFuelPercentage
   | IndividualDeviceType;
+
+export type DotAnimationOption = "auto" | "gpu" | "classic";

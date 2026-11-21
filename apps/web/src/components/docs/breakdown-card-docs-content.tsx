@@ -1,45 +1,46 @@
 import { Link } from "@tanstack/react-router";
 import {
-  ArrowRight,
-  BookOpen,
   CalendarRange,
   ChartPie,
   Filter,
-  Github,
   Layers,
   ListChecks,
   MousePointerClick,
-  Package,
   PaintBucket,
   Settings,
-  Wrench,
 } from "lucide-react";
 import type * as React from "react";
 
-import { Button } from "@flixlix-cards/ui/components/button";
+import { trackEvent } from "#/lib/analytics";
+
+import { heading } from "@/lib/page-meta";
+import { sensor, type StateFixtures } from "@flixlix-cards/shared/preview/fake-hass";
+
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@flixlix-cards/ui/components/card";
-import { Checkbox } from "@flixlix-cards/ui/components/checkbox";
-
-import { CardDemo } from "@/components/card-demo";
-
+  CardHero,
+  DemoGallery,
+  Highlight,
+  Highlights,
+  SectionPages,
+  SourceSection,
+} from "./card-overview";
+import { breakdownGallery } from "@/components/demos";
 import { CategorySection } from "./category-section";
 import {
   Callout,
   CodeBlock,
   NextPageNav,
+  type OptionRow,
   PageHeader,
   Prose,
   Section,
-  type OptionRow,
 } from "./doc-primitives";
+import { InstallFromLink } from "./install-from-link";
+import { RelatedGuides } from "./related-guides";
+import { LiveExample } from "./live-example";
 import { OptionList } from "./option-list";
 import { PageTOC, type TocItem } from "./page-toc";
+import { SupportLinks } from "./support-links";
 
 const TITLE = "Energy Breakdown Card";
 const PKG = "energy-breakdown-card";
@@ -47,140 +48,51 @@ const CARD_TYPE = "custom:energy-breakdown-card";
 const BASE_PATH = "/energy-breakdown-card";
 const REPO_URL = "https://github.com/flixlix/energy-breakdown-card";
 const HACS_REDIRECT =
-  "https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=energy-breakdown-card&category=Dashboard";
+  "https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=energy-breakdown-card&category=plugin";
 const RELEASE_URL = "https://github.com/flixlix/energy-breakdown-card/releases/latest";
-
-function HighlightItem({ children }: { children: React.ReactNode }) {
-  return (
-    <li className="bg-muted/40 flex items-center gap-2 rounded-md border p-3">
-      <Checkbox className="pointer-events-none" checked />
-      {children}
-    </li>
-  );
-}
 
 // ---------- Overview ----------
 
 export function OverviewPage() {
   return (
     <>
-      <PageHeader
-        eyebrow={TITLE}
-        title="Overview"
-        description="A custom Home Assistant Lovelace card that visualizes how your energy use is broken down across sources — as a donut or stacked bar."
-        badges={[{ label: "HACS custom" }, { label: "YAML & UI editor" }, { label: "Donut + bar" }]}
+      <CardHero
+        tags={["HACS custom", "YAML & UI editor", "Donut + bar"]}
+        title={TITLE}
+        demo="breakdown"
+        installHref={HACS_REDIRECT}
+      >
+        <PageHeader
+          className="mb-0"
+          title={heading(BASE_PATH)}
+          description="Where your energy went, as a donut or a bar."
+        />
+      </CardHero>
+
+      <DemoGallery
+        title="Ways to show it"
+        description="The same day's energy, each one live."
+        demos={breakdownGallery}
       />
 
-      <CardDemo demo="breakdown" className="mx-auto w-fit max-w-full rounded-xl border" />
-      <p className="text-muted-foreground mt-2 text-center text-sm">
-        The real card, live, under Energy Period Selector Plus: pick a period to see it change.
-      </p>
+      <Highlights>
+        <Highlight>Donut or stacked bar</Highlight>
+        <Highlight>Legend with names, values and percentages</Highlight>
+        <Highlight>Tooltip on hover, or on tap on mobile</Highlight>
+        <Highlight>Per-entity color, icon, name, multiplier and actions</Highlight>
+        <Highlight>
+          <code>group_others</code> and <code>max_items</code> to keep the chart readable
+        </Highlight>
+        <Highlight>Follows the energy dashboard&apos;s selected period</Highlight>
+      </Highlights>
 
-      <Prose className="mt-4">
-        <p>
-          <strong>{TITLE}</strong> turns a list of energy sensors into a clean proportional chart.
-          It is designed to fit the design language of the latest Lovelace UI: rounded corners, soft
-          shadows, HA color tokens, and a quiet visual presence that adapts to your theme.
-        </p>
-        <p>
-          <strong>Scope.</strong> This card displays accumulated energy values (Wh / kWh) and shows
-          how a total is split across sources. For an animated flow diagram between grid, solar,
-          battery and home use the <Link to="/energy-flow-card-plus">Energy Flow Card Plus</Link>{" "}
-          instead.
-        </p>
-      </Prose>
-
-      <Section title="Highlights">
-        <ul className="text-foreground/90 grid grid-cols-1 gap-2 text-sm md:grid-cols-2">
-          <HighlightItem>Two visual variants — donut and stacked bar</HighlightItem>
-          <HighlightItem>Optional legend with names, values, and percentages</HighlightItem>
-          <HighlightItem>Mobile-friendly tooltip on tap, desktop hover tooltip</HighlightItem>
-          <HighlightItem>Per-entity color, icon, name, multiplier, and actions</HighlightItem>
-          <HighlightItem>
-            <code>group_others</code> + <code>max_items</code> to keep the chart readable
-          </HighlightItem>
-          <HighlightItem>Optional sync to the Home Assistant energy dashboard period</HighlightItem>
-        </ul>
+      <Section title="Compare it">
+        <RelatedGuides paths={["/guides/energy-distribution-card-alternative", "/guides"]} />
       </Section>
 
-      <Section title="What's in this section">
-        <div className="grid gap-3 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Package className="size-4" /> Installation
-              </CardTitle>
-              <CardDescription>HACS custom repository or manual install.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button asChild size="sm" variant="outline">
-                <Link to={`${BASE_PATH}/installation`}>
-                  Open <ArrowRight className="size-3.5" />
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <BookOpen className="size-4" /> Configuration
-              </CardTitle>
-              <CardDescription>Every option, with defaults and types.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button asChild size="sm" variant="outline">
-                <Link to={`${BASE_PATH}/configuration`}>
-                  Open <ArrowRight className="size-3.5" />
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Wrench className="size-4" /> Examples
-              </CardTitle>
-              <CardDescription>Copy-pastable configs for common setups.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button asChild size="sm" variant="outline">
-                <Link to={`${BASE_PATH}/examples`}>
-                  Open <ArrowRight className="size-3.5" />
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </Section>
+      <SectionPages basePath={BASE_PATH} />
 
-      <Section title="Source & releases">
-        <Prose>
-          <p>
-            The card is distributed via{" "}
-            <a href={REPO_URL} target="_blank" rel="noopener noreferrer">
-              flixlix/energy-breakdown-card
-            </a>
-            , but the source code lives in the monorepo at{" "}
-            <a
-              href="https://github.com/flixlix/flixlix-cards"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              flixlix/flixlix-cards
-            </a>
-            . Issues and feature requests are tracked there.
-          </p>
-        </Prose>
-        <Button asChild variant="outline" size="sm">
-          <a
-            href="https://github.com/flixlix/flixlix-cards"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Github className="size-4" /> View source on GitHub
-          </a>
-        </Button>
-      </Section>
+      <SourceSection repoUrl={REPO_URL} />
 
       <NextPageNav next={{ label: "Installation", to: `${BASE_PATH}/installation` }} />
     </>
@@ -194,55 +106,22 @@ export function InstallationPage() {
     <>
       <PageHeader
         eyebrow={TITLE}
-        title="Installation"
-        description="This card is not yet in the default HACS store — you need to add it as a custom repository first. Manual installation is also supported."
+        title={heading(`${BASE_PATH}/installation`)}
+        description="Install it from its link in Home Assistant's Marketplace, or as a custom repository in HACS before 2026.11. Manual installation is also supported."
       />
 
-      <Callout variant="info" title="Custom repository required">
-        Unlike the Power and Energy Flow cards, <strong>{TITLE}</strong> is not part of the default
-        HACS index yet. Add the repository URL below as a <em>Custom repository</em> in HACS to
-        install it.
-      </Callout>
-
-      <Section title="HACS (custom repository)" id="hacs">
-        <Prose>
-          <ol>
-            <li>
-              In Home Assistant, open <strong>HACS</strong>.
-            </li>
-            <li>
-              Click the <strong>⋮</strong> menu in the top-right and choose{" "}
-              <strong>Custom repositories</strong>.
-            </li>
-            <li>
-              Add the repository URL <code>{REPO_URL}</code> with category{" "}
-              <strong>Dashboard</strong>, then click <strong>Add</strong>.
-            </li>
-            <li>
-              Search for <strong>{TITLE}</strong> in HACS and click <strong>Download</strong>.
-            </li>
-            <li>Reload your dashboard / clear browser cache.</li>
-          </ol>
-          <p>
-            The button below opens the repository inside HACS and pre-fills the dialog if you have{" "}
-            <a href="https://my.home-assistant.io" target="_blank" rel="noopener noreferrer">
-              My Home Assistant
-            </a>{" "}
-            set up.
-          </p>
-        </Prose>
-        <Button asChild variant="outline" size="sm">
-          <a href={HACS_REDIRECT} target="_blank" rel="noopener noreferrer">
-            Open in HACS
-          </a>
-        </Button>
-      </Section>
+      <InstallFromLink title={TITLE} repoUrl={REPO_URL} redirect={HACS_REDIRECT} />
 
       <Section title="Manual installation" id="manual">
         <Prose>
           <p>
             Download <code>{PKG}.js</code> from the{" "}
-            <a href={RELEASE_URL} target="_blank" rel="noopener noreferrer">
+            <a
+              href={RELEASE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackEvent("Download release", { card: TITLE })}
+            >
               latest release
             </a>{" "}
             and copy it into <code>config/www/</code>.
@@ -264,12 +143,16 @@ export function InstallationPage() {
           </p>
         </Prose>
         <CodeBlock language="text" code={`/local/${PKG}.js`} />
-        <Callout variant="tip" title="HACS users">
-          When installed via HACS the path becomes{" "}
+        <Callout variant="tip" title="Installed from the Marketplace or HACS?">
+          It registers the resource for you. The Marketplace serves it from
+          <code>
+            /local/community/{PKG}/{PKG}.js
+          </code>
+          ; HACS used
           <code>
             /hacsfiles/{PKG}/{PKG}.js
           </code>
-          . HACS usually registers it automatically.
+          , which keeps working.
         </Callout>
       </Section>
 
@@ -531,6 +414,7 @@ function ConfigShortcut({
   return (
     <a
       href={to}
+      data-llms-skip
       className="group bg-card hover:border-foreground/20 flex items-start gap-3 rounded-lg border p-3 transition-colors"
     >
       <div className={`flex size-8 shrink-0 items-center justify-center rounded-md ${accent}`}>
@@ -562,7 +446,7 @@ export function ConfigurationPage() {
       <div className="min-w-0">
         <PageHeader
           eyebrow={TITLE}
-          title="Configuration"
+          title={heading(`${BASE_PATH}/configuration`)}
           description={
             <>
               Every option, what it does, and how to use it. Required fields are marked with{" "}
@@ -844,6 +728,7 @@ entities:
           />
         </CategorySection>
 
+        <SupportLinks card="Energy Breakdown Card" />
         <NextPageNav
           prev={{ label: "Installation", to: `${BASE_PATH}/installation` }}
           next={{ label: "Examples", to: `${BASE_PATH}/examples` }}
@@ -861,13 +746,29 @@ entities:
 
 // ---------- Examples ----------
 
+const kilowattHours = (state: string, name: string) => sensor(state, { unit: "kWh", name });
+
+/** An average day: today's sensors hold the day so far, the others their daily usage. */
+const EXAMPLE_STATES: StateFixtures = {
+  "sensor.solar_energy_today": kilowattHours("14.2", "Solar"),
+  "sensor.grid_energy_today": kilowattHours("6.8", "Grid"),
+  "sensor.battery_energy_today": kilowattHours("3.4", "Battery"),
+  "sensor.car_energy_today": kilowattHours("8.8", "Car"),
+  "sensor.heatpump_energy_today": kilowattHours("6.2", "Heat pump"),
+  "sensor.dishwasher_energy_today": kilowattHours("1.1", "Dishwasher"),
+  "sensor.dryer_energy_today": kilowattHours("0.9", "Dryer"),
+  "sensor.solar_energy": kilowattHours("21.4", "Solar"),
+  "sensor.grid_energy": kilowattHours("5.2", "Grid"),
+  "sensor.battery_energy": kilowattHours("4.6", "Battery"),
+};
+
 export function ExamplesPage() {
   return (
     <>
       <PageHeader
         eyebrow={TITLE}
-        title="Examples"
-        description="Copy-pastable configs for the most common setups."
+        title={heading(`${BASE_PATH}/examples`)}
+        description="Copy-pastable configs for the most common setups, each next to the card it draws."
       />
 
       <Callout variant="info" title="Don't forget!">
@@ -880,8 +781,9 @@ export function ExamplesPage() {
             The smallest possible config — just a list of entities, defaulting to a stacked bar.
           </p>
         </Prose>
-        <CodeBlock
-          language="yaml"
+        <LiveExample
+          states={EXAMPLE_STATES}
+          energy
           code={`type: ${CARD_TYPE}
 entities:
   - entity: sensor.solar_energy_today
@@ -891,8 +793,9 @@ entities:
       </Section>
 
       <Section id="donut" title="Donut with right legend">
-        <CodeBlock
-          language="yaml"
+        <LiveExample
+          states={EXAMPLE_STATES}
+          energy
           code={`type: ${CARD_TYPE}
 title: Energy Breakdown
 chart_type: donut
@@ -919,8 +822,9 @@ entities:
             you have many low-magnitude sources.
           </p>
         </Prose>
-        <CodeBlock
-          language="yaml"
+        <LiveExample
+          states={EXAMPLE_STATES}
+          energy
           code={`type: ${CARD_TYPE}
 chart_type: donut
 sort: true
@@ -944,8 +848,9 @@ entities:
             energy dashboard (today, week, custom range, …) using statistics growth.
           </p>
         </Prose>
-        <CodeBlock
-          language="yaml"
+        <LiveExample
+          states={EXAMPLE_STATES}
+          energy
           code={`type: ${CARD_TYPE}
 chart_type: bar
 energy_date_selection: true
@@ -964,8 +869,9 @@ entities:
             <code>energy_&lt;dashboard_url&gt;</code>.
           </p>
         </Prose>
-        <CodeBlock
-          language="yaml"
+        <LiveExample
+          states={EXAMPLE_STATES}
+          energy
           code={`type: ${CARD_TYPE}
 energy_date_selection: true
 collection_key: energy_living_room
@@ -983,8 +889,9 @@ entities:
             is a reference of what is possible.
           </p>
         </Prose>
-        <CodeBlock
-          language="yaml"
+        <LiveExample
+          states={EXAMPLE_STATES}
+          energy
           code={`type: ${CARD_TYPE}
 title: Energy Breakdown
 chart_type: bar
@@ -1025,6 +932,7 @@ entities:
         />
       </Section>
 
+      <SupportLinks card="Energy Breakdown Card" />
       <NextPageNav prev={{ label: "Configuration", to: `${BASE_PATH}/configuration` }} />
     </>
   );
