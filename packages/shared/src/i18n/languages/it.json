@@ -160,6 +160,7 @@
     "connect_to_battery": "Batteria (linea verso la batteria)",
     "connect_to_none": "Nessuno (senza linea)",
     "energy_entities": "Selettore live / periodo",
-    "views": "Viste"
+    "views": "Viste",
+    "default_view": "Si apre su"
   }
 }
