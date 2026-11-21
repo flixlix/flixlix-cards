@@ -160,6 +160,7 @@
     "connect_to_battery": "बैटरी (बैटरी तक लाइन)",
     "connect_to_none": "कोई नहीं (कोई लाइन नहीं)",
     "energy_entities": "लाइव / अवधि चयनकर्ता",
-    "views": "दृश्य"
+    "views": "दृश्य",
+    "default_view": "इस पर खुलता है"
   }
 }

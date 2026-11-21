@@ -27,9 +27,10 @@ export class ViewController implements ReactiveController {
   }
 
   configure(views: HomeFlowViews | null): void {
-    const kept = this.views !== null && views?.views.includes(this.view);
+    // a new default_view, e.g. picked in the editor, opens on it
+    const kept = this.views?.initial === views?.initial && views?.views.includes(this.view);
     this.views = views;
-    this.view = kept ? this.view : (views?.views[0] ?? "live");
+    this.view = kept ? this.view : (views?.initial ?? "live");
   }
 
   render(language: string): TemplateResult | typeof nothing {

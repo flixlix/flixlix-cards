@@ -160,6 +160,7 @@
     "connect_to_battery": "Bateria (linia do baterii)",
     "connect_to_none": "Brak (bez linii)",
     "energy_entities": "Wybór na żywo / okres",
-    "views": "Widoki"
+    "views": "Widoki",
+    "default_view": "Otwiera się na"
   }
 }

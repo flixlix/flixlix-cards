@@ -160,6 +160,7 @@
     "connect_to_battery": "Baterie (čára k baterii)",
     "connect_to_none": "Žádné (bez čáry)",
     "energy_entities": "Přepínač živě / období",
-    "views": "Zobrazení"
+    "views": "Zobrazení",
+    "default_view": "Otevře se na"
   }
 }

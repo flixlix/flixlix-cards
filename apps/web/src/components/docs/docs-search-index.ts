@@ -1043,6 +1043,11 @@ function houseEntries(): SearchEntry[] {
       "card-options",
       ["selector", "today", "yesterday", "week", "month", "year"]
     ),
+    option("default_view", "The view the card opens on.", "card-options", [
+      "selector",
+      "default",
+      "today",
+    ]),
     option("min_expected_value", "Where the pulses run their slowest.", "numbers", [
       "min_expected_power",
       "pulse speed",
