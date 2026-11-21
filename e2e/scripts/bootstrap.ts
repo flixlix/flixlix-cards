@@ -15,6 +15,7 @@ import {
   HASS_URL,
   HassSocket,
   isObject,
+  type JsonObject,
   loginWithPassword,
   postJson,
   readToken,
@@ -23,7 +24,11 @@ import {
   waitForRunning,
   writeToken,
 } from "../src/hass.ts";
-import { EDITOR_DASHBOARD, HOUSE_EDITOR_DASHBOARD } from "../src/dashboards.ts";
+import {
+  EDITOR_DASHBOARD,
+  HOUSE_EDITOR_DASHBOARD,
+  PERIOD_EDITOR_DASHBOARD,
+} from "../src/dashboards.ts";
 
 type OnboardingStep = "user" | "core_config" | "analytics" | "integration";
 
@@ -191,21 +196,140 @@ const houseCard = {
 };
 
 /** Seeded only when created, so changes made in its editor survive the next bootstrap. */
-async function ensureHouseEditorDashboard(socket: HassSocket): Promise<void> {
-  const created = await ensureStorageDashboard(
-    socket,
-    HOUSE_EDITOR_DASHBOARD,
-    "Home flow card editor",
-    "mdi:home-edit"
-  );
-  if (created) {
-    await socket.call({
-      type: "lovelace/config/save",
-      url_path: HOUSE_EDITOR_DASHBOARD,
-      config: { views: [{ title: "House card", path: "house", cards: [houseCard] }] },
-    });
+async function ensureSeededDashboard(
+  socket: HassSocket,
+  urlPath: string,
+  title: string,
+  icon: string,
+  config: JsonObject
+): Promise<void> {
+  if (await ensureStorageDashboard(socket, urlPath, title, icon)) {
+    await socket.call({ type: "lovelace/config/save", url_path: urlPath, config });
   }
 }
+
+const PERIOD_CARD = "custom:energy-period-selector-plus";
+
+const periodSection = (heading: string, icon: string, cards: JsonObject[]): JsonObject => ({
+  type: "grid",
+  cards: [{ type: "heading", heading, icon }, ...cards],
+});
+
+/**
+ * Every selector drives the same energy collection, so the graph follows whichever was clicked
+ * last and the others show that range too (as "custom" when it is none of their periods).
+ */
+const periodEditorConfig: JsonObject = {
+  views: [
+    {
+      title: "Period selector",
+      path: "periods",
+      type: "sections",
+      max_columns: 3,
+      sections: [
+        periodSection("Billing cycles", "mdi:receipt-text", [
+          {
+            type: PERIOD_CARD,
+            card_background: true,
+            title: "Bill on the 8th",
+            compare_button_type: "icon",
+            period_buttons: [
+              "day",
+              "month",
+              { label: "Bill", duration: { months: 1 }, starts: "2026-01-08" },
+            ],
+          },
+          {
+            type: PERIOD_CARD,
+            card_background: true,
+            title: "Bill on the 31st (shorter months: their last day)",
+            period_buttons: [
+              "month",
+              { label: "Bill", duration: { months: 1 }, starts: "2026-01-31" },
+            ],
+          },
+          {
+            type: PERIOD_CARD,
+            card_background: true,
+            title: "Bill on the 1st (same range as month)",
+            period_buttons: [
+              "month",
+              { label: "Bill", duration: { months: 1 }, starts: "2026-01-01" },
+            ],
+          },
+        ]),
+        periodSection("Longer and shorter cycles", "mdi:calendar-range", [
+          {
+            type: PERIOD_CARD,
+            card_background: true,
+            title: "Quarter and contract year",
+            period_buttons: [
+              "month",
+              { label: "Quarter", duration: { months: 3 }, starts: "2026-02-15" },
+              { label: "Contract year", duration: { years: 1 }, starts: "2025-04-01" },
+            ],
+          },
+          {
+            type: PERIOD_CARD,
+            card_background: true,
+            title: "Every other Monday",
+            today_button_type: "icon",
+            period_buttons: [
+              "week",
+              { label: "Fortnight", duration: { weeks: 2 }, starts: "2026-01-05" },
+            ],
+          },
+        ]),
+        periodSection("Rolling windows, ending today", "mdi:calendar-clock", [
+          {
+            type: PERIOD_CARD,
+            card_background: true,
+            title: "Last 7 / 30 days, last 12 months",
+            period_buttons: [
+              "day",
+              { label: "Last 7 days", duration: { days: 7 } },
+              { label: "Last 30 days", duration: { days: 30 } },
+              { label: "Last 12 months", duration: { months: 12 } },
+            ],
+          },
+          {
+            type: PERIOD_CARD,
+            card_background: true,
+            title: "Everything together",
+            date_picker: true,
+            compare_button_type: "text",
+            period_buttons: [
+              "day",
+              "week",
+              "month",
+              { label: "Bill", duration: { months: 1 }, starts: "2026-01-08" },
+              { label: "Last 30 days", duration: { days: 30 } },
+              "year",
+              "custom",
+            ],
+            custom_period_label: "Range",
+          },
+        ]),
+        periodSection("What the selectors drive", "mdi:chart-bar", [
+          { type: "energy-usage-graph" },
+          {
+            type: "custom:energy-flow-card-plus",
+            energy_date_selection: true,
+            entities: {
+              grid: {
+                entity: {
+                  consumption: "sensor.grid_import_energy",
+                  production: "sensor.grid_export_energy",
+                },
+              },
+              solar: { entity: "sensor.solar_energy" },
+            },
+          },
+        ]),
+      ],
+    },
+  ],
+};
 
 async function main() {
   console.warn(`Waiting for Home Assistant at ${HASS_URL} ...`);
@@ -218,7 +342,20 @@ async function main() {
     await saveEnergyPrefs(socket);
     await importEnergyHistory(socket);
     await ensureStorageDashboard(socket, EDITOR_DASHBOARD, "Card editors", "mdi:pencil");
-    await ensureHouseEditorDashboard(socket);
+    await ensureSeededDashboard(
+      socket,
+      HOUSE_EDITOR_DASHBOARD,
+      "Home flow card editor",
+      "mdi:home-edit",
+      { views: [{ title: "House card", path: "house", cards: [houseCard] }] }
+    );
+    await ensureSeededDashboard(
+      socket,
+      PERIOD_EDITOR_DASHBOARD,
+      "Period selector editor",
+      "mdi:calendar-edit",
+      periodEditorConfig
+    );
   } finally {
     socket.close();
   }

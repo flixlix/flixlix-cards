@@ -32,4 +32,17 @@ describe("setConfig", () => {
     expect(setConfig({ period_buttons: ["day", "decade"] })).toThrow(/period_buttons/);
     expect(setConfig({ period_buttons: "day" })).toThrow(/period_buttons/);
   });
+
+  test("accepts periods the user defines, and says which entry is wrong", () => {
+    expect(
+      setConfig({
+        period_buttons: [
+          "day",
+          { label: "Bill", duration: { months: 1 }, starts: "2026-01-08" },
+          { label: "Last 30 days", duration: { days: 30 } },
+        ],
+      })
+    ).not.toThrow();
+    expect(setConfig({ period_buttons: ["day", { label: "Bill" }] })).toThrow(/entry 2 .*duration/);
+  });
 });
