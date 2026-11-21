@@ -292,6 +292,38 @@ const auxiliaryVars = ({ auxiliary }: StyledNodes, greyIdle: boolean): CssVars =
   };
 };
 
+const DEFAULT_ORBIT_COLOR = "#964cb5";
+/** Handed out to devices on the orbit in config order, then repeated. */
+const ORBIT_COLORS = [
+  DEFAULT_ORBIT_COLOR,
+  "#5bd0cc",
+  "#b54c9d",
+  "#d0cc5b",
+  "#e08a4c",
+  "#4c8fd0",
+  "#6fbf5a",
+  "#d05b5b",
+] as const;
+
+/**
+ * Inline custom properties for one device on the orbit. Its default colour follows its place in
+ * the config, not where it sorts to, so a device keeps its colour as the order changes.
+ */
+export const orbitDeviceStyle = (
+  field: Partial<IndividualDeviceType> | undefined,
+  index: number
+): string => {
+  const fallback = ORBIT_COLORS[Math.max(index, 0) % ORBIT_COLORS.length] ?? DEFAULT_ORBIT_COLOR;
+  const color = field?.color === undefined ? fallback : cssColor(field.color, fallback);
+  const deviceColor = "var(--orbit-color)";
+  return [
+    `--orbit-color:${color}`,
+    `--orbit-icon-color:${field?.color_icon !== false ? deviceColor : PRIMARY_TEXT}`,
+    `--orbit-text-color:${field?.color_value ? deviceColor : PRIMARY_TEXT}`,
+    `--orbit-secondary-color:${field?.secondary_info?.color_value ? deviceColor : PRIMARY_TEXT}`,
+  ].join(";");
+};
+
 /** CSS custom properties the card sets on its host for colours and line geometry. */
 export const computeCssVars = (
   config: FlowCardPlusConfig,

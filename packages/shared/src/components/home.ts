@@ -26,7 +26,9 @@ export const homeElement = (
   return html`
     <div class="circle-container home">
       <div
-        class="circle ${disableEntityClick ? "pointer-events-none" : ""}"
+        class="circle ${ring.plain ? "border" : ""} ${
+          disableEntityClick ? "pointer-events-none" : ""
+        }"
         tabindex=${disableEntityClick ? nothing : 0}
         role=${disableEntityClick ? nothing : "button"}
         id="home-circle"

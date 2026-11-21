@@ -68,6 +68,8 @@ export type CardStateInput = {
   width: number;
   /** Dots are not animated while the page is hidden. */
   pageHidden?: boolean;
+  /** No grid, solar or battery entity: the card shows only individual devices around the home. */
+  deviceOnly?: boolean;
 };
 
 export type FlowName =
@@ -93,6 +95,19 @@ export type Flows = Record<FlowName, Flow> & { individual: Flow[]; auxiliary: Fl
 
 export type IndividualSlot = { node: IndividualObject; flow: Flow };
 
+/** A device on the orbit around the home, with where it sits and the colours it is drawn in. */
+export type OrbitDevice = IndividualSlot & {
+  /** Position in the config's `individual` list: what the device's default colour follows. */
+  index: number;
+  x: number;
+  y: number;
+  labelAbove: boolean;
+  /** CSS custom properties that colour the device, its line and its dot. */
+  style: string;
+};
+
+export type OrbitState = { geometry: OrbitGeometry; devices: OrbitDevice[] };
+
 export type HomeRing = {
   battery: number;
   solar: number;
@@ -100,6 +115,8 @@ export type HomeRing = {
   nonFossil: number;
   largestSource: "battery" | "solar" | "grid" | "gridNonFossil";
   usageText: string;
+  /** No source supplies the home, so it has no segments and gets a plain border instead. */
+  plain: boolean;
 };
 
 export type CardLayout = {
@@ -134,6 +151,8 @@ export type ReadyCardState = {
     individuals: IndividualObject[];
     auxiliary: IndividualObject;
   };
+  /** Set instead of the slots when the card has no grid, solar or battery. */
+  orbit?: OrbitState;
   individualSlots: {
     leftTop?: IndividualSlot;
     leftBottom?: IndividualSlot;

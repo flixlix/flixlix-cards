@@ -39,8 +39,12 @@ const solarReading = (hass: HomeAssistant, config: FlowCardPlusConfig, read: Ent
   };
 };
 
-/** Live power readings in W from `hass.states`. */
-export function powerReadings(hass: HomeAssistant, config: FlowCardPlusConfig): ReadyReadings {
+/** Live power readings in W from `hass.states`; `deviceOnly` also reads the home entity. */
+export function powerReadings(
+  hass: HomeAssistant,
+  config: FlowCardPlusConfig,
+  deviceOnly = false
+): ReadyReadings {
   const { entities } = config;
   const read = wattsReader(hass);
   const generator = entities.grid?.power_outage?.entity_generator;

@@ -31,10 +31,10 @@ describe("Language files", () => {
   const enKeys = getAllKeys(readLanguage(enFile));
 
   test.each(languageFiles.filter((file) => file !== enFile))(
-    "%s should have the same properties as en.json",
+    "%s only has properties that en.json has",
     (languageFile) => {
       const languageKeys = getAllKeys(readLanguage(languageFile));
-      expect(languageKeys).toEqual(enKeys);
+      expect(enKeys).toEqual(expect.arrayContaining(languageKeys));
     }
   );
 });

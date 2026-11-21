@@ -221,7 +221,7 @@ export const individualElement = (
     slot,
     line,
     label: html`<span class="label">${slot.node.name}</span>`,
-    circle: individualCircle(main, config, slot.node, key),
+    circle: individualCircle(main, config, slot.node, slotCircle(slot.node, key)),
     dot: line ? individualDot(slot, key, animate, 1.75) : nothing,
   });
 };

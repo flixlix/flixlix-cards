@@ -15,6 +15,7 @@ import { homeElement } from "./home";
 import { individualElement } from "./individual-element";
 import { cardButtonsElement } from "./misc/card-buttons";
 import { nonFossilElement } from "./non-fossil";
+import { orbitContent } from "./orbit";
 import { solarElement } from "./solar";
 import { spacer } from "./spacer";
 

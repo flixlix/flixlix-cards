@@ -17,6 +17,8 @@ import {
   assertRenderableFlowCardConfig,
   clickableEntitiesWithDefault,
   displayZeroLinesWithDefaults,
+  isDeviceOnly,
+  withoutEmptyEntities,
 } from "@flixlix-cards/shared/utils/flow-card-config";
 import { EntityActions } from "@flixlix-cards/shared/utils/entity-actions";
 import { defaultValues, getDefaultConfig } from "@flixlix-cards/shared/utils/get-default-config";
@@ -67,8 +69,10 @@ export class PowerFlowCardPlus extends LitElement {
     this._pageHidden = isPageHidden();
   };
 
-  setConfig(config: PowerFlowCardPlusConfig): void {
-    assertRenderableFlowCardConfig(config);
+  setConfig(rawConfig: PowerFlowCardPlusConfig): void {
+    const config = withoutEmptyEntities(rawConfig);
+    assertRenderableFlowCardConfig(config, { allowDeviceOnly: true });
+    this._deviceOnly = isDeviceOnly(config.entities);
     this._config = {
       ...config,
       min_flow_rate: coerceNumber(config.min_flow_rate, defaultValues.minFlowRate),
@@ -85,6 +89,8 @@ export class PowerFlowCardPlus extends LitElement {
 
   public connectedCallback() {
     super.connectedCallback();
+    // Moving the card to another column stops its observer; without this the width stays stale.
+    this._observeWidth();
     if (typeof document !== "undefined") {
       document.addEventListener("visibilitychange", this._handleVisibilityChange);
     }
@@ -130,11 +136,12 @@ export class PowerFlowCardPlus extends LitElement {
     this._cardState = computeCardState({
       config: this._config,
       hass: this.hass,
-      readings: powerReadings(this.hass, this._config),
+      readings: powerReadings(this.hass, this._config, this._deviceOnly),
       templates: this._templates.templates(this._config),
       conditionContext: this._conditions.context,
       width: this._width.width,
       pageHidden: this._pageHidden,
+      deviceOnly: this._deviceOnly,
     });
   }
 

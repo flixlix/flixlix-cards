@@ -41,6 +41,9 @@ const usageText = (
     unitWhiteSpace: home?.unit_white_space,
     reading: true,
   };
+  if (input.deviceOnly && home?.entity && totals.measuredHome === undefined) {
+    return input.hass.localize("state.default.unavailable");
+  }
   const consumption = totals.measuredHome ?? flows.home;
   return format(
     home?.subtract_individual ? consumption - individualConsumption : consumption,
@@ -67,5 +70,6 @@ export const computeHomeRing = (
     ...segments,
     largestSource,
     usageText: usageText(input, balance, individuals, format),
+    plain: input.deviceOnly ?? false,
   };
 };

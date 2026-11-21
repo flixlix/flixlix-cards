@@ -42,8 +42,8 @@ const singleGridTotals = (value: number) =>
 
 const measured = (override: boolean) =>
   normalize(
-    input({ home: { entity: "sensor.home", override_state: override } }),
-    readings({ home: 420 })
+    input({ grid, home: { entity: "sensor.home", override_state: override } }),
+    readings({ grid: single(300), home: 420 })
   ).totals.measuredHome;
 
 const fraction = (percentage: string, invert_state?: boolean) =>
@@ -106,8 +106,8 @@ describe("signs and invert_state", () => {
 
   test("individual devices count as absolute values", () => {
     const { totals, presence } = normalize(
-      input({ individual: [{ entity: "sensor.device" }, { entity: "sensor.off" }] }),
-      readings({ individuals: [-50, null] })
+      input({ grid, individual: [{ entity: "sensor.device" }, { entity: "sensor.off" }] }),
+      readings({ grid: single(300), individuals: [-50, null] })
     );
 
     expect(totals.individuals).toEqual([50, 0]);

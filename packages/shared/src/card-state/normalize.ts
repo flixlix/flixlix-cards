@@ -19,7 +19,10 @@ export type NodeTotals = Readonly<{
   solar: number;
   batteryCharge: number;
   batteryDischarge: number;
-  /** The home entity's reading, present only with `override_state`. */
+  /**
+   * The home entity's reading, present with `override_state`. Without grid, solar or battery it is
+   * always present: the home entity's reading, or the sum of the shown devices without one.
+   */
   measuredHome?: number;
   individuals: ReadonlyArray<number>;
   /** Share of grid import from low-carbon sources, in [0, 1]; 0 while the node is hidden. */
@@ -210,8 +213,34 @@ const gridDuringOutage = (input: NormalizeInput, readings: ReadyReadings): Direc
   ),
 });
 
-const measuredHome = (input: NormalizeInput, readings: ReadyReadings): number | undefined => {
+/** What the devices draw from the home, less what feeding ones (`accept_negative`) put into it. */
+const netConsumption = (
+  totals: ReadonlyArray<number>,
+  presence: ReadonlyArray<boolean>,
+  feeding: ReadonlyArray<boolean>
+): number =>
+  Math.max(
+    totals.reduce((sum, total, index) => {
+      if (!presence[index]) {
+        return sum;
+      }
+      return feeding[index] ? sum - total : sum + total;
+    }, 0),
+    0
+  );
+
+const measuredHome = (
+  input: NormalizeInput,
+  readings: ReadyReadings,
+  devices: number
+): number | undefined => {
   const home = input.config.entities.home;
+  if (input.deviceOnly) {
+    if (!home?.entity) {
+      return devices;
+    }
+    return readings.home === null ? undefined : magnitude(readings.home);
+  }
   return home?.override_state && home.entity ? magnitude(readings.home) : undefined;
 };
 
@@ -234,6 +263,7 @@ export const normalize = (input: NormalizeInput, readings: ReadyReadings): Norma
     nonFossil: nonFossilShown(input, visible.grid, outage, nodes.toleratedGrid.outOf * fraction),
   };
   const grid = outage ? gridDuringOutage(input, readings) : nodes.toleratedGrid;
+  const feeding = feedingIndividuals(input, readings);
   return {
     totals: {
       gridImport: shown(presence.grid, grid.outOf),

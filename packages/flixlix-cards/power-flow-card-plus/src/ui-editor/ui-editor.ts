@@ -21,6 +21,11 @@ import {
 import { dropSpreadEntity } from "@flixlix-cards/shared/ui-editor/utils/drop-spread-entity";
 import { loadHaForm } from "@flixlix-cards/shared/ui-editor/utils/load-ha-form";
 import { defaultValues } from "@flixlix-cards/shared/utils/get-default-config";
+import {
+  dropEmptyEntity,
+  hasEntity,
+  isDeviceOnly,
+} from "@flixlix-cards/shared/utils/flow-card-config";
 import { nonEmpty } from "@flixlix-cards/shared/utils/utils";
 import { type HomeAssistant, type LovelaceCardEditor } from "custom-card-helpers";
 import { LitElement, css, html, nothing } from "lit";
@@ -286,6 +291,13 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
     return html`
       <div class="card-config">
         ${alerts}
+        ${
+          isDeviceOnly(this._config.entities)
+            ? html`<ha-alert class="device-only-alert" alert-type="info">
+                ${localize("editor.device_only_mode")}
+              </ha-alert>`
+            : nothing
+        }
         <ha-form
           .hass=${this.hass}
           .data=${data}
@@ -337,9 +349,49 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
     }
     const config = {
       ...this._config,
-      entities: { ...this._config.entities, [page]: dropSpreadEntity(ev.detail.value) },
+      entities: {
+        ...this._config.entities,
+        [page]: dropEmptyEntity(dropSpreadEntity(ev.detail.value)),
+      },
     };
     fireEvent(this, "config-changed", { config });
+  }
+
+  private _hasEntity(page: EntityPage): boolean {
+    return hasEntity(this._config?.entities[page]);
+  }
+
+  /** Clears the node's entity so it is hidden; its other settings are kept for when it returns. */
+  private _disableSource = (page: EntityPage): void => {
+    if (!this._config) {
+      return;
+    }
+    const node: Record<string, unknown> = { ...this._config.entities[page] };
+    delete node.entity;
+    const config = { ...this._config, entities: { ...this._config.entities, [page]: node } };
+    this._config = config;
+    fireEvent(this, "config-changed", { config });
+  };
+
+  private _renderSourceHint(page: EntityPage) {
+    if (!OPTIONAL_SOURCES.has(page)) {
+      return nothing;
+    }
+    const enabled = this._hasEntity(page);
+    return html`<ha-alert class="source-hint" alert-type="info">
+      ${localize(enabled ? "editor.source_enabled_hint" : "editor.source_disabled_hint")}
+      ${
+        enabled
+          ? html`<button
+              class="legacy-fields-alert-button source-disable"
+              slot="action"
+              @click=${() => this._disableSource(page)}
+            >
+              ${localize("editor.disable")}
+            </button>`
+          : nothing
+      }
+    </ha-alert>`;
   }
 
   private _computeLabelCallback = (schema: HaFormLabelSchema) =>
@@ -366,7 +418,8 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
         margin-bottom: 10px;
       }
 
-      .legacy-fields-alert {
+      .legacy-fields-alert,
+      .source-hint {
         margin-bottom: 8px;
       }
 

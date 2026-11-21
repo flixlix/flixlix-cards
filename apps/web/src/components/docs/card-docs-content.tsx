@@ -298,8 +298,7 @@ const BASIC_CARD_OPTIONS = (v: Variant): OptionRow[] => [
     required: true,
     description: (
       <>
-        At least one of <code>grid</code>, <code>battery</code> or <code>solar</code> is required.
-        See the entity sections below.
+        <EntitiesRequirement v={v} /> See the entity sections below.
       </>
     ),
   },
@@ -732,13 +731,15 @@ const UNIT_OPTIONS = (v: Variant): OptionRow[] => [
   },
 ];
 
-const HOME_OPTIONS: OptionRow[] = [
+const HOME_OPTIONS = (v: Variant): OptionRow[] => [
   {
     name: "entity",
     type: "string",
     required: true,
     description:
-      "Sensor for home consumption. Used only for the more-info dialog, the value is calculated from the other sources.",
+      v.key === "power"
+        ? "Sensor for home consumption. Used only for the more-info dialog, the value is calculated from the other sources. With no grid, solar or battery it is the home's reading instead."
+        : "Sensor for home consumption. Used only for the more-info dialog, the value is calculated from the other sources.",
   },
   {
     name: "name",
@@ -827,7 +828,7 @@ const INDIVIDUAL_OPTIONS: OptionRow[] = [
   {
     name: "display_zero",
     type: "boolean",
-    default: "false",
+    default: v.key === "power" ? "false (true with no grid, solar or battery)" : "false",
     description: "Show device when state is 0.",
   },
   {
@@ -1149,6 +1150,57 @@ function ConfigShortcut({
   );
 }
 
+/** What the `entities` object requires: the power card also runs on devices alone. */
+function EntitiesRequirement({ v }: { v: Variant }) {
+  return v.key === "power" ? (
+    <>
+      At least one of <code>grid</code>, <code>battery</code>, <code>solar</code> or{" "}
+      <code>home</code> (with an <code>entity</code>), or one <code>individual</code> device, is
+      required.
+    </>
+  ) : (
+    <>
+      At least one of <code>grid</code>, <code>battery</code> or <code>solar</code> is required.
+    </>
+  );
+}
+
+const individualRowDescription = (v: Variant): string =>
+  v.key === "power"
+    ? "Individual device objects. Up to 4 are shown around a source; with no grid, solar or battery, all of them are."
+    : "Up to 4 individual device objects.";
+
+const individualSummary = (v: Variant): string =>
+  v.key === "power"
+    ? "As many as you want. Around a grid, solar or battery up to four are shown; with none of them, every device is."
+    : "As many as you want, up to four individual devices are shown.";
+
+/** Explains the power card's mode with no grid, solar or battery. */
+function DeviceOnlyNotes({ v }: { v: Variant }) {
+  if (v.key !== "power") {
+    return null;
+  }
+  return (
+    <>
+      <p>
+        <strong>Device-only mode.</strong> When no <code>grid</code>, <code>solar</code> or{" "}
+        <code>battery</code> entity is set, the home sits in the middle and <em>every</em> device is
+        placed on a ring around it (a second ring takes over for crowded cards, and circles shrink
+        as devices are added). The home shows the <code>home</code> entity's reading, or the net
+        consumption of the devices when there is none: a device that feeds power into the home (
+        <code>accept_negative</code>, below zero) is taken off. An unavailable <code>home</code>{" "}
+        entity shows as unavailable. With <code>show_direction</code>, each device gets an arrow
+        along its line, pointing towards the home when it feeds it.
+      </p>
+      <p>
+        Devices at 0 W stay visible; set <code>display_zero: false</code> on a device to hide it
+        while idle. In the visual editor, use the <strong>Disable</strong> button on the Grid,
+        Solar, Battery and Fossil fuel pages to switch them off.
+      </p>
+    </>
+  );
+}
+
 export function ConfigurationPage({ cardKey }: { cardKey: CardKey }) {
   const v = variant(cardKey);
   const basicOptions = BASIC_CARD_OPTIONS(v);
@@ -1373,8 +1425,7 @@ entities:
           accent="slate"
           description={
             <>
-              The heart of the configuration. At least one of <code>grid</code>,{" "}
-              <code>battery</code> or <code>solar</code> is required. All values use{" "}
+              The heart of the configuration. <EntitiesRequirement v={v} /> All values use{" "}
               <code>
                 {v.unit}/{v.unitKilo}
               </code>{" "}
@@ -1399,7 +1450,7 @@ entities:
               {
                 name: "individual",
                 type: "array",
-                description: "Up to 4 individual device objects.",
+                description: individualRowDescription(v),
               },
               {
                 name: "auxiliary",
@@ -1487,7 +1538,7 @@ entities:
           accent="cyan"
           description={
             <>
-              As many as you want, up to four individual devices are shown. <br />
+              {individualSummary(v)} <br />
               EVs, heat pumps, ovens, anything you'd like to call out.
             </>
           }
@@ -1498,6 +1549,7 @@ entities:
                 as an extra circle on the card. The structure below documents the fields each item
                 accepts.
               </p>
+              <DeviceOnlyNotes v={v} />
             </Prose>
           }
           example={{
@@ -1520,7 +1572,7 @@ entities:
       display_zero: true`,
           }}
         >
-          <OptionList rows={INDIVIDUAL_OPTIONS} />
+          <OptionList rows={INDIVIDUAL_OPTIONS(v)} />
         </CategorySection>
 
         <CategorySection
@@ -1576,7 +1628,7 @@ entities:
     subtract_individual: true`,
           }}
         >
-          <OptionList rows={HOME_OPTIONS} />
+          <OptionList rows={HOME_OPTIONS(v)} />
         </CategorySection>
 
         <CategorySection
@@ -2097,6 +2149,36 @@ clickable_entities: true
 title: ${v.title}`}
         />
       </Section>
+
+      {cardKey === "power" ? (
+        <Section id="only-devices" title="Only devices (no grid, solar or battery)">
+          <Prose>
+            <p>
+              Without a source the home sits in the middle and every device is placed on a ring
+              around it. The home shows the <code>home</code> entity's reading, or the sum of the
+              devices when there is none.
+            </p>
+          </Prose>
+          <CodeBlock
+            language="yaml"
+            code={`type: ${v.cardType}
+entities:
+  home:
+    entity: sensor.total_consumption
+  individual:
+    - entity: sensor.water_heater_${sensorSuffix}
+      name: Water heater
+      icon: mdi:water-boiler
+    - entity: sensor.server_rack_${sensorSuffix}
+      name: Server rack
+      icon: mdi:server
+    - entity: sensor.washing_machine_${sensorSuffix}
+      name: Washing machine
+      icon: mdi:washing-machine
+      display_zero: false`}
+          />
+        </Section>
+      ) : null}
 
       {cardKey === "energy" ? (
         <Section id="multi-dashboard" title="Multiple energy dashboards">
