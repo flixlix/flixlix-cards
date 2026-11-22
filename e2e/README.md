@@ -23,8 +23,9 @@ and committed on purpose; the instance only listens on localhost.
 The bootstrap (`e2e/scripts/bootstrap.ts`, safe to re-run) completes onboarding, writes a
 long-lived token to `.hass_dev/.e2e-token`, saves the energy preferences, imports hourly
 statistics for the energy meters (see `e2e/src/energy-history.ts` for the totals per day:
-today, yesterday and the 35 days before differ), creates the `card-editors` storage dashboard
-and runs the default scenario.
+today and yesterday have fixed totals, the three years before them vary by season), creates
+the `card-editors` storage dashboard and runs the default scenario. The history ends on the day
+it was imported: on a later day, re-run `pnpm hass:bootstrap` to bring "today" back.
 
 **HA version:** `stable` by default. `HA_VERSION=beta pnpm hass:up` runs the beta to catch
 frontend breakages early; run `pnpm hass:reset` when switching back, since a database written

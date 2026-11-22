@@ -19,7 +19,13 @@ import {
 } from "@flixlix-cards/shared/states/utils/selected-period";
 import { registerCustomCard } from "@flixlix-cards/shared/utils/register-custom-card";
 import { nonEmpty } from "@flixlix-cards/shared/utils/utils";
-import { mdiChevronLeft, mdiChevronRight } from "@mdi/js";
+import {
+  mdiCalendarTodayOutline,
+  mdiChevronLeft,
+  mdiChevronRight,
+  mdiCompare,
+  mdiCompareRemove,
+} from "@mdi/js";
 import {
   type HomeAssistant,
   type LovelaceCard,
@@ -45,6 +51,16 @@ const DEFAULT_PERIOD_BUTTONS: PeriodButton[] = ["day", "week", "month", "year"];
 // ponytail: fixed grace period for HA's lazily loaded energy cards to create their collection;
 // on a slow device a hidden date picker may be added needlessly, which is harmless.
 const COLLECTION_GRACE_MS = 1500;
+
+/** Arrow keys move along the tabs, wrapping around; Home and End jump to the ends. */
+const TAB_STEPS: Record<string, (index: number, count: number) => number> = {
+  ArrowLeft: (index, count) => (index - 1 + count) % count,
+  ArrowUp: (index, count) => (index - 1 + count) % count,
+  ArrowRight: (index, count) => (index + 1) % count,
+  ArrowDown: (index, count) => (index + 1) % count,
+  Home: () => 0,
+  End: (_index, count) => count - 1,
+};
 
 const isSelectedPeriod = (value: unknown): value is SelectedPeriod =>
   PERIODS.some((period) => period === value);
@@ -351,12 +367,12 @@ export class EnergyPeriodSelectorPlus extends LitElement implements LovelaceCard
     } else if (value?.startsWith(PERIOD_ITEM)) {
       const period = this._periodButtons[Number(value.slice(PERIOD_ITEM.length))];
       if (period) {
-        this._pickFromMenu(period);
+        this._pick(period);
       }
     }
   };
 
-  private _pickFromMenu(period: PeriodButton) {
+  private _pick(period: PeriodButton) {
     this._selectPeriod(period);
     if (period === "custom") {
       // Opened after this click is done: HA's calendar closes on clicks outside it.
@@ -423,12 +439,120 @@ export class EnergyPeriodSelectorPlus extends LitElement implements LovelaceCard
       </div>`;
     }
     const navigation = this._config?.prev_next_buttons !== false;
+    const tabs = this._config?.period_style === "tabs";
     // As in HA's own energy period selector: the date, then previous and next together.
-    return html`<div class="selector">
+    const row = html`<div class="selector">
       <span class="label">${this._rangeLabel(range)}</span>
       ${navigation ? this._renderNavButton(-1) : nothing}
       ${navigation ? this._renderNavButton(1) : nothing}
-      ${this._datePickerShown ? this._renderDatePicker(range) : nothing} ${this._renderMenu()}
+      ${this._datePickerShown ? this._renderDatePicker(range) : nothing}
+      ${tabs ? html`${this._renderTodayButton()} ${this._renderCompareButton()}` : this._renderMenu()}
+    </div>`;
+    return tabs ? html`${row} ${this._renderTabs()}` : row;
+  }
+
+  private get _todayLabel() {
+    return this._localize("ui.panel.lovelace.components.energy_period_selector.now", "Today");
+  }
+
+  private get _compareLabel() {
+    return (
+      this._config?.compare_button_label ??
+      this._localize("ui.panel.lovelace.components.energy_period_selector.compare", "Compare")
+    );
+  }
+
+  private _renderTodayButton() {
+    const type = this._config?.today_button_type;
+    if (type === false || this._period === "custom") {
+      return nothing;
+    }
+    const label = this._todayLabel;
+    return type === "icon"
+      ? html`<button
+          class="icon-button"
+          title=${label}
+          aria-label=${label}
+          @click=${this._pickToday}
+        >
+          ${icon(mdiCalendarTodayOutline)}
+        </button>`
+      : html`<button class="pill" @click=${this._pickToday}>${label}</button>`;
+  }
+
+  /** A toggle: pressed while the previous period is compared. */
+  private _renderCompareButton() {
+    const type = this._config?.compare_button_type;
+    if (type !== "icon" && type !== "text") {
+      return nothing;
+    }
+    const label = this._compareLabel;
+    const pressed = this._compare ? "true" : "false";
+    return type === "icon"
+      ? html`<button
+          class="icon-button compare"
+          title=${label}
+          aria-label=${label}
+          aria-pressed=${pressed}
+          @click=${this._toggleCompare}
+        >
+          ${icon(this._compare ? mdiCompareRemove : mdiCompare)}
+        </button>`
+      : html`<button class="pill compare" aria-pressed=${pressed} @click=${this._toggleCompare}>
+          ${label}
+        </button>`;
+  }
+
+  /**
+   * The periods side by side, like Home Flow Card's view picker: an indicator behind the selected
+   * one, a copy of the labels in the selected colors, clipped to the selected tab, slides along.
+   */
+  private _renderTabs() {
+    const periods = this._periodButtons;
+    const index = periods.findIndex((period) => period === this._period);
+    const pick = (period: PeriodButton | undefined) => {
+      if (period !== undefined) {
+        this._pick(period);
+      }
+    };
+    const onKeydown = (event: KeyboardEvent) => {
+      const step = TAB_STEPS[event.key];
+      const next = step ? periods[step(Math.max(index, 0), periods.length)] : undefined;
+      if (next !== undefined) {
+        event.preventDefault();
+        pick(next);
+        void this.updateComplete.then(() =>
+          this.renderRoot.querySelector<HTMLElement>('.tabs [aria-checked="true"]')?.focus()
+        );
+      }
+    };
+    return html`<div
+      class="tabs"
+      role="radiogroup"
+      style=${`--tab-count: ${String(periods.length)}; --tab-index: ${String(Math.max(index, 0))}`}
+      @keydown=${onKeydown}
+    >
+      ${periods.map(
+        (period, position) =>
+          html`<button
+            type="button"
+            role="radio"
+            class=${typeof period === "object" ? "defined" : "built-in"}
+            aria-checked=${position === index ? "true" : "false"}
+            tabindex=${position === Math.max(index, 0) ? 0 : -1}
+            @click=${() => pick(period)}
+          >
+            ${this._periodLabel(period)}
+          </button>`
+      )}
+      <div class="tab-indicator" aria-hidden="true" ?hidden=${index < 0}>
+        ${periods.map(
+          (period) =>
+            html`<span class=${typeof period === "object" ? "defined" : "built-in"}
+              >${this._periodLabel(period)}</span
+            >`
+        )}
+      </div>
     </div>`;
   }
 
@@ -479,23 +603,11 @@ export class EnergyPeriodSelectorPlus extends LitElement implements LovelaceCard
           </ha-dropdown-item>`
       )}
       ${today || compare ? html`<wa-divider></wa-divider>` : nothing}
-      ${
-        today
-          ? html`<ha-dropdown-item value="today">
-              ${this._localize("ui.panel.lovelace.components.energy_period_selector.now", "Today")}
-            </ha-dropdown-item>`
-          : nothing
-      }
+      ${today ? html`<ha-dropdown-item value="today">${this._todayLabel}</ha-dropdown-item>` : nothing}
       ${
         compare
           ? html`<ha-dropdown-item type="checkbox" value="compare" ?checked=${this._compare}>
-              ${
-                this._config?.compare_button_label ??
-                this._localize(
-                  "ui.panel.lovelace.components.energy_period_selector.compare",
-                  "Compare"
-                )
-              }
+              ${this._compareLabel}
             </ha-dropdown-item>`
           : nothing
       }
@@ -556,7 +668,9 @@ export class EnergyPeriodSelectorPlus extends LitElement implements LovelaceCard
       transform: scale(0.94);
     }
     .icon-button:focus-visible,
-    .period-trigger:focus-visible {
+    .pill:focus-visible,
+    .period-trigger:focus-visible,
+    .tabs:has(:focus-visible) {
       outline: 2px solid var(--primary-color);
       outline-offset: 2px;
     }
@@ -621,7 +735,100 @@ export class EnergyPeriodSelectorPlus extends LitElement implements LovelaceCard
         background: color-mix(in srgb, var(--eps-track), var(--primary-text-color) 8%);
       }
     }
+    .pill {
+      flex: none;
+      margin: 0;
+      border: 0;
+      border-radius: 999px;
+      padding: 0.6em 1em;
+      background: var(--eps-track);
+      font: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 1;
+      white-space: nowrap;
+      color: var(--primary-text-color);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition:
+        background-color 150ms ease-out,
+        color 150ms ease-out,
+        transform 160ms var(--eps-ease-out);
+    }
+    .pill:active {
+      transform: scale(0.97);
+    }
+    .compare[aria-pressed="true"] {
+      background: var(--primary-color);
+      color: var(--text-primary-color, #fff);
+    }
+    .tabs {
+      --tab-inset: 2px;
+      position: relative;
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: 1fr;
+      margin-top: 8px;
+      padding: var(--tab-inset);
+      border-radius: 999px;
+      background: var(--eps-track);
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 1;
+    }
+    .tabs button,
+    .tab-indicator span {
+      padding: 0.6em 0.75em;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .tabs button {
+      margin: 0;
+      border: 0;
+      border-radius: 999px;
+      background: none;
+      font: inherit;
+      color: var(--secondary-text-color);
+      cursor: pointer;
+      outline: none;
+      -webkit-tap-highlight-color: transparent;
+      transition: color 150ms ease;
+    }
+    .tab-indicator {
+      position: absolute;
+      inset: var(--tab-inset);
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: 1fr;
+      border-radius: 999px;
+      background: var(--card-background-color, #fff);
+      box-shadow: 0 1px 2px rgb(0 0 0 / 0.12);
+      color: var(--primary-text-color);
+      pointer-events: none;
+      clip-path: inset(
+        0 calc((var(--tab-count) - var(--tab-index) - 1) / var(--tab-count) * 100%) 0
+          calc(var(--tab-index) / var(--tab-count) * 100%) round 999px
+      );
+      transition: clip-path 260ms cubic-bezier(0.77, 0, 0.175, 1);
+    }
+    .tab-indicator[hidden] {
+      display: none;
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .pill:hover {
+        background: color-mix(in srgb, var(--eps-track), var(--primary-text-color) 8%);
+      }
+      .compare[aria-pressed="true"]:hover {
+        background: color-mix(in srgb, var(--primary-color), #000 10%);
+      }
+      .tabs button:hover {
+        color: var(--primary-text-color);
+      }
+    }
     /* HA's period names are lowercase; labels the user wrote are shown as written. */
+    .tabs .built-in,
     ha-dropdown-item.built-in {
       text-transform: capitalize;
     }
@@ -635,7 +842,9 @@ export class EnergyPeriodSelectorPlus extends LitElement implements LovelaceCard
     @media (prefers-reduced-motion: reduce) {
       .period-trigger,
       .period-trigger svg,
-      .icon-button {
+      .icon-button,
+      .pill,
+      .tab-indicator {
         transition: none;
       }
     }

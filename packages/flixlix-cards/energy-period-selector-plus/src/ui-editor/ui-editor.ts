@@ -26,13 +26,21 @@ const BUILT_IN_LABELS: Record<(typeof BUILT_IN)[number], string> = {
   custom: "Custom",
 };
 
-/** Today and compare sit in the period menu; `icon` and `text` both show them there. */
-const shownInMenu = (hidden: string | false) => ({
+/**
+ * With the menu, today and compare sit in it, where `icon` and `text` look the same; with tabs,
+ * they are buttons next to the dates.
+ */
+const buttonType = (hidden: string | false, tabs: boolean) => ({
   select: {
     mode: "dropdown",
     options: [
       { value: hidden, label: "Hidden" },
-      { value: "text", label: "In the period menu" },
+      ...(tabs
+        ? [
+            { value: "icon", label: "Icon button" },
+            { value: "text", label: "Text button" },
+          ]
+        : [{ value: "text", label: "In the period menu" }]),
     ],
   },
 });
@@ -62,45 +70,60 @@ const fromSelectValues = (values: string[], buttons: PeriodButton[]): PeriodButt
   });
 };
 
-const topSchema = (config: EnergyPeriodSelectorPlusConfig, buttons: PeriodButton[]) => [
-  { name: "title", selector: { text: {} } },
-  {
-    type: "grid",
-    name: "",
-    schema: [
-      { name: "card_background", selector: { boolean: {} } },
-      { name: "prev_next_buttons", selector: { boolean: {} } },
-      { name: "date_picker", selector: { boolean: {} } },
-    ],
-  },
-  {
-    type: "grid",
-    name: "",
-    schema: [
-      { name: "today_button_type", selector: shownInMenu(false) },
-      { name: "compare_button_type", selector: shownInMenu("") },
-      ...(shown(config.compare_button_type)
-        ? [{ name: "compare_button_label", selector: { text: {} } }]
-        : []),
-    ],
-  },
-  {
-    name: "period_buttons",
-    selector: {
-      select: {
-        multiple: true,
-        reorder: true,
-        options: [
-          ...BUILT_IN.map((value) => ({ value, label: BUILT_IN_LABELS[value] })),
-          ...definitionsOf(buttons).map((definition, index) => ({
-            value: `${DEFINED}${index}`,
-            label: definition.label,
-          })),
-        ],
+const topSchema = (config: EnergyPeriodSelectorPlusConfig, buttons: PeriodButton[]) => {
+  const tabs = config.period_style === "tabs";
+  return [
+    { name: "title", selector: { text: {} } },
+    {
+      name: "period_style",
+      selector: {
+        select: {
+          mode: "box",
+          options: [
+            { value: "menu", label: "Menu" },
+            { value: "tabs", label: "Tabs" },
+          ],
+        },
       },
     },
-  },
-];
+    {
+      type: "grid",
+      name: "",
+      schema: [
+        { name: "card_background", selector: { boolean: {} } },
+        { name: "prev_next_buttons", selector: { boolean: {} } },
+        { name: "date_picker", selector: { boolean: {} } },
+      ],
+    },
+    {
+      type: "grid",
+      name: "",
+      schema: [
+        { name: "today_button_type", selector: buttonType(false, tabs) },
+        { name: "compare_button_type", selector: buttonType("", tabs) },
+        ...(shown(config.compare_button_type)
+          ? [{ name: "compare_button_label", selector: { text: {} } }]
+          : []),
+      ],
+    },
+    {
+      name: "period_buttons",
+      selector: {
+        select: {
+          multiple: true,
+          reorder: true,
+          options: [
+            ...BUILT_IN.map((value) => ({ value, label: BUILT_IN_LABELS[value] })),
+            ...definitionsOf(buttons).map((definition, index) => ({
+              value: `${DEFINED}${index}`,
+              label: definition.label,
+            })),
+          ],
+        },
+      },
+    },
+  ];
+};
 
 const bottomSchema = (buttons: PeriodButton[]) => [
   ...(buttons.includes("custom") ? [{ name: "custom_period_label", selector: { text: {} } }] : []),
@@ -181,6 +204,7 @@ const LABELS: Record<string, string> = {
   today_button_type: "Today button",
   compare_button_type: "Compare",
   compare_button_label: "Compare label",
+  period_style: "Periods as",
   period_buttons: "Period buttons",
   custom_period_label: "Custom period label",
   collection_key: "Collection key (only to drive another energy dashboard)",
@@ -217,13 +241,18 @@ export class EnergyPeriodSelectorPlusEditor extends LitElement implements Lovela
       return nothing;
     }
     const buttons = this._buttons;
+    const menu = this._config.period_style !== "tabs";
     const data = {
       prev_next_buttons: true,
       today_button_type: "text",
       compare_button_type: "",
+      period_style: "menu",
       ...this._config,
-      ...(this._config.today_button_type === "icon" ? { today_button_type: "text" } : {}),
-      ...(this._config.compare_button_type === "icon" ? { compare_button_type: "text" } : {}),
+      // The menu has no icons: there, `icon` shows as `text`.
+      ...(menu && this._config.today_button_type === "icon" ? { today_button_type: "text" } : {}),
+      ...(menu && this._config.compare_button_type === "icon"
+        ? { compare_button_type: "text" }
+        : {}),
       period_buttons: toSelectValues(buttons),
     };
     return html`<ha-form

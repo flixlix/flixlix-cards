@@ -21,5 +21,7 @@ export interface EnergyPeriodSelectorPlusConfig extends LovelaceCardConfig {
   compare_button_label?: string;
   today_button_type?: ButtonStyle | false;
   period_buttons?: PeriodButton[];
+  /** The periods in a menu behind a pill (default), or side by side as tabs. */
+  period_style?: "menu" | "tabs";
   custom_period_label?: string;
 }

@@ -66,6 +66,7 @@ describe("editor", () => {
   test("offers the date picker option next to the other toggles", async () => {
     expect(await editorFields({})).toEqual([
       "title",
+      "period_style",
       "card_background",
       "prev_next_buttons",
       "date_picker",
@@ -95,6 +96,21 @@ describe("editor", () => {
 
     expect(dataOf(top)).toMatchObject({ today_button_type: "text", compare_button_type: "text" });
     expect(fieldNames(schemaOf(top))).toContain("compare_button_label");
+    editor.remove();
+  });
+
+  test("with tabs, keeps today and compare as icon buttons", async () => {
+    const editor = await mountEditor({
+      period_style: "tabs",
+      today_button_type: "icon",
+      compare_button_type: "icon",
+    });
+    const [top] = forms(editor);
+    if (!top) {
+      throw new Error("no form");
+    }
+
+    expect(dataOf(top)).toMatchObject({ today_button_type: "icon", compare_button_type: "icon" });
     editor.remove();
   });
 

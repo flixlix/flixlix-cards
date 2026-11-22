@@ -881,6 +881,12 @@ function periodConfigOptions(): SearchEntry[] {
       "duration",
       "starts",
     ]),
+    periodOption("period_style", "The periods in a menu or side by side as tabs.", "buttons", [
+      "tabs",
+      "menu",
+      "dropdown",
+      "segmented",
+    ]),
     periodOption("custom_period_label", "Label of the custom button.", "buttons"),
     periodOption("prev_next_buttons", "Show the previous and next buttons.", "buttons"),
     periodOption("today_button_type", "Today in the period menu, or hide it.", "buttons"),

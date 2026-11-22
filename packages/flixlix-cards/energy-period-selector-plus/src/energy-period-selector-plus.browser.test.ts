@@ -272,6 +272,43 @@ describe("energy period selector plus", () => {
     expect(createCardElement).toHaveBeenCalledWith({ type: "energy-date-selection" });
   });
 
+  test("tabs show the periods side by side, with today and a compare toggle next to the dates", async () => {
+    const { root, collection, text } = await mountSelector({
+      period_style: "tabs",
+      compare_button_type: "text",
+    });
+    const checked = () => text('.tabs [aria-checked="true"]');
+    expect(root.querySelector("ha-dropdown")).toBeNull();
+    expect(checked()).toBe("day");
+
+    await userEvent.click(button(root, "month"));
+    expect(periodOf(collection)).toEqual({ start: date(5, 1), end: endOf(5, 31) });
+    await expect.poll(checked).toBe("month");
+    expect(root.querySelector<HTMLElement>(".tabs")?.style.getPropertyValue("--tab-index")).toBe(
+      "2"
+    );
+
+    const compare = button(root, "Compare data");
+    await userEvent.click(compare);
+    expect(collection.compare).toBe("previous");
+    await expect.poll(() => compare.getAttribute("aria-pressed")).toBe("true");
+    await userEvent.click(compare);
+    expect(collection.compare).toBe("");
+
+    await userEvent.click(button(root, "Now"));
+    expect(periodOf(collection).start.getMonth()).toBe(new Date().getMonth());
+  });
+
+  test("arrow keys move between the tabs", async () => {
+    const { root, collection } = await mountSelector({ period_style: "tabs" });
+
+    button(root, "day").focus();
+    await userEvent.keyboard("{ArrowRight}");
+
+    expect(periodOf(collection)).toEqual({ start: date(5, 12), end: endOf(5, 18) });
+    await expect.poll(() => root.activeElement?.textContent?.trim()).toBe("week");
+  });
+
   test("fits a phone-sized card without overflowing", async () => {
     const { card } = await mountSelector(
       {

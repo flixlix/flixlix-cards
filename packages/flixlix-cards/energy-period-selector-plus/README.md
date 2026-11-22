@@ -34,10 +34,11 @@ around it.
 | `title`                | string                    | —                          | Card title, with `card_background: true`                                                                                  |
 | `prev_next_buttons`    | boolean                   | `true`                     | Show the previous and next buttons                                                                                        |
 | `date_picker`          | boolean                   | `false`                    | Show HA's calendar button next to the period in every period (always on for `custom`)                                     |
-| `today_button_type`    | `text` / `icon` / `false` | `text`                     | Today in the period menu; `false` hides it (`text` and `icon` look the same)                                              |
-| `compare_button_type`  | `text` / `icon`           | —                          | Show a compare checkbox in the period menu, to compare with the previous period                                           |
+| `today_button_type`    | `text` / `icon` / `false` | `text`                     | Today in the period menu; `false` hides it. With `tabs`, a text or icon button                                            |
+| `compare_button_type`  | `text` / `icon`           | —                          | Compare with the previous period: a checkbox in the menu, or a toggle button with `tabs`                                  |
 | `compare_button_label` | string                    | HA's "Compare data"        | Label of the compare checkbox                                                                                             |
 | `period_buttons`       | list                      | `[day, week, month, year]` | Period buttons and their order. Add `custom` to pick any range in HA's calendar, or [your own periods](#your-own-periods) |
+| `period_style`         | `menu` / `tabs`           | `menu`                     | `menu`: the period in a pill that opens a menu. `tabs`: the periods side by side, today and compare as buttons            |
 | `custom_period_label`  | string                    | `Custom`                   | Label of the `custom` button                                                                                              |
 | `collection_key`       | string                    | the dashboard's            | Like in HA's energy cards: drive another energy collection. Must start with `energy_`                                     |
 
