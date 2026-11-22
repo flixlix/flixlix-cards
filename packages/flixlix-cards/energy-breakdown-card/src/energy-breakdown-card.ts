@@ -5,6 +5,10 @@ import {
   watchGlobalEnergyPeriodChanges,
   type EnergyPeriodWindow,
 } from "@flixlix-cards/shared/states/utils/energy-period";
+import {
+  energyDashboardDevices,
+  fetchEnergyPreferences,
+} from "@flixlix-cards/shared/utils/energy-dashboard-entities";
 import { getEnergyEntityState } from "@flixlix-cards/shared/utils/get-energy-entity-state";
 import { registerCustomCard } from "@flixlix-cards/shared/utils/register-custom-card";
 import { cardShouldUpdate } from "@flixlix-cards/shared/utils/relevant-change";
@@ -18,7 +22,8 @@ import { LitElement, css, html, nothing, svg, type PropertyValues, type Template
 import { customElement, property, query, state } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 import { styleMap } from "lit/directives/style-map.js";
-import packageJson from "../package.json" with { type: "json" };
+import { version } from "../package.json";
+import { EnergyBreakdownCardEditor } from "./ui-editor/ui-editor";
 import {
   type EnergyBreakdownCardConfig,
   type EnergyBreakdownEntityConfig,
@@ -36,7 +41,7 @@ registerCustomCard({
   type: "energy-breakdown-card",
   name: "Energy Breakdown Card",
   description: "A bar or donut chart showing how your energy use is broken down across sources.",
-  version: packageJson.version,
+  version: version,
 });
 
 const DONUT_SIZE = 220;
@@ -63,12 +68,16 @@ export class EnergyBreakdownCard extends LitElement implements LovelaceCard {
   private _energyRefreshGeneration = 0;
   private _energyRefreshPending = false;
 
-  public static async getConfigElement(): Promise<LovelaceCardEditor> {
-    await import("./ui-editor/ui-editor");
-    return document.createElement("energy-breakdown-card-editor");
+  public static getConfigElement(): LovelaceCardEditor {
+    return new EnergyBreakdownCardEditor();
   }
 
-  public static getStubConfig(hass: HomeAssistant): EnergyBreakdownCardConfig {
+  public static async getStubConfig(hass: HomeAssistant): Promise<EnergyBreakdownCardConfig> {
+    const preferences = await fetchEnergyPreferences(hass);
+    const devices = preferences ? energyDashboardDevices(hass, preferences, "energy") : [];
+    if (devices.length > 0) {
+      return { type: "custom:energy-breakdown-card", chart_type: "bar", entities: devices };
+    }
     const energyEntities = Object.keys(hass?.states ?? {})
       .filter((id) => {
         const stateObj = hass.states[id];

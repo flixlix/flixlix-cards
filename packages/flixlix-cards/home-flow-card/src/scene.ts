@@ -1,88 +1,26 @@
 import { type HouseNode } from "@flixlix-cards/shared/card-state";
 import { type ChargeLevel } from "@flixlix-cards/shared/utils/severity";
-import { mdiFlash, mdiGeneratorStationary, mdiHome } from "@mdi/js";
+import { mdiFan, mdiFlash, mdiGeneratorStationary, mdiHome } from "@mdi/js";
+import { box, face, type Face, type Point, type Shape } from "./geometry";
 
-/** A point in house space: x along the ridge, y towards the viewer's left, z up. */
-export type Point = readonly [x: number, y: number, z: number];
-export type ScreenPoint = readonly [x: number, y: number];
-
-const COS_30 = Math.cos(Math.PI / 6);
-/** Screen units per house unit. */
-const UNIT = 10;
-
-export const project = ([x, y, z]: Point): ScreenPoint => [
-  (x - y) * COS_30 * UNIT,
-  (x + y) * 0.5 * UNIT - z * UNIT,
-];
-
-const round2 = (value: number) => Math.round(value * 100) / 100;
-const pointText = ([x, y]: ScreenPoint) => `${round2(x)} ${round2(y)}`;
-
-/** The point `distance` from `from` towards `to`. */
-const towards = (from: ScreenPoint, to: ScreenPoint, distance: number): ScreenPoint => {
-  const length = Math.hypot(to[0] - from[0], to[1] - from[1]) || 1;
-  return [
-    from[0] + ((to[0] - from[0]) * distance) / length,
-    from[1] + ((to[1] - from[1]) * distance) / length,
-  ];
-};
-
-/**
- * An SVG path through `points` with each bend rounded by `radius`, never more than half of the
- * segments on either side, so short steps stay sensible.
- */
-export const roundedPath = (points: readonly ScreenPoint[], radius: number): string => {
-  const [first, ...rest] = points;
-  if (!first) {
-    return "";
-  }
-  const bends = rest.slice(0, -1).map((corner, index) => {
-    const before = points[index] ?? corner;
-    const after = points[index + 2] ?? corner;
-    const reach = Math.min(
-      radius,
-      Math.hypot(corner[0] - before[0], corner[1] - before[1]) / 2,
-      Math.hypot(after[0] - corner[0], after[1] - corner[1]) / 2
-    );
-    return `L${pointText(towards(corner, before, reach))}Q${pointText(corner)} ${pointText(towards(corner, after, reach))}`;
-  });
-  const last = rest[rest.length - 1];
-  return `M${pointText(first)}${bends.join("")}${last ? `L${pointText(last)}` : ""}`;
-};
-
-/** Maps a face's own 2D coordinates (along the face, down) onto the screen, for icons. */
-export const faceTransform = (face: "front" | "gable", at: Point): string => {
-  const [e, f] = project(at);
-  const along = face === "front" ? COS_30 * UNIT : -COS_30 * UNIT;
-  return `matrix(${along},${0.5 * UNIT},0,${UNIT},${e},${f})`;
-};
-
-/** A filled polygon; `fill` names a colour or gradient of the card's stylesheet. */
-export type Face = { kind: "face"; points: Point[]; fill: string };
-export type Icon = { kind: "icon"; face: "front" | "gable"; at: Point; size: number; path: string };
-export type Shape = Face | Icon;
+export {
+  type Face,
+  faceTransform,
+  type Point,
+  project,
+  roundedPath,
+  type ScreenPoint,
+  type Shape,
+} from "./geometry";
 
 /** A part of the house, one group per node so each can be clicked on its own. */
 export type SceneGroup = { node: HouseNode | "inverter" | "outlet"; shapes: Shape[] };
-
-const face = (fill: string, ...points: Point[]): Face => ({ kind: "face", points, fill });
-
-/** A box from (x, y, z) with width along x, depth along y and height; only its visible faces. */
-const box = (
-  [x, y, z]: Point,
-  [w, d, h]: Point,
-  fills = { top: "box-top", front: "box-front", side: "box-side" }
-): Face[] => [
-  face(fills.side, [x + w, y, z], [x + w, y + d, z], [x + w, y + d, z + h], [x + w, y, z + h]),
-  face(fills.front, [x, y + d, z], [x + w, y + d, z], [x + w, y + d, z + h], [x, y + d, z + h]),
-  face(fills.top, [x, y, z + h], [x + w, y, z + h], [x + w, y + d, z + h], [x, y + d, z + h]),
-];
 
 /** Height of the gable roof above (x, y): ridge along x at y = 4. */
 export const roofHeight = (y: number): number => 8.6 - Math.abs(y - 4) * 0.85;
 
 /** The house is 11 long, 8 deep and 5.2 to the eaves; the front wall faces y = 8. */
-const FRONT = 8;
+export const FRONT = 8;
 const LENGTH = 11;
 const EAVES = 5.2;
 const EAVE_Y = 8.6;
@@ -143,7 +81,7 @@ const outlet = (): Shape[] => [
 
 /** The panel array: 6 columns along the ridge, 2 rows down the front roof. */
 export const PANELS = { x0: 1, x1: 9.8, y0: 4.4, y1: 8.25, columns: 6, rows: 2 } as const;
-const onRoof = (x: number, y: number): Point => [x, y, roofHeight(y) + 0.05];
+export const onRoof = (x: number, y: number): Point => [x, y, roofHeight(y) + 0.05];
 
 const panels = (): Shape[] => {
   const { x0, x1, y0, y1 } = PANELS;
@@ -168,7 +106,11 @@ export const panelSeams = (): [Point, Point][] => {
 const BATTERY_FACE_X = LENGTH + 0.46;
 const SOC_STRIP = { y0: 2.25, y1: 2.47, z0: 0.8, z1: 3 } as const;
 
-const onBattery = (y: number, z: number, offset = 0): Point => [BATTERY_FACE_X + offset, y, z];
+export const onBattery = (y: number, z: number, offset = 0): Point => [
+  BATTERY_FACE_X + offset,
+  y,
+  z,
+];
 
 /** How the battery looks: its icon's path and its charge bar. */
 export type BatteryLook = {
@@ -210,7 +152,7 @@ const socFill = (top: number, level: ChargeLevel | undefined): Face =>
 
 /** Where every wire meets, on the gable wall. */
 export const INVERTER = { y0: 4.5, y1: 5.6, z0: 2.3, z1: 3.4 } as const;
-const INVERTER_Y = (INVERTER.y0 + INVERTER.y1) / 2;
+export const INVERTER_Y = (INVERTER.y0 + INVERTER.y1) / 2;
 const INVERTER_Z = (INVERTER.z0 + INVERTER.z1) / 2;
 
 const inverter = (): Shape[] => [
@@ -228,9 +170,9 @@ const inverter = (): Shape[] => [
 ];
 
 /** A generator on the ground well off the gable, behind the grid cable and clear of it. */
-const GENERATOR = { x0: 16, x1: 17.8, y0: 1.9, y1: 3.1, height: 1.3 } as const;
-const GENERATOR_X = (GENERATOR.x0 + GENERATOR.x1) / 2;
-const GENERATOR_Y = (GENERATOR.y0 + GENERATOR.y1) / 2;
+export const GENERATOR = { x0: 16, x1: 17.8, y0: 1.9, y1: 3.1, height: 1.3 } as const;
+export const GENERATOR_X = (GENERATOR.x0 + GENERATOR.x1) / 2;
+export const GENERATOR_Y = (GENERATOR.y0 + GENERATOR.y1) / 2;
 
 const generator = (): Shape[] => [
   ...box(
@@ -246,8 +188,53 @@ const generator = (): Shape[] => [
   },
 ];
 
-/** What the house shows: panels with solar, the battery and the generator when there are. */
-export type ScenePresence = { solar: boolean; battery?: BatteryLook; generator?: boolean };
+/**
+ * What else is configured that moves things on the house. Only the config decides, never whether
+ * the car is home, so nothing moves as the car comes and goes.
+ */
+export type SceneLayout = {
+  car: boolean;
+  /**
+   * An energy card's generator runs beside the grid rather than in its place, so their labels
+   * show together and the grid's hangs under its cable instead.
+   */
+  generatorBesideGrid?: boolean;
+};
+
+/**
+ * The heat pump hangs on the front wall. With a car configured it sits at the wall's far left,
+ * just above the car's roof; without one it comes down near the ground, further along the wall,
+ * where the car would park.
+ */
+export const HEAT_PUMP = { width: 2.2, depth: 0.65, height: 1.4 } as const;
+export const heatPumpLeft = ({ car }: SceneLayout) => (car ? 0.3 : 2.4);
+export const heatPumpBottom = ({ car }: SceneLayout) => (car ? 1.95 : 0.35);
+const heatPumpRight = (layout: SceneLayout) => heatPumpLeft(layout) + HEAT_PUMP.width;
+export const HEAT_PUMP_FRONT = FRONT + HEAT_PUMP.depth;
+
+const heatPump = (layout: SceneLayout, running: boolean): Shape[] => {
+  const [x0, z0] = [heatPumpLeft(layout), heatPumpBottom(layout)];
+  const { width, height } = HEAT_PUMP;
+  const middle: Point = [x0 + width / 2, HEAT_PUMP_FRONT + 0.01, z0 + height / 2];
+  const radius = 0.52;
+  const grille = Array.from({ length: 28 }, (_, i): Point => {
+    const turn = (i / 28) * Math.PI * 2;
+    return [middle[0] + Math.cos(turn) * radius, middle[1], middle[2] + Math.sin(turn) * radius];
+  });
+  return [
+    ...box([x0, FRONT, z0], [HEAT_PUMP.width, HEAT_PUMP.depth, HEAT_PUMP.height]),
+    face("grille", ...grille),
+    { kind: "icon", face: "front", at: middle, size: radius * 1.7, path: mdiFan, spin: running },
+  ];
+};
+
+/** What the house shows: panels with solar, and each fixture that is configured. */
+export type ScenePresence = {
+  solar: boolean;
+  battery?: BatteryLook;
+  generator?: boolean;
+  heatPump?: { layout: SceneLayout; running: boolean };
+};
 
 /** Walls and roof: drawn before the wires, which run on them. */
 export const houseShell = (): SceneGroup => ({ node: "home", shapes: house() });
@@ -260,20 +247,33 @@ export const fixtures = ({
   solar,
   battery: look,
   generator: hasGenerator,
+  heatPump: pump,
 }: ScenePresence): SceneGroup[] => [
   ...(solar ? [{ node: "solar" as const, shapes: panels() }] : []),
   ...(look ? [{ node: "battery" as const, shapes: battery(look) }] : []),
   ...(hasGenerator ? [{ node: "generator" as const, shapes: generator() }] : []),
+  ...(pump ? [{ node: "heat_pump" as const, shapes: heatPump(pump.layout, pump.running) }] : []),
   { node: "outlet", shapes: outlet() },
   { node: "inverter", shapes: inverter() },
 ];
 
+/** Where the grid's label points at its cable: out past the generator, under its label's place. */
+export const GRID_LABEL_X = 19.5;
+
 /** The grid cable runs on past the card's edge, fading out from GRID_FADE_FROM onwards. */
 const GRID_CABLE_END = 40;
-export const GRID_FADE_FROM: Point = [18, 5.05, 0];
+export const GRID_FADE_FROM: Point = [GRID_LABEL_X + 1.5, 5.05, 0];
 export const GRID_CABLE_START: Point = [LENGTH + 0.07, INVERTER_Y, 0.02];
 const ON_FRONT = FRONT + 0.07;
 const ON_GABLE = LENGTH + 0.07;
+/**
+ * Where the car's wire rises up the front wall, behind the car's nose and just left of the outlet,
+ * so the wall left of it stays free for the heat pump.
+ */
+const CAR_WIRE_X = 7.15;
+/** The car's wire meets the outlet's left side low, the heat pump's above it. */
+const CAR_WIRE_Z = 2.6;
+const HEAT_PUMP_WIRE_Z = 3.1;
 /** The generator's wire runs parallel to the grid cable, just behind it. */
 const GENERATOR_WIRE_Y = INVERTER.y0 + 0.1;
 
@@ -283,7 +283,7 @@ const GENERATOR_WIRE_Y = INVERTER.y0 + 0.1;
  * the grid from below. A wire ends on the surface of a fixture it lies in front of and runs into
  * one it passes behind; `DRAW_ORDER` stacks them to match.
  */
-export const WIRE_ROUTES: Record<HouseNode, Point[]> = {
+export const WIRE_ROUTES: Record<Exclude<HouseNode, "heat_pump">, Point[]> = {
   // from the panels along the roof, parallel to its ridge, then down the gable: one bend
   solar: [
     onRoof(PANELS.x1 - 0.4, INVERTER_Y),
@@ -309,7 +309,37 @@ export const WIRE_ROUTES: Record<HouseNode, Point[]> = {
     [ON_GABLE, GENERATOR_WIRE_Y, 0.02],
     [ON_GABLE, GENERATOR_WIRE_Y, INVERTER_Z],
   ],
+  // the car hangs off the home's outlet: up the front wall from behind the car's nose
+  car: [
+    [CAR_WIRE_X, ON_FRONT, 0.02],
+    [CAR_WIRE_X, ON_FRONT, CAR_WIRE_Z],
+    [OUTLET.x0, ON_FRONT, CAR_WIRE_Z],
+  ],
 };
+
+/**
+ * The heat pump also hangs off the outlet: level along the wall above the car's wire, or without
+ * a car low along the wall and up the car's route, which is free then.
+ */
+const heatPumpRoute = (layout: SceneLayout): Point[] => {
+  if (layout.car) {
+    return [
+      [heatPumpRight(layout), ON_FRONT, HEAT_PUMP_WIRE_Z],
+      [OUTLET.x0, ON_FRONT, HEAT_PUMP_WIRE_Z],
+    ];
+  }
+  const middle = heatPumpBottom(layout) + HEAT_PUMP.height / 2;
+  return [
+    [heatPumpRight(layout), ON_FRONT, middle],
+    [CAR_WIRE_X, ON_FRONT, middle],
+    [CAR_WIRE_X, ON_FRONT, CAR_WIRE_Z],
+    [OUTLET.x0, ON_FRONT, CAR_WIRE_Z],
+  ];
+};
+
+/** A node's wire from the node to the inverter, or to the outlet for the car and the heat pump. */
+export const wireRoute = (node: HouseNode, layout: SceneLayout): Point[] =>
+  node === "heat_pump" ? heatPumpRoute(layout) : WIRE_ROUTES[node];
 
 /**
  * Wires and fixtures from back to front, over the walls and roof. Each wire sits over the fixtures
@@ -322,27 +352,14 @@ export const DRAW_ORDER: readonly ({ wire: HouseNode } | { part: SceneGroup["nod
   { part: "battery" },
   { wire: "battery" }, // from the battery's visible side into the inverter's back
   { part: "inverter" },
+  { wire: "heat_pump" }, // out of the heat pump's side into the outlet's
+  { part: "heat_pump" },
+  { wire: "car" }, // into the outlet's side, from behind the car
   { part: "outlet" },
   { wire: "home" }, // onto the inverter's and the outlet's visible sides
   { wire: "solar" }, // onto the inverter's top, from under the panels
   { part: "solar" },
 ];
-
-/**
- * Where each node's label hangs: the leader line starts at `at` and runs `leader` screen units up
- * (negative) or down, with the label's text running right from it. The anchors keep leaders and
- * labels clear of the wires, the panels and each other.
- */
-/** The grid has no label: its cable runs on to the card's edge and the space above is the generator's. */
-export type LabelledNode = Exclude<HouseNode, "grid">;
-
-export const LABEL_ANCHORS: Record<LabelledNode, { at: Point; leader: number }> = {
-  solar: { at: onRoof(4.2, PANELS.y0), leader: -40 },
-  home: { at: [8.1, FRONT + 0.13, 2.35], leader: 44 },
-  battery: { at: onBattery(1.8, 3.3), leader: -50 },
-  // above the generator, right of the battery and below its label
-  generator: { at: [GENERATOR_X, GENERATOR_Y, GENERATOR.height], leader: -22 },
-};
 
 /** The house's leftmost and rightmost points: its front eave and its gable's back corner. */
 export const HOUSE_SPAN: readonly [Point, Point] = [

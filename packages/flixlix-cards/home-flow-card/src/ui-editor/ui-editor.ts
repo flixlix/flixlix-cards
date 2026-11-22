@@ -8,6 +8,7 @@ import {
   type ValueChangedEvent,
 } from "@flixlix-cards/shared/ui-editor/ha-form";
 import { loadHaForm } from "@flixlix-cards/shared/ui-editor/utils/load-ha-form";
+import { clickableEntitiesWithDefault } from "@flixlix-cards/shared/utils/flow-card-config";
 import { formatNumber } from "@flixlix-cards/shared/utils/format-number";
 import { type ChargeSeverity } from "@flixlix-cards/shared/utils/severity";
 import { isNumberValue, nonEmpty } from "@flixlix-cards/shared/utils/utils";
@@ -19,11 +20,18 @@ import {
   type HomeFlowCardConfig,
   type HomeFlowNodes,
 } from "../types";
-import { advancedSchema, FIELD_DEFAULTS, generalSchema, NODE_SCHEMAS } from "./schema";
+import {
+  conditionsEditorAvailable,
+  conditionsPanelStyles,
+} from "@flixlix-cards/shared/ui-editor/components/conditions-panel";
+import { carConditionKeys, carConditionsAsYaml, carConditionsHtml } from "./car-conditions";
+import { withGenericOptions } from "../generic-options";
+import { fromViewFields, withViewFields } from "./energy-schema";
+import { advancedSchema, fieldDefaults, generalSchema, nodeSchemas } from "./schema";
 
 defineEditorElements();
 
-type Node = keyof HomeFlowNodes | "generator";
+type Node = keyof HomeFlowNodes | "generator" | "car" | "heat_pump";
 type Page = Node | "advanced";
 
 const NODE_PAGES: { page: Node; icon: string }[] = [
@@ -32,6 +40,8 @@ const NODE_PAGES: { page: Node; icon: string }[] = [
   { page: "battery", icon: "mdi:battery-high" },
   { page: "generator", icon: "mdi:engine" },
   { page: "home", icon: "mdi:home" },
+  { page: "car", icon: "mdi:car-electric" },
+  { page: "heat_pump", icon: "mdi:heat-pump" },
 ];
 
 /** The entity ids a node reads: one, or one per direction. */
@@ -76,8 +86,9 @@ export class HomeFlowCardEditor extends LitElement implements LovelaceCardEditor
   @state() private _config?: HomeFlowCardConfig;
   @state() private _page?: Page;
 
+  /** Shows a config's older option names as the ones that read for both modes, and saves those. */
   public setConfig(config: HomeFlowCardConfig): void {
-    this._config = config;
+    this._config = withGenericOptions(config);
   }
 
   connectedCallback(): void {
@@ -91,24 +102,35 @@ export class HomeFlowCardEditor extends LitElement implements LovelaceCardEditor
     }
     if (this._page === "advanced") {
       return html`
-        <subpage-header @go-back=${this._goBack} page="advanced"></subpage-header>
-        ${this._form({ animate_numbers: true, ...this._config }, advancedSchema, this._valueChanged)}
+        ${this._header("advanced")}
+        ${this._form(
+          {
+            animate_numbers: true,
+            ...this._config,
+            clickable_entities: clickableEntitiesWithDefault(this._config.clickable_entities),
+          },
+          advancedSchema(this._config.mode),
+          this._valueChanged
+        )}
       `;
     }
     const node = this._page;
+    if (node === "car") {
+      return this._carPage();
+    }
     if (node) {
       const data =
         node === "battery"
           ? { state_of_charge_severity: DEFAULT_STATE_OF_CHARGE_SEVERITY, ...this._config.battery }
           : this._config[node];
       return html`
-        <subpage-header @go-back=${this._goBack} page=${node}></subpage-header>
-        ${this._form(data, NODE_SCHEMAS[node], (event) => this._nodeChanged(node, event))}
+        ${this._header(node)}
+        ${this._form(data, nodeSchemas(this._config.mode)[node], (event) => this._nodeChanged(node, event.detail.value))}
       `;
     }
     return html`
       <div class="card-config">
-        ${this._form(this._config, generalSchema, this._valueChanged)}
+        ${this._form(withViewFields(this._config), generalSchema(this._config), this._generalChanged)}
         <div class="pages">
           ${NODE_PAGES.map(({ page, icon }) => {
             const nodeConfig = this._config?.[page];
@@ -164,6 +186,13 @@ export class HomeFlowCardEditor extends LitElement implements LovelaceCardEditor
     return [ids.join(" / "), ...readings, charge].filter(Boolean).join(" · ");
   }
 
+  private _header(page: Page) {
+    return html`<flixlix-subpage-header
+      @go-back=${this._goBack}
+      header=${localize(`editor.${page}`)}
+    ></flixlix-subpage-header>`;
+  }
+
   private _goBack = () => {
     this._page = undefined;
   };
@@ -172,40 +201,60 @@ export class HomeFlowCardEditor extends LitElement implements LovelaceCardEditor
     fireEvent(this, "config-changed", { config: event.detail.value });
   };
 
-  private _nodeChanged(node: Node, event: ValueChangedEvent<Record<string, unknown>>) {
+  private _generalChanged = (event: ValueChangedEvent<Record<string, unknown>>): void => {
+    fireEvent(this, "config-changed", { config: fromViewFields(event.detail.value) });
+  };
+
+  /** The car's fields, then its visibility and idle conditions in Home Assistant's own editor. */
+  private _carPage() {
+    const car = this._config?.car;
+    const mode = this._config?.mode;
+    const visual = conditionsEditorAvailable();
+    const { car: fields } = nodeSchemas(mode);
+    const schema = visual ? fields : [...fields, ...carConditionsAsYaml(mode)];
+    const onChange = (value: Record<string, unknown>) => this._nodeChanged("car", value);
+    return html`
+      ${this._header("car")} ${this._form(car, schema, (event) => onChange(event.detail.value))}
+      ${visual ? carConditionsHtml(this.hass, car, carConditionKeys(mode), onChange) : nothing}
+    `;
+  }
+
+  private _nodeChanged(node: Node, nodeConfig: Record<string, unknown>) {
     if (!this._config) {
       return;
     }
-    const value =
-      node === "battery" ? withoutDefaultSeverity(event.detail.value) : event.detail.value;
+    const value = node === "battery" ? withoutDefaultSeverity(nodeConfig) : nodeConfig;
     fireEvent(this, "config-changed", { config: { ...this._config, [node]: value } });
   }
 
   private _computeLabel = (schema: HaFormLabelSchema) => computeEditorLabel(this.hass, schema);
 
   private _computeHelper = (schema: HaFormLabelSchema) => {
-    const fallback = FIELD_DEFAULTS[schema.name];
+    const fallback = fieldDefaults(this._config?.mode)[schema.name];
     return fallback ? `${localize("editor.default")}: ${fallback}` : undefined;
   };
 
-  static styles = css`
-    ha-form {
-      width: 100%;
-    }
+  static styles = [
+    conditionsPanelStyles,
+    css`
+      ha-form {
+        width: 100%;
+      }
 
-    .card-config {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      margin-bottom: 10px;
-    }
+      .card-config {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        margin-bottom: 10px;
+      }
 
-    .pages {
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-    }
-  `;
+      .pages {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+    `,
+  ];
 }
 
 declare global {

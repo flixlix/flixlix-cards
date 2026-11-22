@@ -6,6 +6,11 @@ const greyColorSchema = {
   selector: { color_rgb: {} },
 };
 
+const greyOutCirclesSchema = {
+  name: "grey_out_circles",
+  selector: { boolean: {} },
+};
+
 const transparencySchema = {
   name: "transparency",
   selector: {
@@ -22,13 +27,18 @@ const gridCustomSchema = {
   name: "",
   type: "grid",
   column_min_width: "200px",
-  schema: [transparencySchema, greyColorSchema],
+  schema: [transparencySchema, greyColorSchema, greyOutCirclesSchema],
 };
 
 const displayZeroLinesOptionsSchema = (mode: string) => {
   switch (mode) {
     case "grey_out":
-      return greyColorSchema;
+      return {
+        name: "",
+        type: "grid",
+        column_min_width: "200px",
+        schema: [greyColorSchema, greyOutCirclesSchema],
+      };
     case "transparency":
       return transparencySchema;
     case "custom":

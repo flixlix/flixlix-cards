@@ -12,18 +12,20 @@ interface RegisterCardParams {
   description: string;
   version: string;
 }
+
+const DOCS_URL = "https://cards.flixlix.com";
+
 export function registerCustomCard(params: RegisterCardParams) {
-  const readmeURL = `https://github.com/flixlix/${params.type}`;
   window.customCards ??= [];
   window.customCards.push({
     ...params,
     preview: true,
-    documentationURL: readmeURL,
+    documentationURL: `${DOCS_URL}/${params.type}/configuration`,
   });
 
   setupLogger({
     name: params.name,
     version: params.version,
-    readme: readmeURL,
+    readme: `${DOCS_URL}/${params.type}`,
   });
 }

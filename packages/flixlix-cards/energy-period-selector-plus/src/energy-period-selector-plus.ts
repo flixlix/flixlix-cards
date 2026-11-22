@@ -4,11 +4,15 @@ import {
   watchGlobalEnergyPeriodChanges,
 } from "@flixlix-cards/shared/states/utils/energy-period";
 import {
+  CALENDAR_PERIODS,
   type CalendarPeriod,
   type DateRange,
   detectPeriod,
   firstWeekday,
   HA_PERIOD_PRESET,
+  type Period,
+  type PeriodContext,
+  periodDefinitionError,
   periodRange,
   type SelectedPeriod,
   shiftPeriod,
@@ -29,24 +33,45 @@ import {
 } from "custom-card-helpers";
 import { css, html, LitElement, nothing, type PropertyValues, svg } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import packageJson from "../package.json" with { type: "json" };
-import { type EnergyPeriodSelectorPlusConfig } from "./types";
+import { version } from "../package.json";
+import { EnergyPeriodSelectorPlusEditor } from "./ui-editor/ui-editor";
+import { type EnergyPeriodSelectorPlusConfig, type PeriodButton } from "./types";
 
 registerCustomCard({
   type: "energy-period-selector-plus",
   name: "Energy Period Selector Plus",
   description: "Pick the period shown by the energy cards on this dashboard.",
-  version: packageJson.version,
+  version: version,
 });
 
+/** Dropdown item values of the period buttons: their position in `period_buttons`. */
+const PERIOD_ITEM = "period-";
 const PERIODS: readonly SelectedPeriod[] = ["day", "week", "month", "year", "custom"];
-const DEFAULT_PERIOD_BUTTONS: SelectedPeriod[] = ["day", "week", "month", "year"];
+const DEFAULT_PERIOD_BUTTONS: PeriodButton[] = ["day", "week", "month", "year"];
 // ponytail: fixed grace period for HA's lazily loaded energy cards to create their collection;
 // on a slow device a hidden date picker may be added needlessly, which is harmless.
 const COLLECTION_GRACE_MS = 1500;
 
+/** Arrow keys move along the tabs, wrapping around; Home and End jump to the ends. */
+const TAB_STEPS: Record<string, (index: number, count: number) => number> = {
+  ArrowLeft: (index, count) => (index - 1 + count) % count,
+  ArrowUp: (index, count) => (index - 1 + count) % count,
+  ArrowRight: (index, count) => (index + 1) % count,
+  ArrowDown: (index, count) => (index + 1) % count,
+  Home: () => 0,
+  End: (_index, count) => count - 1,
+};
+
 const isSelectedPeriod = (value: unknown): value is SelectedPeriod =>
   PERIODS.some((period) => period === value);
+
+/** Why a `period_buttons` entry is invalid, or undefined if it is a valid one. */
+const periodButtonError = (value: unknown) =>
+  typeof value === "string"
+    ? isSelectedPeriod(value)
+      ? undefined
+      : `must be one of ${PERIODS.join(", ")}`
+    : periodDefinitionError(value);
 
 const icon = (path: string) =>
   html`<svg viewBox="0 0 24 24" aria-hidden="true">${svg`<path d=${path}></path>`}</svg>`;
@@ -86,7 +111,7 @@ export class EnergyPeriodSelectorPlus extends LitElement implements LovelaceCard
   @property({ attribute: false }) public hass!: HomeAssistant;
   @state() private _config?: EnergyPeriodSelectorPlusConfig;
   @state() private _range?: DateRange;
-  @state() private _period?: SelectedPeriod;
+  @state() private _period?: Period | "custom";
   @state() private _compare = false;
   /** HA's own date selection card, kept hidden, so HA creates the energy collection. */
   @state() private _collectionCreator?: HTMLElement;
@@ -95,9 +120,8 @@ export class EnergyPeriodSelectorPlus extends LitElement implements LovelaceCard
   private _datePickerRequested = false;
   private _creatorTimer?: ReturnType<typeof setTimeout>;
 
-  public static async getConfigElement(): Promise<LovelaceCardEditor> {
-    await import("./ui-editor/ui-editor");
-    return document.createElement("energy-period-selector-plus-editor");
+  public static getConfigElement(): LovelaceCardEditor {
+    return new EnergyPeriodSelectorPlusEditor();
   }
 
   public static getStubConfig(): EnergyPeriodSelectorPlusConfig {
@@ -115,14 +139,25 @@ export class EnergyPeriodSelectorPlus extends LitElement implements LovelaceCard
     if (config.collection_key && !config.collection_key.startsWith("energy_")) {
       throw new Error("`collection_key` must start with `energy_`, like in HA's energy cards");
     }
-    if (
-      config.period_buttons !== undefined &&
-      !(Array.isArray(config.period_buttons) && config.period_buttons.every(isSelectedPeriod))
-    ) {
-      throw new Error(`\`period_buttons\` must be a list of: ${PERIODS.join(", ")}`);
+    const buttons: unknown = config.period_buttons;
+    if (buttons !== undefined) {
+      if (!Array.isArray(buttons)) {
+        throw new Error("`period_buttons` must be a list");
+      }
+      buttons.forEach((button, index) => {
+        const error = periodButtonError(button);
+        if (error) {
+          throw new Error(`\`period_buttons\` entry ${index + 1} ${error}`);
+        }
+      });
     }
     const keyChanged = config.collection_key !== this._config?.collection_key;
     this._config = config;
+    // Edited periods are new objects; find the selected one among them again.
+    if (this._range && this._period !== "custom") {
+      this._period = undefined;
+      this._period = this._detectPeriod(this._range);
+    }
     if (keyChanged && this._unwatch) {
       this._watch();
     }
@@ -162,8 +197,22 @@ export class EnergyPeriodSelectorPlus extends LitElement implements LovelaceCard
     return this._period === "custom" || this._config?.date_picker === true;
   }
 
-  private get _weekStartsOn() {
-    return firstWeekday(this.hass.locale);
+  private get _periodContext(): PeriodContext {
+    return { weekStartsOn: firstWeekday(this.hass.locale), now: new Date() };
+  }
+
+  private get _periodButtons() {
+    return this._config?.period_buttons ?? DEFAULT_PERIOD_BUTTONS;
+  }
+
+  /**
+   * The selected period if it still covers the range, else the first button that does, so a
+   * period that matches another one (a billing cycle starting on the 1st, a month) stays selected.
+   */
+  private _detectPeriod(range: DateRange) {
+    const shown = this._periodButtons.filter((button): button is Period => button !== "custom");
+    const current = this._period && this._period !== "custom" ? [this._period] : [];
+    return detectPeriod(range, this._periodContext, [...current, ...shown, ...CALENDAR_PERIODS]);
   }
 
   private get _collection() {
@@ -194,7 +243,7 @@ export class EnergyPeriodSelectorPlus extends LitElement implements LovelaceCard
     this._range = range;
     this._compare = Boolean(collection.compare);
     if (this._period !== "custom") {
-      this._period = detectPeriod(range, this._weekStartsOn);
+      this._period = this._detectPeriod(range);
     }
   }
 
@@ -239,15 +288,18 @@ export class EnergyPeriodSelectorPlus extends LitElement implements LovelaceCard
     void collection.refresh();
   }
 
-  private _selectPeriod(period: SelectedPeriod) {
+  private _selectPeriod(period: PeriodButton) {
     this._period = period;
     if (period === "custom" || !this._range) {
       return;
     }
-    const now = new Date();
+    const context = this._periodContext;
+    const { now } = context;
     const showsNow = this._range.start <= now && now <= this._range.end;
-    this._setRange(periodRange(period, showsNow ? now : this._range.start, this._weekStartsOn));
-    this._rememberPeriod(period);
+    this._setRange(periodRange(period, showsNow ? now : this._range.start, context));
+    if (typeof period === "string") {
+      this._rememberPeriod(period);
+    }
   }
 
   /** HA opens the dashboard on the period picked last, like after picking a preset in HA. */
@@ -264,13 +316,14 @@ export class EnergyPeriodSelectorPlus extends LitElement implements LovelaceCard
 
   private _shift(step: 1 | -1) {
     if (this._range && this._period) {
-      this._setRange(shiftPeriod(this._period, this._range, step, this._weekStartsOn));
+      this._setRange(shiftPeriod(this._period, this._range, step, this._periodContext));
     }
   }
 
   private _pickToday = () => {
     const period = this._period === "custom" || !this._period ? "day" : this._period;
-    this._setRange(periodRange(period, new Date(), this._weekStartsOn));
+    const context = this._periodContext;
+    this._setRange(periodRange(period, context.now, context));
   };
 
   private _toggleCompare = () => {
@@ -289,25 +342,54 @@ export class EnergyPeriodSelectorPlus extends LitElement implements LovelaceCard
     }
     const range = { start: startOfDay(startDate), end: endOfDay(endDate) };
     if (this._period !== "custom") {
-      this._period = detectPeriod(range, this._weekStartsOn);
+      this._period = this._detectPeriod(range);
     }
     this._setRange(range);
   };
 
-  private _openDatePicker = (event: Event) => {
-    // The picker closes on clicks outside it, which this click would otherwise count as.
-    event.stopPropagation();
+  private _openDatePicker() {
     const picker = this.renderRoot.querySelector(DATE_PICKER);
     if (hasOpen(picker)) {
       picker.open();
     }
+  }
+
+  /** HA's dropdown reports the picked item; its `value` says what it stands for. */
+  private _menuPicked = (event: Event) => {
+    const detail: unknown = "detail" in event ? event.detail : undefined;
+    const item =
+      typeof detail === "object" && detail !== null && "item" in detail ? detail.item : undefined;
+    const value = item instanceof Element ? item.getAttribute("value") : null;
+    if (value === "today") {
+      this._pickToday();
+    } else if (value === "compare") {
+      this._toggleCompare();
+    } else if (value?.startsWith(PERIOD_ITEM)) {
+      const period = this._periodButtons[Number(value.slice(PERIOD_ITEM.length))];
+      if (period) {
+        this._pick(period);
+      }
+    }
   };
+
+  private _pick(period: PeriodButton) {
+    this._selectPeriod(period);
+    if (period === "custom") {
+      // Opened after this click is done: HA's calendar closes on clicks outside it.
+      void this.updateComplete
+        .then(() => customElements.whenDefined(DATE_PICKER))
+        .then(() => setTimeout(() => this._openDatePicker()));
+    }
+  }
 
   private _localize(key: string, fallback: string) {
     return nonEmpty(this.hass.localize(key)) ?? fallback;
   }
 
-  private _periodLabel(period: SelectedPeriod) {
+  private _periodLabel(period: PeriodButton) {
+    if (typeof period === "object") {
+      return period.label;
+    }
     return period === "custom"
       ? (this._config?.custom_period_label ?? "Custom")
       : this._localize(`ui.components.calendar.event.rrule.${period}`, period);
@@ -316,7 +398,12 @@ export class EnergyPeriodSelectorPlus extends LitElement implements LovelaceCard
   private _rangeLabel({ start, end }: DateRange) {
     const { language } = this.hass.locale;
     if (this._period === "day") {
-      return start.toLocaleDateString(language, { year: "numeric", month: "long", day: "numeric" });
+      // Short month, as in ranges: the label shares one row with the period and the arrows.
+      return start.toLocaleDateString(language, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
     }
     if (this._period === "month") {
       return start.toLocaleDateString(language, { year: "numeric", month: "long" });
@@ -351,103 +438,55 @@ export class EnergyPeriodSelectorPlus extends LitElement implements LovelaceCard
         ${this._localize("ui.panel.lovelace.cards.energy.loading", "Loading…")}
       </div>`;
     }
-    return html`<div class="selector">
-      <div class="range">${this._renderRange(range)}</div>
-      <div class="actions">${this._renderPeriodButtons()} ${this._renderCompareButton()}</div>
+    const navigation = this._config?.prev_next_buttons !== false;
+    const tabs = this._config?.period_style === "tabs";
+    // As in HA's own energy period selector: the date, then previous and next together.
+    const row = html`<div class="selector">
+      <span class="label">${this._rangeLabel(range)}</span>
+      ${navigation ? this._renderNavButton(-1) : nothing}
+      ${navigation ? this._renderNavButton(1) : nothing}
+      ${this._datePickerShown ? this._renderDatePicker(range) : nothing}
+      ${tabs ? html`${this._renderTodayButton()} ${this._renderCompareButton()}` : this._renderMenu()}
     </div>`;
+    return tabs ? html`${row} ${this._renderTabs()}` : row;
   }
 
-  private _renderRange(range: DateRange) {
-    return html`${
-      this._datePickerShown
-        ? this._renderDatePicker(range)
-        : html`<span class="label">${this._rangeLabel(range)}</span>`
-    }
-    ${this._config?.prev_next_buttons === false ? nothing : this._renderPrevNext()}
-    ${this._period === "custom" ? nothing : this._renderTodayButton()}`;
+  private get _todayLabel() {
+    return this._localize("ui.panel.lovelace.components.energy_period_selector.now", "Today");
+  }
+
+  private get _compareLabel() {
+    return (
+      this._config?.compare_button_label ??
+      this._localize("ui.panel.lovelace.components.energy_period_selector.compare", "Compare")
+    );
   }
 
   private _renderTodayButton() {
     const type = this._config?.today_button_type;
-    if (type === false) {
+    if (type === false || this._period === "custom") {
       return nothing;
     }
-    const today = this._localize(
-      "ui.panel.lovelace.components.energy_period_selector.now",
-      "Today"
-    );
+    const label = this._todayLabel;
     return type === "icon"
       ? html`<button
           class="icon-button"
-          title=${today}
-          aria-label=${today}
+          title=${label}
+          aria-label=${label}
           @click=${this._pickToday}
         >
           ${icon(mdiCalendarTodayOutline)}
         </button>`
-      : html`<button class="text-button" @click=${this._pickToday}>${today}</button>`;
+      : html`<button class="pill" @click=${this._pickToday}>${label}</button>`;
   }
 
-  private _renderPrevNext() {
-    const previous = this._localize(
-      "ui.panel.lovelace.components.energy_period_selector.previous",
-      "Previous"
-    );
-    const next = this._localize("ui.panel.lovelace.components.energy_period_selector.next", "Next");
-    return html`<button
-        class="icon-button nav"
-        title=${previous}
-        aria-label=${previous}
-        @click=${() => this._shift(-1)}
-      >
-        ${icon(mdiChevronLeft)}
-      </button>
-      <button
-        class="icon-button nav"
-        title=${next}
-        aria-label=${next}
-        @click=${() => this._shift(1)}
-      >
-        ${icon(mdiChevronRight)}
-      </button>`;
-  }
-
-  private _renderDatePicker(range: DateRange) {
-    return html`<button class="label range-button" @click=${this._openDatePicker}>
-        ${this._rangeLabel(range)}
-      </button>
-      <ha-date-range-picker
-        minimal
-        .hass=${this.hass}
-        .startDate=${range.start}
-        .endDate=${range.end}
-        @value-changed=${this._dateRangeChanged}
-      ></ha-date-range-picker>`;
-  }
-
-  private _renderPeriodButtons() {
-    const periods = this._config?.period_buttons ?? DEFAULT_PERIOD_BUTTONS;
-    return html`<div class="periods" role="group">
-      ${periods.map(
-        (period) =>
-          html`<button
-            aria-pressed=${this._period === period ? "true" : "false"}
-            @click=${() => this._selectPeriod(period)}
-          >
-            ${this._periodLabel(period)}
-          </button>`
-      )}
-    </div>`;
-  }
-
+  /** A toggle: pressed while the previous period is compared. */
   private _renderCompareButton() {
     const type = this._config?.compare_button_type;
     if (type !== "icon" && type !== "text") {
       return nothing;
     }
-    const label =
-      this._config?.compare_button_label ??
-      this._localize("ui.panel.lovelace.components.energy_period_selector.compare", "Compare");
+    const label = this._compareLabel;
     const pressed = this._compare ? "true" : "false";
     return type === "icon"
       ? html`<button
@@ -459,18 +498,132 @@ export class EnergyPeriodSelectorPlus extends LitElement implements LovelaceCard
         >
           ${icon(this._compare ? mdiCompareRemove : mdiCompare)}
         </button>`
-      : html`<button
-          class="text-button compare"
-          aria-pressed=${pressed}
-          @click=${this._toggleCompare}
-        >
+      : html`<button class="pill compare" aria-pressed=${pressed} @click=${this._toggleCompare}>
           ${label}
         </button>`;
+  }
+
+  /**
+   * The periods side by side, like Home Flow Card's view picker: an indicator behind the selected
+   * one, a copy of the labels in the selected colors, clipped to the selected tab, slides along.
+   */
+  private _renderTabs() {
+    const periods = this._periodButtons;
+    const index = periods.findIndex((period) => period === this._period);
+    const pick = (period: PeriodButton | undefined) => {
+      if (period !== undefined) {
+        this._pick(period);
+      }
+    };
+    const onKeydown = (event: KeyboardEvent) => {
+      const step = TAB_STEPS[event.key];
+      const next = step ? periods[step(Math.max(index, 0), periods.length)] : undefined;
+      if (next !== undefined) {
+        event.preventDefault();
+        pick(next);
+        void this.updateComplete.then(() =>
+          this.renderRoot.querySelector<HTMLElement>('.tabs [aria-checked="true"]')?.focus()
+        );
+      }
+    };
+    return html`<div
+      class="tabs"
+      role="radiogroup"
+      style=${`--tab-count: ${String(periods.length)}; --tab-index: ${String(Math.max(index, 0))}`}
+      @keydown=${onKeydown}
+    >
+      ${periods.map(
+        (period, position) =>
+          html`<button
+            type="button"
+            role="radio"
+            class=${typeof period === "object" ? "defined" : "built-in"}
+            aria-checked=${position === index ? "true" : "false"}
+            tabindex=${position === Math.max(index, 0) ? 0 : -1}
+            @click=${() => pick(period)}
+          >
+            ${this._periodLabel(period)}
+          </button>`
+      )}
+      <div class="tab-indicator" aria-hidden="true" ?hidden=${index < 0}>
+        ${periods.map(
+          (period) =>
+            html`<span class=${typeof period === "object" ? "defined" : "built-in"}
+              >${this._periodLabel(period)}</span
+            >`
+        )}
+      </div>
+    </div>`;
+  }
+
+  private _renderNavButton(step: 1 | -1) {
+    const label =
+      step === -1
+        ? this._localize("ui.panel.lovelace.components.energy_period_selector.previous", "Previous")
+        : this._localize("ui.panel.lovelace.components.energy_period_selector.next", "Next");
+    return html`<button
+      class="icon-button nav"
+      title=${label}
+      aria-label=${label}
+      @click=${() => this._shift(step)}
+    >
+      ${icon(step === -1 ? mdiChevronLeft : mdiChevronRight)}
+    </button>`;
+  }
+
+  /** HA's own calendar; its icon button opens it, as do the custom period and `date_picker`. */
+  private _renderDatePicker(range: DateRange) {
+    return html`<ha-date-range-picker
+      minimal
+      .hass=${this.hass}
+      .startDate=${range.start}
+      .endDate=${range.end}
+      @value-changed=${this._dateRangeChanged}
+    ></ha-date-range-picker>`;
+  }
+
+  /** The period, as in Home Flow Card's view picker: a pill that opens HA's own dropdown. */
+  private _renderMenu() {
+    const type = this._config?.compare_button_type;
+    const compare = type === "icon" || type === "text";
+    const today = this._config?.today_button_type !== false;
+    return html`<ha-dropdown placement="bottom-end" @wa-select=${this._menuPicked}>
+      <button slot="trigger" type="button" class="period-trigger">
+        <span>${this._periodLabel(this._period ?? "custom")}</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5" /></svg>
+      </button>
+      ${this._periodButtons.map(
+        (period, index) =>
+          html`<ha-dropdown-item
+            class=${typeof period === "object" ? "defined" : "built-in"}
+            value=${`${PERIOD_ITEM}${String(index)}`}
+            ?selected=${this._period === period}
+          >
+            ${this._periodLabel(period)}
+          </ha-dropdown-item>`
+      )}
+      ${today || compare ? html`<wa-divider></wa-divider>` : nothing}
+      ${today ? html`<ha-dropdown-item value="today">${this._todayLabel}</ha-dropdown-item>` : nothing}
+      ${
+        compare
+          ? html`<ha-dropdown-item type="checkbox" value="compare" ?checked=${this._compare}>
+              ${this._compareLabel}
+            </ha-dropdown-item>`
+          : nothing
+      }
+    </ha-dropdown>`;
   }
 
   static styles = css`
     :host {
       display: block;
+      /* Home Flow Card's view picker track: the text color, faint, on the card. */
+      --eps-track: color-mix(
+        in srgb,
+        var(--primary-text-color, #212121) 7%,
+        var(--card-background-color, #fff)
+      );
+      --eps-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
     }
     .card-content {
       padding: 16px;
@@ -478,58 +631,48 @@ export class EnergyPeriodSelectorPlus extends LitElement implements LovelaceCard
     .card-content[data-header] {
       padding-top: 0;
     }
-    .selector {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px 16px;
-    }
-    .range,
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 4px 8px;
-      min-width: 0;
-    }
-    .label {
-      font-size: 20px;
-      margin-inline-end: 4px;
-    }
     .waiting {
       color: var(--secondary-text-color);
     }
-    button {
-      font: inherit;
-      font-size: 14px;
-      font-weight: 500;
-      color: var(--primary-text-color);
-      background: none;
-      border: 1px solid var(--divider-color);
-      border-radius: 18px;
-      padding: 0 12px;
-      height: 36px;
-      cursor: pointer;
+    .selector {
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
-    button:hover {
-      background: var(--secondary-background-color);
-    }
-    button:focus-visible {
-      outline: 2px solid var(--primary-color);
-      outline-offset: 2px;
-    }
-    button[aria-pressed="true"] {
-      color: var(--text-primary-color, #fff);
-      background: var(--primary-color);
-      border-color: var(--primary-color);
+    .label {
+      flex: 1;
+      min-width: 0;
+      font-size: 18px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .icon-button {
       display: inline-grid;
       place-items: center;
+      flex: none;
       width: 36px;
+      height: 36px;
       padding: 0;
-      border-color: transparent;
+      border: 0;
+      border-radius: 50%;
+      background: none;
+      color: var(--primary-text-color);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition:
+        background-color 150ms ease-out,
+        transform 100ms ease-out;
+    }
+    .icon-button:active {
+      transform: scale(0.94);
+    }
+    .icon-button:focus-visible,
+    .pill:focus-visible,
+    .period-trigger:focus-visible,
+    .tabs:has(:focus-visible) {
+      outline: 2px solid var(--primary-color);
+      outline-offset: 2px;
     }
     .icon-button svg {
       width: 22px;
@@ -539,36 +682,171 @@ export class EnergyPeriodSelectorPlus extends LitElement implements LovelaceCard
     .nav svg:dir(rtl) {
       transform: scaleX(-1);
     }
-    .periods {
-      display: inline-flex;
-      flex-wrap: wrap;
+    ha-dropdown {
+      flex: none;
+      margin-inline-start: 4px;
     }
-    .periods button {
-      border-radius: 0;
-      margin-inline-start: -1px;
+    .period-trigger {
+      display: flex;
+      align-items: center;
+      gap: 0.35em;
+      margin: 0;
+      border: 0;
+      border-radius: 999px;
+      padding: 0.6em 0.75em 0.6em 1em;
+      background: var(--eps-track);
+      font: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 1;
+      white-space: nowrap;
+      color: var(--primary-text-color);
+      cursor: pointer;
+      text-transform: capitalize;
+      -webkit-tap-highlight-color: transparent;
+      transition:
+        background-color 150ms ease-out,
+        transform 160ms var(--eps-ease-out);
+    }
+    .period-trigger:active {
+      transform: scale(0.97);
+    }
+    .period-trigger svg {
+      width: 1.2em;
+      height: 1.2em;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: transform 200ms var(--eps-ease-out);
+    }
+    .period-trigger[aria-expanded="true"] {
+      background: color-mix(in srgb, var(--eps-track), var(--primary-text-color) 8%);
+    }
+    .period-trigger[aria-expanded="true"] svg {
+      transform: rotate(180deg);
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .icon-button:hover {
+        background: var(--eps-track);
+      }
+      .period-trigger:hover {
+        background: color-mix(in srgb, var(--eps-track), var(--primary-text-color) 8%);
+      }
+    }
+    .pill {
+      flex: none;
+      margin: 0;
+      border: 0;
+      border-radius: 999px;
+      padding: 0.6em 1em;
+      background: var(--eps-track);
+      font: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 1;
+      white-space: nowrap;
+      color: var(--primary-text-color);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition:
+        background-color 150ms ease-out,
+        color 150ms ease-out,
+        transform 160ms var(--eps-ease-out);
+    }
+    .pill:active {
+      transform: scale(0.97);
+    }
+    .compare[aria-pressed="true"] {
+      background: var(--primary-color);
+      color: var(--text-primary-color, #fff);
+    }
+    .tabs {
+      --tab-inset: 2px;
+      position: relative;
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: 1fr;
+      margin-top: 8px;
+      padding: var(--tab-inset);
+      border-radius: 999px;
+      background: var(--eps-track);
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 1;
+    }
+    .tabs button,
+    .tab-indicator span {
+      padding: 0.6em 0.75em;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .tabs button {
+      margin: 0;
+      border: 0;
+      border-radius: 999px;
+      background: none;
+      font: inherit;
+      color: var(--secondary-text-color);
+      cursor: pointer;
+      outline: none;
+      -webkit-tap-highlight-color: transparent;
+      transition: color 150ms ease;
+    }
+    .tab-indicator {
+      position: absolute;
+      inset: var(--tab-inset);
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: 1fr;
+      border-radius: 999px;
+      background: var(--card-background-color, #fff);
+      box-shadow: 0 1px 2px rgb(0 0 0 / 0.12);
+      color: var(--primary-text-color);
+      pointer-events: none;
+      clip-path: inset(
+        0 calc((var(--tab-count) - var(--tab-index) - 1) / var(--tab-count) * 100%) 0
+          calc(var(--tab-index) / var(--tab-count) * 100%) round 999px
+      );
+      transition: clip-path 260ms cubic-bezier(0.77, 0, 0.175, 1);
+    }
+    .tab-indicator[hidden] {
+      display: none;
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .pill:hover {
+        background: color-mix(in srgb, var(--eps-track), var(--primary-text-color) 8%);
+      }
+      .compare[aria-pressed="true"]:hover {
+        background: color-mix(in srgb, var(--primary-color), #000 10%);
+      }
+      .tabs button:hover {
+        color: var(--primary-text-color);
+      }
+    }
+    /* HA's period names are lowercase; labels the user wrote are shown as written. */
+    .tabs .built-in,
+    ha-dropdown-item.built-in {
       text-transform: capitalize;
     }
-    .periods button:first-child {
-      border-start-start-radius: 18px;
-      border-end-start-radius: 18px;
-      margin-inline-start: 0;
-    }
-    .periods button:last-child {
-      border-start-end-radius: 18px;
-      border-end-end-radius: 18px;
-    }
     ha-date-range-picker {
+      flex: none;
       /* HA's icon buttons are 48px; keep the row as tall as the card's own 36px buttons. */
       --ha-icon-button-size: 36px;
       --mdc-icon-button-size: 36px;
       --mdc-icon-size: 22px;
     }
-    .range-button {
-      font-size: 20px;
-      font-weight: 400;
-      border-color: transparent;
-      padding: 0 8px;
-      margin-inline-start: -8px;
+    @media (prefers-reduced-motion: reduce) {
+      .period-trigger,
+      .period-trigger svg,
+      .icon-button,
+      .pill,
+      .tab-indicator {
+        transition: none;
+      }
     }
   `;
 }

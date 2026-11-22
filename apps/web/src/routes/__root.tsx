@@ -19,7 +19,12 @@ export const Route = createRootRoute({
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "flixlix-cards",
+        title: "Solar, battery and grid power flow cards for Home Assistant | flixlix-cards",
+      },
+      {
+        name: "description",
+        content:
+          "Free, open-source Lovelace cards that show live solar, battery and grid power flowing through your home: Power Flow Card Plus, Home Flow Card, Energy Flow Card Plus and more.",
       },
     ],
     links: [
@@ -28,6 +33,7 @@ export const Route = createRootRoute({
         type: "image/svg+xml",
         href: "/favicon.svg",
       },
+      { rel: "manifest", href: "/manifest.json" },
       {
         rel: "stylesheet",
         href: globalsCss,
@@ -46,24 +52,26 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <script defer src="https://assets.onedollarstats.com/stonks.js"></script>
         <HeadContent />
       </head>
-      <body className="font-sans antialiased wrap-anywhere selection:bg-orange-300/50">
+      <body className="font-sans antialiased wrap-anywhere selection:bg-solar/30">
         <TooltipProvider>
           {/* <SidebarProvider> */}
           {/* <AppSidebar /> */}
           {/* <SidebarTrigger /> */}
           {children}
           <Analytics />
-          <TanStackDevtools
-            config={{
-              position: "bottom-right",
-            }}
-            plugins={[
-              {
-                name: "Tanstack Router",
-                render: <TanStackRouterDevtoolsPanel />,
-              },
-            ]}
-          />
+          {import.meta.env.DEV ? (
+            <TanStackDevtools
+              config={{
+                position: "bottom-right",
+              }}
+              plugins={[
+                {
+                  name: "Tanstack Router",
+                  render: <TanStackRouterDevtoolsPanel />,
+                },
+              ]}
+            />
+          ) : null}
           <Scripts />
           {/* </SidebarProvider> */}
         </TooltipProvider>

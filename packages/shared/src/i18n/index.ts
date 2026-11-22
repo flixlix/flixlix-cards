@@ -1,22 +1,22 @@
 import { nonEmpty } from "@flixlix-cards/shared/utils/utils";
-import * as ca from "./languages/ca.json";
-import * as cs from "./languages/cs.json";
-import * as de from "./languages/de.json";
-import * as dk from "./languages/dk.json";
-import * as en from "./languages/en.json";
-import * as es from "./languages/es.json";
-import * as fi from "./languages/fi.json";
-import * as fr from "./languages/fr.json";
-import * as hi from "./languages/hi-IN.json";
-import * as it from "./languages/it.json";
-import * as nl from "./languages/nl.json";
-import * as pl from "./languages/pl.json";
-import * as ptBR from "./languages/pt-BR.json";
-import * as pt from "./languages/pt-PT.json";
-import * as ru from "./languages/ru.json";
-import * as sk from "./languages/sk.json";
-import * as sv from "./languages/sv.json";
-import * as ua from "./languages/ua.json";
+import ca from "./languages/ca.json";
+import cs from "./languages/cs.json";
+import de from "./languages/de.json";
+import dk from "./languages/dk.json";
+import en from "./languages/en.json";
+import es from "./languages/es.json";
+import fi from "./languages/fi.json";
+import fr from "./languages/fr.json";
+import hi from "./languages/hi-IN.json";
+import it from "./languages/it.json";
+import nl from "./languages/nl.json";
+import pl from "./languages/pl.json";
+import ptBR from "./languages/pt-BR.json";
+import pt from "./languages/pt-PT.json";
+import ru from "./languages/ru.json";
+import sk from "./languages/sk.json";
+import sv from "./languages/sv.json";
+import ua from "./languages/ua.json";
 
 const languages: Record<string, unknown> = {
   ca,

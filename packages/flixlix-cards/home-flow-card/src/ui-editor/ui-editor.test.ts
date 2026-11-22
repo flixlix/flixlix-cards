@@ -33,6 +33,20 @@ const topLevel = (schema: unknown): string[] =>
       })
     : [];
 
+const selectorFields = [
+  "views",
+  "default_view",
+  "consumption",
+  "production",
+  "solar",
+  "consumption",
+  "production",
+  "home",
+  "generator",
+  "car",
+  "heat_pump",
+];
+
 const mountEditor = async (config: Record<string, unknown> = {}, states: StateFixtures = {}) => {
   const editor = new HomeFlowCardEditor();
   editor.hass = fakeHass({ states });
@@ -71,16 +85,97 @@ const mountEditor = async (config: Record<string, unknown> = {}, states: StateFi
 };
 
 describe("editor", () => {
+  test("in energy mode, the main page also asks which date picker to follow", async () => {
+    const { fields, helper } = await mountEditor({ mode: "energy" });
+
+    expect(fields()).toEqual(["title", "mode", "collection_key"]);
+    expect(helper("mode")).toBe("Default: Power");
+  });
+
+  test("the selector's sensors sit under energy_entities", async () => {
+    const { schema } = await mountEditor();
+    const fields = schema();
+    const selector = Array.isArray(fields) ? fields.at(-1) : undefined;
+
+    expect(topLevel(isGroup(selector) ? selector.schema : [])).toEqual([
+      "views",
+      "default_view",
+      "energy_entities",
+    ]);
+  });
+
+  test("switching to energy mode drops the selector's sensors and views", async () => {
+    const { change, changes } = await mountEditor({
+      energy_entities: { solar: "sensor.solar_energy" },
+      views: ["today", "week"],
+    });
+
+    change({
+      type: "custom:home-flow-card",
+      mode: "energy",
+      energy_entities: { solar: "sensor.solar_energy" },
+      views: ["today", "week"],
+    });
+
+    expect(changes).toEqual([{ type: "custom:home-flow-card", mode: "energy" }]);
+  });
+
+  test("unticking the last view keeps the list empty instead of falling back to the default", async () => {
+    const { data, change, changes } = await mountEditor({ views: ["live"] });
+
+    expect(data()).toMatchObject({ views: ["live"] });
+
+    change({ type: "custom:home-flow-card", views: [] });
+
+    expect(changes).toEqual([{ type: "custom:home-flow-card", views: [] }]);
+  });
+
+  test("the views list reads and writes views in their usual order, leaving the default out", async () => {
+    const { data, change, changes } = await mountEditor();
+
+    expect(data()).toMatchObject({ views: ["live", "today"] });
+
+    change({ type: "custom:home-flow-card", views: ["live", "today", "month", "yesterday"] });
+    change({ type: "custom:home-flow-card", views: ["today", "live"] });
+
+    expect(changes).toEqual([
+      { type: "custom:home-flow-card", views: ["live", "today", "yesterday", "month"] },
+      { type: "custom:home-flow-card" },
+    ]);
+  });
+
+  test("the view the card opens on is asked only with two or more views", async () => {
+    const { data, fields, change, changes } = await mountEditor({ views: ["live", "today"] });
+
+    expect(data()).toMatchObject({ default_view: "live" });
+
+    change({ type: "custom:home-flow-card", views: ["live", "today"], default_view: "today" });
+    change({ type: "custom:home-flow-card", views: ["today", "live"], default_view: "live" });
+    change({ type: "custom:home-flow-card", views: ["live", "week"], default_view: "today" });
+
+    expect(changes).toEqual([
+      { type: "custom:home-flow-card", default_view: "today" },
+      { type: "custom:home-flow-card" },
+      { type: "custom:home-flow-card", views: ["live", "week"] },
+    ]);
+
+    const single = await mountEditor({ views: ["today"] });
+    expect(single.fields()).not.toContain("default_view");
+    expect(fields()).toContain("default_view");
+  });
+
   test("the main page holds the title and a link per node, then advanced", async () => {
     const { editor, fields, links } = await mountEditor();
 
-    expect(fields()).toEqual(["title"]);
+    expect(fields()).toEqual(["title", "mode", ...selectorFields]);
     expect(links().map((link) => link.getAttribute("path"))).toEqual([
       "grid",
       "solar",
       "battery",
       "generator",
       "home",
+      "car",
+      "heat_pump",
       "advanced",
     ]);
     editor.remove();
@@ -108,6 +203,8 @@ describe("editor", () => {
       "sensor.battery · -800 W · 55 %",
       "Not configured",
       "Not configured",
+      "Not configured",
+      "Not configured",
       null,
     ]);
     editor.remove();
@@ -121,6 +218,7 @@ describe("editor", () => {
       "entity",
       "entity",
       "state_of_charge",
+      "state_of_charge_position",
       "(group)",
       "state_of_charge_severity",
       "(group)",
@@ -133,33 +231,87 @@ describe("editor", () => {
     await open("grid");
 
     expect(fields()).not.toEqual(
-      expect.arrayContaining([
-        expect.stringMatching(/^(color_icon|color_circle|display_state|name|label_alert)$/),
-      ])
+      expect.arrayContaining([expect.stringMatching(/^(color_icon|color_circle|display_state)$/)])
     );
     expect(fields()).toEqual(
-      expect.arrayContaining(["entity", "state_alert", "invert_state", "decimals"])
+      expect.arrayContaining(["entity", "name", "state_alert", "label_alert", "decimals"])
     );
     editor.remove();
   });
 
-  test("advanced holds animation, number format and interaction", async () => {
+  test("advanced holds appearance, animation, number format and interaction", async () => {
     const { editor, open, fields, data } = await mountEditor();
     await open("advanced");
 
     expect(fields()).toEqual([
+      "wire_width",
       "animate_numbers",
       "disable_dots",
       "min_flow_rate",
       "max_flow_rate",
-      "min_expected_power",
-      "max_expected_power",
+      "min_expected_value",
+      "max_expected_value",
       "base_decimals",
       "kilo_decimals",
       "kilo_threshold",
+      "mega_decimals",
+      "mega_threshold",
       "clickable_entities",
     ]);
-    expect(data()).toMatchObject({ animate_numbers: true });
+    expect(data()).toMatchObject({ animate_numbers: true, clickable_entities: true });
+    editor.remove();
+  });
+
+  test("in energy mode, thresholds and the expected range are in Wh and two-way values can shrink", async () => {
+    const { editor, open, fields, helper } = await mountEditor({ mode: "energy" });
+    await open("advanced");
+
+    expect(fields()).toEqual(expect.arrayContaining(["min_expected_value", "max_expected_value"]));
+    expect(helper("kilo_threshold")).toBe("Default: 1000 Wh");
+    expect(helper("mega_threshold")).toBe("Default: 1000000 Wh");
+    expect(helper("max_expected_value")).toBe("Default: Relative to the period's total");
+    expect(helper("two_way_value_size")).toBe("Default: 1×");
+    editor.remove();
+  });
+
+  test("a config with the older option names shows and saves the ones for both modes", async () => {
+    const { editor, open, data, change, changes } = await mountEditor({
+      min_expected_power: 5,
+      max_expected_power: 3000,
+      battery: { entity: "sensor.battery", state_of_charge_position: "after_power" },
+    });
+    await open("advanced");
+
+    expect(data()).toMatchObject({ min_expected_value: 5, max_expected_value: 3000 });
+    change({ ...(data() as object), wire_width: 2 });
+    expect(changes).toEqual([
+      {
+        type: "custom:home-flow-card",
+        min_expected_value: 5,
+        max_expected_value: 3000,
+        animate_numbers: true,
+        clickable_entities: true,
+        wire_width: 2,
+        battery: { entity: "sensor.battery", state_of_charge_position: "after_value" },
+      },
+    ]);
+    editor.remove();
+  });
+
+  test("in energy mode, the grid has no outage and the car no idle conditions", async () => {
+    const { editor, open, fields } = await mountEditor({
+      mode: "energy",
+      grid: { entity: "sensor.grid" },
+    });
+    await open("grid");
+    expect(fields()).not.toEqual(expect.arrayContaining(["state_alert"]));
+
+    editor.shadowRoot
+      ?.querySelector("flixlix-subpage-header")
+      ?.dispatchEvent(new CustomEvent("go-back"));
+    await editor.updateComplete;
+    await open("car");
+    expect(fields()).toEqual(["entity", "state_of_charge", "name", "visibility"]);
     editor.remove();
   });
 
@@ -168,6 +320,7 @@ describe("editor", () => {
     await open("advanced");
 
     expect(helper("kilo_threshold")).toBe("Default: 1000 W");
+    expect(helper("wire_width")).toBe("Default: 1×");
     expect(helper("animate_numbers")).toBeUndefined();
     editor.remove();
   });
@@ -177,6 +330,14 @@ describe("editor", () => {
     await open("battery");
 
     expect(data()).toMatchObject({ state_of_charge_severity: { red: 15, yellow: 30 } });
+    editor.remove();
+  });
+
+  test("the state of charge position says it stays under the value by default", async () => {
+    const { editor, open, helper } = await mountEditor({ battery: { entity: "sensor.battery" } });
+    await open("battery");
+
+    expect(helper("state_of_charge_position")).toBe("Default: Under the value");
     editor.remove();
   });
 
@@ -211,6 +372,78 @@ describe("editor", () => {
         grid: { entity: "sensor.grid" },
         solar: { entity: "sensor.pv" },
       },
+    ]);
+    editor.remove();
+  });
+
+  test("without Home Assistant's conditions editor, the car's conditions are YAML fields", async () => {
+    const { editor, open, fields, change, changes } = await mountEditor();
+    await open("car");
+
+    expect(fields()).toEqual(["entity", "state_of_charge", "name", "visibility", "idle"]);
+    change({ entity: "sensor.car_power", state_of_charge: "sensor.car_soc" });
+    expect(changes).toEqual([
+      {
+        type: "custom:home-flow-card",
+        car: { entity: "sensor.car_power", state_of_charge: "sensor.car_soc" },
+      },
+    ]);
+    editor.remove();
+  });
+
+  test("the heat pump's page: its power, its climate entity, what to show and its name", async () => {
+    const { editor, open, fields, change, changes } = await mountEditor();
+    await open("heat_pump");
+
+    expect(editor.shadowRoot?.querySelector("flixlix-subpage-header")?.header).toBe("Heat pump");
+    expect(fields()).toEqual(["entity", "climate", "status", "name"]);
+    change({
+      entity: "sensor.heat_pump_power",
+      climate: "climate.heat_pump",
+      status: "temperature",
+    });
+    expect(changes).toEqual([
+      {
+        type: "custom:home-flow-card",
+        heat_pump: {
+          entity: "sensor.heat_pump_power",
+          climate: "climate.heat_pump",
+          status: "temperature",
+        },
+      },
+    ]);
+    editor.remove();
+  });
+
+  test("with Home Assistant's conditions editor, the car's conditions need no YAML", async () => {
+    // stands in for Home Assistant's own, defined while a dashboard is being edited
+    customElements.define(
+      "ha-card-conditions-editor",
+      class extends HTMLElement {
+        conditions: unknown[] = [];
+      }
+    );
+    const home = { condition: "state", entity: "device_tracker.car", state: "home" };
+    const { editor, open, fields, changes } = await mountEditor({
+      car: { entity: "sensor.car_power", idle: [home] },
+    });
+    await open("car");
+    const [visibility, idle] = [
+      ...(editor.shadowRoot?.querySelectorAll("ha-card-conditions-editor") ?? []),
+    ];
+
+    expect(fields()).toEqual(["entity", "state_of_charge", "name"]);
+    expect(Reflect.get(idle ?? {}, "conditions")).toEqual([home]);
+
+    visibility?.dispatchEvent(new CustomEvent("value-changed", { detail: { value: [home] } }));
+    idle?.dispatchEvent(new CustomEvent("value-changed", { detail: { value: [] } }));
+
+    expect(changes).toEqual([
+      {
+        type: "custom:home-flow-card",
+        car: { entity: "sensor.car_power", idle: [home], visibility: [home] },
+      },
+      { type: "custom:home-flow-card", car: { entity: "sensor.car_power" } },
     ]);
     editor.remove();
   });

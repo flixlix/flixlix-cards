@@ -52,7 +52,7 @@ const getStartOfWeek = (date: Date): Date => {
   return start;
 };
 
-const getPeriodWindow = (period: EnergyPeriodKey): EnergyPeriodWindow => {
+export const energyPeriodWindow = (period: EnergyPeriodKey): EnergyPeriodWindow => {
   const now = new Date();
 
   if (period === "yesterday") {
@@ -210,7 +210,7 @@ export const getGlobalEnergyPeriodWindow = (
     period = "yesterday";
   }
 
-  return getPeriodWindow(period);
+  return energyPeriodWindow(period);
 };
 
 const getEnergyCollection = (
@@ -355,6 +355,7 @@ export const watchGlobalEnergyPeriodChanges = (
   };
 };
 
+/** Signed: a net meter that runs backwards over the period reports negative growth. */
 const getSumGrowth = (values: StatisticsValue[]): number => {
   if (!values.length) {
     return 0;
@@ -369,7 +370,7 @@ const getSumGrowth = (values: StatisticsValue[]): number => {
     hasChange = true;
   }
   if (hasChange) {
-    return Math.max(changeGrowth, 0);
+    return changeGrowth;
   }
   const sums = values.flatMap((item) =>
     item.sum === null || item.sum === undefined ? [] : [item.sum]
@@ -379,7 +380,7 @@ const getSumGrowth = (values: StatisticsValue[]): number => {
   if (first === undefined || first === null || last === undefined || last === null) {
     return 0;
   }
-  return Math.max(last - first, 0);
+  return last - first;
 };
 
 export const fetchEnergyPeriodGrowth = async (
@@ -415,7 +416,10 @@ export const getEntityEnergyFromGrowthMap = (
   if (!entity) {
     return 0;
   }
-  return getEntityNames(entity).reduce((sum, entityId) => sum + (growthMap[entityId] ?? 0), 0);
+  return getEntityNames(entity).reduce(
+    (sum, entityId) => sum + Math.max(growthMap[entityId] ?? 0, 0),
+    0
+  );
 };
 
 export type FossilEnergyConsumption = Record<string, number>;
@@ -452,6 +456,30 @@ export const subscribeEnergyCollectionData = (
         Reflect.apply(unsub, undefined, []);
       }
     : null;
+};
+
+/**
+ * The fossil share of the grid import over the window, in kWh per bucket, as HA's own energy
+ * collection computes it. For pages where no HA energy card created a collection to read it from.
+ */
+export const fetchFossilEnergyConsumption = async (
+  hass: HomeAssistant,
+  gridImportIds: string[],
+  co2StatisticId: string,
+  window: EnergyPeriodWindow
+): Promise<FossilEnergyConsumption | undefined> => {
+  if (!gridImportIds.length) {
+    return undefined;
+  }
+  const raw = await hass.callWS<unknown>({
+    type: "energy/fossil_energy_consumption",
+    start_time: window.start.toISOString(),
+    end_time: window.end.toISOString(),
+    energy_statistic_ids: gridImportIds,
+    co2_statistic_id: co2StatisticId,
+    period: getSuggestedPeriod(window.start, window.end),
+  });
+  return isFossilEnergyConsumption(raw) ? raw : undefined;
 };
 
 export const computeNonFossilFromCollection = (

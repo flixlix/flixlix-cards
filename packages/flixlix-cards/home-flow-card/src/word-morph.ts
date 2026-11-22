@@ -21,7 +21,7 @@ const GHOST_STYLE = "position: absolute; left: 0; top: 0";
 /**
  * Shows `word` in `element`. With `animate`, only the letters that differ from the word shown
  * before change: their gap grows or shrinks so the shared letters slide, while the new letters
- * fade in over the old ones fading out. "charging" to "discharging" only fades "dis" in.
+ * fade in over the old ones fading out. "Charging" to "Discharging" only swaps "C" for "Disc".
  */
 export const morphWord = (element: HTMLElement, word: string, animate: boolean): void => {
   const before = shown.get(element);

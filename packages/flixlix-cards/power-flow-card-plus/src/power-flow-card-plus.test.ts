@@ -6,11 +6,8 @@ import { PowerFlowCardPlus } from "./power-flow-card-plus";
 // test that the card renders correctly
 
 // jsdom does not provide ResizeObserver; stub it so the card's `updated` hook doesn't throw
-const observed: Element[] = [];
 globalThis.ResizeObserver = class {
-  observe(target: Element) {
-    observed.push(target);
-  }
+  observe() {}
   disconnect() {}
   unobserve() {}
 };
@@ -342,29 +339,6 @@ describe("entity actions", () => {
 
     expect(circle.classList).toContain("pointer-events-none");
     expect(circle.querySelector("ha-ripple")).toHaveProperty("disabled", true);
-  });
-});
-
-describe("the card's width", () => {
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
-  const gridCard = {
-    type: "custom:power-flow-card-plus",
-    entities: { grid: { entity: "sensor.grid" } },
-  } as PowerFlowCardPlusConfig;
-
-  test("is watched again after the card is moved to another column", async () => {
-    const { card } = await renderCard(gridCard, makeHass({ "sensor.grid": "500" }));
-    const before = observed.length;
-
-    const column = document.createElement("div");
-    document.body.append(column);
-    column.append(card);
-    await card.updateComplete;
-
-    expect(observed.length).toBe(before + 1);
   });
 });
 

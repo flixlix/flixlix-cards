@@ -31,6 +31,12 @@ const readings = (
     entities,
   } as FlowCardPlusConfig);
 
+const summed = (secondary: Record<string, unknown> = { sum_total: true }) => ({
+  individual: [
+    { entity: "sensor.charger", secondary_info: { entity: "sensor.charger_2", ...secondary } },
+  ],
+});
+
 describe("powerReadings", () => {
   test("a single grid or battery entity is read as one signed value", () => {
     const entities = {
@@ -106,5 +112,41 @@ describe("powerReadings", () => {
     );
 
     expect(result.solar).toEqual({ total: 350, secondary: 50 });
+  });
+
+  describe("an individual with secondary_info.sum_total", () => {
+    test.each([
+      { main: "0", secondary: "7200", total: 7200 },
+      { main: "300", secondary: "50", total: 350 },
+      { main: "-200", secondary: "50", total: -150 },
+      { main: "unavailable", secondary: "7200", total: 7200 },
+      { main: "300", secondary: "unavailable", total: 300 },
+      { main: "unavailable", secondary: "unknown", total: null },
+    ])("reads $main W plus $secondary W as $total", ({ main, secondary, total }) => {
+      const result = readings(summed(), {
+        "sensor.charger": [main],
+        "sensor.charger_2": [secondary],
+      });
+
+      expect(result.individuals).toEqual([total]);
+    });
+
+    test("converts the secondary entity's unit before summing", () => {
+      const result = readings(summed(), {
+        "sensor.charger": ["100"],
+        "sensor.charger_2": ["1.5", "kW"],
+      });
+
+      expect(result.individuals).toEqual([1600]);
+    });
+
+    test("ignores the secondary entity without sum_total", () => {
+      const result = readings(summed({}), {
+        "sensor.charger": ["100"],
+        "sensor.charger_2": ["50"],
+      });
+
+      expect(result.individuals).toEqual([100]);
+    });
   });
 });

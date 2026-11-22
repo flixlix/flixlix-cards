@@ -1,5 +1,6 @@
 import { getEntityNames } from "@flixlix-cards/shared/states/utils/mutli-entity";
 import { type ComboEntity, type FlowCardPlusConfig } from "@flixlix-cards/shared/types";
+import { type Condition, conditionEntities } from "./conditions";
 
 type EntityField = {
   entity?: string | ComboEntity;
@@ -19,9 +20,14 @@ const fieldEntities = (field: EntityField | undefined): (string | undefined)[] =
   ];
 };
 
+/** The individual devices' `visibility` conditions. */
+export const visibilityConditions = (config: FlowCardPlusConfig): Condition[] =>
+  (config.entities.individual ?? []).flatMap((device) => device.visibility ?? []);
+
 /** Every entity id a flow card reads from `hass.states`; a change to any other entity cannot change the card. */
 export function watchedEntities(config: FlowCardPlusConfig): string[] {
-  const { battery, grid, solar, home, fossil_fuel_percentage, individual } = config.entities;
+  const { battery, grid, solar, home, fossil_fuel_percentage, individual, auxiliary } =
+    config.entities;
   const fields: (EntityField | undefined)[] = [
     battery,
     grid,
@@ -29,9 +35,9 @@ export function watchedEntities(config: FlowCardPlusConfig): string[] {
     home,
     fossil_fuel_percentage,
     ...(individual ?? []),
+    auxiliary,
   ];
-  const ids = fields
-    .flatMap(fieldEntities)
+  const ids = [...fields.flatMap(fieldEntities), ...conditionEntities(visibilityConditions(config))]
     .flatMap((entity) => (entity ? getEntityNames(entity) : []))
     .filter((id) => id !== "");
   return [...new Set(ids)];

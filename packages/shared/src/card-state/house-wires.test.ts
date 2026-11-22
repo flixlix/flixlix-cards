@@ -1,9 +1,10 @@
+import { fakeConditionContext } from "@flixlix-cards/shared/testing/fixtures";
 import { type FlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { type HomeAssistant, NumberFormat, TimeFormat } from "custom-card-helpers";
 import { describe, expect, test } from "vite-plus/test";
 import { computeCardState } from "./compute-card-state";
-import { houseWires } from "./house-wires";
-import { type ReadyReadings } from "./types";
+import { type HouseFixtures, houseWires } from "./house-wires";
+import { type ReadyReadings, type UnitFamily } from "./types";
 
 /** A `hass` whose outage sensor reads `on` while there is an outage. */
 const hassWith = (outage: boolean): HomeAssistant => {
@@ -57,20 +58,22 @@ type Power = {
   toGrid?: number;
   generator?: number;
   outage?: boolean;
+  family?: UnitFamily;
 };
 
 const readings = (power: Power): ReadyReadings => ({
   status: "ready",
-  family: "power",
+  family: power.family ?? "power",
   grid: { kind: "split", outOf: power.fromGrid ?? 0, into: power.toGrid ?? 0 },
   solar: { total: power.solar ?? 0, secondary: 0 },
   battery: { kind: "split", outOf: power.fromBattery ?? 0, into: power.toBattery ?? 0 },
   home: null,
   generator: power.generator ?? null,
   individuals: [],
+  auxiliary: null,
 });
 
-const wiresFor = (cardConfig: FlowCardPlusConfig, power: Power) => {
+const wiresFor = (cardConfig: FlowCardPlusConfig, power: Power, fixtures: HouseFixtures = {}) => {
   const state = computeCardState({
     config: cardConfig,
     hass: hassWith(power.outage ?? false),
@@ -80,15 +83,19 @@ const wiresFor = (cardConfig: FlowCardPlusConfig, power: Power) => {
       solarSecondary: undefined,
       homeSecondary: undefined,
       nonFossilFuelSecondary: undefined,
+      auxiliarySecondary: undefined,
       individual: [],
     },
+    conditionContext: fakeConditionContext,
     width: 400,
   });
   if (state.status !== "ready") {
     throw new Error("expected a ready card state");
   }
-  return houseWires(cardConfig, state);
+  return houseWires(cardConfig, state, fixtures);
 };
+
+const isGrid = (wire: { node: string }) => wire.node === "grid";
 
 const summary = (cardConfig: FlowCardPlusConfig, power: Power) =>
   wiresFor(cardConfig, power).map(({ node, power: watts, intoInverter, color }) => ({
@@ -99,6 +106,90 @@ const summary = (cardConfig: FlowCardPlusConfig, power: Power) =>
   }));
 
 describe("house wires", () => {
+  test("live power runs one way at a time: the grid's wire carries what it nets", () => {
+    expect(summary(allNodes, { fromGrid: 1200, toGrid: 800 }).filter(isGrid)).toEqual([
+      {
+        node: "grid",
+        watts: 400,
+        intoInverter: true,
+        color: "var(--energy-grid-consumption-color)",
+      },
+    ]);
+  });
+
+  test("energy that ran both ways gets a lane per direction, each in its own colour", () => {
+    const grid = wiresFor(allNodes, { fromGrid: 1200, toGrid: 800, family: "energy" }).filter(
+      isGrid
+    );
+    expect(grid).toMatchObject([
+      { power: 1200, intoInverter: true, lane: -1, reading: { value: 1.2, unit: "kWh" } },
+      { power: 800, intoInverter: false, lane: 1, color: "var(--energy-grid-return-color)" },
+    ]);
+  });
+
+  test("energy that ran one way keeps a single wire", () => {
+    const battery = wiresFor(allNodes, { toBattery: 2000, family: "energy" }).filter(
+      (wire) => wire.node === "battery"
+    );
+    expect(battery).toEqual([expect.objectContaining({ power: 2000, intoInverter: false })]);
+    expect(battery[0]?.lane).toBeUndefined();
+  });
+
+  test("a charging car draws from the home's outlet, in the home's colour", () => {
+    const car = wiresFor(allNodes, { solar: 9000, toGrid: 1000 }, { car: { power: 7400 } }).find(
+      (wire) => wire.node === "car"
+    );
+    expect(car).toMatchObject({
+      power: 7400,
+      intoInverter: false,
+      color: "var(--energy-solar-color)",
+      reading: { value: 7.4, unit: "kW" },
+    });
+  });
+
+  test("a car feeding the home runs back towards the outlet", () => {
+    const car = wiresFor(allNodes, { fromGrid: 100 }, { car: { power: -3000 } }).find(
+      (wire) => wire.node === "car"
+    );
+    expect(car).toMatchObject({ power: 3000, intoInverter: true });
+  });
+
+  test("an unavailable car reads as an idle wire", () => {
+    const car = wiresFor(allNodes, { fromGrid: 100 }, { car: { power: null } }).find(
+      (wire) => wire.node === "car"
+    );
+    expect(car).toMatchObject({ power: 0 });
+  });
+
+  test("without a car there is no car wire", () => {
+    expect(wiresFor(allNodes, { fromGrid: 100 }).some((wire) => wire.node === "car")).toBe(false);
+  });
+
+  test("a running heat pump draws from the home's outlet, in the home's colour", () => {
+    const heatPump = wiresFor(
+      allNodes,
+      { solar: 4000, toGrid: 1000 },
+      { heatPump: { power: 1350 } }
+    ).find((wire) => wire.node === "heat_pump");
+    expect(heatPump).toMatchObject({
+      power: 1350,
+      intoInverter: false,
+      color: "var(--energy-solar-color)",
+      reading: { value: 1.4, unit: "kW" },
+    });
+  });
+
+  test("a heat pump never feeds the home: a negative or missing reading is an idle wire", () => {
+    const negative = wiresFor(allNodes, { fromGrid: 100 }, { heatPump: { power: -20 } });
+    const missing = wiresFor(allNodes, { fromGrid: 100 }, { heatPump: { power: null } });
+    for (const wires of [negative, missing]) {
+      expect(wires.find((wire) => wire.node === "heat_pump")).toMatchObject({
+        power: 0,
+        intoInverter: false,
+      });
+    }
+  });
+
   test("an evening on the battery: production and discharge run into the inverter, home out of it", () => {
     expect(summary(allNodes, { solar: 800, fromBattery: 1800 })).toEqual([
       { node: "solar", watts: 800, intoInverter: true, color: "var(--energy-solar-color)" },
@@ -163,6 +254,16 @@ describe("house wires", () => {
     expect(wiresFor(allNodes, {})[0]?.intensity).toBe(0);
   });
 
+  test("over a period, intensity is a share of what was supplied without an expected range", () => {
+    const day = { family: "energy" as const, solar: 3000, fromGrid: 1000 };
+    const relative = { ...allNodes, flow_rate_model: "relative" as const };
+    const [solar] = wiresFor(relative, day);
+    const [inRange] = wiresFor({ ...allNodes, max_expected_power: 6000 }, day);
+
+    expect(solar?.intensity).toBeCloseTo(0.75, 2);
+    expect(inRange?.intensity).toBeCloseTo(0.5, 2);
+  });
+
   describe("with a generator", () => {
     const withGenerator = config({
       grid: {
@@ -186,6 +287,22 @@ describe("house wires", () => {
 
       expect(wire(normal, "generator")).toBeUndefined();
       expect(wire(normal, "grid")).toMatchObject({ power: 300, intoInverter: true });
+    });
+
+    test("over a period it feeds the inverter beside the grid, and the home gets its share", () => {
+      const day = { family: "energy" as const, generator: 4000, fromGrid: 3000 };
+      const wires = wiresFor(withGenerator, day, { generator: 800 });
+      const of = (node: string) => wires.find((candidate) => candidate.node === node);
+
+      expect(of("generator")).toMatchObject({ power: 800, intoInverter: true });
+      expect(of("grid")).toMatchObject({ power: 3000, intoInverter: true });
+      expect(of("home")).toMatchObject({ power: 3800 });
+    });
+
+    test("over a period it is not drawn while it made nothing", () => {
+      const day = { family: "energy" as const, fromGrid: 3000 };
+
+      expect(wire(day, "generator")).toBeUndefined();
     });
 
     test("without a generator there is no generator wire", () => {

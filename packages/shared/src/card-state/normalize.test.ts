@@ -1,6 +1,6 @@
 import * as fc from "fast-check";
 import { describe, expect, test } from "vite-plus/test";
-import { fakeConfig, fakeEntity, fakeHass } from "../testing/fixtures";
+import { fakeConditionContext, fakeConfig, fakeEntity, fakeHass } from "../testing/fixtures";
 import { type FlowCardPlusConfig } from "../types";
 import { normalize } from "./normalize";
 import { solve } from "./solve";
@@ -18,6 +18,7 @@ const readings = (overrides: Partial<ReadyReadings> = {}): ReadyReadings => ({
   battery: none,
   home: null,
   generator: null,
+  auxiliary: null,
   individuals: [],
   ...overrides,
 });
@@ -26,6 +27,7 @@ const grid = { entity: "sensor.grid", power_outage: { entity: "binary_sensor.out
 
 const input = (entities: FlowCardPlusConfig["entities"], states: Record<string, string> = {}) => ({
   config: fakeConfig({ entities }),
+  conditionContext: fakeConditionContext,
   hass: fakeHass({
     states: Object.fromEntries(
       Object.entries(states).map(([id, state]) => [id, fakeEntity(id, state)])
@@ -44,10 +46,13 @@ const measured = (override: boolean) =>
     readings({ grid: single(300), home: 420 })
   ).totals.measuredHome;
 
-const fraction = (percentage: string) =>
+const fraction = (percentage: string, invert_state?: boolean) =>
   normalize(
     input(
-      { grid, fossil_fuel_percentage: { entity: "sensor.fossil", secondary_info: {} } },
+      {
+        grid,
+        fossil_fuel_percentage: { entity: "sensor.fossil", invert_state, secondary_info: {} },
+      },
       { "sensor.fossil": percentage, "binary_sensor.outage": "off" }
     ),
     readings({ grid: single(100) })
@@ -188,6 +193,12 @@ describe("tolerance, outage and hidden nodes", () => {
   test("the non-fossil fraction comes from the fossil percentage, clamped to [0, 1]", () => {
     expect(fraction("30")).toBeCloseTo(0.7, 10);
     expect(fraction("140")).toBe(0);
+  });
+
+  test("invert_state reads the entity as the low-carbon percentage", () => {
+    expect(fraction("30", true)).toBeCloseTo(0.3, 10);
+    expect(fraction("140", true)).toBe(1);
+    expect(fraction("-20", true)).toBe(0);
   });
 });
 
@@ -410,5 +421,27 @@ describe("device-only mode (no grid, solar or battery)", () => {
       readings({ individuals: [100, 50] })
     );
     expect(solve(totals).home).toBe(0);
+  });
+});
+
+describe("presence", () => {
+  test("a node with an empty entity, as left by clearing it in the editor, is not drawn", () => {
+    const { presence } = normalize(
+      input({
+        grid: { entity: "" },
+        solar: { entity: "" },
+        battery: { entity: { consumption: "", production: "" } },
+      }),
+      readings({ grid: single(400), solar: { total: 800, secondary: 0 }, battery: single(200) })
+    );
+    expect(presence).toMatchObject({ grid: false, solar: false, battery: false });
+  });
+
+  test("split entities count with one side set", () => {
+    const { presence } = normalize(
+      input({ grid: { entity: { consumption: "sensor.import", production: "" } } }),
+      readings({ grid: { kind: "split", into: 0, outOf: 400 } })
+    );
+    expect(presence.grid).toBe(true);
   });
 });

@@ -19,14 +19,15 @@ const ringOf = (element: Element | null, origin: DOMRect): Ring | undefined => {
   return { cx: x, cy: y, r: round(element.getBoundingClientRect().width / 2) };
 };
 
-/** The middle row's slots: grid, a spacer under solar and the home, each 80px wide. */
+/** The middle row's slots: the grid unless the card has none, the hub and the home, each 80px wide. */
 const middleRow = (middle: Element, origin: DOMRect, radius: number) => {
-  const [gridSlot, hubSlot, homeSlot] = [...middle.children].map((slot) => center(slot, origin));
+  const hubSlot = middle.querySelector(":scope > .hub");
+  const homeSlot = hubSlot?.nextElementSibling;
   return {
     // Circles sit at the top of the middle row, their labels under them.
     axisY: round(middle.getBoundingClientRect().top - origin.top + radius),
-    hubX: hubSlot?.x ?? gridSlot?.x ?? 0,
-    homeX: homeSlot?.x ?? origin.width - radius,
+    hubX: hubSlot ? center(hubSlot, origin).x : 0,
+    homeX: homeSlot ? center(homeSlot, origin).x : origin.width - radius,
   };
 };
 
@@ -61,6 +62,7 @@ export const measureFlowLayout = (content: HTMLElement): FlowLayout | undefined 
     battery,
     rightTop: circle("individual-right-top"),
     rightBottom: circle("individual-right-bottom"),
+    auxiliary: circle("auxiliary"),
   };
 };
 
@@ -68,11 +70,14 @@ const sameLayout = (a: FlowLayout | undefined, b: FlowLayout | undefined) =>
   JSON.stringify(a) === JSON.stringify(b);
 
 /**
- * Measures where the card's node circles landed after every render and renders again when they
- * moved, so the flow lines can be drawn to them.
+ * Measures where the card's node circles landed after every render and whenever the content
+ * resizes without one (a sections grid making the card taller), and renders again when they moved,
+ * so the flow lines can be drawn to them.
  */
 export class FlowLayoutController implements ReactiveController {
   private current?: FlowLayout;
+  private observer?: ResizeObserver;
+  private observed?: HTMLElement;
 
   constructor(
     private readonly host: ReactiveControllerHost & HTMLElement,
@@ -85,8 +90,32 @@ export class FlowLayoutController implements ReactiveController {
     return this.current;
   }
 
+  hostConnected(): void {
+    this.hostUpdated();
+  }
+
   hostUpdated(): void {
-    const content = this.host.shadowRoot?.getElementById(this.contentId);
+    const content = this.host.shadowRoot?.getElementById(this.contentId) ?? undefined;
+    this.observe(content);
+    this.measure(content);
+  }
+
+  hostDisconnected(): void {
+    this.observer?.disconnect();
+    this.observed = undefined;
+  }
+
+  private observe(content: HTMLElement | undefined) {
+    if (!content || content === this.observed) {
+      return;
+    }
+    this.observed = content;
+    this.observer?.disconnect();
+    this.observer ??= new ResizeObserver(() => this.measure(this.observed));
+    this.observer.observe(content);
+  }
+
+  private measure(content: HTMLElement | undefined) {
     const next = content ? measureFlowLayout(content) : undefined;
     if (next && !sameLayout(next, this.current)) {
       this.current = next;

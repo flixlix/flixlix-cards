@@ -1,5 +1,6 @@
 import { type ActionConfig } from "custom-card-helpers";
 import { type TemplateResult } from "lit";
+import { type Condition as VisibilityCondition } from "../card-state/conditions";
 
 export type ActionConfigSet = {
   tap_action?: ActionConfig;
@@ -37,6 +38,9 @@ export type ComboEntity = {
   production: string;
 };
 
+/** Grid and battery colours: one per direction, and `idle` for the circle while nothing flows. */
+export type DirectionalColors = Partial<ComboEntity> & { idle?: ColorValue };
+
 export type SecondaryInfoType = {
   entity?: string;
   unit_of_measurement?: string;
@@ -50,6 +54,11 @@ export type SecondaryInfoType = {
   decimals?: number;
 } & ActionConfigSet;
 
+/** Secondary info whose entity can be added to the node's own reading with `sum_total`. */
+export type SummableSecondaryInfoType = SecondaryInfoType & {
+  sum_total?: boolean;
+};
+
 /** A `name` option: a plain string, or name parts resolved from the registry. */
 export type EntityName = string | EntityNameItem | EntityNameItem[];
 
@@ -61,7 +70,7 @@ export interface BaseConfigEntity extends ActionConfigSet {
   entity: string | ComboEntity;
   name?: EntityName;
   icon?: string;
-  color?: ComboEntity | ColorValue;
+  color?: DirectionalColors | ColorValue;
   color_icon?: boolean | string;
   display_state?: "two_way" | "one_way" | "one_way_no_zero";
   display_zero_tolerance?: number;
@@ -78,12 +87,16 @@ export type GridPowerOutage = {
   state_alert?: string;
   label_alert?: string;
   icon_alert?: string;
+  /** Colour of the icon and label while the power is out. */
+  color_alert?: ColorValue;
   entity_generator?: string;
 };
 
 export type IndividualDeviceType = BaseConfigEntity & {
   entity: string;
   color?: ColorValue;
+  /** Circle colour while the device draws nothing. */
+  color_idle?: ColorValue;
   color_icon?: boolean;
   inverted_animation?: boolean;
   display_zero?: boolean;
@@ -94,6 +107,9 @@ export type IndividualDeviceType = BaseConfigEntity & {
   use_metadata?: boolean;
   show_direction?: boolean;
   accept_negative?: boolean;
+  secondary_info?: SummableSecondaryInfoType;
+  /** Shown only while all of these hold, as in a card's visibility tab; always shown without. */
+  visibility?: VisibilityCondition[];
 };
 
 export type EntityType =
@@ -110,6 +126,7 @@ export type TemplatesObj = {
   solarSecondary: string | undefined;
   homeSecondary: string | undefined;
   individual: (string | undefined)[];
+  auxiliarySecondary: string | undefined;
   nonFossilFuelSecondary: string | undefined;
 };
 
@@ -152,6 +169,7 @@ export type GridObject = ActionConfigSet & {
     isOutage: boolean;
     icon: string;
     name: string | TemplateResult<1>;
+    color?: ColorValue;
     entityGenerator?: string;
   };
   icon: string;
@@ -160,6 +178,7 @@ export type GridObject = ActionConfigSet & {
   color: {
     fromGrid?: ColorValue;
     toGrid?: ColorValue;
+    idle?: ColorValue;
     icon_type?: "color_dynamically" | "no_color" | "production" | "consumption";
     circle_type?: CircleColorType;
   };
@@ -208,6 +227,7 @@ export type BatteryObject = ActionConfigSet & {
   color: {
     fromBattery?: ColorValue;
     toBattery?: ColorValue;
+    idle?: ColorValue;
     icon_type?: string | boolean;
     circle_type?: CircleColorType;
   };
@@ -355,7 +375,7 @@ interface LovelaceLayoutOptions {
   grid_max_rows?: number;
 }
 
-interface LovelaceGridOptions {
+export interface LovelaceGridOptions {
   columns?: number | "full";
   rows?: number | "auto";
   max_columns?: number;

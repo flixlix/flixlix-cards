@@ -96,4 +96,12 @@ export const displayZeroLinesWithDefaults = (
   mode: lines?.mode ?? defaultValues.displayZeroLines.mode,
   transparency: coerceNumber(lines?.transparency, defaultValues.displayZeroLines.transparency),
   grey_color: lines?.grey_color ?? defaultValues.displayZeroLines.grey_color,
+  ...(lines?.grey_out_circles === undefined ? {} : { grey_out_circles: lines.grey_out_circles }),
 });
+
+/**
+ * Nodes are clickable unless the config says `false`: most configs predate the option and leave
+ * it out. Normalised once in `setConfig` so every reader can treat it as a plain boolean.
+ */
+export const clickableEntitiesWithDefault = (value: boolean | undefined): boolean =>
+  value !== false;

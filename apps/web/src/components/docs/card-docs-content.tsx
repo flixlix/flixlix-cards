@@ -1,52 +1,60 @@
 import { Link } from "@tanstack/react-router";
 import {
   AlertTriangle,
-  ArrowRight,
   Battery,
   BookOpen,
   Calculator,
+  CircleDot,
   Cpu,
   EyeOff,
-  Github,
   Home,
   Info,
   Layers,
   Leaf,
   MousePointerClick,
-  Package,
+  MoveVertical,
+  Network,
   Palette,
+  RectangleEllipsis,
   Settings,
   Split,
   Sun,
-  Wrench,
   Zap,
 } from "lucide-react";
 import * as React from "react";
 
-import { Button } from "@flixlix-cards/ui/components/button";
+import { trackEvent } from "#/lib/analytics";
+import type { IssueCard } from "#/lib/issues";
+
+import { heading } from "@/lib/page-meta";
+import { sensor, type StateFixtures } from "@flixlix-cards/shared/preview/fake-hass";
+
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@flixlix-cards/ui/components/card";
-import { Checkbox } from "@flixlix-cards/ui/components/checkbox";
-
-import { CardDemo } from "@/components/card-demo";
-
+  CardHero,
+  DemoGallery,
+  Highlight,
+  Highlights,
+  SectionPages,
+  SourceSection,
+} from "./card-overview";
+import { topologyGallery } from "@/components/demos";
 import { CategorySection } from "./category-section";
 import {
   Callout,
   CodeBlock,
   NextPageNav,
+  type OptionRow,
   PageHeader,
   Prose,
   Section,
-  type OptionRow,
 } from "./doc-primitives";
+import { RelatedGuides } from "./related-guides";
+import { InstallFromCatalog } from "./install-from-catalog";
+import { LiveExample } from "./live-example";
 import { OptionList } from "./option-list";
 import { PageTOC, type TocItem } from "./page-toc";
+import { SupportLinks } from "./support-links";
+import { TopologyDemo } from "./topology-demo";
 
 export type CardKey = "power" | "energy";
 
@@ -55,7 +63,7 @@ type Variant = {
   cardSlug: string;
   cardType: "custom:power-flow-card-plus" | "custom:energy-flow-card-plus";
   pkgName: string;
-  title: string;
+  title: IssueCard;
   tagline: string;
   unit: string;
   unitLong: string;
@@ -77,8 +85,7 @@ const VARIANTS: Record<CardKey, Variant> = {
     cardType: "custom:power-flow-card-plus",
     pkgName: "power-flow-card-plus",
     title: "Power Flow Card Plus",
-    tagline:
-      "A highly customizable Home Assistant card visualizing the live (instantaneous) power flow between grid, solar, battery, home, and individual devices.",
+    tagline: "Live power between grid, solar, battery, home and your devices.",
     unit: "W",
     unitLong: "watts",
     unitKilo: "kW",
@@ -94,7 +101,7 @@ const VARIANTS: Record<CardKey, Variant> = {
     thresholdDescription:
       "Number of watts before converting to and displaying in kilowatts. Setting 0 always displays in kW.",
     hacsRedirect:
-      "https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=power-flow-card-plus&category=Dashboard",
+      "https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=power-flow-card-plus&category=plugin",
     releaseUrl: "https://github.com/flixlix/power-flow-card-plus/releases/latest",
     basePath: "/power-flow-card-plus",
     demo: "power",
@@ -105,8 +112,7 @@ const VARIANTS: Record<CardKey, Variant> = {
     cardType: "custom:energy-flow-card-plus",
     pkgName: "energy-flow-card-plus",
     title: "Energy Flow Card Plus",
-    tagline:
-      "A highly customizable Home Assistant card visualizing the accumulated energy distribution for the dashboard's selected period.",
+    tagline: "Where your energy came from and went over the dashboard's selected period.",
     unit: "Wh",
     unitLong: "watt-hours",
     unitKilo: "kWh",
@@ -117,21 +123,12 @@ const VARIANTS: Record<CardKey, Variant> = {
     thresholdDescription:
       "Number of watt-hours before converting to and displaying in kilowatt-hours. Setting 0 always displays in kWh.",
     hacsRedirect:
-      "https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=energy-flow-card-plus&category=Dashboard",
+      "https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=energy-flow-card-plus&category=plugin",
     releaseUrl: "https://github.com/flixlix/energy-flow-card-plus/releases/latest",
     basePath: "/energy-flow-card-plus",
     demo: "period",
   },
 };
-
-function HighlightsListCheckedItem({ children }: { children: React.ReactNode }) {
-  return (
-    <li className="bg-muted/40 flex items-center gap-2 rounded-md border p-3">
-      <Checkbox className="pointer-events-none" checked />
-      {children}
-    </li>
-  );
-}
 
 function variant(key: CardKey): Variant {
   return VARIANTS[key];
@@ -143,137 +140,56 @@ export function OverviewPage({ cardKey }: { cardKey: CardKey }) {
   const v = variant(cardKey);
   return (
     <>
-      <PageHeader
-        eyebrow={v.title}
-        title="Overview"
-        description={v.tagline}
-        badges={[{ label: "HACS Default" }, { label: "YAML & UI editor" }, { label: v.unitKilo }]}
+      <CardHero
+        tags={["HACS Default", "YAML & UI editor", v.unitKilo]}
+        title={v.title}
+        demo={v.demo}
+        installHref={v.hacsRedirect}
+        playgroundTo={`${v.basePath}/playground`}
+      >
+        <PageHeader className="mb-0" title={heading(v.basePath)} description={v.tagline} />
+      </CardHero>
+
+      <DemoGallery
+        title="Three ways to wire it"
+        description="The same readings in each topology, each one live."
+        demos={topologyGallery(v.key)}
+        playgroundTo={`${v.basePath}/playground`}
       />
 
-      <CardDemo demo={v.demo} className="mx-auto w-fit max-w-full rounded-xl border" />
-      <p className="text-muted-foreground mt-2 text-center text-sm">
-        The real card, live.{" "}
-        <Link
-          to={`${v.basePath}/playground`}
-          className="text-primary underline-offset-4 hover:underline"
-        >
-          Try it in the playground
-        </Link>
-        .
-      </p>
+      <Highlights>
+        <Highlight>Full UI editor with subpages for each entity</Highlight>
+        <Highlight>
+          {v.key === "power"
+            ? "Up to 4 individual devices around a source, or every device around the home with no grid, solar or battery"
+            : "Up to 4 individual devices with custom icons & colors"}
+        </Highlight>
+        <Highlight>Bidirectional grid & battery (split or single entity)</Highlight>
+        <Highlight>Secondary info, templates, and clickable entities</Highlight>
+        <Highlight>Configurable flow rate model (legacy & new)</Highlight>
+        <Highlight>Translated to 14+ languages out of the box</Highlight>
+      </Highlights>
 
-      <Prose className="mt-4">
-        <p>
-          <strong>{v.title}</strong> is a Home Assistant Lovelace card that draws an animated flow
-          diagram between the major energy sources in your home. It is designed as a drop-in
-          replacement for Home Assistant's built-in distribution card, with a long list of
-          customization options for users who want full control of the visual.
-        </p>
-        <p>
-          <strong>Scope.</strong> {v.scope}
-        </p>
-      </Prose>
-
-      <Section title="Highlights">
-        <ul className="text-foreground/90 grid grid-cols-1 gap-2 text-sm md:grid-cols-2">
-          <HighlightsListCheckedItem>
-            Full UI editor with subpages for each entity
-          </HighlightsListCheckedItem>
-          <HighlightsListCheckedItem>
-            {cardKey === "power"
-              ? "Up to 4 individual devices around a source, or every device around the home with no grid, solar or battery"
-              : "Up to 4 individual devices with custom icons & colors"}
-          </HighlightsListCheckedItem>
-          <HighlightsListCheckedItem>
-            Bidirectional grid &amp; battery (split or single entity)
-          </HighlightsListCheckedItem>
-          <HighlightsListCheckedItem>
-            Secondary info, templates, and clickable entities
-          </HighlightsListCheckedItem>
-          <HighlightsListCheckedItem>
-            Configurable flow rate model (legacy & new)
-          </HighlightsListCheckedItem>
-          <HighlightsListCheckedItem>
-            Translated to 14+ languages out of the box
-          </HighlightsListCheckedItem>
-        </ul>
+      <Section title="Compare it">
+        <RelatedGuides
+          paths={
+            v.key === "power"
+              ? [
+                  "/guides/solar-battery-power-flow",
+                  "/guides/power-flow-card-plus-vs-power-flow-card",
+                  "/guides/power-flow-card-plus-vs-sunsynk",
+                  "/guides/power-flow-card-plus-vs-tesla-style",
+                  "/guides/energy-distribution-card-alternative",
+                  "/guides",
+                ]
+              : ["/guides/energy-distribution-card-alternative", "/guides"]
+          }
+        />
       </Section>
 
-      <Section title="What's in this section">
-        <div className="grid gap-3 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Package className="size-4" /> Installation
-              </CardTitle>
-              <CardDescription>HACS or manual install in two minutes.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button asChild size="sm" variant="outline">
-                <Link to={`${v.basePath}/installation`}>
-                  Open <ArrowRight className="size-3.5" />
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <BookOpen className="size-4" /> Configuration
-              </CardTitle>
-              <CardDescription>Every option, with defaults and types.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button asChild size="sm" variant="outline">
-                <Link to={`${v.basePath}/configuration`}>
-                  Open <ArrowRight className="size-3.5" />
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Wrench className="size-4" /> Examples
-              </CardTitle>
-              <CardDescription>Copy-pastable configs for common setups.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button asChild size="sm" variant="outline">
-                <Link to={`${v.basePath}/examples`}>
-                  Open <ArrowRight className="size-3.5" />
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </Section>
+      <SectionPages basePath={v.basePath} playground />
 
-      <Section title="Source & releases">
-        <Prose>
-          <p>
-            The card is published as <code>{v.pkgName}</code> via HACS and on GitHub. Issues and
-            feature requests are tracked in the{" "}
-            <a
-              href="https://github.com/flixlix/flixlix-cards"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              flixlix-cards monorepo
-            </a>
-            .
-          </p>
-        </Prose>
-        <Button asChild variant="outline" size="sm">
-          <a
-            href="https://github.com/flixlix/flixlix-cards"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Github className="size-4" /> View source on GitHub
-          </a>
-        </Button>
-      </Section>
+      <SourceSection repoUrl={`https://github.com/flixlix/${v.pkgName}`} />
 
       <NextPageNav next={{ label: "Installation", to: `${v.basePath}/installation` }} />
     </>
@@ -288,49 +204,26 @@ export function InstallationPage({ cardKey }: { cardKey: CardKey }) {
     <>
       <PageHeader
         eyebrow={v.title}
-        title="Installation"
-        description="HACS is the recommended way to install the card. Manual installation is also supported."
+        title={heading(`${v.basePath}/installation`)}
+        description="Install it from Home Assistant's Marketplace, or from HACS before 2026.11. Manual installation is also supported."
       />
 
-      <Section title="HACS (recommended)" id="hacs">
-        <Prose>
-          <p>
-            The card is part of the <strong>HACS Default</strong> repositories. If you don't have
-            HACS yet, follow the{" "}
-            <a
-              href="https://hacs.xyz/docs/setup/prerequisites"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              HACS prerequisites
-            </a>
-            .
-          </p>
-          <ol>
-            <li>
-              Open HACS in your Home Assistant instance and search for <strong>{v.title}</strong>.
-            </li>
-            <li>
-              Press <strong>Download</strong> and confirm.
-            </li>
-            <li>
-              Reload your dashboard, then add the card via the UI or paste the YAML from the{" "}
-              <Link to={`${v.basePath}/examples`}>Examples</Link> page.
-            </li>
-          </ol>
-        </Prose>
-        <Button asChild variant="outline" size="sm">
-          <a href={v.hacsRedirect} target="_blank" rel="noopener noreferrer">
-            Open in HACS
-          </a>
-        </Button>
-      </Section>
+      <InstallFromCatalog
+        title={v.title}
+        redirect={v.hacsRedirect}
+        examplesPath={`${v.basePath}/examples`}
+      />
 
       <Section title="Manual installation" id="manual">
         <Prose>
           <p>
             Download <code>{v.cardSlug}.js</code> from the{" "}
-            <a href={v.releaseUrl} target="_blank" rel="noopener noreferrer">
+            <a
+              href={v.releaseUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackEvent("Download release", { card: v.title })}
+            >
               latest release
             </a>{" "}
             and copy it into <code>config/www</code>.
@@ -351,12 +244,16 @@ export function InstallationPage({ cardKey }: { cardKey: CardKey }) {
           </p>
         </Prose>
         <CodeBlock language="text" code={`/local/${v.cardSlug}.js`} />
-        <Callout variant="tip" title="HACS users">
-          When installed via HACS the path becomes{" "}
+        <Callout variant="tip" title="Installed from the Marketplace or HACS?">
+          It registers the resource for you. The Marketplace serves it from
+          <code>
+            /local/community/{v.cardSlug}/{v.cardSlug}.js
+          </code>
+          ; HACS used
           <code>
             /hacsfiles/{v.cardSlug}/{v.cardSlug}.js
           </code>
-          . HACS usually registers it automatically.
+          , which keeps working.
         </Callout>
       </Section>
 
@@ -418,14 +315,24 @@ const ADVANCED_CARD_OPTIONS = (v: Variant): OptionRow[] => [
     type: "string",
     description: (
       <>
-        URL path to a dashboard (e.g. <code>/energy</code>), shows a button at the bottom.
+        Legacy, kept so existing configs still work: use <a href="#buttons">buttons</a> instead. URL
+        path to a dashboard (e.g. <code>/energy</code>), shown as a link at the bottom.
       </>
     ),
   },
   {
     name: "dashboard_link_label",
     type: "string",
-    description: "Override the default label of the dashboard link.",
+    description: "Legacy: the label of dashboard_link.",
+  },
+  {
+    name: "buttons",
+    type: "list",
+    description: (
+      <>
+        More buttons at the bottom, after the dashboard links. See <a href="#buttons">Buttons</a>.
+      </>
+    ),
   },
   {
     name: "kilo_decimals",
@@ -440,6 +347,12 @@ const ADVANCED_CARD_OPTIONS = (v: Variant): OptionRow[] => [
     description: v.baseDecimalsHelp,
   },
   {
+    name: "keep_trailing_zeros",
+    type: "boolean",
+    default: "false",
+    description: `Always show the decimals a value is rounded to, keeping trailing zeros: 1.0 ${v.unitKilo} instead of 1 ${v.unitKilo}.`,
+  },
+  {
     name: "kilo_threshold",
     type: "number",
     default: "0",
@@ -448,30 +361,43 @@ const ADVANCED_CARD_OPTIONS = (v: Variant): OptionRow[] => [
   {
     name: "clickable_entities",
     type: "boolean",
-    default: "false",
+    default: "true",
     description: "Open the entity's more-info dialog when clicking a circle.",
   },
   {
     name: "second_dashboard_link",
     type: "string",
-    description: "Optional second dashboard link (YAML editor only).",
+    description: "Legacy: a second link like dashboard_link.",
   },
   {
     name: "second_dashboard_link_label",
     type: "string",
-    description: "Override the second dashboard link label.",
+    description: "Legacy: the label of second_dashboard_link.",
   },
   {
     name: "min_flow_rate",
     type: "number",
     default: "0.75",
-    description: "Time (s) for the fastest dot to travel an entire line.",
+    description: "Time (s) for the fastest dot to travel 175px of line; shorter lines take less.",
   },
   {
     name: "max_flow_rate",
     type: "number",
     default: "6",
-    description: "Time (s) for the slowest dot to travel an entire line.",
+    description: "Time (s) for the slowest dot to travel 175px of line; shorter lines take less.",
+  },
+  {
+    name: "dot_animation",
+    type: "string",
+    default: "auto",
+    description: (
+      <>
+        How the flow dots move: <code>gpu</code> moves them off the main thread,{" "}
+        <code>classic</code> uses SVG animation as before v0.4.0. <code>auto</code> picks{" "}
+        <code>classic</code> on ARM Mali GPUs, such as the Fire HD 10 (2023), whose drivers draw
+        icons, values and lines in the wrong place with <code>gpu</code> dots.
+      </>
+    ),
   },
   // The energy card always uses the relative formula, so these never apply there
   ...(v.key === "energy"
@@ -551,6 +477,17 @@ const ADVANCED_CARD_OPTIONS = (v: Variant): OptionRow[] => [
     type: "boolean",
     default: "false",
     description: "Force showing up to 4 individual devices even if they don't fit.",
+  },
+  {
+    name: "topology",
+    type: "string",
+    default: "standard",
+    description: (
+      <>
+        Which wires your installation has: <code>standard</code>, <code>battery_hub</code> or{" "}
+        <code>isolated_battery</code>. See <a href="#topology">topology</a>.
+      </>
+    ),
   },
   ...(v.key === "energy"
     ? [
@@ -843,7 +780,15 @@ const HOME_OPTIONS = (v: Variant): OptionRow[] => [
   },
 ];
 
-const INDIVIDUAL_OPTIONS = (v: Variant): OptionRow[] => [
+const AUXILIARY_CONNECT_TO: OptionRow = {
+  name: "connect_to",
+  type: "grid | battery | none",
+  default: "grid",
+  description:
+    "Where its line runs: up to the grid, across to the battery, or no line at all. The line is drawn only while that node is shown; while it runs up into the grid, the grid's label is hidden to make room.",
+};
+
+const INDIVIDUAL_OPTIONS: OptionRow[] = [
   {
     name: "entity",
     type: "string",
@@ -858,6 +803,11 @@ const INDIVIDUAL_OPTIONS = (v: Variant): OptionRow[] => [
   },
   { name: "icon", type: "string", description: "Icon path (e.g. mdi:car-electric)." },
   { name: "color", type: "string", description: "HEX color for circle, label and line." },
+  {
+    name: "color_idle",
+    type: "string",
+    description: "HEX color for the circle while the device draws nothing. Unset keeps color.",
+  },
   {
     name: "color_icon",
     type: "boolean",
@@ -882,7 +832,7 @@ const INDIVIDUAL_OPTIONS = (v: Variant): OptionRow[] => [
   {
     name: "display_zero",
     type: "boolean",
-    default: v.key === "power" ? "false (true with no grid, solar or battery)" : "false",
+    default: "false",
     description: "Show device when state is 0.",
   },
   {
@@ -904,6 +854,12 @@ const INDIVIDUAL_OPTIONS = (v: Variant): OptionRow[] => [
     description: "Match value text to circle color.",
   },
   { name: "decimals", type: "number", default: "0", description: "Decimals shown in the value." },
+  {
+    name: "visibility",
+    type: "list",
+    description:
+      "Show the device only while all of these conditions hold, in the format of a card's visibility tab. While hidden it counts as zero. The UI editor has them under Advanced Options.",
+  },
 ];
 
 const FOSSIL_OPTIONS: OptionRow[] = [
@@ -952,6 +908,13 @@ const FOSSIL_OPTIONS: OptionRow[] = [
     description: "power | percentage; what type of value the entity provides.",
   },
   {
+    name: "invert_state",
+    type: "boolean",
+    default: "false",
+    description:
+      "The entity reports the low-carbon (green energy) percentage instead of the fossil one; the card reads it as 100 minus the state.",
+  },
+  {
     name: "unit_white_space",
     type: "boolean",
     default: "true",
@@ -962,7 +925,7 @@ const FOSSIL_OPTIONS: OptionRow[] = [
     type: "boolean | number",
     default: "true",
     description:
-      "Unset or true uses the calculated flow rate, false a fixed pace, a number a fixed dot interval (seconds).",
+      "Unset or true uses the calculated flow rate, false a fixed pace, a number fixed seconds per 175px of line.",
   },
 ];
 
@@ -1006,7 +969,8 @@ const SECONDARY_INFO_OPTIONS: OptionRow[] = [
   {
     name: "sum_total",
     type: "boolean",
-    description: "On the solar bubble, sum the secondary info with the main entity.",
+    description:
+      "On solar or an individual device, add the secondary entity to the main entity. On an individual device the sum drives the shown value, the flow and subtract_individual; the secondary info keeps its own value.",
   },
   { name: "tap_action", type: "object", description: "Action triggered on tap." },
   { name: "hold_action", type: "object", description: "Action triggered on long press." },
@@ -1034,6 +998,12 @@ const POWER_OUTAGE_OPTIONS: OptionRow[] = [
     description: "Icon shown during the outage.",
   },
   {
+    name: "color_alert",
+    type: "string | number[]",
+    description:
+      "HEX or RGB color for the outage icon and label. Unset keeps the usual grid icon color.",
+  },
+  {
     name: "label_alert",
     type: "string",
     description: "Text shown below the icon during the outage.",
@@ -1043,7 +1013,87 @@ const POWER_OUTAGE_OPTIONS: OptionRow[] = [
     type: "boolean | number",
     default: "true",
     description:
-      "Unset or true uses the calculated flow rate, false a fixed pace, a number a fixed dot interval (seconds).",
+      "Unset or true uses the calculated flow rate, false a fixed pace, a number fixed seconds per 175px of line.",
+  },
+];
+
+const BUTTON_OPTIONS: OptionRow[] = [
+  {
+    name: "name",
+    type: "string",
+    description: "Text on the button. Leave out for an icon-only button.",
+  },
+  {
+    name: "icon",
+    type: "string",
+    description: "Icon shown before the name, e.g. mdi:solar-power.",
+  },
+  {
+    name: "entity",
+    type: "string",
+    description:
+      "Entity for more-info and toggle actions. Without a name or icon, the button shows the entity's name.",
+  },
+  {
+    name: "tap_action",
+    type: "object",
+    description: "Triggered on tap/click. Without any action, a tap opens the entity's more-info.",
+  },
+  { name: "hold_action", type: "object", description: "Triggered on long press." },
+  { name: "double_tap_action", type: "object", description: "Triggered on double tap." },
+];
+
+const CUSTOM_CSS_SELECTORS: OptionRow[] = [
+  {
+    name: ".grid .consumption, .grid .return",
+    type: "selector",
+    description: "The grid's import and export values.",
+  },
+  {
+    name: ".solar span.solar:not(.secondary-info)",
+    type: "selector",
+    description: "The solar value.",
+  },
+  {
+    name: ".battery .battery-in, .battery .battery-out",
+    type: "selector",
+    description: "The battery's charge and discharge values.",
+  },
+  {
+    name: ".home span.home:not(.secondary-info)",
+    type: "selector",
+    description: "The home consumption value.",
+  },
+  {
+    name: "#grid-icon, #solar-icon, #battery-icon, #home-icon",
+    type: "selector",
+    description: "Each circle's icon.",
+  },
+  {
+    name: ".<node> .secondary-info",
+    type: "selector",
+    description: "A circle's secondary info, e.g. .home .secondary-info.",
+  },
+];
+
+const TOPOLOGY_OPTIONS: OptionRow[] = [
+  {
+    name: "standard",
+    type: "value",
+    default: "yes",
+    description: "Every wire. Most installations, AC or DC coupled.",
+  },
+  {
+    name: "battery_hub",
+    type: "value",
+    description:
+      "Solar → battery, grid ↔ battery, battery → home, and nothing else. For portable power stations, UPS-style and off-grid inverters where every load runs through the battery. Power that would skip the battery passes through it instead, so home consumption stays the same. Needs a battery; without one the card uses standard.",
+  },
+  {
+    name: "isolated_battery",
+    type: "value",
+    description:
+      "Every wire except grid ↔ battery. For batteries that never charge from or discharge into the grid. A battery reading that would need that wire is credited to solar or home instead, so sensor noise no longer draws a battery ↔ grid flow.",
   },
 ];
 
@@ -1065,6 +1115,13 @@ const DISPLAY_ZERO_LINES_OPTIONS: OptionRow[] = [
     type: "string | number[]",
     description: "HEX or RGB array, used by grey_out / custom modes.",
   },
+  {
+    name: "grey_out_circles",
+    type: "boolean",
+    default: "false",
+    description:
+      "Grey out grid, battery and individual circles while nothing flows, in grey_out / custom modes. A node's own idle color wins.",
+  },
 ];
 
 function ConfigShortcut({
@@ -1083,6 +1140,7 @@ function ConfigShortcut({
   return (
     <a
       href={to}
+      data-llms-skip
       className="group bg-card hover:border-foreground/20 flex items-start gap-3 rounded-lg border p-3 transition-colors"
     >
       <div className={`flex size-8 shrink-0 items-center justify-center rounded-md ${accent}`}>
@@ -1162,6 +1220,7 @@ export function ConfigurationPage({ cardKey }: { cardKey: CardKey }) {
     { id: "solar", label: "Solar", depth: 2 },
     { id: "battery", label: "Battery", depth: 2 },
     { id: "individual", label: "Individual devices", depth: 2 },
+    { id: "auxiliary", label: "Auxiliary", depth: 2 },
     { id: "home", label: "Home", depth: 2 },
     { id: "fossil-fuel", label: "Fossil fuel", depth: 2 },
     { id: "shared-objects", label: "Shared objects" },
@@ -1170,6 +1229,9 @@ export function ConfigurationPage({ cardKey }: { cardKey: CardKey }) {
     { id: "secondary-info", label: "Secondary info", depth: 2 },
     { id: "power-outage", label: "Power outage", depth: 2 },
     { id: "display-zero-lines", label: "Display zero lines", depth: 2 },
+    { id: "topology", label: "Topology", depth: 2 },
+    { id: "card-height", label: "Card height", depth: 2 },
+    { id: "custom-css", label: "Custom CSS", depth: 2 },
     ...(cardKey === "energy" ? [{ id: "collection-key", label: "Collection key" } as TocItem] : []),
     { id: "flow-formula", label: "Flow formulas" },
   ];
@@ -1179,7 +1241,7 @@ export function ConfigurationPage({ cardKey }: { cardKey: CardKey }) {
       <div className="min-w-0">
         <PageHeader
           eyebrow={v.title}
-          title="Configuration"
+          title={heading(`${v.basePath}/configuration`)}
           description={
             <>
               Every option, what it does, and how to use it. Required fields are marked with{" "}
@@ -1277,7 +1339,7 @@ entities:
           intro={
             <Prose>
               <p>
-                Requires <code>clickable_entities: true</code>.
+                Turned off by <code>clickable_entities: false</code>.
               </p>
               <p>
                 Each clickable circle supports the standard{" "}
@@ -1288,8 +1350,7 @@ entities:
                 >
                   Home Assistant action
                 </a>{" "}
-                objects. If you don't configure these and have <code>clickable_entities: true</code>
-                , the card falls back to opening more-info.
+                objects. If you don't configure these, the card falls back to opening more-info.
               </p>
             </Prose>
           }
@@ -1316,6 +1377,49 @@ entities:
               },
             ]}
           />
+        </CategorySection>
+
+        <CategorySection
+          id="buttons"
+          title="Buttons"
+          icon={RectangleEllipsis}
+          accent="slate"
+          description="A row of buttons at the bottom of the card, each with its own name, icon and actions."
+          intro={
+            <Prose>
+              <p>
+                Add, remove, reorder and edit them in the visual editor under{" "}
+                <strong>Buttons</strong>, or list them under <code>buttons</code>. Each button takes
+                the standard{" "}
+                <a
+                  href="https://www.home-assistant.io/dashboards/actions/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Home Assistant action
+                </a>{" "}
+                objects. The legacy <code>dashboard_link</code> and{" "}
+                <code>second_dashboard_link</code> still show before the buttons; the visual editor
+                no longer offers them and instead converts them to buttons.
+              </p>
+            </Prose>
+          }
+          example={{
+            language: "yaml",
+            code: `buttons:
+  - name: Solar
+    icon: mdi:solar-power
+    tap_action:
+      action: navigate
+      navigation_path: /dashboard-energy/solar
+  - name: Battery
+    icon: mdi:home-battery
+    entity: input_boolean.battery_force_charge
+    tap_action:
+      action: toggle`,
+          }}
+        >
+          <OptionList rows={BUTTON_OPTIONS} />
         </CategorySection>
 
         <CategorySection
@@ -1351,6 +1455,11 @@ entities:
                 name: "individual",
                 type: "array",
                 description: individualRowDescription(v),
+              },
+              {
+                name: "auxiliary",
+                type: "object",
+                description: "One display-only circle under the grid. See Auxiliary below.",
               },
               { name: "home", type: "object", description: "See Home below." },
               {
@@ -1456,13 +1565,61 @@ entities:
       icon: mdi:car-electric
       color: "#80b8ff"
       color_icon: true
+      display_zero: true
+      visibility:
+        - condition: state
+          entity: binary_sensor.car_plugged_in
+          state: "on"
     - entity: sensor.heatpump_${sensorSuffix}
       name: Heat pump
       icon: mdi:heat-pump
       display_zero: true`,
           }}
         >
-          <OptionList rows={INDIVIDUAL_OPTIONS(v)} />
+          <OptionList
+            rows={INDIVIDUAL_OPTIONS.map((row) =>
+              v.key === "power" && row.name === "display_zero"
+                ? { ...row, default: "false (true with no grid, solar or battery)" }
+                : row
+            )}
+          />
+        </CategorySection>
+
+        <CategorySection
+          id="auxiliary"
+          title="Auxiliary"
+          icon={CircleDot}
+          accent="slate"
+          description="One extra circle under the grid and left of the battery, for a reading outside your home's consumption: a wind farm share, a virtual battery, a gas meter, DC solar behind the battery."
+          intro={
+            <Prose>
+              <p>
+                It is <strong>display-only</strong>: its reading never changes the other flows, the
+                home consumption or the home circle. It takes every option of an individual device
+                but <code>visibility</code>, plus <code>connect_to</code>. A positive reading flows
+                into it; set <code>inverted_animation: true</code> for something that feeds the grid
+                or battery, or <code>accept_negative: true</code> when the entity reads negative
+                while feeding.
+              </p>
+            </Prose>
+          }
+          example={{
+            language: "yaml",
+            code: `entities:
+  auxiliary:
+    entity: sensor.wind_stake_${sensorSuffix}
+    name: Wind stake
+    icon: mdi:wind-turbine
+    connect_to: grid
+    inverted_animation: true`,
+          }}
+        >
+          <OptionList
+            rows={[
+              AUXILIARY_CONNECT_TO,
+              ...INDIVIDUAL_OPTIONS.filter((row) => row.name !== "visibility"),
+            ]}
+          />
         </CategorySection>
 
         <CategorySection
@@ -1506,7 +1663,7 @@ entities:
 
         <h2
           id="shared-objects"
-          className="text-foreground/80 mb-4 mt-12 scroll-mt-24 text-xs font-semibold uppercase tracking-widest"
+          className="mt-16 mb-6 scroll-mt-24 border-t pt-8 text-[1.75rem] font-semibold tracking-[-0.025em]"
         >
           Shared objects
         </h2>
@@ -1524,13 +1681,19 @@ entities:
     entity: sensor.grid_${sensorSuffix}
     color:
       consumption: "#488fc2"
-      production: "#8353d1"`,
+      production: "#8353d1"
+      idle: "#9e9e9e"`,
           }}
         >
           <OptionList
             rows={[
               { name: "production", type: "string", description: "HEX color for production." },
               { name: "consumption", type: "string", description: "HEX color for consumption." },
+              {
+                name: "idle",
+                type: "string",
+                description: "HEX color for the circle while nothing flows. Unset keeps the usual.",
+              },
             ]}
           />
         </CategorySection>
@@ -1594,6 +1757,7 @@ entities:
       entity: binary_sensor.grid_status
       state_alert: "off"
       icon_alert: mdi:flash-off
+      color_alert: "#db4437"
       label_alert: Outage`,
           }}
         >
@@ -1614,6 +1778,61 @@ entities:
           }}
         >
           <OptionList rows={DISPLAY_ZERO_LINES_OPTIONS} />
+        </CategorySection>
+
+        <CategorySection
+          id="topology"
+          title="Topology"
+          icon={Network}
+          accent="amber"
+          description="Which wires exist between grid, solar, battery and home. The card only draws those wires and routes power along them."
+          example={{
+            language: "yaml",
+            code: `topology: battery_hub`,
+          }}
+        >
+          <TopologyDemo card={cardKey} />
+          <OptionList rows={TOPOLOGY_OPTIONS} />
+        </CategorySection>
+
+        <CategorySection
+          id="card-height"
+          title="Card height"
+          icon={MoveVertical}
+          accent="slate"
+          description="Make the card taller in a sections dashboard to line it up with the cards beside it."
+          example={{
+            language: "yaml",
+            code: `grid_options:
+  rows: 8`,
+          }}
+        >
+          <Prose>
+            <p>
+              Resize the card in the dashboard editor, or set <code>grid_options.rows</code>. The
+              rows of circles spread apart to fill the extra height, up to the spacing the columns
+              get at full width. Past that, the circles stay centred and the lines follow them.
+            </p>
+          </Prose>
+        </CategorySection>
+
+        <CategorySection
+          id="custom-css"
+          title="Custom CSS"
+          icon={Palette}
+          accent="violet"
+          description="With card-mod you can style each part of a circle. Every value has its own element, so it can be moved or recoloured without touching the icon or the secondary info."
+          example={{
+            language: "yaml",
+            code: `card_mod:
+  style: |
+    .home span.home:not(.secondary-info) {
+      color: red;
+      transform: translateY(-17px);
+    }`,
+          }}
+        >
+          <OptionList rows={CUSTOM_CSS_SELECTORS} />
         </CategorySection>
 
         {cardKey === "energy" ? (
@@ -1671,14 +1890,14 @@ entities:
           accent="violet"
           description={
             cardKey === "energy"
-              ? "The card animates dots along the lines. It always uses the relative formula: period totals in Wh don't fit an absolute power scale, so flow_rate_model, use_new_flow_rate_model, min_expected_power and max_expected_power have no effect."
-              : "The card animates dots along the lines. flow_rate_model picks one of three formulas for how fast they travel. With the defaults, a 1000 W line takes 3.38 s per dot with duration and 1.33 s with speed; relative depends on the line's share of all lines."
+              ? "The card animates dots along the lines. It always uses the relative formula: period totals in Wh don't fit an absolute power scale, so flow_rate_model, use_new_flow_rate_model, min_expected_power and max_expected_power have no effect. Every flow rate is seconds per 175px of line, scaled by the square root of each line's length, so dots on short individual lines no longer crawl next to the main lines."
+              : "The card animates dots along the lines. flow_rate_model picks one of three formulas for how fast they travel. With the defaults, a 1000 W line takes 3.38 s per 175px with duration and 1.33 s with speed; relative depends on the line's share of all lines. Every flow rate, including min/max_flow_rate and a fixed calculate_flow_rate, is seconds per 175px of line, scaled by the square root of each line's length: a line a quarter as long takes half the time, so short individual lines no longer crawl next to the main lines."
           }
         >
           <div className={cardKey === "energy" ? "grid gap-4" : "grid gap-4 md:grid-cols-3"}>
             <div className="bg-card rounded-lg border p-4">
               <div className="mb-2 flex items-center gap-2">
-                <span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide">
+                <span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-[11px] font-medium">
                   {cardKey === "energy" ? "Always used" : "Optional"}
                 </span>
                 <h3 className="text-foreground text-sm font-semibold">Relative</h3>
@@ -1706,7 +1925,7 @@ entities:
               <>
                 <div className="bg-card rounded-lg border p-4">
                   <div className="mb-2 flex items-center gap-2">
-                    <span className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide">
+                    <span className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 rounded-full px-2 py-0.5 text-[11px] font-medium">
                       Default
                     </span>
                     <h3 className="text-foreground text-sm font-semibold">Duration</h3>
@@ -1727,7 +1946,7 @@ return ((value - minIn) * (minOut - maxOut)) / (maxIn - minIn) + maxOut;
                 </div>
                 <div className="bg-card rounded-lg border p-4">
                   <div className="mb-2 flex items-center gap-2">
-                    <span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide">
+                    <span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-[11px] font-medium">
                       Optional
                     </span>
                     <h3 className="text-foreground text-sm font-semibold">Speed</h3>
@@ -1749,6 +1968,7 @@ return 1 / speed;`}
           </div>
         </CategorySection>
 
+        <SupportLinks card={v.title} />
         <NextPageNav
           prev={{ label: "Installation", to: `${v.basePath}/installation` }}
           next={{ label: "Examples", to: `${v.basePath}/examples` }}
@@ -1766,16 +1986,55 @@ return 1 / speed;`}
 
 // ---------- Examples ----------
 
+const percent = (state: string) => sensor(state, { unit: "%" });
+
+const SHARED_EXAMPLE_STATES: StateFixtures = {
+  "sensor.power_outage": sensor("off", { unit: undefined }),
+  "sensor.battery_state_of_charge": percent("68"),
+  "sensor.battery_soc": percent("68"),
+  "sensor.fossil_fuel_percentage": percent("34"),
+};
+
+/** A sunny afternoon in W for the power card, an average day in kWh for the energy card. */
+const EXAMPLE_STATES: Record<CardKey, StateFixtures> = {
+  power: {
+    ...SHARED_EXAMPLE_STATES,
+    "sensor.grid_power": "860",
+    "sensor.grid_consumption": "0",
+    "sensor.grid_production": "1150",
+    "sensor.solar_production": "4200",
+    "sensor.battery_consumption": "0",
+    "sensor.battery_production": "1600",
+    "sensor.home_consumption": "1450",
+    "sensor.car_power": "1100",
+    "sensor.motorbike_power": "0",
+  },
+  energy: {
+    ...SHARED_EXAMPLE_STATES,
+    "sensor.grid_energy": sensor("9.4", { unit: "kWh" }),
+    "sensor.grid_consumption": sensor("5.2", { unit: "kWh" }),
+    "sensor.grid_production": sensor("3.8", { unit: "kWh" }),
+    "sensor.solar_energy": sensor("21.4", { unit: "kWh" }),
+    "sensor.battery_consumption": sensor("4.6", { unit: "kWh" }),
+    "sensor.battery_production": sensor("5.1", { unit: "kWh" }),
+    "sensor.home_consumption": sensor("21.3", { unit: "kWh" }),
+    "sensor.car_energy": sensor("8.8", { unit: "kWh" }),
+    "sensor.motorbike_energy": sensor("0", { unit: "kWh" }),
+  },
+};
+
 export function ExamplesPage({ cardKey }: { cardKey: CardKey }) {
   const v = variant(cardKey);
   const sensorSuffix = cardKey === "power" ? "power" : "energy";
+  const states = EXAMPLE_STATES[cardKey];
+  const energy = cardKey === "energy";
 
   return (
     <>
       <PageHeader
         eyebrow={v.title}
-        title="Examples"
-        description="Copy-pastable configs for the most common setups."
+        title={heading(`${v.basePath}/examples`)}
+        description="Copy-pastable configs for the most common setups, each next to the card it draws."
       />
 
       <Callout variant="info" title="Don't forget!">
@@ -1783,8 +2042,9 @@ export function ExamplesPage({ cardKey }: { cardKey: CardKey }) {
         <b>Always replace the entity ids with your own.</b>
       </Callout>
       <Section id="only-grid" title="Only grid">
-        <CodeBlock
-          language="yaml"
+        <LiveExample
+          states={states}
+          energy={energy}
           code={`type: ${v.cardType}
 entities:
   grid:
@@ -1798,8 +2058,9 @@ kilo_threshold: 10000`}
       </Section>
 
       <Section id="grid-solar" title="Grid + solar">
-        <CodeBlock
-          language="yaml"
+        <LiveExample
+          states={states}
+          energy={energy}
           code={`type: ${v.cardType}
 entities:
   grid:
@@ -1814,8 +2075,9 @@ entities:
       </Section>
 
       <Section id="grid-solar-battery" title="Grid + solar + battery">
-        <CodeBlock
-          language="yaml"
+        <LiveExample
+          states={states}
+          energy={energy}
           code={`type: ${v.cardType}
 entities:
   grid:
@@ -1846,8 +2108,9 @@ kilo_threshold: 10000`}
             is here as a reference of what is possible.
           </p>
         </Prose>
-        <CodeBlock
-          language="yaml"
+        <LiveExample
+          states={states}
+          energy={energy}
           code={`type: ${v.cardType}
 entities:
   home:
@@ -1936,8 +2199,9 @@ entities:
               <code>energy_&lt;dashboard_url&gt;</code>.
             </p>
           </Prose>
-          <CodeBlock
-            language="yaml"
+          <LiveExample
+            states={states}
+            energy={energy}
             code={`type: ${v.cardType}
 collection_key: energy_living_room
 entities:
@@ -1949,6 +2213,7 @@ entities:
         </Section>
       ) : null}
 
+      <SupportLinks card={v.title} />
       <NextPageNav prev={{ label: "Configuration", to: `${v.basePath}/configuration` }} />
     </>
   );

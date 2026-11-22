@@ -65,8 +65,40 @@ const pickRange = (picker: Element, startDate: Date, endDate: Date) =>
     new CustomEvent("value-changed", { detail: { value: { startDate, endDate } } })
   );
 
+/** Stands in for HA's `ha-dropdown`: like the real one, only its trigger shows until opened. */
+class FakeDropdown extends HTMLElement {
+  connectedCallback() {
+    this.attachShadow({ mode: "open" }).innerHTML = '<slot name="trigger"></slot>';
+  }
+}
+if (!customElements.get("ha-dropdown")) {
+  customElements.define("ha-dropdown", FakeDropdown);
+}
+
+/** The items of HA's dropdown, by their text. */
+const menuItems = (root: ShadowRoot) => [...root.querySelectorAll("ha-dropdown-item")];
+
+const menuItem = (root: ShadowRoot, label: string) => {
+  const match = menuItems(root).find((item) => item.textContent?.trim() === label);
+  if (!match) {
+    throw new Error(`no menu item "${label}"`);
+  }
+  return match;
+};
+
 const pressedPeriod = (root: ShadowRoot) =>
-  root.querySelector('.periods [aria-pressed="true"]')?.textContent?.trim();
+  menuItems(root)
+    .find((item) => item.hasAttribute("selected"))
+    ?.textContent?.trim();
+
+/** Picks an item the way HA's dropdown reports it (it only exists inside Home Assistant). */
+const inMenu = async (root: ShadowRoot, label: string) => {
+  const item = menuItem(root, label);
+  root
+    .querySelector("ha-dropdown")
+    ?.dispatchEvent(Object.assign(new Event("wa-select"), { detail: { item } }));
+  await new Promise((resolve) => setTimeout(resolve, 0));
+};
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -79,17 +111,21 @@ describe("energy period selector plus", () => {
     const { root, text } = await mountSelector();
 
     expect(text(".label")).toBe("May 15, 2024");
-    expect([...root.querySelectorAll(".periods button")].map((b) => b.textContent?.trim())).toEqual(
-      ["day", "week", "month", "year"]
-    );
+    expect(text(".period-trigger")).toBe("day");
+    expect(menuItems(root).map((item) => item.textContent?.trim())).toEqual([
+      "day",
+      "week",
+      "month",
+      "year",
+      "Now",
+    ]);
     expect(pressedPeriod(root)).toBe("day");
-    expect(button(root, "Now")).toBeTruthy();
   });
 
   test("picking a period sets it on HA's collection and remembers it like HA's presets", async () => {
     const { root, collection, refresh, hass } = await mountSelector();
 
-    await userEvent.click(button(root, "month"));
+    await inMenu(root, "month");
 
     expect(periodOf(collection)).toEqual({ start: date(5, 1), end: endOf(5, 31) });
     expect(refresh).toHaveBeenCalled();
@@ -116,16 +152,57 @@ describe("energy period selector plus", () => {
     expect(text(".label")).toBe("May 19 – 25, 2024");
   });
 
-  test("the compare button uses HA's compare modes", async () => {
+  test("compare is a checkbox in the menu that uses HA's compare modes", async () => {
     const { root, collection } = await mountSelector({ compare_button_type: "text" });
-    const compare = button(root, "Compare data");
+    expect(menuItem(root, "Compare data").getAttribute("type")).toBe("checkbox");
 
-    await userEvent.click(compare);
+    await inMenu(root, "Compare data");
     expect(collection.compare).toBe("previous");
-    await expect.poll(() => compare.getAttribute("aria-pressed")).toBe("true");
+    await expect.poll(() => menuItem(root, "Compare data").hasAttribute("checked")).toBe(true);
 
-    await userEvent.click(compare);
+    await inMenu(root, "Compare data");
     expect(collection.compare).toBe("");
+  });
+
+  test("the menu leaves out the actions that are turned off", async () => {
+    const { root } = await mountSelector({ today_button_type: false });
+
+    expect(root.querySelector("wa-divider")).toBeNull();
+    expect(menuItems(root).map((item) => item.getAttribute("value"))).toEqual([
+      "period-0",
+      "period-1",
+      "period-2",
+      "period-3",
+    ]);
+  });
+
+  test("a billing cycle is picked, stepped and kept selected like a calendar period", async () => {
+    const bill = { label: "Bill", duration: { months: 1 }, starts: "2024-01-08" };
+    const { root, collection, refresh, text, hass } = await mountSelector({
+      period_buttons: ["day", "month", bill],
+    });
+
+    await inMenu(root, "Bill");
+    expect(periodOf(collection)).toEqual({ start: date(5, 8), end: endOf(6, 7) });
+    expect(refresh).toHaveBeenCalled();
+    await expect.poll(() => pressedPeriod(root)).toBe("Bill");
+    expect(text(".label")).toBe("May 8 – Jun 7, 2024");
+    expect(localStorage.getItem(`energy-default-period-_energy_${hass.panelUrl}`)).toBeNull();
+
+    await userEvent.click(button(root, "Previous"));
+    await userEvent.click(button(root, "Previous"));
+    expect(periodOf(collection)).toEqual({ start: date(3, 8), end: endOf(4, 7) });
+    await expect.poll(() => pressedPeriod(root)).toBe("Bill");
+  });
+
+  test("a billing cycle on the 1st stays selected although it matches a month", async () => {
+    const bill = { label: "Bill", duration: { months: 1 }, starts: "2024-01-01" };
+    const { root } = await mountSelector({ period_buttons: ["month", bill] });
+
+    await inMenu(root, "Bill");
+    await userEvent.click(button(root, "Next"));
+
+    await expect.poll(() => pressedPeriod(root)).toBe("Bill");
   });
 
   test("follows period changes made by other selectors", async () => {
@@ -146,17 +223,14 @@ describe("energy period selector plus", () => {
     );
     expect(pressedPeriod(root)).toBe("Range");
     expect(root.querySelector('input[type="date"]')).toBeNull();
-    const picker = root.querySelector("ha-date-range-picker");
-    if (!(picker instanceof FakeDateRangePicker)) {
-      throw new Error("no HA date range picker");
-    }
+    const picker = datePicker(root);
     expect({ start: picker.startDate, end: picker.endDate }).toEqual({
       start: date(5, 10),
       end: endOf(6, 8),
     });
 
-    await userEvent.click(button(root, "May 10 – Jun 8, 2024"));
-    expect(picker.opened).toBe(true);
+    await inMenu(root, "Range");
+    await expect.poll(() => picker.opened).toBe(true);
 
     picker.dispatchEvent(
       new CustomEvent("value-changed", {
@@ -168,26 +242,21 @@ describe("energy period selector plus", () => {
     expect(periodOf(collection)).toEqual({ start: date(5, 1), end: endOf(5, 20) });
   });
 
-  test("the date opens HA's calendar in every period with `date_picker`", async () => {
+  test("HA's calendar sits next to the period in every period with `date_picker`", async () => {
     defineFakeDateRangePicker();
     const { root, collection } = await mountSelector({ date_picker: true });
     expect(pressedPeriod(root)).toBe("day");
-    expect(button(root, "Now")).toBeTruthy();
-
-    await userEvent.click(button(root, "May 15, 2024"));
-    expect(datePicker(root).opened).toBe(true);
 
     pickRange(datePicker(root), date(4, 1), date(4, 30));
     expect(periodOf(collection)).toEqual({ start: date(4, 1), end: endOf(4, 30) });
     await expect.poll(() => pressedPeriod(root)).toBe("month");
   });
 
-  test("without `date_picker` the date of a calendar period is plain text", async () => {
+  test("without `date_picker` a calendar period shows no calendar", async () => {
     defineFakeDateRangePicker();
     const { root } = await mountSelector();
 
     expect(root.querySelector("ha-date-range-picker")).toBeNull();
-    expect(root.querySelector(".range-button")).toBeNull();
   });
 
   test("has HA load its date range picker when the custom range is shown", async () => {
@@ -201,6 +270,43 @@ describe("energy period selector plus", () => {
     await mountSelector({ period_buttons: ["custom"] }, energyCollection(date(5, 10), endOf(6, 8)));
 
     expect(createCardElement).toHaveBeenCalledWith({ type: "energy-date-selection" });
+  });
+
+  test("tabs show the periods side by side, with today and a compare toggle next to the dates", async () => {
+    const { root, collection, text } = await mountSelector({
+      period_style: "tabs",
+      compare_button_type: "text",
+    });
+    const checked = () => text('.tabs [aria-checked="true"]');
+    expect(root.querySelector("ha-dropdown")).toBeNull();
+    expect(checked()).toBe("day");
+
+    await userEvent.click(button(root, "month"));
+    expect(periodOf(collection)).toEqual({ start: date(5, 1), end: endOf(5, 31) });
+    await expect.poll(checked).toBe("month");
+    expect(root.querySelector<HTMLElement>(".tabs")?.style.getPropertyValue("--tab-index")).toBe(
+      "2"
+    );
+
+    const compare = button(root, "Compare data");
+    await userEvent.click(compare);
+    expect(collection.compare).toBe("previous");
+    await expect.poll(() => compare.getAttribute("aria-pressed")).toBe("true");
+    await userEvent.click(compare);
+    expect(collection.compare).toBe("");
+
+    await userEvent.click(button(root, "Now"));
+    expect(periodOf(collection).start.getMonth()).toBe(new Date().getMonth());
+  });
+
+  test("arrow keys move between the tabs", async () => {
+    const { root, collection } = await mountSelector({ period_style: "tabs" });
+
+    button(root, "day").focus();
+    await userEvent.keyboard("{ArrowRight}");
+
+    expect(periodOf(collection)).toEqual({ start: date(5, 12), end: endOf(5, 18) });
+    await expect.poll(() => root.activeElement?.textContent?.trim()).toBe("week");
   });
 
   test("fits a phone-sized card without overflowing", async () => {

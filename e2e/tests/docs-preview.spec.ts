@@ -1,9 +1,11 @@
-import { type Locator, type Page } from "@playwright/test";
+import { type Locator } from "@playwright/test";
+import pixelmatch from "pixelmatch";
+import { PNG } from "pngjs";
 import { CARD_DASHBOARDS } from "../src/dashboards.ts";
 import { cardByTitle, expect, openDashboard, runScript, test } from "../src/fixtures.ts";
 import { DOCS_URL } from "../src/hass.ts";
 
-// The docs render the cards without Home Assistant: its theme, `ha-card` and icons copied into
+// The docs render the cards without Home Assistant: its theme, `ha-card`, icons and ripple copied into
 // packages/shared/src/preview/, and a fake `hass`. These tests hold the docs to looking exactly
 // like the card on a real dashboard. When they fail after an HA update, run `pnpm hass:sync-theme`.
 
@@ -39,6 +41,32 @@ const freeze = (card: Locator) =>
     });
   });
 
+const fraction = (value: number) => value - Math.floor(value);
+
+/**
+ * Shifts the docs card onto the same subpixel offset as the card in HA: the pages around them
+ * differ, and a card a fraction of a pixel lower rasterises every edge and glyph differently.
+ */
+const alignSubpixels = async (haCard: Locator, docsCard: Locator) => {
+  const [ha, docs] = await Promise.all([haCard.boundingBox(), docsCard.boundingBox()]);
+  if (!ha || !docs) {
+    throw new Error("card is not on the page");
+  }
+  const left = fraction(ha.x) - fraction(docs.x);
+  const top = fraction(ha.y) - fraction(docs.y);
+  await docsCard.evaluate(
+    (element, offset) => {
+      if (!(element instanceof HTMLElement)) {
+        throw new Error("card is not an HTML element");
+      }
+      element.style.position = "relative";
+      element.style.left = `${offset.left}px`;
+      element.style.top = `${offset.top}px`;
+    },
+    { left, top }
+  );
+};
+
 /** The card's dashboard config and the states of every entity it names, as HA has them. */
 const readCard = (card: Locator) =>
   card.evaluate((element) => {
@@ -54,40 +82,20 @@ const readCard = (card: Locator) =>
     return { config, states, width: element.getBoundingClientRect().width };
   });
 
-/** Number of pixels that differ between two PNG screenshots of the same size. */
-const diffPixels = (page: Page, a: Buffer, b: Buffer) =>
-  page.evaluate(
-    async ([first, second]) => {
-      const [x, y] = await Promise.all(
-        [first, second].map(async (base64) => {
-          const bitmap = await createImageBitmap(
-            await (await fetch(`data:image/png;base64,${base64}`)).blob()
-          );
-          const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
-          const context = canvas.getContext("2d");
-          if (!context) {
-            throw new Error("no 2d context");
-          }
-          context.drawImage(bitmap, 0, 0);
-          return context.getImageData(0, 0, bitmap.width, bitmap.height);
-        })
-      );
-      if (!x || !y || x.width !== y.width || x.height !== y.height) {
-        return Number.POSITIVE_INFINITY;
-      }
-      let differing = 0;
-      for (let index = 0; index < x.data.length; index += 4) {
-        const channels = [0, 1, 2, 3].map((channel) =>
-          Math.abs((x.data[index + channel] ?? 0) - (y.data[index + channel] ?? 0))
-        );
-        if (Math.max(...channels) > 16) {
-          differing += 1;
-        }
-      }
-      return differing;
-    },
-    [a.toString("base64"), b.toString("base64")] as const
-  );
+/**
+ * Number of pixels that differ between two PNG screenshots of the same size. Anti-aliased edge
+ * pixels don't count: Chrome rasterises the same ring edge a little differently depending on
+ * what the card is composited into, and HA's page and the docs' are built differently.
+ */
+const diffPixels = (a: Buffer, b: Buffer) => {
+  const [first, second] = [PNG.sync.read(a), PNG.sync.read(b)];
+  if (first.width !== second.width || first.height !== second.height) {
+    return Number.POSITIVE_INFINITY;
+  }
+  return pixelmatch(first.data, second.data, undefined, first.width, first.height, {
+    threshold: 0.1,
+  });
+};
 
 for (const { scenario, title } of CASES) {
   test(`docs render "${title}" as Home Assistant does`, async ({ page, browser }, testInfo) => {
@@ -109,13 +117,14 @@ for (const { scenario, title } of CASES) {
     expect((await docsCard.boundingBox())?.width).toBeCloseTo(width, 0);
 
     await Promise.all([freeze(haCard), freeze(docsCard)]);
+    await alignSubpixels(haCard, docsCard);
     const [inHa, inDocs] = await Promise.all([
       haCard.screenshot({ animations: "disabled" }),
       docsCard.screenshot({ animations: "disabled" }),
     ]);
     await testInfo.attach("home-assistant.png", { body: inHa, contentType: "image/png" });
     await testInfo.attach("docs.png", { body: inDocs, contentType: "image/png" });
-    expect(await diffPixels(docs, inHa, inDocs)).toBeLessThanOrEqual(MAX_DIFF_PIXELS);
+    expect(diffPixels(inHa, inDocs)).toBeLessThanOrEqual(MAX_DIFF_PIXELS);
     await docs.close();
   });
 }

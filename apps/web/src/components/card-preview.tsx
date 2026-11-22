@@ -14,14 +14,17 @@ const loadPreview = () =>
     import("@flixlix-cards/shared/preview/ha-elements"),
     import("@flixlix-cards/shared/preview/fake-hass"),
     import("@flixlix-cards/shared/preview/date-range-picker"),
+    import("@flixlix-cards/shared/preview/dropdown"),
     import("power-flow-card-plus/source"),
     import("home-flow-card/source"),
     import("energy-flow-card-plus/source"),
     import("energy-breakdown-card/source"),
     import("energy-period-selector-plus/source"),
-  ]).then(([elements, hass, picker]) => {
+    import("sortable-list-card/source"),
+  ]).then(([elements, hass, picker, dropdown]) => {
     elements.defineHaElements();
     picker.defineDateRangePicker();
+    dropdown.defineDropdown();
     return { haDashboardStyle: elements.haDashboardStyle, ...hass };
   });
 
@@ -63,6 +66,29 @@ const useDocsScheme = () =>
     () => (document.documentElement.classList.contains("dark") ? "dark" : "light"),
     () => "light" as const
   );
+
+/**
+ * Takes the card's chrome away and gives it the page's colour, which cards like Home Flow Card
+ * shade themselves from, so what they draw blends into the page.
+ */
+const BARE_CARD_VARIABLES: Record<`--${string}`, string> = {
+  "--card-background-color": "var(--background)",
+  "--ha-card-background": "transparent",
+  "--ha-card-border-width": "0",
+  "--ha-card-box-shadow": "none",
+};
+
+// Rendered with the page as well as set with the theme: a card styled before them would fade its
+// default background out (ha-card transitions everything), a flash on a dark page.
+const BARE_CARD_STYLE = `${Object.entries(BARE_CARD_VARIABLES)
+  .map(([name, value]) => `${name}: ${value};`)
+  .join(" ")} background: transparent;`;
+
+/** Resolves once a Lit card has rendered its latest properties. */
+const updated = (card: HTMLElement): Promise<unknown> =>
+  "updateComplete" in card && card.updateComplete instanceof Promise
+    ? card.updateComplete
+    : Promise.resolve();
 
 const DAY = 86_400_000;
 
@@ -117,6 +143,8 @@ export function CardPreview({
   states,
   templates,
   energy = false,
+  bare = false,
+  fallback,
   width = 500,
   className,
 }: {
@@ -124,6 +152,13 @@ export function CardPreview({
   states: StateFixtures;
   templates?: Record<string, string>;
   energy?: boolean;
+  /** The cards straight on the page: no dashboard around them and no card behind them. */
+  bare?: boolean;
+  /**
+   * Shown in the cards' place until they have rendered, which is only after hydration: give it
+   * the cards' size and the page doesn't shift when they appear.
+   */
+  fallback?: React.ReactNode;
   width?: number;
   className?: string;
 }) {
@@ -134,6 +169,7 @@ export function CardPreview({
   const collection = React.useRef<{ refresh: () => void }>(undefined);
   const [preview, setPreview] = React.useState<Preview>();
   const [loadError, setLoadError] = React.useState<string>();
+  const [rendered, setRendered] = React.useState(false);
   const scheme = useDocsScheme();
 
   React.useEffect(() => {
@@ -145,9 +181,17 @@ export function CardPreview({
 
   React.useEffect(() => {
     if (preview && dashboard.current) {
-      dashboard.current.style.cssText = preview.haDashboardStyle(scheme);
+      dashboard.current.style.cssText =
+        preview.haDashboardStyle(scheme) + (bare ? BARE_CARD_STYLE : "");
     }
-  }, [preview, scheme]);
+    // Cards that shade themselves for a dark theme read it from `hass`, as in Home Assistant.
+    if (preview && hass.current) {
+      hass.current = preview.withDarkMode(hass.current, scheme === "dark");
+      for (const { setHass } of created) {
+        setHass?.(hass.current);
+      }
+    }
+  }, [preview, scheme, created, bare]);
 
   // Mounts the cards, then hands them a new `hass` per state change that keeps the connection, as
   // Home Assistant does; energy cards refetch their statistics.
@@ -172,6 +216,7 @@ export function CardPreview({
       hass.current = preview.fakeHass({
         states,
         templates,
+        darkMode: scheme === "dark",
         energyCollection,
         statistics: (window) => growthOver(latestStates.current, window),
       });
@@ -179,17 +224,61 @@ export function CardPreview({
     for (const { setHass } of created) {
       setHass?.(hass.current);
     }
-  }, [preview, created, states, templates, energy]);
+  }, [preview, created, states, templates, energy, scheme]);
+
+  React.useEffect(() => {
+    const cards = created.flatMap(({ card }) => (card ? [card] : []));
+    if (!preview || cards.length === 0) {
+      return undefined;
+    }
+    let cancelled = false;
+    void Promise.all(cards.map(updated)).then(() =>
+      // Two frames more for cards that size their labels after their first render.
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          if (!cancelled) {
+            setRendered(true);
+          }
+        })
+      )
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [preview, created]);
 
   const error = loadError ?? created.find((card) => card.error)?.error;
   return (
-    <div ref={dashboard} className={cn("overflow-hidden rounded-lg p-4", className)}>
-      <div
-        ref={host}
-        data-card-preview
-        className="flex flex-col gap-2"
-        style={{ width, maxWidth: "100%" }}
-      />
+    <div
+      ref={dashboard}
+      style={bare ? BARE_CARD_VARIABLES : undefined}
+      className={cn(!bare && "overflow-hidden rounded-lg p-4", className)}
+    >
+      <div className="grid grid-cols-[minmax(0,1fr)]">
+        <div
+          ref={host}
+          data-card-preview
+          className={cn(
+            "flex flex-col gap-2 [grid-area:1/1]",
+            fallback !== undefined &&
+              "transition-opacity duration-300 ease-(--ease-out-strong) motion-reduce:transition-none",
+            fallback !== undefined && !rendered && "opacity-0"
+          )}
+          style={{ width, maxWidth: "100%" }}
+        />
+        {fallback === undefined ? null : (
+          <div
+            aria-hidden={rendered || undefined}
+            className={cn(
+              "pointer-events-none transition-opacity duration-300 ease-(--ease-out-strong) [grid-area:1/1] motion-reduce:transition-none",
+              rendered && "opacity-0"
+            )}
+            style={{ width, maxWidth: "100%" }}
+          >
+            {fallback}
+          </div>
+        )}
+      </div>
       {error ? <pre className="text-destructive text-sm whitespace-pre-wrap">{error}</pre> : null}
     </div>
   );

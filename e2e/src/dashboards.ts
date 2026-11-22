@@ -17,3 +17,9 @@ export const EDITOR_DASHBOARD = "card-editors";
  * editor by hand; no test touches it.
  */
 export const HOUSE_EDITOR_DASHBOARD = "home-flow-editor";
+
+/**
+ * Storage dashboard the bootstrap seeds once with Energy Period Selector Plus configs (billing
+ * cycles, quarters, rolling windows), for trying its visual editor by hand; no test touches it.
+ */
+export const PERIOD_EDITOR_DASHBOARD = "period-selector-editor";

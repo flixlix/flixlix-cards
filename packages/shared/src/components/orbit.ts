@@ -10,14 +10,14 @@ import { html, nothing } from "lit";
 import { flowDot } from "./flow-dot";
 import { type Ring, straightLine } from "./flows/geometry";
 import { homeElement } from "./home";
-import { type CircleParts, individualCircle, isFlowing } from "./individual-element";
+import { deviceCircle, type DeviceCircleOptions, isFlowing } from "./individual-element";
 
 const DOT_RADIUS = 1.75;
 
 const half = ORBIT_NODE_SIZE / 2;
 
 /** Points along the device's line: away from the home, or towards it for a feeding device. */
-const orbitArrow = (device: OrbitDevice, home: OrbitPoint): CircleParts["arrow"] => {
+const orbitArrow = (device: OrbitDevice, home: OrbitPoint): DeviceCircleOptions["arrow"] => {
   if (!device.node.showDirection) {
     return nothing;
   }
@@ -73,7 +73,7 @@ const deviceNode = (
   device: OrbitDevice,
   { home, scale }: { home: OrbitPoint; scale: number }
 ) => {
-  const parts: CircleParts = {
+  const parts: DeviceCircleOptions = {
     valueClass: "individual-orbit",
     secondaryClass: "orbit",
     arrow: orbitArrow(device, home),
@@ -82,7 +82,7 @@ const deviceNode = (
     class="orbit-node orbit-device ${device.labelAbove ? "orbit-label-above" : ""}"
     style="left:${device.x - half}px;top:${device.y - half}px;transform:scale(${scale});${device.style}"
   >
-    ${individualCircle(main, config, device.node, parts)}
+    ${deviceCircle(main, config, device.node, parts)}
     <span class="label">${device.node.name}</span>
   </div>`;
 };

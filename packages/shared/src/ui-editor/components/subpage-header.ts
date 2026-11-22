@@ -1,7 +1,5 @@
-import localize from "@flixlix-cards/shared/i18n";
-import { type ConfigPage, type PowerFlowCardPlusConfig } from "@flixlix-cards/shared/types";
 import { mdiArrowLeft } from "@mdi/js";
-import { fireEvent, type HomeAssistant } from "custom-card-helpers";
+import { fireEvent } from "custom-card-helpers";
 import { css, type CSSResultGroup, html, LitElement, type TemplateResult } from "lit";
 import { property } from "lit/decorators.js";
 
@@ -11,10 +9,12 @@ declare global {
   }
 }
 
+/**
+ * The caller passes `header` already translated: the element is shared by every flow card under
+ * one tag, so the first card to load defines it, with that card's translations.
+ */
 export class SubpageHeader extends LitElement {
-  public hass!: HomeAssistant;
-  @property({ attribute: false }) public config!: PowerFlowCardPlusConfig;
-  @property() protected page?: ConfigPage;
+  @property() public header = "";
 
   protected render(): TemplateResult {
     return html`
@@ -25,7 +25,7 @@ export class SubpageHeader extends LitElement {
             .path=${mdiArrowLeft}
             @click=${this._goBack}
           ></ha-icon-button>
-          <span>${localize(`editor.${this.page}`)}</span>
+          <span>${this.header}</span>
         </div>
       </div>
     `;
@@ -54,6 +54,6 @@ export class SubpageHeader extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "subpage-header": SubpageHeader;
+    "flixlix-subpage-header": SubpageHeader;
   }
 }

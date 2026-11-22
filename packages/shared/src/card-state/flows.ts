@@ -1,10 +1,12 @@
 import {
+  type AuxiliaryConnection,
   FLOW_RATE_MODELS,
   type FlowCardPlusConfig,
   type FlowRateModel,
   type IndividualObject,
 } from "@flixlix-cards/shared/types";
 import { type Balance } from "./nodes";
+import { type AllocatedFlow, hasWire } from "./solve";
 import { type Flow, type Flows } from "./types";
 
 /** Seconds per dot when a flow's rate is not calculated from its value. */
@@ -86,6 +88,21 @@ const configuredDuration = (calculateFlowRate: boolean | number | undefined, rat
   return calculateFlowRate !== false && rate ? rate : FIXED_FLOW_DURATION;
 };
 
+/**
+ * Every flow rate (calculated, `min_flow_rate`/`max_flow_rate`, a fixed `calculate_flow_rate`) is
+ * in seconds per this many pixels of line: the elbow lines of a card in a typical 500px column, so
+ * those keep the pace they always had.
+ */
+export const REFERENCE_LINE_LENGTH = 175;
+
+/**
+ * Seconds a dot takes along a line `lengthPixels` long. Scaled by the square root of the length:
+ * equal pixels per second makes a short line's dot loop so often that it looks faster than a long
+ * line's, while no scaling makes it crawl. The square root sits between the two.
+ */
+export const lineDuration = (secondsPerReferenceLine: number, lengthPixels: number): number =>
+  secondsPerReferenceLine * Math.sqrt(lengthPixels / REFERENCE_LINE_LENGTH);
+
 /** Lines with nothing flowing are hidden, greyed out or faded per `display_zero_lines`. */
 const zeroLine = (config: FlowCardPlusConfig, value: number, visible: boolean) => {
   const mode = config.display_zero_lines?.mode;
@@ -115,6 +132,7 @@ export type FlowContext = {
   config: FlowCardPlusConfig;
   balance: Balance;
   individuals: IndividualObject[];
+  auxiliary: IndividualObject;
   hasReturnToGrid: boolean;
 };
 
@@ -122,10 +140,12 @@ export const computeFlows = ({
   config,
   balance,
   individuals,
+  auxiliary,
   hasReturnToGrid,
 }: FlowContext): Flows => {
-  const { presence: has, flows } = balance;
+  const { presence: has, flows, topology } = balance;
   const toHomeDrawn = !config.entities.home?.hide;
+  const wired = (flow: AllocatedFlow) => hasWire(topology, flow);
   const total = [
     flows.gridToHome,
     flows.solarToHome,
@@ -144,18 +164,20 @@ export const computeFlows = ({
   return {
     batteryGrid: batteryGridLine(config, balance, total),
     batteryToHome: line(config, flows.batteryToHome, total, {
-      visible: has.battery && toHomeDrawn,
+      visible: has.battery && toHomeDrawn && wired("batteryToHome"),
     }),
-    gridToHome: gridToHomeLine(config, balance, total, toHomeDrawn),
+    gridToHome: gridToHomeLine(config, balance, total, toHomeDrawn && wired("gridToHome")),
     solarToBattery: line(config, flows.solarToBattery, total, {
-      visible: has.battery && has.solar,
+      visible: has.battery && has.solar && wired("solarToBattery"),
     }),
     solarToGrid: line(config, flows.solarToGrid, total, {
-      visible: has.grid && hasReturnToGrid && has.solar,
+      visible: has.grid && hasReturnToGrid && has.solar && wired("solarToGrid"),
     }),
-    solarToHome: line(config, flows.solarToHome, total, { visible: has.solar && toHomeDrawn }),
+    solarToHome: line(config, flows.solarToHome, total, {
+      visible: has.solar && toHomeDrawn && wired("solarToHome"),
+    }),
     nonFossil: line(config, nonFossilPower, total, {
-      visible: true,
+      visible: wired("gridToHome"),
       duration: configuredDuration(
         fossil?.calculate_flow_rate,
         flowRate(config, nonFossilPower, total)
@@ -171,7 +193,31 @@ export const computeFlows = ({
         ),
       });
     }),
+    auxiliary: auxiliaryLine(config, balance, auxiliary, total),
   };
+};
+
+export const auxiliaryConnection = (config: FlowCardPlusConfig): AuxiliaryConnection =>
+  config.entities.auxiliary?.connect_to ?? "grid";
+
+/** Drawn only while the node it connects to is shown; its value never counts towards `total`. */
+const auxiliaryLine = (
+  config: FlowCardPlusConfig,
+  { presence }: Balance,
+  auxiliary: IndividualObject,
+  total: number
+): Flow => {
+  const connectTo = auxiliaryConnection(config);
+  const connected =
+    (connectTo === "grid" && presence.grid) || (connectTo === "battery" && presence.battery);
+  const value = auxiliary.state ?? 0;
+  return line(config, value, Math.max(total, value), {
+    visible: auxiliary.has && connected,
+    duration: configuredDuration(
+      auxiliary.field?.calculate_flow_rate,
+      flowRate(config, value, Math.max(total, value))
+    ),
+  });
 };
 
 /** The grid line is drawn while importing, but styled by what reaches home. */
@@ -191,13 +237,14 @@ const gridToHomeLine = (
 /** One line carries both directions between grid and battery. */
 const batteryGridLine = (
   config: FlowCardPlusConfig,
-  { presence, flows }: Balance,
+  { presence, flows, topology }: Balance,
   total: number
 ): Flow => {
+  const wired = hasWire(topology, "gridToBattery") || hasWire(topology, "batteryToGrid");
   const value = Math.max(flows.gridToBattery, flows.batteryToGrid);
   const styledBy = flows.batteryToGrid === 0 ? flows.gridToBattery : flows.batteryToGrid;
   return {
-    ...line(config, value, total, { visible: presence.grid && presence.battery }),
+    ...line(config, value, total, { visible: presence.grid && presence.battery && wired }),
     lineClass: zeroLine(config, styledBy, true).lineClass,
   };
 };

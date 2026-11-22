@@ -7,10 +7,11 @@ import { type CardStateInput, type HomeRing } from "./types";
 
 type Segments = Readonly<Pick<HomeRing, "battery" | "solar" | "grid" | "nonFossil">>;
 
-/** Arc lengths of each source's share of home; they sum to the circumference, or are all 0. */
+/** Arc lengths of each source's share of home; they always sum to the circumference. */
 export const ringSegments = (flows: NodeFlows): Segments => {
+  // With nothing consumed there are no shares, but the home still needs a closed ring (#449).
   if (flows.home <= 0) {
-    return { battery: 0, solar: 0, grid: 0, nonFossil: 0 };
+    return { battery: 0, solar: 0, grid: CIRCLE_CIRCUMFERENCE, nonFossil: 0 };
   }
   const arc = (value: number) => CIRCLE_CIRCUMFERENCE * (value / flows.home);
   const battery = arc(flows.batteryToHome);
@@ -50,6 +51,8 @@ const usageText = (
   );
 };
 
+const NO_SEGMENTS: Segments = { battery: 0, solar: 0, grid: 0, nonFossil: 0 };
+
 /** The home circle's segments: each source's share of home consumption, as arc lengths. */
 export const computeHomeRing = (
   input: CardStateInput,
@@ -57,7 +60,8 @@ export const computeHomeRing = (
   individuals: IndividualObject[],
   format: Formatter
 ): HomeRing => {
-  const segments = ringSegments(balance.flows);
+  // Device-only mode draws a plain border: no source feeds the home, so no ring (not #449's).
+  const segments = input.deviceOnly ? NO_SEGMENTS : ringSegments(balance.flows);
   const sources = [
     ["battery", segments.battery],
     ["solar", segments.solar],

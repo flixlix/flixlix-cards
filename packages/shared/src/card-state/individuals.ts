@@ -35,8 +35,18 @@ const unconfigured: IndividualObject = {
 
 const missingStates = new Set(["", "unavailable", "unknown"]);
 
-/** The secondary entity's state, numeric or text such as "heating"; null while it is missing. */
-const secondaryReading = (hass: HomeAssistant, field: IndividualDeviceType) => {
+/**
+ * The secondary entity's state, numeric or text such as "heating"; null while it is missing.
+ * `periodValue` replaces the live state with the entity's energy over the selected period.
+ */
+const secondaryReading = (
+  hass: HomeAssistant,
+  field: IndividualDeviceType,
+  periodValue: number | null
+) => {
+  if (periodValue !== null) {
+    return periodValue === 0 ? null : periodValue;
+  }
   const entity = field.secondary_info?.entity;
   const state = entity === undefined ? undefined : hass.states[getFirstEntityName(entity)]?.state;
   if (state === undefined || missingStates.has(state)) {
@@ -67,22 +77,23 @@ const individualSecondary = (
   hass: HomeAssistant,
   format: Formatter,
   field: IndividualDeviceType,
-  templateResult: string | undefined
+  templateResult: string | undefined,
+  periodValue: number | null
 ): IndividualObject["secondary"] => {
   const info = field.secondary_info;
-  const state = secondaryReading(hass, field);
+  const state = secondaryReading(hass, field, periodValue);
   return {
     entity: nonEmpty(info?.entity),
     icon: nonEmpty(info?.icon),
-    text:
-      info?.entity === undefined
-        ? undefined
-        : format(state, {
-            unit: nonEmpty(info.unit_of_measurement),
-            unitWhiteSpace: info.unit_white_space !== false,
-            decimals: info.decimals ?? 0,
-            accept_negative: info.accept_negative ?? false,
-          }),
+    text: !info?.entity
+      ? undefined
+      : format(state, {
+          unit: nonEmpty(info.unit_of_measurement),
+          unitWhiteSpace: info.unit_white_space !== false,
+          decimals: info.decimals ?? 0,
+          accept_negative: info.accept_negative ?? false,
+          reading: periodValue !== null,
+        }),
     templateResult: nonEmpty(templateResult),
     show: secondaryShown(info, state, templateResult),
     tap_action: info?.tap_action,
@@ -98,42 +109,95 @@ const fieldColor = (color: IndividualDeviceType["color"]): string | null => {
   return typeof color === "object" ? convertColorListToHex(color) : null;
 };
 
+type DeviceReading = {
+  state: number;
+  has: boolean;
+  feeding: boolean;
+  templateResult: string | undefined;
+  secondaryPeriodValue: number | null;
+};
+
+const deviceNode = (
+  input: CardStateInput,
+  format: Formatter,
+  field: IndividualDeviceType,
+  { state, has, feeding, templateResult, secondaryPeriodValue }: DeviceReading,
+  fallbackName: string,
+  displayZeroByDefault = false
+): IndividualObject => ({
+  field,
+  entity: field.entity,
+  has,
+  state,
+  displayZero: field.display_zero ?? displayZeroByDefault,
+  displayZeroTolerance: field.display_zero_tolerance ?? 0,
+  icon: computeFieldIcon(input.hass, field, "mdi:flash"),
+  name: computeFieldName(input.hass, field, fallbackName),
+  color: fieldColor(field.color),
+  invertAnimation: (field.inverted_animation ?? false) !== feeding,
+  showDirection: field.show_direction ?? false,
+  displayState: format(feeding ? -state : state, {
+    decimals: field.decimals,
+    unit: field.unit_of_measurement,
+    unitWhiteSpace: field.unit_white_space,
+    accept_negative: feeding,
+    reading: true,
+  }),
+  secondary: individualSecondary(input.hass, format, field, templateResult, secondaryPeriodValue),
+});
+
+const periodSecondaries = ({ readings }: CardStateInput) =>
+  readings.status === "ready" ? readings.periodSecondaries : undefined;
+
 /** Individual device nodes in config order. */
 export const individualNodes = (
   input: CardStateInput,
   { totals, presence, feedingIndividuals }: Normalized,
   format: Formatter
 ): IndividualObject[] =>
-  (input.config.entities.individual ?? []).map((field, index) => {
-    if (!field?.entity) {
-      return unconfigured;
-    }
-    const state = totals.individuals[index] ?? 0;
-    const feeding = feedingIndividuals[index] ?? false;
-    const displayZero = field.display_zero ?? input.deviceOnly ?? false;
-    const displayZeroTolerance = field.display_zero_tolerance ?? 0;
-    return {
-      field,
-      entity: field.entity,
-      has: presence.individuals[index] ?? false,
-      state,
-      displayZero,
-      displayZeroTolerance,
-      icon: computeFieldIcon(input.hass, field, "mdi:flash"),
-      name: computeFieldName(input.hass, field, "Individual"),
-      color: fieldColor(field.color),
-      invertAnimation: (field.inverted_animation ?? false) !== feeding,
-      showDirection: field.show_direction ?? false,
-      displayState: format(feeding ? -state : state, {
-        decimals: field.decimals,
-        unit: field.unit_of_measurement,
-        unitWhiteSpace: field.unit_white_space,
-        accept_negative: feeding,
-        reading: true,
-      }),
-      secondary: individualSecondary(input.hass, format, field, input.templates.individual[index]),
-    };
-  });
+  (input.config.entities.individual ?? []).map((field, index) =>
+    field?.entity
+      ? deviceNode(
+          input,
+          format,
+          field,
+          {
+            state: totals.individuals[index] ?? 0,
+            has: presence.individuals[index] ?? false,
+            feeding: feedingIndividuals[index] ?? false,
+            templateResult: input.templates.individual[index],
+            secondaryPeriodValue: periodSecondaries(input)?.individuals[index] ?? null,
+          },
+          "Individual",
+          input.deviceOnly
+        )
+      : unconfigured
+  );
+
+/** The display-only node under the grid; built like an individual device. */
+export const auxiliaryNode = (
+  input: CardStateInput,
+  { presence, auxiliary }: Normalized,
+  format: Formatter
+): IndividualObject => {
+  const field = input.config.entities.auxiliary;
+  if (!field?.entity) {
+    return unconfigured;
+  }
+  return deviceNode(
+    input,
+    format,
+    field,
+    {
+      state: auxiliary.total,
+      has: presence.auxiliary,
+      feeding: auxiliary.feeding,
+      templateResult: input.templates.auxiliarySecondary,
+      secondaryPeriodValue: periodSecondaries(input)?.auxiliary ?? null,
+    },
+    "Auxiliary"
+  );
+};
 
 const byStateThenEntity = (a: IndividualSlot, b: IndividualSlot) =>
   (b.node.state ?? 0) - (a.node.state ?? 0) || a.node.entity.localeCompare(b.node.entity);

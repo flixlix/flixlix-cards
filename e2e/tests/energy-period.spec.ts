@@ -51,15 +51,13 @@ test("energy-period-selector-plus drives HA's own energy collection", async ({ p
   await selector.getByRole("button", { name: "Previous" }).click();
   await expect(gridImport).toHaveText(kWh(yesterday["sensor.grid_import_energy"]));
 
-  await selector.getByRole("button", { name: "Month" }).click();
-  await expect(selector.getByRole("button", { name: "Month" })).toHaveAttribute(
-    "aria-pressed",
-    "true"
-  );
+  await selector.locator(".period-trigger").click();
+  await selector.getByRole("menuitem", { name: /^month$/i }).click();
+  await expect(selector.locator(".period-trigger")).toHaveText(/^\s*month\s*$/i);
   const haTitle = page.locator("hui-energy-period-selector .header-title");
   await expect
     .poll(async () =>
-      (await selector.locator(".label").innerText()).includes(await haTitle.innerText())
+      (await selector.locator(".selector > .label").innerText()).includes(await haTitle.innerText())
     )
     .toBe(true);
 });
@@ -69,15 +67,17 @@ test("energy-period-selector-plus picks custom ranges in HA's own calendar, at t
 }) => {
   await openDashboard(page, CARD_DASHBOARDS["energy-flow-card-plus"]);
   const selector = page.locator("energy-period-selector-plus");
-  await selector.getByRole("button", { name: "Day" }).click();
+  await selector.locator(".period-trigger").click();
+  await selector.getByRole("menuitem", { name: /^day$/i }).click();
   const dayHeight = (await selector.boundingBox())?.height;
-  await selector.getByRole("button", { name: "Custom" }).click();
+  await selector.locator(".period-trigger").click();
+  await selector.getByRole("menuitem", { name: /^custom$/i }).click();
   await expect(selector.locator('input[type="date"]')).toHaveCount(0);
-  await expect(selector.locator(".range > ha-date-range-picker")).toBeVisible();
+  const picker = selector.locator(".selector > ha-date-range-picker");
+  await expect(picker).toBeVisible();
   expect((await selector.boundingBox())?.height).toBe(dayHeight);
 
-  await selector.locator("button.range-button").click();
-  const picker = selector.locator(".range > ha-date-range-picker");
+  // Picking the custom period opens HA's calendar right away.
   await picker.getByText("Yesterday", { exact: true }).click();
 
   const yesterday = await page.evaluate(() => {
@@ -89,5 +89,5 @@ test("energy-period-selector-plus picks custom ranges in HA's own calendar, at t
       day: "numeric",
     }).format(date);
   });
-  await expect(selector.locator(".range > .label")).toHaveText(yesterday);
+  await expect(selector.locator(".selector > .label")).toHaveText(yesterday);
 });

@@ -1,30 +1,35 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, BookOpen, Github, House, Package, Settings, Wrench } from "lucide-react";
-import type * as React from "react";
+import { BatteryCharging, Car, Fan, Fuel, House, Settings, Sun, UtilityPole } from "lucide-react";
 
-import { CardDemo } from "@/components/card-demo";
-import { Button } from "@flixlix-cards/ui/components/button";
+import { trackEvent } from "#/lib/analytics";
+import { houseGallery, houseMoments } from "@/components/demos";
+import { heading } from "@/lib/page-meta";
+import { sensor, type StateFixtures } from "@flixlix-cards/shared/preview/fake-hass";
+
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@flixlix-cards/ui/components/card";
-import { Checkbox } from "@flixlix-cards/ui/components/checkbox";
-
+  CardHero,
+  DemoGallery,
+  Highlight,
+  Highlights,
+  SectionPages,
+  SourceSection,
+} from "./card-overview";
 import { CategorySection } from "./category-section";
 import {
   Callout,
   CodeBlock,
   NextPageNav,
+  type OptionRow,
   PageHeader,
   Prose,
   Section,
-  type OptionRow,
 } from "./doc-primitives";
+import { InstallFromCatalog } from "./install-from-catalog";
+import { RelatedGuides } from "./related-guides";
+import { LiveExample } from "./live-example";
 import { OptionList } from "./option-list";
 import { PageTOC, type TocItem } from "./page-toc";
+import { SupportLinks } from "./support-links";
 
 const TITLE = "Home Flow Card";
 const PKG = "home-flow-card";
@@ -32,7 +37,7 @@ const CARD_TYPE = "custom:home-flow-card";
 const BASE_PATH = "/home-flow-card";
 const REPO_URL = "https://github.com/flixlix/home-flow-card";
 const HACS_REDIRECT =
-  "https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=home-flow-card&category=Dashboard";
+  "https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=home-flow-card&category=plugin";
 const RELEASE_URL = "https://github.com/flixlix/home-flow-card/releases/latest";
 
 const MINIMAL_CONFIG = `type: ${CARD_TYPE}
@@ -44,141 +49,55 @@ battery:
   entity: sensor.battery_power
   state_of_charge: sensor.battery_soc`;
 
-function HighlightItem({ children }: { children: React.ReactNode }) {
-  return (
-    <li className="bg-muted/40 flex items-center gap-2 rounded-md border p-3">
-      <Checkbox className="pointer-events-none" checked />
-      {children}
-    </li>
-  );
-}
-
-function SectionCard({
-  to,
-  icon: Icon,
-  title,
-  description,
-}: {
-  to: string;
-  icon: React.ComponentType<{ className?: string }>;
-  title: string;
-  description: string;
-}) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
-          <Icon className="size-4" /> {title}
-        </CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Button asChild size="sm" variant="outline">
-          <Link to={to}>
-            Open <ArrowRight className="size-3.5" />
-          </Link>
-        </Button>
-      </CardContent>
-    </Card>
-  );
-}
-
 // ---------- Overview ----------
 
+/** A moment of the day as the playground's setup, so a link can open it there. */
 export function OverviewPage() {
   return (
     <>
-      <PageHeader
-        eyebrow={TITLE}
-        title="Overview"
-        description="Your power flows drawn on an isometric house: solar panels on the roof, a battery on the wall and every wire running through the inverter, with the values next to what they measure."
-        badges={[{ label: "HACS custom" }, { label: "YAML & UI editor" }, { label: "Power" }]}
+      <CardHero
+        tags={["HACS Default", "YAML & UI editor", "Power"]}
+        title={TITLE}
+        demo="house"
+        installHref={HACS_REDIRECT}
+        playgroundTo={`${BASE_PATH}/playground`}
+      >
+        <PageHeader
+          className="mb-0"
+          title={heading(BASE_PATH)}
+          description="Your live power, drawn on a little house."
+        />
+      </CardHero>
+
+      <DemoGallery
+        title="A day on your house"
+        description="The same card through the day, each one live."
+        demos={houseGallery}
+        playgroundTo={`${BASE_PATH}/playground`}
       />
 
-      <CardDemo demo="house" className="mx-auto w-fit max-w-full rounded-xl border" />
-      <p className="text-muted-foreground mt-2 mb-8 text-center text-sm">
-        The real card, live: a sunny afternoon, charging the battery and exporting the surplus.
-      </p>
+      <Highlights>
+        <Highlight>Solar on the roof, battery on the wall, grid to the street</Highlight>
+        <Highlight>A pulse along every wire, in the direction of the power</Highlight>
+        <Highlight>Optional electric car, heat pump and generator</Highlight>
+        <Highlight>Greys from your theme, light and dark</Highlight>
+        <Highlight>A dead grid cable and a generator in an outage</Highlight>
+        <Highlight>Visual editor, no YAML needed</Highlight>
+      </Highlights>
 
-      <Prose className="mt-4">
-        <p>
-          <strong>{TITLE}</strong> reads the same sensors as{" "}
-          <Link to="/power-flow-card-plus">Power Flow Card Plus</Link>, and its <code>grid</code>,{" "}
-          <code>solar</code>, <code>battery</code> and <code>home</code> take the same options, at
-          the top level of the card. Instead of circles and lines, every node is wired to the
-          inverter on the house wall: a pulse runs along a wire in the direction its power flows,
-          faster and longer the more power it carries.
-        </p>
-        <p>
-          It shows solar, battery, grid and home for now. Individual devices are not drawn yet; use
-          Power Flow Card Plus for those.
-        </p>
-      </Prose>
-
-      <Section title="Highlights">
-        <ul className="text-foreground/90 grid grid-cols-1 gap-2 text-sm md:grid-cols-2">
-          <HighlightItem>Solar on the roof, battery on the wall, grid to the street</HighlightItem>
-          <HighlightItem>Only what you configure is drawn</HighlightItem>
-          <HighlightItem>Numbers that roll to their new value</HighlightItem>
-          <HighlightItem>Battery icon and charge colours from its state of charge</HighlightItem>
-          <HighlightItem>
-            A dead grid cable in an outage, with an optional generator on the inverter
-          </HighlightItem>
-          <HighlightItem>Greys taken from your theme, light and dark</HighlightItem>
-        </ul>
+      <Section title="Compare it">
+        <RelatedGuides
+          paths={[
+            "/guides/solar-battery-power-flow",
+            "/guides",
+            "/guides/energy-distribution-card-alternative",
+          ]}
+        />
       </Section>
 
-      <Section title="What's in this section">
-        <div className="grid gap-3 md:grid-cols-2">
-          <SectionCard
-            to={`${BASE_PATH}/installation`}
-            icon={Package}
-            title="Installation"
-            description="HACS custom repository or manual install."
-          />
-          <SectionCard
-            to={`${BASE_PATH}/configuration`}
-            icon={BookOpen}
-            title="Configuration"
-            description="The nodes and the card's own options."
-          />
-          <SectionCard
-            to={`${BASE_PATH}/examples`}
-            icon={Wrench}
-            title="Examples"
-            description="Copy-pastable configs."
-          />
-        </div>
-      </Section>
+      <SectionPages basePath={BASE_PATH} playground />
 
-      <Section title="Source & releases">
-        <Prose>
-          <p>
-            The card is distributed via{" "}
-            <a href={REPO_URL} target="_blank" rel="noopener noreferrer">
-              flixlix/{PKG}
-            </a>
-            , but the source code lives in the monorepo at{" "}
-            <a
-              href="https://github.com/flixlix/flixlix-cards"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              flixlix/flixlix-cards
-            </a>
-            . Issues and feature requests are tracked there.
-          </p>
-        </Prose>
-        <Button asChild variant="outline" size="sm">
-          <a
-            href="https://github.com/flixlix/flixlix-cards"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Github className="size-4" /> View source on GitHub
-          </a>
-        </Button>
-      </Section>
+      <SourceSection repoUrl={REPO_URL} />
 
       <NextPageNav next={{ label: "Installation", to: `${BASE_PATH}/installation` }} />
     </>
@@ -192,47 +111,26 @@ export function InstallationPage() {
     <>
       <PageHeader
         eyebrow={TITLE}
-        title="Installation"
-        description="This card is not in the default HACS store — add it as a custom repository first. Manual installation is also supported."
+        title={heading(`${BASE_PATH}/installation`)}
+        description="Install it from Home Assistant's Marketplace, or from HACS before 2026.11. Manual installation is also supported."
       />
 
-      <Callout variant="info" title="Custom repository required">
-        <strong>{TITLE}</strong> is not part of the default HACS index. Add the repository URL below
-        as a <em>Custom repository</em> in HACS to install it.
-      </Callout>
-
-      <Section title="HACS (custom repository)" id="hacs">
-        <Prose>
-          <ol>
-            <li>
-              In Home Assistant, open <strong>HACS</strong>.
-            </li>
-            <li>
-              Click the <strong>⋮</strong> menu in the top-right and choose{" "}
-              <strong>Custom repositories</strong>.
-            </li>
-            <li>
-              Add the repository URL <code>{REPO_URL}</code> with category{" "}
-              <strong>Dashboard</strong>, then click <strong>Add</strong>.
-            </li>
-            <li>
-              Search for <strong>{TITLE}</strong> in HACS and click <strong>Download</strong>.
-            </li>
-            <li>Reload your dashboard / clear browser cache.</li>
-          </ol>
-        </Prose>
-        <Button asChild variant="outline" size="sm">
-          <a href={HACS_REDIRECT} target="_blank" rel="noopener noreferrer">
-            Open in HACS
-          </a>
-        </Button>
-      </Section>
+      <InstallFromCatalog
+        title={TITLE}
+        redirect={HACS_REDIRECT}
+        examplesPath={`${BASE_PATH}/examples`}
+      />
 
       <Section title="Manual installation" id="manual">
         <Prose>
           <p>
             Download <code>{PKG}.js</code> from the{" "}
-            <a href={RELEASE_URL} target="_blank" rel="noopener noreferrer">
+            <a
+              href={RELEASE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackEvent("Download release", { card: TITLE })}
+            >
               latest release
             </a>{" "}
             and copy it into <code>config/www/</code>, then register the resource:
@@ -245,12 +143,16 @@ export function InstallationPage() {
     - url: /local/${PKG}.js
       type: module`}
         />
-        <Callout variant="tip" title="HACS users">
-          When installed via HACS the path becomes{" "}
+        <Callout variant="tip" title="Installed from the Marketplace or HACS?">
+          It registers the resource for you. The Marketplace serves it from
+          <code>
+            /local/community/{PKG}/{PKG}.js
+          </code>
+          ; HACS used
           <code>
             /hacsfiles/{PKG}/{PKG}.js
           </code>
-          . HACS usually registers it automatically.
+          , which keeps working.
         </Callout>
       </Section>
 
@@ -279,41 +181,88 @@ export function InstallationPage() {
 
 const CARD_OPTIONS: OptionRow[] = [
   { name: "type", type: "string", required: true, description: <code>{CARD_TYPE}</code> },
+  { name: "title", type: "string", description: "Card title." },
+  {
+    name: "mode",
+    type: "string",
+    default: "power",
+    description: (
+      <>
+        What the sensors measure: <code>power</code> for live power in W, or <code>energy</code> for
+        energy in Wh over the period picked on the dashboard&apos;s energy date picker (today
+        without one). In energy mode every node, the car and the heat pump read energy sensors, each
+        wire carries its energy over the period and, without an expected range in Wh, the pulses
+        share out what was supplied. A grid or battery that ran both ways gets a parallel line and a
+        value each way. What only says what is happening now is left out: the grid&apos;s outage,
+        the car&apos;s <code>idle</code> conditions and the heat pump&apos;s turning fan. See{" "}
+        <Link to={`${BASE_PATH}/examples`} hash="energy">
+          the energy example
+        </Link>
+        .
+      </>
+    ),
+  },
+  {
+    name: "collection_key",
+    type: "string",
+    description: (
+      <>
+        With <code>mode: energy</code>, the energy date picker to follow, as in Energy Flow Card
+        Plus, for example <code>energy_living_room</code>. Without it, the dashboard&apos;s own.
+      </>
+    ),
+  },
+  {
+    name: "energy_entities",
+    type: "object",
+    description: (
+      <>
+        Each node&apos;s energy sensor, by node: <code>grid</code>, <code>solar</code>,{" "}
+        <code>battery</code>, <code>home</code>, <code>generator</code>, <code>car</code> and{" "}
+        <code>heat_pump</code>, each written like the node&apos;s <code>entity</code>. With them,
+        the card gets a selector in its top right corner between live power and today, and reads
+        today itself instead of following a date picker. The house keeps its live size and place. A
+        node without an energy sensor is left out of today; the home without one shows what flowed
+        into it. Only with <code>mode: power</code>, the default. See{" "}
+        <Link to={`${BASE_PATH}/examples`} hash="live-or-today">
+          the example
+        </Link>
+        .
+      </>
+    ),
+  },
+  {
+    name: "views",
+    type: "list",
+    default: "[live, today]",
+    description: (
+      <>
+        With <code>energy_entities</code>, any of <code>live</code>, <code>today</code>,{" "}
+        <code>yesterday</code>, <code>week</code>, <code>month</code> and <code>year</code> for the
+        selector, always shown in that order. Two sit side by side; more open in Home
+        Assistant&apos;s dropdown. A single one shows that view without a selector.
+      </>
+    ),
+  },
+  {
+    name: "default_view",
+    type: "string",
+    default: "first of views",
+    description: (
+      <>
+        The view the card opens on, one of <code>views</code>, for example <code>today</code> with{" "}
+        <code>views: [live, today]</code>.
+      </>
+    ),
+  },
   {
     name: "grid / solar / battery / home",
     type: "object",
     description: (
       <>
-        <code>grid</code>, <code>solar</code>, <code>battery</code> and <code>home</code>,
-        configured as in <Link to="/power-flow-card-plus/configuration">Power Flow Card Plus</Link>,
-        at the top level of the card. Leave one out and it is not drawn; one of grid, solar or
-        battery is required.
-      </>
-    ),
-  },
-  { name: "title", type: "string", description: "Card title." },
-  {
-    name: "animate_numbers",
-    type: "boolean",
-    default: "true",
-    description:
-      "Roll each number to its new value when a reading changes. Always still when your system asks for reduced motion.",
-  },
-  {
-    name: "clickable_entities",
-    type: "boolean",
-    default: "false",
-    description: "Tapping a value opens its entity, or runs the node's tap/hold actions.",
-  },
-  {
-    name: "battery.state_of_charge_severity",
-    type: "object",
-    default: "{ red: 15, yellow: 30 }",
-    description: (
-      <>
-        The battery&apos;s charge bar colours, in %: red below <code>red</code>, yellow below{" "}
-        <code>yellow</code>, green above both. Its icon follows the state of charge as in Power Flow
-        Card Plus, and its label shows the state of charge and whether it is charging.
+        The nodes, at the top level of the card; see their sections below. Leave one out and it is
+        not drawn; one of grid, solar or battery is required. Without <code>home</code>, the card
+        works out what the home uses from the others.
       </>
     ),
   },
@@ -322,13 +271,34 @@ const CARD_OPTIONS: OptionRow[] = [
     type: "object",
     description: (
       <>
-        <code>entity</code> (and optional <code>name</code>) of a generator the inverter switches to
-        during a grid outage. It gets its own wire into the inverter and is never drawn on the grid
-        cable. Needs <code>grid.power_outage</code> to know when the grid is down. The grid itself
-        has no label, so its <code>name</code> and <code>power_outage.label_alert</code> are not
-        shown.
+        A generator for grid outages; see <a href="#generator">Generator</a>.
       </>
     ),
+  },
+  {
+    name: "car",
+    type: "object",
+    description: (
+      <>
+        An electric car in front of the house; see <a href="#car">Car</a>.
+      </>
+    ),
+  },
+  {
+    name: "heat_pump",
+    type: "object",
+    description: (
+      <>
+        A heat pump on the front wall; see <a href="#heat-pump">Heat pump</a>.
+      </>
+    ),
+  },
+  {
+    name: "animate_numbers",
+    type: "boolean",
+    default: "true",
+    description:
+      "Roll each number to its new value when a reading changes. Always still when your system asks for reduced motion.",
   },
   {
     name: "disable_dots",
@@ -336,16 +306,63 @@ const CARD_OPTIONS: OptionRow[] = [
     default: "false",
     description: "Keep the wires still: no pulses, only the colour of the power they carry.",
   },
+  {
+    name: "wire_width",
+    type: "number",
+    default: "1",
+    description:
+      "How many times thicker the wires are drawn, for example 2 for twice as thick. Like the labels' text, wires keep a similar size in px whatever the card's width: they stay visible in a narrow sidebar and do not swell on a wide dashboard.",
+  },
+  {
+    name: "two_way_value_size",
+    type: "number",
+    default: "1",
+    description:
+      "In energy mode, how large the values of a grid or battery that ran both ways are drawn against the other labels' values, for example 0.8 so their two values take less room.",
+  },
+  {
+    name: "clickable_entities",
+    type: "boolean",
+    default: "true",
+    description: (
+      <>
+        Tapping a value opens its entity&apos;s details; <code>false</code> turns that off. A
+        node&apos;s own <a href="#actions">actions</a> run either way.
+      </>
+    ),
+  },
 ];
 
 const NUMBER_OPTIONS: OptionRow[] = [
-  { name: "base_decimals", type: "number", default: "0", description: "Decimals of values in W." },
-  { name: "kilo_decimals", type: "number", default: "1", description: "Decimals of values in kW." },
+  {
+    name: "base_decimals",
+    type: "number",
+    default: "0",
+    description: "Decimals of values in W, or Wh in energy mode.",
+  },
+  {
+    name: "kilo_decimals",
+    type: "number",
+    default: "1",
+    description: "Decimals of values in kW (kWh).",
+  },
   {
     name: "kilo_threshold",
     type: "number",
     default: "1000",
-    description: "From how many watts a value is shown in kW.",
+    description: "From how many W (Wh) a value is shown in kW (kWh).",
+  },
+  {
+    name: "mega_decimals",
+    type: "number",
+    default: "2",
+    description: "Decimals of values in MW (MWh).",
+  },
+  {
+    name: "mega_threshold",
+    type: "number",
+    default: "1000000",
+    description: "From how many W (Wh) a value is shown in MW (MWh).",
   },
   {
     name: "min_flow_rate / max_flow_rate",
@@ -354,17 +371,429 @@ const NUMBER_OPTIONS: OptionRow[] = [
     description: "Seconds per pulse at the most and the least power.",
   },
   {
-    name: "min_expected_power / max_expected_power",
+    name: "min_expected_value / max_expected_value",
     type: "number",
     default: "0.01 / 2000",
-    description: "The power range the pulse speed follows.",
+    description: (
+      <>
+        The range the pulses follow, in W (Wh in energy mode): slowest and shortest at the min,
+        fastest and longest at the max. In energy mode without them, each wire&apos;s pulses share
+        out what was supplied over the period instead. The older <code>min_expected_power</code> and{" "}
+        <code>max_expected_power</code> still work in power mode; the visual editor saves them under
+        the new names.
+      </>
+    ),
   },
+];
+
+const nameRow = (fallback: string, fromEntity = "the name"): OptionRow[] => [
+  { name: "name", type: "string", default: fallback, description: "Label name." },
+  {
+    name: "use_metadata",
+    type: "boolean",
+    default: "false",
+    description: `Take ${fromEntity} from the entity.`,
+  },
+];
+
+const valueRows = (node: string): OptionRow[] => [
+  {
+    name: "display_zero_tolerance",
+    type: "number",
+    default: "0",
+    description: `Below this, in W (Wh in energy mode), the ${node} counts as idle.`,
+  },
+  {
+    name: "unit_of_measurement",
+    type: "string",
+    description: "Unit shown instead of the sensor's own.",
+  },
+  {
+    name: "decimals",
+    type: "number",
+    description: (
+      <>
+        Decimals of the value, instead of the card&apos;s <code>base_decimals</code> and{" "}
+        <code>kilo_decimals</code>.
+      </>
+    ),
+  },
+];
+
+const ACTION_ROWS: OptionRow[] = [
+  {
+    name: "tap_action / hold_action / double_tap_action",
+    type: "object",
+    description: (
+      <>
+        What tapping, holding or double-tapping the label does; see <a href="#actions">Actions</a>.
+      </>
+    ),
+  },
+];
+
+const colorRows = (consumption: string, production: string): OptionRow[] => [
+  {
+    name: "color.consumption",
+    type: "string | list",
+    default: "theme",
+    description: (
+      <>
+        Colour of the wire {consumption}, as <code>#rrggbb</code> or <code>[r, g, b]</code>.
+      </>
+    ),
+  },
+  {
+    name: "color.production",
+    type: "string | list",
+    default: "theme",
+    description: `Colour of the wire ${production}.`,
+  },
+];
+
+const GRID_OPTIONS: OptionRow[] = [
+  {
+    name: "entity",
+    type: "string | object",
+    required: true,
+    description: (
+      <>
+        A power or energy sensor, positive while importing and negative while exporting; or{" "}
+        <code>consumption</code> (import) and <code>production</code> (export), one sensor per
+        direction, each positive.
+      </>
+    ),
+  },
+  ...nameRow("Grid"),
+  {
+    name: "power_outage.entity",
+    type: "string",
+    description:
+      "The entity that reports an outage. While the grid is down, its cable goes dead and its label shows a dash and an alert. Live only: energy mode leaves it out.",
+  },
+  {
+    name: "power_outage.state_alert",
+    type: "string",
+    default: "on",
+    description: (
+      <>
+        The state of <code>power_outage.entity</code> that means the grid is down.
+      </>
+    ),
+  },
+  {
+    name: "power_outage.label_alert",
+    type: "string",
+    default: "Power Outage",
+    description: "The alert under the grid's name during an outage.",
+  },
+  {
+    name: "invert_state",
+    type: "boolean",
+    default: "false",
+    description: "Swap import and export, for a sensor that reads the other way round.",
+  },
+  ...valueRows("grid"),
+  ...colorRows("while importing", "while exporting"),
+  ...ACTION_ROWS,
+];
+
+const SOLAR_OPTIONS: OptionRow[] = [
+  { name: "entity", type: "string", required: true, description: "The solar production sensor." },
+  ...nameRow("Solar"),
+  {
+    name: "invert_state",
+    type: "boolean",
+    default: "false",
+    description: "For a sensor that reads production as negative.",
+  },
+  ...valueRows("solar"),
+  {
+    name: "color",
+    type: "string | list",
+    default: "theme",
+    description: (
+      <>
+        Colour of the wire, as <code>#rrggbb</code> or <code>[r, g, b]</code>.
+      </>
+    ),
+  },
+  ...ACTION_ROWS,
+];
+
+const BATTERY_OPTIONS: OptionRow[] = [
+  {
+    name: "entity",
+    type: "string | object",
+    required: true,
+    description: (
+      <>
+        A power or energy sensor, positive while discharging and negative while charging; or{" "}
+        <code>consumption</code> (discharge) and <code>production</code> (charge), one sensor per
+        direction, each positive.
+      </>
+    ),
+  },
+  {
+    name: "state_of_charge",
+    type: "string",
+    description: "The state of charge sensor, in %. Fills the charge bar and shows on the label.",
+  },
+  {
+    name: "state_of_charge_position",
+    type: "string",
+    default: "below_value",
+    description: (
+      <>
+        Where the label shows the state of charge: <code>below_value</code>, beside whether it is
+        charging; <code>above_value</code>, swapped with the value as the large one; or on the
+        value&apos;s line, <code>after_value</code> or <code>before_value</code>. Without a state of
+        charge, the label shows the value either way. The older <code>below_power</code>,{" "}
+        <code>above_power</code>, <code>after_power</code> and <code>before_power</code> still work;
+        the visual editor saves them under the new names.
+      </>
+    ),
+  },
+  {
+    name: "state_of_charge_severity.red",
+    type: "number",
+    default: "15",
+    description: "The charge bar is red below this charge, in %.",
+  },
+  {
+    name: "state_of_charge_severity.yellow",
+    type: "number",
+    default: "30",
+    description: "The charge bar is yellow below this charge, in %, and green above it.",
+  },
+  {
+    name: "state_of_charge_unit",
+    type: "string",
+    default: "%",
+    description: "Unit of the state of charge.",
+  },
+  {
+    name: "state_of_charge_unit_white_space",
+    type: "boolean",
+    default: "true",
+    description: "Put a space between the state of charge and its unit.",
+  },
+  {
+    name: "state_of_charge_decimals",
+    type: "number",
+    default: "0",
+    description: "Decimals of the state of charge.",
+  },
+  ...nameRow("Battery", "the name and icon"),
+  {
+    name: "icon",
+    type: "string",
+    default: "by charge",
+    description: (
+      <>
+        The icon on the battery: <code>mdi:battery</code>, <code>mdi:battery-high</code>,{" "}
+        <code>mdi:battery-medium</code>, <code>mdi:battery-low</code> or{" "}
+        <code>mdi:battery-outline</code>. By default it follows the state of charge.
+      </>
+    ),
+  },
+  {
+    name: "invert_state",
+    type: "boolean",
+    default: "false",
+    description: "Swap charging and discharging, for a sensor that reads the other way round.",
+  },
+  ...valueRows("battery"),
+  ...colorRows("while discharging", "while charging"),
+  ...ACTION_ROWS,
+];
+
+const HOME_OPTIONS: OptionRow[] = [
+  {
+    name: "entity",
+    type: "string",
+    description: (
+      <>
+        The home&apos;s consumption sensor, opened on tap and read with <code>override_state</code>.
+      </>
+    ),
+  },
+  ...nameRow("Home"),
+  {
+    name: "override_state",
+    type: "boolean",
+    default: "false",
+    description: (
+      <>
+        Show the <code>entity</code>&apos;s reading instead of the consumption the card works out.
+      </>
+    ),
+  },
+  {
+    name: "unit_of_measurement",
+    type: "string",
+    description: "Unit shown instead of the sensor's own.",
+  },
+  {
+    name: "decimals",
+    type: "number",
+    description: "Decimals of the value, instead of the card's.",
+  },
+  ...ACTION_ROWS,
+];
+
+const GENERATOR_OPTIONS: OptionRow[] = [
+  {
+    name: "entity",
+    type: "string",
+    required: true,
+    description: "The generator's power or energy sensor.",
+  },
+  { name: "name", type: "string", default: "Generator", description: "Label name." },
+];
+
+const CAR_OPTIONS: OptionRow[] = [
+  {
+    name: "entity",
+    type: "string",
+    required: true,
+    description:
+      "Its charging power or energy, positive while it charges and negative while it feeds the home.",
+  },
+  {
+    name: "state_of_charge",
+    type: "string",
+    description: "Its battery level, in %, shown on its label under its power.",
+  },
+  { name: "name", type: "string", default: "Car", description: "Label name." },
+  {
+    name: "visibility",
+    type: "list",
+    description: (
+      <>
+        <a href="#conditions">Conditions</a>, set up with the same editor as a card&apos;s
+        visibility tab: the car shows only while all of them hold, for example while its tracker
+        reads <code>home</code>. While hidden it keeps its room, so the house does not move as the
+        car comes and goes. Without conditions the car always shows.
+      </>
+    ),
+  },
+  {
+    name: "idle",
+    type: "list",
+    description: (
+      <>
+        <a href="#conditions">Conditions</a>: while all of them hold, the car is parked and
+        unplugged. It is drawn faded, without its cable, and its label shows its state of charge;
+        without one, the car shows on its own, without a label. Without conditions the car is idle
+        while it draws no power. Live only: in energy mode the car is idle while it used nothing
+        over the period.
+      </>
+    ),
+  },
+];
+
+const CONDITION_ROWS: OptionRow[] = [
+  {
+    name: "state",
+    type: "condition",
+    description: (
+      <>
+        <code>entity</code>, and <code>state</code> or <code>state_not</code>: a value or a list.
+      </>
+    ),
+  },
+  {
+    name: "numeric_state",
+    type: "condition",
+    description: (
+      <>
+        <code>entity</code>, <code>above</code>, <code>below</code>.
+      </>
+    ),
+  },
+  { name: "screen", type: "condition", description: <code>media_query</code> },
+  { name: "user", type: "condition", description: <>{<code>users</code>}: user ids.</> },
+  {
+    name: "time",
+    type: "condition",
+    description: (
+      <>
+        <code>after</code>, <code>before</code>, <code>weekdays</code>.
+      </>
+    ),
+  },
+  {
+    name: "location",
+    type: "condition",
+    description: (
+      <>
+        <code>target</code>: zones, by id, area, floor or label; <code>match_mode</code>:{" "}
+        <code>any_zone</code> or <code>active_zone</code>; <code>away</code>. Or the older{" "}
+        <code>locations</code>: <code>home</code>, <code>not_home</code> or zone names.
+      </>
+    ),
+  },
+  {
+    name: "and / or",
+    type: "condition",
+    description: (
+      <>
+        <code>conditions</code>: all of them, or any of them.
+      </>
+    ),
+  },
+  {
+    name: "not",
+    type: "condition",
+    description: (
+      <>
+        <code>conditions</code>: passes unless all of them hold.
+      </>
+    ),
+  },
+];
+
+const HEAT_PUMP_OPTIONS: OptionRow[] = [
+  { name: "entity", type: "string", required: true, description: "Its power or energy." },
+  {
+    name: "climate",
+    type: "string",
+    description: (
+      <>
+        Its climate entity: a tap on its label opens it, and its label reads its state or
+        temperature from it. Without it, a tap opens <code>entity</code>.
+      </>
+    ),
+  },
+  {
+    name: "status",
+    type: "string",
+    default: "state",
+    description: (
+      <>
+        What its label shows under its power, read from <code>climate</code>: <code>state</code>{" "}
+        (what it is doing, for example Heating), <code>temperature</code>, or{" "}
+        <code>temperature_and_target</code> (38 °C → 45 °C).
+      </>
+    ),
+  },
+  { name: "name", type: "string", default: "Heat pump", description: "Label name." },
 ];
 
 export function ConfigurationPage() {
   const tocItems: TocItem[] = [
     { id: "card-options", label: "Card options" },
     { id: "numbers", label: "Numbers and pulses" },
+    { id: "grid", label: "Grid" },
+    { id: "solar", label: "Solar" },
+    { id: "battery", label: "Battery" },
+    { id: "home", label: "Home" },
+    { id: "generator", label: "Generator" },
+    { id: "car", label: "Car" },
+    { id: "heat-pump", label: "Heat pump" },
+    { id: "conditions", label: "Conditions" },
+    { id: "actions", label: "Actions" },
   ];
 
   return (
@@ -372,11 +801,11 @@ export function ConfigurationPage() {
       <div className="min-w-0">
         <PageHeader
           eyebrow={TITLE}
-          title="Configuration"
+          title={heading(`${BASE_PATH}/configuration`)}
           description={
             <>
-              The card&apos;s own options. Required fields are marked with{" "}
-              <span className="text-destructive font-mono">*</span>.
+              Every option the card reads, by where it goes in the YAML. Required fields are marked
+              with <span className="text-destructive font-mono">*</span>.
             </>
           }
         />
@@ -410,12 +839,210 @@ export function ConfigurationPage() {
             language: "yaml",
             code: `kilo_threshold: 1000
 kilo_decimals: 2
-max_expected_power: 5000`,
+max_expected_value: 5000`,
           }}
         >
           <OptionList rows={NUMBER_OPTIONS} />
         </CategorySection>
 
+        <CategorySection
+          id="grid"
+          title="Grid"
+          icon={UtilityPole}
+          accent="violet"
+          description={
+            <>
+              Under <code>grid</code>: the cable running off to the street.
+            </>
+          }
+          example={{
+            language: "yaml",
+            code: `grid:
+  entity:
+    consumption: sensor.grid_import_power
+    production: sensor.grid_export_power
+  power_outage:
+    entity: binary_sensor.grid_outage
+    label_alert: Blackout`,
+          }}
+        >
+          <OptionList rows={GRID_OPTIONS} />
+        </CategorySection>
+
+        <CategorySection
+          id="solar"
+          title="Solar"
+          icon={Sun}
+          accent="orange"
+          description={
+            <>
+              Under <code>solar</code>: the panels on the roof.
+            </>
+          }
+          example={{
+            language: "yaml",
+            code: `solar:
+  entity: sensor.solar_power
+  name: Roof
+  color: "#ff9800"`,
+          }}
+        >
+          <OptionList rows={SOLAR_OPTIONS} />
+        </CategorySection>
+
+        <CategorySection
+          id="battery"
+          title="Battery"
+          icon={BatteryCharging}
+          accent="green"
+          description={
+            <>
+              Under <code>battery</code>: the battery on the wall, with its charge bar.
+            </>
+          }
+          example={{
+            language: "yaml",
+            code: `battery:
+  entity: sensor.battery_power
+  state_of_charge: sensor.battery_soc
+  state_of_charge_position: after_value
+  state_of_charge_severity:
+    red: 10
+    yellow: 25`,
+          }}
+        >
+          <OptionList rows={BATTERY_OPTIONS} />
+        </CategorySection>
+
+        <CategorySection
+          id="home"
+          title="Home"
+          icon={House}
+          accent="cyan"
+          description={
+            <>
+              Under <code>home</code>: the outlet inside the house. Optional; without it the card
+              works out what the home uses.
+            </>
+          }
+          example={{
+            language: "yaml",
+            code: `home:
+  entity: sensor.home_power
+  override_state: true`,
+          }}
+        >
+          <OptionList rows={HOME_OPTIONS} />
+        </CategorySection>
+
+        <CategorySection
+          id="generator"
+          title="Generator"
+          icon={Fuel}
+          accent="amber"
+          description={
+            <>
+              Under <code>generator</code>: a generator the inverter switches to during a grid
+              outage. It gets its own wire into the inverter and is never drawn on the grid cable.
+              It needs <code>grid.power_outage</code> to know when the grid is down; while it runs,
+              its label takes the grid&apos;s place. In energy mode it needs no{" "}
+              <code>power_outage</code>: it shows beside the grid whenever it ran over the period.
+            </>
+          }
+          example={{
+            language: "yaml",
+            code: `grid:
+  entity: sensor.grid_power
+  power_outage:
+    entity: binary_sensor.grid_outage
+generator:
+  entity: sensor.generator_power`,
+          }}
+        >
+          <OptionList rows={GENERATOR_OPTIONS} />
+        </CategorySection>
+
+        <CategorySection
+          id="car"
+          title="Car"
+          icon={Car}
+          accent="pink"
+          description={
+            <>
+              Under <code>car</code>: an electric car parked in front of the house, wired to the
+              home&apos;s outlet.
+            </>
+          }
+          example={{
+            language: "yaml",
+            code: `car:
+  entity: sensor.wallbox_power
+  state_of_charge: sensor.car_battery_level
+  visibility:
+    - condition: state
+      entity: device_tracker.car
+      state: home
+  idle:
+    - condition: state
+      entity: binary_sensor.car_plugged_in
+      state: "off"`,
+          }}
+        >
+          <OptionList rows={CAR_OPTIONS} />
+        </CategorySection>
+
+        <CategorySection
+          id="heat-pump"
+          title="Heat pump"
+          icon={Fan}
+          accent="rose"
+          description={
+            <>
+              Under <code>heat_pump</code>: a heat pump on the front wall, wired to the home&apos;s
+              outlet, its fan turning while it runs. With a <code>car</code> configured it hangs
+              above where the car parks; without one, low and further along the wall, its label
+              below it. Only the config decides, so it stays put while the car is away.
+            </>
+          }
+          example={{
+            language: "yaml",
+            code: `heat_pump:
+  entity: sensor.heat_pump_power
+  climate: climate.heat_pump
+  status: temperature_and_target`,
+          }}
+        >
+          <OptionList rows={HEAT_PUMP_OPTIONS} />
+        </CategorySection>
+
+        <Section title="Conditions" id="conditions">
+          <Prose>
+            <p>
+              <code>car.visibility</code> and <code>car.idle</code> take the conditions of a
+              card&apos;s visibility tab. Since Home Assistant 2026.10 its editor writes{" "}
+              <code>state</code> and <code>numeric_state</code> with <code>entity_id</code>, as
+              automations do, and offers template, sun, zone and device conditions, which Home
+              Assistant checks for the card. Before 2026.10 those are ignored.
+            </p>
+          </Prose>
+          <OptionList rows={CONDITION_ROWS} />
+        </Section>
+
+        <Section title="Actions" id="actions">
+          <Prose>
+            <p>
+              <code>tap_action</code>, <code>hold_action</code> and <code>double_tap_action</code>{" "}
+              take Home Assistant&apos;s{" "}
+              <a href="https://www.home-assistant.io/dashboards/actions/">actions</a>:{" "}
+              <code>more-info</code>, <code>toggle</code>, <code>navigate</code>, <code>url</code>,{" "}
+              <code>perform-action</code>, <code>assist</code> or <code>none</code>. Without any of
+              them, tapping a label opens its entity&apos;s details, unless{" "}
+              <code>clickable_entities: false</code>.
+            </p>
+          </Prose>
+        </Section>
+
+        <SupportLinks card="Home Flow Card" />
         <NextPageNav
           prev={{ label: "Installation", to: `${BASE_PATH}/installation` }}
           next={{ label: "Examples", to: `${BASE_PATH}/examples` }}
@@ -433,29 +1060,28 @@ max_expected_power: 5000`,
 
 // ---------- Examples ----------
 
-export function ExamplesPage() {
-  return (
-    <>
-      <PageHeader
-        eyebrow={TITLE}
-        title="Examples"
-        description="Copy-pastable configs for the most common setups."
-      />
+const AFTERNOON = houseMoments[0]?.states ?? {};
 
-      <Section id="solar-battery" title="Solar and a battery">
-        <Prose>
-          <p>The full house: solar, a battery with its state of charge, and the grid.</p>
-        </Prose>
-        <CodeBlock language="yaml" code={MINIMAL_CONFIG} />
-      </Section>
-
-      <Section id="split" title="Separate import and export sensors">
-        <Prose>
-          <p>One sensor per direction, the power-outage alert and a generator for outages.</p>
-        </Prose>
-        <CodeBlock
-          language="yaml"
-          code={`type: ${CARD_TYPE}
+const EXAMPLES: {
+  id: string;
+  title: string;
+  text: string;
+  code: string;
+  states: StateFixtures;
+  energy?: boolean;
+}[] = [
+  {
+    id: "solar-battery",
+    title: "Solar and a battery",
+    text: "The full house: solar, a battery with its state of charge, and the grid.",
+    code: MINIMAL_CONFIG,
+    states: AFTERNOON,
+  },
+  {
+    id: "split",
+    title: "Separate sensors, an outage and a generator",
+    text: "One sensor per direction, the grid's outage sensor, and a generator that appears when the grid goes down. Here the grid is down.",
+    code: `type: ${CARD_TYPE}
 grid:
   entity:
     consumption: sensor.grid_import_power
@@ -470,39 +1096,226 @@ battery:
   entity:
     consumption: sensor.battery_discharge_power
     production: sensor.battery_charge_power
-  state_of_charge: sensor.battery_soc`}
-        />
-      </Section>
-
-      <Section id="grid-only" title="Grid only">
-        <Prose>
-          <p>Without solar or a battery, the house shows the grid feeding the home.</p>
-        </Prose>
-        <CodeBlock
-          language="yaml"
-          code={`type: ${CARD_TYPE}
+  state_of_charge: sensor.battery_soc`,
+    states: {
+      "sensor.grid_import_power": "1400",
+      "sensor.grid_export_power": "0",
+      "binary_sensor.grid_outage": sensor("on", { unit: undefined }),
+      "sensor.generator_power": "1400",
+      "sensor.solar_power": "600",
+      "sensor.battery_discharge_power": "0",
+      "sensor.battery_charge_power": "300",
+      "sensor.battery_soc": sensor("41", { unit: "%" }),
+    },
+  },
+  {
+    id: "car",
+    title: "A car charging off the sun",
+    text: "An electric car in front of the house, charging from the home's outlet, with its battery level on its label. It shows only while it is home, and waits faded and unplugged while its cable is out.",
+    code: `type: ${CARD_TYPE}
 grid:
-  entity: sensor.grid_power`}
-        />
-      </Section>
-
-      <Section id="still" title="Still numbers and wires">
-        <Prose>
-          <p>Plain numbers and no pulses, for a calmer dashboard.</p>
-        </Prose>
-        <CodeBlock
-          language="yaml"
-          code={`type: ${CARD_TYPE}
+  entity: sensor.grid_power
+solar:
+  entity: sensor.solar_power
+car:
+  entity: sensor.wallbox_power
+  state_of_charge: sensor.car_battery_level
+  visibility:
+    - condition: state
+      entity: device_tracker.car
+      state: home
+  idle:
+    - condition: state
+      entity: binary_sensor.car_plugged_in
+      state: "off"`,
+    states: {
+      "sensor.grid_power": "-400",
+      "sensor.solar_power": "8200",
+      "sensor.wallbox_power": sensor("7.4", { unit: "kW" }),
+      "sensor.car_battery_level": sensor("64", { unit: "%" }),
+      "device_tracker.car": sensor("home", { unit: undefined }),
+      "binary_sensor.car_plugged_in": sensor("on", { unit: undefined }),
+    },
+  },
+  {
+    id: "heat-pump",
+    title: "A heat pump heating towards its target",
+    text: "A heat pump on the front wall, fed from the home's outlet, its fan turning while it runs. Its label shows its temperature and the target it heads for; a tap opens its thermostat.",
+    code: `type: ${CARD_TYPE}
+grid:
+  entity: sensor.grid_power
+solar:
+  entity: sensor.solar_power
+heat_pump:
+  entity: sensor.heat_pump_power
+  climate: climate.heat_pump
+  status: temperature_and_target`,
+    states: {
+      "sensor.grid_power": "450",
+      "sensor.solar_power": "1600",
+      "sensor.heat_pump_power": "1350",
+      "climate.heat_pump": sensor("heat", {
+        unit: undefined,
+        attributes: { hvac_action: "heating", current_temperature: 38, temperature: 45 },
+      }),
+    },
+  },
+  {
+    id: "energy",
+    title: "Energy over the day",
+    text: "The same house in energy mode: each label shows what its node made, stored, bought or used over the period picked on the dashboard's energy date picker, and each wire its energy, a line each way where the grid or battery ran both ways. The battery's charge stays live.",
+    code: `type: ${CARD_TYPE}
+mode: energy
+grid:
+  entity:
+    consumption: sensor.grid_import_energy
+    production: sensor.grid_export_energy
+solar:
+  entity: sensor.solar_energy
+battery:
+  entity:
+    consumption: sensor.battery_discharge_energy
+    production: sensor.battery_charge_energy
+  state_of_charge: sensor.battery_soc`,
+    states: {
+      "sensor.grid_import_energy": sensor("4.2", { unit: "kWh" }),
+      "sensor.grid_export_energy": sensor("1.1", { unit: "kWh" }),
+      "sensor.solar_energy": sensor("9.6", { unit: "kWh" }),
+      "sensor.battery_discharge_energy": sensor("2.4", { unit: "kWh" }),
+      "sensor.battery_charge_energy": sensor("3.8", { unit: "kWh" }),
+      "sensor.battery_soc": sensor("58", { unit: "%" }),
+    },
+    energy: true,
+  },
+  {
+    id: "live-or-today",
+    title: "Live power or the day so far",
+    text: "Give the nodes their energy sensors too and the card gets a selector in its corner: live power, or today's energy, picked on the card itself rather than on a date picker.",
+    code: `type: ${CARD_TYPE}
+grid:
+  entity: sensor.grid_power
+solar:
+  entity: sensor.solar_power
+battery:
+  entity: sensor.battery_power
+  state_of_charge: sensor.battery_soc
+energy_entities:
+  grid:
+    consumption: sensor.grid_import_energy
+    production: sensor.grid_export_energy
+  solar: sensor.solar_energy
+  battery:
+    consumption: sensor.battery_discharge_energy
+    production: sensor.battery_charge_energy`,
+    states: {
+      "sensor.grid_power": "2600",
+      "sensor.solar_power": "0",
+      "sensor.battery_power": "-1700",
+      "sensor.battery_soc": sensor("28", { unit: "%" }),
+      "sensor.grid_import_energy": sensor("6.8", { unit: "kWh" }),
+      "sensor.grid_export_energy": sensor("2.1", { unit: "kWh" }),
+      "sensor.solar_energy": sensor("11.2", { unit: "kWh" }),
+      "sensor.battery_discharge_energy": sensor("3.4", { unit: "kWh" }),
+      "sensor.battery_charge_energy": sensor("4.1", { unit: "kWh" }),
+    },
+    energy: true,
+  },
+  {
+    id: "thresholds",
+    title: "Your own battery thresholds",
+    text: "Turn the charge bar yellow and red where it matters for your battery.",
+    code: `type: ${CARD_TYPE}
+grid:
+  entity: sensor.grid_power
+battery:
+  entity: sensor.battery_power
+  state_of_charge: sensor.battery_soc
+  state_of_charge_severity:
+    red: 25
+    yellow: 50`,
+    states: {
+      "sensor.grid_power": "300",
+      "sensor.battery_power": "800",
+      "sensor.battery_soc": sensor("44", { unit: "%" }),
+    },
+  },
+  {
+    id: "charge-position",
+    title: "The state of charge beside the value",
+    text: "Put the battery's charge on the value's line, or swap the two.",
+    code: `type: ${CARD_TYPE}
+grid:
+  entity: sensor.grid_power
+battery:
+  entity: sensor.battery_power
+  state_of_charge: sensor.battery_soc
+  state_of_charge_position: after_value`,
+    states: {
+      "sensor.grid_power": "300",
+      "sensor.battery_power": "800",
+      "sensor.battery_soc": sensor("68", { unit: "%" }),
+    },
+  },
+  {
+    id: "grid-only",
+    title: "Grid only",
+    text: "Without solar or a battery, the house shows the grid feeding the home.",
+    code: `type: ${CARD_TYPE}
+grid:
+  entity: sensor.grid_power`,
+    states: { "sensor.grid_power": "860" },
+  },
+  {
+    id: "wire-width",
+    title: "Thicker wires",
+    text: "Draw the wires twice as thick. They keep that size whatever the card's width.",
+    code: `${MINIMAL_CONFIG}
+wire_width: 2`,
+    states: AFTERNOON,
+  },
+  {
+    id: "still",
+    title: "Still numbers and wires",
+    text: "Plain numbers and no pulses, for a calmer dashboard.",
+    code: `type: ${CARD_TYPE}
 animate_numbers: false
 disable_dots: true
 grid:
   entity: sensor.grid_power
 solar:
-  entity: sensor.solar_power`}
-        />
-      </Section>
+  entity: sensor.solar_power`,
+    states: AFTERNOON,
+  },
+];
 
-      <NextPageNav prev={{ label: "Configuration", to: `${BASE_PATH}/configuration` }} />
+export function ExamplesPage() {
+  return (
+    <>
+      <PageHeader
+        eyebrow={TITLE}
+        title={heading(`${BASE_PATH}/examples`)}
+        description="Copy-pastable configs for the most common setups, each next to the card it draws."
+      />
+
+      {EXAMPLES.map((example) => (
+        <Section key={example.id} id={example.id} title={example.title}>
+          <Prose>
+            <p>{example.text}</p>
+          </Prose>
+          <LiveExample code={example.code} states={example.states} energy={example.energy} />
+        </Section>
+      ))}
+
+      <Callout variant="tip" title="Try your own">
+        Paste your config into the <Link to={`${BASE_PATH}/playground`}>playground</Link> and drag
+        the sensors to see every state of your house.
+      </Callout>
+
+      <SupportLinks card="Home Flow Card" />
+      <NextPageNav
+        prev={{ label: "Configuration", to: `${BASE_PATH}/configuration` }}
+        next={{ label: "Playground", to: `${BASE_PATH}/playground` }}
+      />
     </>
   );
 }

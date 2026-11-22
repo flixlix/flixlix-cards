@@ -1,11 +1,16 @@
 import { computeNonFossilFromCollection } from "@flixlix-cards/shared/states/utils/energy-period";
 import { getEntityState } from "@flixlix-cards/shared/states/utils/get-entity-state";
-import { type ConfigEntities } from "@flixlix-cards/shared/types";
+import {
+  type ComboEntity,
+  type ConfigEntities,
+  type IndividualDeviceType,
+} from "@flixlix-cards/shared/types";
 import { type HomeAssistant } from "custom-card-helpers";
+import { conditionsMet } from "./conditions";
 import { adjustZeroTolerance } from "./tolerance";
 import { type CardStateInput, type ReadyReadings, type TwoWayReading } from "./types";
 
-type NormalizeInput = Pick<CardStateInput, "config" | "hass" | "deviceOnly">;
+type NormalizeInput = Pick<CardStateInput, "config" | "hass" | "conditionContext" | "deviceOnly">;
 
 /** What each node puts in or takes out, after signs, tolerance, outage and display_zero. */
 export type NodeTotals = Readonly<{
@@ -31,6 +36,7 @@ export type Presence = Readonly<{
   battery: boolean;
   nonFossil: boolean;
   individuals: ReadonlyArray<boolean>;
+  auxiliary: boolean;
 }>;
 
 export type Normalized = Readonly<{
@@ -39,6 +45,11 @@ export type Normalized = Readonly<{
   outage: boolean;
   /** Per individual device: it reads negative with `accept_negative`, so it feeds the home. */
   feedingIndividuals: ReadonlyArray<boolean>;
+  /**
+   * The display-only auxiliary node, kept out of the totals the solver reads: 0 while hidden, and
+   * feeding when it reads negative with `accept_negative`.
+   */
+  auxiliary: Readonly<{ total: number; feeding: boolean }>;
 }>;
 
 type Directions = Readonly<{ into: number; outOf: number }>;
@@ -82,12 +93,16 @@ const solarProduction = (input: NormalizeInput, readings: ReadyReadings): number
 
 export const isOutage = (hass: HomeAssistant, entities: ConfigEntities): boolean => {
   const outage = entities.grid?.power_outage;
-  const outageState = outage?.entity === undefined ? undefined : hass.states[outage.entity]?.state;
+  const outageState = outage?.entity ? hass.states[outage.entity]?.state : undefined;
   return entities.grid !== undefined && outageState === (outage?.state_alert ?? "on");
 };
 
-const hasBatteryEntity = (battery: ConfigEntities["battery"]): boolean => {
-  const entity = battery?.entity;
+/**
+ * A node is configured only with an entity: a non-empty id, or split entities with one side set.
+ * An empty one, as the visual editor leaves after clearing the field, does not count.
+ */
+export const hasEntity = (field: { entity?: string | ComboEntity } | undefined): boolean => {
+  const entity = field?.entity;
   return typeof entity === "object" ? !!(entity.consumption || entity.production) : !!entity;
 };
 
@@ -101,8 +116,9 @@ const nonFossilFraction = (input: NormalizeInput, readings: ReadyReadings, gridI
     const share = computeNonFossilFromCollection(readings.fossilEnergyConsumption, gridImport);
     return clampFraction(share.nonFossilPercentage / 100);
   }
-  const entity = input.config.entities.fossil_fuel_percentage?.entity;
-  const fossilPercentage = entity === undefined ? 0 : (getEntityState(input.hass, entity) ?? 0);
+  const fossil = input.config.entities.fossil_fuel_percentage;
+  const percentage = fossil?.entity ? (getEntityState(input.hass, fossil.entity) ?? 0) : 0;
+  const fossilPercentage = fossil?.invert_state ? 100 - percentage : percentage;
   return clampFraction(1 - fossilPercentage / 100);
 };
 
@@ -127,34 +143,53 @@ const nodeReadings = (input: NormalizeInput, readings: ReadyReadings): NodeReadi
   };
 };
 
+type DeviceField = { display_zero_tolerance?: number; accept_negative?: boolean } | undefined;
+
+const deviceTotal = (field: DeviceField, reading: number | null | undefined) =>
+  adjustZeroTolerance(magnitude(reading), field?.display_zero_tolerance);
+
+const isFeeding = (field: DeviceField, reading: number | null | undefined) =>
+  field?.accept_negative === true && (reading ?? 0) < 0;
+
+const deviceShown = (
+  field: { entity?: string; display_zero?: boolean } | undefined,
+  total: number,
+  displayZeroByDefault = false
+): boolean => !!field?.entity && ((field.display_zero ?? displayZeroByDefault) || total > 0);
+
 const individualTotals = (input: NormalizeInput, readings: ReadyReadings) =>
   (input.config.entities.individual ?? []).map((field, index) =>
-    adjustZeroTolerance(magnitude(readings.individuals[index]), field?.display_zero_tolerance)
+    deviceTotal(field, readings.individuals[index])
   );
 
+const individualShown = (
+  input: NormalizeInput,
+  field: IndividualDeviceType | undefined,
+  total: number
+): boolean =>
+  deviceShown(field, total, input.deviceOnly) &&
+  conditionsMet(field?.visibility ?? [], input.hass, input.conditionContext);
+
 const feedingIndividuals = (input: NormalizeInput, readings: ReadyReadings) =>
-  (input.config.entities.individual ?? []).map(
-    (field, index) => field?.accept_negative === true && (readings.individuals[index] ?? 0) < 0
+  (input.config.entities.individual ?? []).map((field, index) =>
+    isFeeding(field, readings.individuals[index])
   );
 
 const presenceOf = (
   input: NormalizeInput,
   nodes: NodeReadings,
-  individuals: ReadonlyArray<number>
+  individuals: ReadonlyArray<number>,
+  auxiliary: number
 ): Omit<Presence, "nonFossil"> => {
   const { entities } = input.config;
   return {
-    grid:
-      entities.grid?.entity !== undefined && shownWithTotals(entities.grid, nodes.toleratedGrid),
-    solar:
-      entities.solar?.entity !== undefined &&
-      (entities.solar.display_zero !== false || nodes.solar > 0),
-    battery: hasBatteryEntity(entities.battery) && shownWithTotals(entities.battery, nodes.battery),
-    individuals: individuals.map((total, index) => {
-      const field = entities.individual?.[index];
-      const showsZero = field?.display_zero ?? input.deviceOnly ?? false;
-      return !!field?.entity && (showsZero || total > 0);
-    }),
+    grid: hasEntity(entities.grid) && shownWithTotals(entities.grid, nodes.toleratedGrid),
+    solar: hasEntity(entities.solar) && (entities.solar?.display_zero !== false || nodes.solar > 0),
+    battery: hasEntity(entities.battery) && shownWithTotals(entities.battery, nodes.battery),
+    individuals: individuals.map((total, index) =>
+      individualShown(input, entities.individual?.[index], total)
+    ),
+    auxiliary: deviceShown(entities.auxiliary, auxiliary),
   };
 };
 
@@ -165,7 +200,7 @@ const nonFossilShown = (
   nonFossilImport: number
 ): boolean => {
   const fossil = input.config.entities.fossil_fuel_percentage;
-  if (fossil?.entity === undefined || !gridShown || outage) {
+  if (!fossil?.entity || !gridShown || outage) {
     return false;
   }
   return fossil.display_zero === true || nonFossilImport > 0;
@@ -220,9 +255,10 @@ const shown = (isShown: boolean, value: number): number => (isShown ? value : 0)
 export const normalize = (input: NormalizeInput, readings: ReadyReadings): Normalized => {
   const nodes = nodeReadings(input, readings);
   const individuals = individualTotals(input, readings);
+  const auxiliary = deviceTotal(input.config.entities.auxiliary, readings.auxiliary);
   const outage = isOutage(input.hass, input.config.entities);
   const fraction = nonFossilFraction(input, readings, nodes.toleratedGrid.outOf);
-  const visible = presenceOf(input, nodes, individuals);
+  const visible = presenceOf(input, nodes, individuals, auxiliary);
   const presence = {
     ...visible,
     nonFossil: nonFossilShown(input, visible.grid, outage, nodes.toleratedGrid.outOf * fraction),
@@ -241,11 +277,17 @@ export const normalize = (input: NormalizeInput, readings: ReadyReadings): Norma
         readings,
         netConsumption(individuals, presence.individuals, feeding)
       ),
-      individuals,
+      individuals: individuals.map((total, index) =>
+        shown(presence.individuals[index] ?? false, total)
+      ),
       nonFossilFraction: shown(presence.nonFossil, fraction),
     },
     presence,
     outage,
     feedingIndividuals: feeding,
+    auxiliary: {
+      total: shown(presence.auxiliary, auxiliary),
+      feeding: isFeeding(input.config.entities.auxiliary, readings.auxiliary),
+    },
   };
 };

@@ -1,0 +1,19 @@
+{
+  "name": "@flixlix-cards/release-notes",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    "./changelog": "./changelog.js"
+  },
+  "scripts": {
+    "test": "vp test run"
+  },
+  "dependencies": {
+    "@changesets/get-github-info": "catalog:packages"
+  },
+  "devDependencies": {
+    "vite-plus": "catalog:packages"
+  }
+}

@@ -7,6 +7,7 @@ import {
   type EnergyPeriodWindow,
   energyDefaultPeriodStorageKey,
   fetchEnergyPeriodGrowth,
+  fetchFossilEnergyConsumption,
   findEnergyCollection,
   getEntityEnergyFromGrowthMap,
   getGlobalEnergyPeriodWindow,
@@ -332,15 +333,15 @@ describe("fetchEnergyPeriodGrowth", () => {
     });
   });
 
-  test("never reports negative growth", async () => {
+  test("reports a net meter that ran backwards as negative growth", async () => {
     const { hass } = hassReturning({
-      "sensor.by_change": [{ change: -50 }],
+      "sensor.by_change": [{ change: 100 }, { change: -150 }],
       "sensor.by_sum": [{ sum: 500 }, { sum: 100 }],
     });
 
     expect(
       await fetchEnergyPeriodGrowth(hass, ["sensor.by_change", "sensor.by_sum"], todayWindow)
-    ).toEqual({ "sensor.by_change": 0, "sensor.by_sum": 0 });
+    ).toEqual({ "sensor.by_change": -50, "sensor.by_sum": -400 });
   });
 
   test("reports zero for statistics the recorder has no data for", async () => {
@@ -352,12 +353,59 @@ describe("fetchEnergyPeriodGrowth", () => {
   });
 });
 
+describe("fetchFossilEnergyConsumption", () => {
+  const todayWindow: EnergyPeriodWindow = {
+    key: "today",
+    start: day(15),
+    end: new Date(2024, 4, 15, 23, 59, 59, 999),
+  };
+
+  test("asks HA for the fossil share of the grid import over the window", async () => {
+    const { hass, callWS } = hassReturning({ "2024-05-15T00:00:00Z": 1.5 });
+
+    expect(
+      await fetchFossilEnergyConsumption(hass, ["sensor.grid_in"], "sensor.fossil", todayWindow)
+    ).toEqual({ "2024-05-15T00:00:00Z": 1.5 });
+    expect(callWS).toHaveBeenCalledWith({
+      type: "energy/fossil_energy_consumption",
+      start_time: todayWindow.start.toISOString(),
+      end_time: todayWindow.end.toISOString(),
+      energy_statistic_ids: ["sensor.grid_in"],
+      co2_statistic_id: "sensor.fossil",
+      period: "hour",
+    });
+  });
+
+  test("does not ask without a grid import statistic", async () => {
+    const { hass, callWS } = hassReturning({});
+
+    expect(await fetchFossilEnergyConsumption(hass, [], "sensor.fossil", todayWindow)).toBe(
+      undefined
+    );
+    expect(callWS).not.toHaveBeenCalled();
+  });
+
+  test("ignores a malformed response", async () => {
+    const { hass } = hassReturning({ bucket: "lots" });
+
+    expect(
+      await fetchFossilEnergyConsumption(hass, ["sensor.grid_in"], "sensor.fossil", todayWindow)
+    ).toBe(undefined);
+  });
+});
+
 describe("getEntityEnergyFromGrowthMap", () => {
   test("adds up every entity of a `|`-separated list", () => {
     const growth = { "sensor.a": 100, "sensor.b": 50 };
 
     expect(getEntityEnergyFromGrowthMap(growth, "sensor.a | sensor.b | sensor.unknown")).toBe(150);
     expect(getEntityEnergyFromGrowthMap(growth)).toBe(0);
+  });
+
+  test("counts an entity that ran backwards as no energy", () => {
+    expect(
+      getEntityEnergyFromGrowthMap({ "sensor.a": 100, "sensor.b": -300 }, "sensor.a | sensor.b")
+    ).toBe(100);
   });
 });
 

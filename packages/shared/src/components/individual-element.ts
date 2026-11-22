@@ -16,39 +16,35 @@ const stateShown = (node: IndividualObject): boolean =>
 export const isFlowing = (node: IndividualObject): boolean =>
   !!node.state && node.state >= (node.displayZeroTolerance ?? 0);
 
-/** What differs between a device's circle in a slot and on the orbit. */
-export type CircleParts = {
-  valueClass: string;
-  secondaryClass: string;
-  /** Id of the icon, which only the slots' lines are measured from. */
-  iconId?: string;
-  arrow: TemplateResult | typeof nothing;
-};
+/** Icons for a dot running towards the device and away from it. */
+export type DirectionArrows = { inflow: string; outflow: string };
 
-/** Bottom slots point the other way: their lines run up into the home. */
-const directionArrow = (node: IndividualObject, key: IndividualKey) => {
+export const directionArrow = (node: IndividualObject, arrows: DirectionArrows) => {
   if (!node.showDirection) {
     return nothing;
   }
-  const pointsUp = key.endsWith("bottom") ? node.invertAnimation : !node.invertAnimation;
   return html`<ha-icon
     class="small"
-    .icon=${pointsUp ? "mdi:arrow-up" : "mdi:arrow-down"}
+    .icon=${node.invertAnimation ? arrows.outflow : arrows.inflow}
   ></ha-icon>`;
 };
 
-const slotCircle = (node: IndividualObject, key: IndividualKey): CircleParts => ({
-  valueClass: `individual-${key.endsWith("top") ? "top" : "bottom"} individual-${key}`,
-  secondaryClass: key,
-  iconId: `individual-${key}-icon`,
-  arrow: directionArrow(node, key),
-});
+export type DeviceCircleOptions = {
+  /** Id of the icon, which only the slots' lines are measured from. */
+  iconId?: string;
+  /** Classes of the value span, which pick its colour. */
+  valueClass: string;
+  /** Class of the secondary info span, which picks its colour. */
+  secondaryClass: string;
+  arrow: TemplateResult | typeof nothing;
+};
 
-export const individualCircle = (
+/** An individual device's circle: secondary info, icon and value, opening its entity on click. */
+export const deviceCircle = (
   main: CardMainContext,
   config: FlowCardPlusConfig,
   node: IndividualObject,
-  parts: CircleParts
+  { iconId, valueClass, secondaryClass, arrow }: DeviceCircleOptions
 ) => {
   const disableEntityClick = !config.clickable_entities;
   return html`<div
@@ -77,18 +73,33 @@ export const individualCircle = (
     }}
   >
     <ha-ripple .disabled=${disableEntityClick}></ha-ripple>
-    ${individualSecondarySpan(main, node, parts.secondaryClass)}
-    ${
-      node.icon !== " "
-        ? html` <ha-icon id=${parts.iconId ?? nothing} .icon=${node.icon}></ha-icon>`
-        : nothing
-    }
+    ${individualSecondarySpan(main, node, secondaryClass)}
+    ${node.icon !== " " ? html` <ha-icon id=${iconId ?? nothing} .icon=${node.icon}></ha-icon>` : nothing}
     ${
       stateShown(node)
-        ? html` <span class=${parts.valueClass}> ${parts.arrow}${node.displayState} </span>`
+        ? html` <span class=${valueClass}> ${arrow}${node.displayState} </span>`
         : nothing
     }
   </div>`;
+};
+
+const INFLOW_UP: DirectionArrows = { inflow: "mdi:arrow-up", outflow: "mdi:arrow-down" };
+const INFLOW_DOWN: DirectionArrows = { inflow: "mdi:arrow-down", outflow: "mdi:arrow-up" };
+
+/** Lines into the home run down from the top slots and up from the bottom slots. */
+const individualCircle = (
+  main: CardMainContext,
+  config: FlowCardPlusConfig,
+  node: IndividualObject,
+  key: IndividualKey
+) => {
+  const vertical = key.endsWith("top") ? "top" : "bottom";
+  return deviceCircle(main, config, node, {
+    iconId: `individual-${key}-icon`,
+    valueClass: `individual-${vertical} individual-${key}`,
+    secondaryClass: key,
+    arrow: directionArrow(node, vertical === "top" ? INFLOW_UP : INFLOW_DOWN),
+  });
 };
 
 type LeftKey = "left-top" | "left-bottom";
@@ -209,7 +220,7 @@ export const individualElement = (
     slot,
     line,
     label: html`<span class="label">${slot.node.name}</span>`,
-    circle: individualCircle(main, config, slot.node, slotCircle(slot.node, key)),
+    circle: individualCircle(main, config, slot.node, key),
     dot: line ? individualDot(slot, key, animate, 1.75) : nothing,
   });
 };

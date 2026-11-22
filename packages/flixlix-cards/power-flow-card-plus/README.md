@@ -9,14 +9,14 @@
 ![2023-03-26-13-04-07](https://user-images.githubusercontent.com/61006057/227771568-78497ecc-e863-46f2-b29e-e15c7c20a154.gif)
 
 > [!TIP]
-> 📖 **Full documentation: [cards.flixlix.com/power-flow-card-plus](https://cards.flixlix.com/power-flow-card-plus)**
->
-> The docs site has the complete configuration reference, an interactive configurator with copy-pasteable YAML, and ready-made examples — much easier to navigate than this README.
+> **Canonical docs: [cards.flixlix.com/power-flow-card-plus](https://cards.flixlix.com/power-flow-card-plus).** This README is the offline copy. The docs site has the configuration reference, a live playground and copy-paste examples.
 >
 > - [Installation](https://cards.flixlix.com/power-flow-card-plus/installation)
 > - [Configuration reference](https://cards.flixlix.com/power-flow-card-plus/configuration)
-> - [Interactive configurator](https://cards.flixlix.com/power-flow-card-plus/configurator)
+> - [Playground](https://cards.flixlix.com/power-flow-card-plus/playground)
 > - [Examples](https://cards.flixlix.com/power-flow-card-plus/examples)
+> - [Solar and battery setup](https://cards.flixlix.com/guides/solar-battery-power-flow)
+> - [Vs the original Power Flow Card](https://cards.flixlix.com/guides/power-flow-card-plus-vs-power-flow-card)
 
 > [!NOTE]
 > This card is distributed via [flixlix/power-flow-card-plus](https://github.com/flixlix/power-flow-card-plus), but the source code lives in the monorepo at [flixlix/flixlix-cards](https://github.com/flixlix/flixlix-cards). Issues and feature requests will be tracked there going forward.
@@ -68,12 +68,11 @@ In case you want to watch a tutorial instead of reading through this very long r
 
 ## Installation
 
-### HACS (recommended)
+### Marketplace or HACS (recommended)
 
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=power-flow-card-plus&category=Dashboard)
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=flixlix&repository=power-flow-card-plus&category=plugin)
 
-This card is directly available through [HACS](https://hacs.xyz). To install HACS, follow these [instructions](https://hacs.xyz/docs/setup/prerequisites).
-After having HACS installed, simply search for "Power Flow Card Plus" and download it using the UI 🙂
+This card is in the default catalog. On Home Assistant 2026.11 and newer, go to **Settings → Marketplace**, search for "Power Flow Card Plus" and install it. Before 2026.11, search for it in [HACS](https://hacs.xyz) and download it 🙂
 
 <details>
 <summary>Manual install</summary>
@@ -107,7 +106,7 @@ Else, if you prefer the graphical editor, use the menu to add the resource:
 ## Usage
 
 > [!IMPORTANT]
-> The reference below is kept for offline reading. The **canonical, easier-to-navigate version is at [cards.flixlix.com/power-flow-card-plus/configuration](https://cards.flixlix.com/power-flow-card-plus/configuration)** — with grouped options, an interactive configurator, and copy-pasteable examples.
+> The reference below is kept for offline reading. The **canonical version is [cards.flixlix.com/power-flow-card-plus/configuration](https://cards.flixlix.com/power-flow-card-plus/configuration)** — grouped options, a [playground](https://cards.flixlix.com/power-flow-card-plus/playground) and copy-pasteable examples.
 
 > [!WARNING]  
 > This card offers a **LOT** of configuration options. Don't worry, if you want your card's appearance to match the official Energy Flow Card, you will only need to setup the entities. The rest of the options only enable further customization. If this is your goal, please go to [Minimal Configuration](#minimal-configuration) or the [Examples page](https://cards.flixlix.com/power-flow-card-plus/examples) on the docs site.
@@ -116,31 +115,35 @@ Else, if you prefer the graphical editor, use the menu to add the resource:
 
 #### Card options
 
-| Name                        | Type      |                 Default                  | Description                                                                                                                                                                                                              |
-| --------------------------- | --------- | :--------------------------------------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| type                        | `string`  |               **required**               | `custom:power-flow-card-plus`.                                                                                                                                                                                           |
-| entities                    | `object`  |               **required**               | One or more sensor entities, see [entities object](#entities-object) for additional entity options.                                                                                                                      |
-| title                       | `string`  |                                          | Shows a title at the top of the card.                                                                                                                                                                                    |
-| dashboard_link              | `string`  |                                          | Shows a link to an Energy Dashboard. Should be a url path to location of your choice. If you wanted to link to the built-in dashboard you would enter `/energy` for example.                                             |
-| dashboard_link_label        | `string`  | Go To Energy Dashboard (auto-translates) | If set, overrides the default link label to go to a different dashboard.                                                                                                                                                 |
-| second_dashboard_link       | `string`  |                                          | Shows another link to an Energy Dashboard. Should be a url path to location of your choice. If you wanted to link to the built-in dashboard you would enter `/energy` for example. (Only available in the YAML Editor)   |
-| second_dashboard_link_label | `string`  | Go To Energy Dashboard (auto-translates) | If set, overrides the second default link label to go to a different dashboard.                                                                                                                                          |
-| kilo_decimals               | `number`  |                    1                     | Number of decimals rounded to when kilowatts are displayed.                                                                                                                                                              |
-| base_decimals               | `number`  |                    1                     | Number of decimals rounded to when watts are displayed.                                                                                                                                                                  |
-| min_flow_rate               | `number`  |                   .75                    | Represents how much time it takes for the quickest dot to travel from one end to the other in seconds.                                                                                                                   |
-| max_flow_rate               | `number`  |                    6                     | Represents how much time it takes for the slowest dot to travel from one end to the other in seconds.                                                                                                                    |
-| kilo_threshold              | `number`  |                    0                     | The number of watts to display before converting to and displaying kilowatts. Setting of 0 will always display in kilowatts.                                                                                             |
-| clickable_entities          | `boolean` |                  false                   | If true, clicking on the entity will open the entity's more info dialog.                                                                                                                                                 |
-| min_expected_power          | `number`  |                   0.01                   | Represents the minimum amount of power (in Watts) expected to flow through the system at a given moment. Only used by the `duration` and `speed` [flow rate models](#flow-formula).                                      |
-| max_expected_power          | `number`  |                   2000                   | Represents the maximum amount of power (in Watts) expected to flow through the system at a given moment. Only used by the `duration` and `speed` [flow rate models](#flow-formula).                                      |
-| display_zero_lines          | `object`  |             `{mode: "show"}`             | Check [Display Zero Lines](#display-zero-lines)                                                                                                                                                                          |
-| full_size                   | `boolean` |                  false                   | Warning: This option is experimental. To use this option, you must set your view to panel mode. If set to true, the card will take up the full height of the screen. And the Card should go to the center of the screen. |
-| style_ha_card               | `css`     |                                          | [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) Styling to apply to the container of the card (border and background of the card).                                                                               |
-| style_card_content          | `css`     |                                          | [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) Styling to apply to the content of the card (all circles and lines of the card).                                                                                 |
-| flow_rate_model             | `string`  |                `duration`                | How dot speed follows power: `duration`, `speed` or `relative`. See [Flow Formula](#flow-formula).                                                                                                                       |
-| use_new_flow_rate_model     | `boolean` |                                          | Older alias of `flow_rate_model`: `false` is `relative`, `true` is `duration`. Ignored when `flow_rate_model` is set.                                                                                                    |
-| sort_individual_devices     | `boolean` |           true (since v0.3.1)            | If `true`, sort devices in order of power consumption -> entity id -> alphabetically.                                                                                                                                    |
-| allow_layout_break          | `boolean` |                  false                   | Always allow up to 4 individual devices to show, even when there is not enough space, causing visual layout break.                                                                                                       |
+| Name                        | Type      |                 Default                  | Description                                                                                                                                                                                                                                                         |
+| --------------------------- | --------- | :--------------------------------------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| type                        | `string`  |               **required**               | `custom:power-flow-card-plus`.                                                                                                                                                                                                                                      |
+| entities                    | `object`  |               **required**               | One or more sensor entities, see [entities object](#entities-object) for additional entity options.                                                                                                                                                                 |
+| title                       | `string`  |                                          | Shows a title at the top of the card.                                                                                                                                                                                                                               |
+| dashboard_link              | `string`  |                                          | Legacy, kept so existing configs still work: use [`buttons`](#buttons) instead. Shows a link to a dashboard, e.g. `/energy`. The visual editor offers to convert it to a button.                                                                                    |
+| dashboard_link_label        | `string`  | Go To Energy Dashboard (auto-translates) | Legacy: the label of `dashboard_link`.                                                                                                                                                                                                                              |
+| second_dashboard_link       | `string`  |                                          | Legacy: a second link like `dashboard_link`.                                                                                                                                                                                                                        |
+| second_dashboard_link_label | `string`  | Go To Energy Dashboard (auto-translates) | Legacy: the label of `second_dashboard_link`.                                                                                                                                                                                                                       |
+| buttons                     | `list`    |                                          | More buttons at the bottom of the card, after the dashboard links. See [Buttons](#buttons).                                                                                                                                                                         |
+| kilo_decimals               | `number`  |                    1                     | Number of decimals rounded to when kilowatts are displayed.                                                                                                                                                                                                         |
+| base_decimals               | `number`  |                    1                     | Number of decimals rounded to when watts are displayed.                                                                                                                                                                                                             |
+| keep_trailing_zeros         | `boolean` |                  false                   | Always show the decimals a value is rounded to, keeping trailing zeros: `1.0 kW` instead of `1 kW`.                                                                                                                                                                 |
+| min_flow_rate               | `number`  |                   .75                    | Seconds the quickest dot takes along a 175px line; shorter lines take less, longer lines more. See [Flow Formula](#flow-formula).                                                                                                                                   |
+| max_flow_rate               | `number`  |                    6                     | Seconds the slowest dot takes along a 175px line; shorter lines take less, longer lines more. See [Flow Formula](#flow-formula).                                                                                                                                    |
+| dot_animation               | `string`  |                  `auto`                  | How the flow dots move: `gpu` moves them off the main thread, `classic` uses SVG animation as before v0.4.0. `auto` picks `classic` on ARM Mali GPUs, such as the Fire HD 10 (2023), whose drivers draw icons, values and lines in the wrong place with `gpu` dots. |
+| kilo_threshold              | `number`  |                    0                     | The number of watts to display before converting to and displaying kilowatts. Setting of 0 will always display in kilowatts.                                                                                                                                        |
+| clickable_entities          | `boolean` |                   true                   | Clicking a circle opens the entity's more info dialog. Set to `false` to turn it off.                                                                                                                                                                               |
+| min_expected_power          | `number`  |                   0.01                   | Represents the minimum amount of power (in Watts) expected to flow through the system at a given moment. Only used by the `duration` and `speed` [flow rate models](#flow-formula).                                                                                 |
+| max_expected_power          | `number`  |                   2000                   | Represents the maximum amount of power (in Watts) expected to flow through the system at a given moment. Only used by the `duration` and `speed` [flow rate models](#flow-formula).                                                                                 |
+| display_zero_lines          | `object`  |             `{mode: "show"}`             | Check [Display Zero Lines](#display-zero-lines)                                                                                                                                                                                                                     |
+| full_size                   | `boolean` |                  false                   | Warning: This option is experimental. To use this option, you must set your view to panel mode. If set to true, the card will take up the full height of the screen. And the Card should go to the center of the screen.                                            |
+| style_ha_card               | `css`     |                                          | [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) Styling to apply to the container of the card (border and background of the card).                                                                                                                          |
+| style_card_content          | `css`     |                                          | [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) Styling to apply to the content of the card (all circles and lines of the card).                                                                                                                            |
+| flow_rate_model             | `string`  |                `duration`                | How dot speed follows power: `duration`, `speed` or `relative`. See [Flow Formula](#flow-formula).                                                                                                                                                                  |
+| use_new_flow_rate_model     | `boolean` |                                          | Older alias of `flow_rate_model`: `false` is `relative`, `true` is `duration`. Ignored when `flow_rate_model` is set.                                                                                                                                               |
+| sort_individual_devices     | `boolean` |           true (since v0.3.1)            | If `true`, sort devices in order of power consumption -> entity id -> alphabetically.                                                                                                                                                                               |
+| allow_layout_break          | `boolean` |                  false                   | Always allow up to 4 individual devices to show, even when there is not enough space, causing visual layout break.                                                                                                                                                  |
+| topology                    | `string`  |                `standard`                | Which wires your installation has: `standard`, `battery_hub` or `isolated_battery`. See [Topology](#topology).                                                                                                                                                      |
 
 #### Action Configuration
 
@@ -152,7 +155,36 @@ The card supports Home Assistant action configs on entity circles and other clic
 | hold_action       | `object` | Action triggered on long press.       |
 | double_tap_action | `object` | Action triggered on double tap/click. |
 
-If none of these actions are configured for a clickable entity surface, the card falls back to opening more-info when `clickable_entities: true`.
+If none of these actions are configured for a clickable entity surface, the card falls back to opening more-info unless `clickable_entities: false`.
+
+#### Buttons
+
+`buttons` adds a row of buttons at the bottom of the card. In the visual editor, open **Buttons** to add, remove, reorder and edit them.
+
+`dashboard_link` and `second_dashboard_link` still work and show before the buttons, but they are no longer in the visual editor. When a config still has them, the editor offers **Convert to buttons**, which turns each link into a button with a `navigate` action (or `url` for a full URL), keeping its label and its place in the row.
+
+| Name              | Type     | Description                                                                                     |
+| ----------------- | -------- | ----------------------------------------------------------------------------------------------- |
+| name              | `string` | Text on the button. Leave it out for an icon-only button.                                       |
+| icon              | `string` | Icon shown before the name, e.g. `mdi:solar-power`.                                             |
+| entity            | `string` | Entity for `more-info` and `toggle` actions. Without a name or icon, the button shows its name. |
+| tap_action        | `object` | Action triggered on tap/click. Without any action, a tap opens the entity's more-info.          |
+| hold_action       | `object` | Action triggered on long press.                                                                 |
+| double_tap_action | `object` | Action triggered on double tap/click.                                                           |
+
+```yaml
+buttons:
+  - name: Solar
+    icon: mdi:solar-power
+    tap_action:
+      action: navigate
+      navigation_path: /dashboard-energy/solar
+  - name: Battery
+    icon: mdi:home-battery
+    entity: input_boolean.battery_force_charge
+    tap_action:
+      action: toggle
+```
 
 #### Entities object
 
@@ -164,6 +196,7 @@ At least one of _grid_, _battery_, _solar_ or _home_ (with an `entity`), or one 
 | solar                  | `object` | Check [Solar Configuration](#solar-configuration) for more information.          |
 | battery                | `object` | Check [Battery Configuration](#battery-configuration) for more information.      |
 | individual             | `array`  | Check [Individual Devices](#individual-configuration) for more information.      |
+| auxiliary              | `object` | Check [Auxiliary](#auxiliary-configuration) for more information.                |
 | home                   | `object` | Check [Home Configuration](#home-configuration) for more information.            |
 | fossil_fuel_percentage | `object` | Check [Fossil Fuel Percentage](#fossil-fuel-configuration) for more information. |
 
@@ -232,22 +265,64 @@ At least one of _grid_, _battery_, _solar_ or _home_ (with an `entity`), or one 
 
 The Individual fields must be an array of objects. Each object must follow the following structure:
 
-| Name                   | Type              | Default                                        | Description                                                                                                                                                                          |
-| ---------------------- | ----------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| entity                 | `string`          | `undefined` required                           | Entity ID providing a state with the value of an individual consumption.                                                                                                             |
-| name                   | `string` / `list` | `Car` or `Motorcycle`                          | Label for the individual device option. If you don't populate this option, the label will continue to update based on the language selected.                                         |
-| icon                   | `string`          | `mdi:car-electric` or `mdi:motorbike-electric` | Icon path for the icon inside the Individual Device Circle.                                                                                                                          |
-| color                  | `string`          | `#d0cc5b` or `#964cb5`                         | HEX value of the color for circles labels and lines of the individual device.                                                                                                        |
-| color_icon             | `boolean`         | `false`                                        | If set to `true`, icon color will match the circle's color. If set to `false`, icon color will match the text's color.                                                               |
-| unit_of_measurement    | `string`          | `W`or `kW` (dynamic)                           | Sets the unit of measurement to show in the corresponding circle                                                                                                                     |
-| inverted_animation     | `boolean`         | `false`                                        | If set to true, the small dots will flow in the opposite direction.                                                                                                                  |
-| accept_negative        | `boolean`         | `false`                                        | If set to `true`, a negative reading means the device feeds power to the home: the value keeps its minus sign and the dots and direction arrow flip. Otherwise the sign is dropped.  |
-| secondary_info         | `object`          | `undefined`                                    | Check [Secondary Info Object](#secondary-info-configuration). The `secondary_info` entity can provide a number or a string (eg: EV State `charging` and `discharging`).              |
-| display_zero           | `boolean`         | `false`                                        | If set to `true`, the device will be displayed even if the entity state is `0` or not a number (eg: `unavailable`). Otherwise, the non-fossil section will be hidden.                |
-| display_zero_tolerance | `number`          | `0`                                            | If set, the device will be displayed if the state is greater than the tolerance set (This is also available for the secondary info). No need to set `display_zero` property to true. |
-| display_zero_state     | `boolean`         | `true`                                         | If set to `true`, the state will be shown even if it is `0`. If set to `false`, the state will be hidden if it is `0`.                                                               |
-| color_value            | `boolean`         | `false`                                        | If set to `true`, state text color will match the circle's color. If set to `false`, state text color will be the primary text color.                                                |
-| decimals               | `number`          | `0`                                            | Number of decimals to show in the corresponding state.                                                                                                                               |
+| Name                   | Type              | Default                                        | Description                                                                                                                                                                                                                        |
+| ---------------------- | ----------------- | ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| entity                 | `string`          | `undefined` required                           | Entity ID providing a state with the value of an individual consumption.                                                                                                                                                           |
+| name                   | `string` / `list` | `Car` or `Motorcycle`                          | Label for the individual device option. If you don't populate this option, the label will continue to update based on the language selected.                                                                                       |
+| icon                   | `string`          | `mdi:car-electric` or `mdi:motorbike-electric` | Icon path for the icon inside the Individual Device Circle.                                                                                                                                                                        |
+| color                  | `string`          | `#d0cc5b` or `#964cb5`                         | HEX value of the color for circles labels and lines of the individual device.                                                                                                                                                      |
+| color_idle             | `string`          |                                                | HEX value of the circle color while the device draws nothing (below `display_zero_tolerance`). Unset keeps `color`.                                                                                                                |
+| color_icon             | `boolean`         | `false`                                        | If set to `true`, icon color will match the circle's color. If set to `false`, icon color will match the text's color.                                                                                                             |
+| unit_of_measurement    | `string`          | `W`or `kW` (dynamic)                           | Sets the unit of measurement to show in the corresponding circle                                                                                                                                                                   |
+| inverted_animation     | `boolean`         | `false`                                        | If set to true, the small dots will flow in the opposite direction.                                                                                                                                                                |
+| accept_negative        | `boolean`         | `false`                                        | If set to `true`, a negative reading means the device feeds power to the home: the value keeps its minus sign and the dots and direction arrow flip. Otherwise the sign is dropped.                                                |
+| secondary_info         | `object`          | `undefined`                                    | Check [Secondary Info Object](#secondary-info-configuration). The `secondary_info` entity can provide a number or a string (eg: EV State `charging` and `discharging`).                                                            |
+| display_zero           | `boolean`         | `false`                                        | If set to `true`, the device will be displayed even if the entity state is `0` or not a number (eg: `unavailable`). Otherwise, the non-fossil section will be hidden.                                                              |
+| display_zero_tolerance | `number`          | `0`                                            | If set, the device will be displayed if the state is greater than the tolerance set (This is also available for the secondary info). No need to set `display_zero` property to true.                                               |
+| display_zero_state     | `boolean`         | `true`                                         | If set to `true`, the state will be shown even if it is `0`. If set to `false`, the state will be hidden if it is `0`.                                                                                                             |
+| color_value            | `boolean`         | `false`                                        | If set to `true`, state text color will match the circle's color. If set to `false`, state text color will be the primary text color.                                                                                              |
+| decimals               | `number`          | `0`                                            | Number of decimals to show in the corresponding state.                                                                                                                                                                             |
+| visibility             | `list`            | `undefined`                                    | Shows the device only while all of these conditions hold, in the format of a card's visibility tab (`state`, `numeric_state`, `screen`, `user`, `time`, `location`, `and`, `or`, `not`). See [Visibility](#individual-visibility). |
+
+##### Individual visibility
+
+Show a device only while some conditions hold, for example the car charger only while the car is plugged in. A hidden device counts as zero: no circle, no line, and it is not subtracted from the home with `subtract_individual`. While the conditions hold, `display_zero` and `display_zero_tolerance` still apply, so add `display_zero: true` to keep it shown at zero.
+
+```yaml
+individual:
+  - entity: sensor.wallbox_power
+    name: Car
+    display_zero: true
+    visibility:
+      - condition: state
+        entity: binary_sensor.car_plugged_in
+        state: "on"
+```
+
+The conditions use the format of a card's visibility tab; the UI editor edits them under **Advanced Options** of the device with Home Assistant's own conditions editor. Since Home Assistant 2026.10 its editor writes `state` and `numeric_state` with `entity_id`, as automations do, and offers template, sun, zone and device conditions, which Home Assistant checks for the card. Before 2026.10 those are ignored.
+
+#### Auxiliary Configuration
+
+One extra node under the grid and left of the battery, for a reading that is not part of your home's consumption: a share in a wind farm, a virtual battery at your provider, a gas meter or solar panels wired to the battery's DC side. It is display-only: its reading never changes the other flows, the home consumption or the home circle.
+
+It takes every option of an [individual device](#individual-configuration) but `visibility`, plus `connect_to`:
+
+| Name       | Type                          | Default | Description                                                                                                                                                                                              |
+| ---------- | ----------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| connect_to | `grid` \| `battery` \| `none` | `grid`  | Where its line runs: up to the grid, across to the battery, or no line at all. The line is drawn only while that node is shown; while it runs up into the grid, the grid's label is hidden to make room. |
+
+A positive reading flows into the auxiliary node. Set `inverted_animation: true` for something that feeds the grid or battery, or `accept_negative: true` when the entity reads negative while feeding.
+
+```yaml
+entities:
+  grid:
+    entity: sensor.grid_power
+  auxiliary:
+    entity: sensor.wind_stake_power
+    name: Wind stake
+    icon: mdi:wind-turbine
+    inverted_animation: true
+```
 
 #### Home Configuration
 
@@ -274,15 +349,17 @@ The Individual fields must be an array of objects. Each object must follow the f
 | display_zero        | `boolean`             | `false`         | If set to `true`, the device will be displayed even if the entity state is `0` or not a number (eg: `unavailable`). Otherwise, the non-fossil section will be hidden.                                                                                                                                                                                                                                                                                          |
 | display_zero_state  | `boolean`             | `true`          | If set to `true`, the state will be shown even if it is `0`. If set to `false`, the state will be hidden if it is `0`.                                                                                                                                                                                                                                                                                                                                         |
 | state_type          | `string`              | `power`         | The type of state to use for the entity. Can be `power` or `percentage`. When set to `power` the state will be the amount of power from the grid that is low-carbon. When set to `percentage` the state will be the percentage of power from the grid that is low-carbon.                                                                                                                                                                                      |
+| invert_state        | `boolean`             | `false`         | Set to `true` when the entity reports the low-carbon (green energy) percentage instead of the fossil one. The card then reads it as `100 - state`.                                                                                                                                                                                                                                                                                                             |
 | unit_white_space    | `boolean`             | `true`          | If set to `false` will not add any whitespace between unit and state. Otherwise, white space will be added.                                                                                                                                                                                                                                                                                                                                                    |
-| calculate_flow_rate | `boolean` or `number` | `true`          | When unset or `true`, the flow rate is calculated with the flow rate formula (see `flow_rate_model`). If `false`, dots flow at a fixed pace. If set to a number, the flow rate will be set to that number. For example, defining the value `10` will ensure one dot will flow every 10 seconds.                                                                                                                                                                |
+| calculate_flow_rate | `boolean` or `number` | `true`          | When unset or `true`, the flow rate is calculated with the flow rate formula (see `flow_rate_model`). If `false`, dots flow at a fixed pace. If set to a number, the flow rate will be set to that number. For example, `10` makes a dot take 10 seconds per 175px of line, like the other lines (see [Flow Formula](#flow-formula)).                                                                                                                          |
 
 #### Color Object
 
-| Name        | Type     | Description                                                         |
-| ----------- | -------- | ------------------------------------------------------------------- |
-| production  | `string` | HEX value of the color for circles labels and lines of production.  |
-| consumption | `string` | HEX value of the color for circles labels and lines of consumption. |
+| Name        | Type     | Description                                                                                                                                 |
+| ----------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| production  | `string` | HEX value of the color for circles labels and lines of production.                                                                          |
+| consumption | `string` | HEX value of the color for circles labels and lines of consumption.                                                                         |
+| idle        | `string` | HEX value of the circle color while nothing flows in either direction (below `display_zero_tolerance`). Unset keeps the usual circle color. |
 
 #### Split entities
 
@@ -297,45 +374,92 @@ Can be use with either Grid or Battery configuration. The same `unit_of_measurem
 
 This Feature allows you to configure an additional small text for each Individual Device. Here you can put , for example, the state of charge of an electric car.
 
-| Name                   | Type              | Description                                                                                                                                                                                                                                                                                                                                                                                                  |
-| ---------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| entity                 | `string` required | Entity ID providing a state value that is going to be displayed.                                                                                                                                                                                                                                                                                                                                             |
-| unit_of_measurement    | `string`          | A string to be used as the unit of measurement. (Important: don't forget surrounding string with quotes)                                                                                                                                                                                                                                                                                                     |
-| icon                   | `string`          | An icon path to be displayed next to the state of the individual device. This is optional, meaning if you don't use this, no icon will be displayed.                                                                                                                                                                                                                                                         |
-| unit_white_space       | `boolean`         | Default is `true`. If set to `false` will not add any whitespace between unit and state. Otherwise, white space will be added.                                                                                                                                                                                                                                                                               |
-| display_zero           | `boolean`         | Default is `false`. If set to `true` info will still be displayed if state of the entity is `0` or `unavailable`.                                                                                                                                                                                                                                                                                            |
-| display_zero_tolerance | `number`          | If set, the device will be displayed if the state is greater than the tolerance set. No need to set `display_zero` property to true.                                                                                                                                                                                                                                                                         |
-| decimals               | `number`          | The number of decimal places to round the value to.                                                                                                                                                                                                                                                                                                                                                          |
-| template               | `string`          | Here you can enter a [HA Template](https://www.home-assistant.io/docs/configuration/templating/). The output of the template will be displayed. Space is limited inside the circle and too much text will result in overflow using ellipsis, so use with caution. Will update automatically in case one of the provided entities inside the template updates. Can only be used in case `entity` was not set. |
-| accept_negative        | `boolean`         | Default is `false`. If set to `true`, negative values will be displayed as negative, otherwise they will be transformed to positive                                                                                                                                                                                                                                                                          |
-| sum_total              | `boolean`         | The secondary info field on the solar bubble can be used as a second string and be summed with the main entity to create a total of solar consumption. By default, these two values are completely decoupled.                                                                                                                                                                                                |
-| tap_action             | `object`          | Action triggered on tap/click on the secondary info text.                                                                                                                                                                                                                                                                                                                                                    |
-| hold_action            | `object`          | Action triggered on long press on the secondary info text.                                                                                                                                                                                                                                                                                                                                                   |
-| double_tap_action      | `object`          | Action triggered on double tap/click on the secondary info text.                                                                                                                                                                                                                                                                                                                                             |
+| Name                   | Type              | Description                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ---------------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| entity                 | `string` required | Entity ID providing a state value that is going to be displayed.                                                                                                                                                                                                                                                                                                                                                     |
+| unit_of_measurement    | `string`          | A string to be used as the unit of measurement. (Important: don't forget surrounding string with quotes)                                                                                                                                                                                                                                                                                                             |
+| icon                   | `string`          | An icon path to be displayed next to the state of the individual device. This is optional, meaning if you don't use this, no icon will be displayed.                                                                                                                                                                                                                                                                 |
+| unit_white_space       | `boolean`         | Default is `true`. If set to `false` will not add any whitespace between unit and state. Otherwise, white space will be added.                                                                                                                                                                                                                                                                                       |
+| display_zero           | `boolean`         | Default is `false`. If set to `true` info will still be displayed if state of the entity is `0` or `unavailable`.                                                                                                                                                                                                                                                                                                    |
+| display_zero_tolerance | `number`          | If set, the device will be displayed if the state is greater than the tolerance set. No need to set `display_zero` property to true.                                                                                                                                                                                                                                                                                 |
+| decimals               | `number`          | The number of decimal places to round the value to.                                                                                                                                                                                                                                                                                                                                                                  |
+| template               | `string`          | Here you can enter a [HA Template](https://www.home-assistant.io/docs/configuration/templating/). The output of the template will be displayed. Space is limited inside the circle and too much text will result in overflow using ellipsis, so use with caution. Will update automatically in case one of the provided entities inside the template updates. Can only be used in case `entity` was not set.         |
+| accept_negative        | `boolean`         | Default is `false`. If set to `true`, negative values will be displayed as negative, otherwise they will be transformed to positive                                                                                                                                                                                                                                                                                  |
+| sum_total              | `boolean`         | Solar and individual devices only. Adds the secondary entity's value to the main entity's. On the solar bubble it acts as a second string summed into the solar total. On an individual device the sum is what the bubble shows and what drives the flow, its speed, sorting and `subtract_individual`, while the secondary info keeps showing its own value. By default, these two values are completely decoupled. |
+| tap_action             | `object`          | Action triggered on tap/click on the secondary info text.                                                                                                                                                                                                                                                                                                                                                            |
+| hold_action            | `object`          | Action triggered on long press on the secondary info text.                                                                                                                                                                                                                                                                                                                                                           |
+| double_tap_action      | `object`          | Action triggered on double tap/click on the secondary info text.                                                                                                                                                                                                                                                                                                                                                     |
 
 #### Power Outage
 
 This feature allows you to configure how the card handles a Grid Power Outage scenario.
 
-| Name                | Type                  | Description                                                                                                                                                                                                                                                                                     |
-| ------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| entity              | `string` required     | Entity ID providing a state that changes when there is a Power Outage. (eg: `binary_sensor.grid_connection_status`). Doesn't need to be a binary_sensor.                                                                                                                                        |
-| entity_generator    | `string`              | Entity ID providing the power of a Generator. (eg: `sensor.generator_power`). This is optional, meaning if you don't use this, the card will assume the grid is the only source of power.                                                                                                       |
-| state_alert         | `string`              | The state the provided entity is at when there is a power outage. Default is `on`, meaning if the entity's state is `on` the card will assume there is a power outage.                                                                                                                          |
-| icon_alert          | `string`              | An icon path to be override the grid icon when there is a power outage. Default is `mdi:transmission-tower-off`.                                                                                                                                                                                |
-| label_alert         | `string`              | A text that will be displayed below the icon when there is a power outage.                                                                                                                                                                                                                      |
-| calculate_flow_rate | `boolean` or `number` | `true`                                                                                                                                                                                                                                                                                          |
-|                     |                       | When unset or `true`, the flow rate is calculated with the flow rate formula (see `flow_rate_model`). If `false`, dots flow at a fixed pace. If set to a number, the flow rate will be set to that number. For example, defining the value `10` will ensure one dot will flow every 10 seconds. |
+| Name                | Type                   | Description                                                                                                                                                                                                                                                                                                                           |
+| ------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| entity              | `string` required      | Entity ID providing a state that changes when there is a Power Outage. (eg: `binary_sensor.grid_connection_status`). Doesn't need to be a binary_sensor.                                                                                                                                                                              |
+| entity_generator    | `string`               | Entity ID providing the power of a Generator. (eg: `sensor.generator_power`). This is optional, meaning if you don't use this, the card will assume the grid is the only source of power.                                                                                                                                             |
+| state_alert         | `string`               | The state the provided entity is at when there is a power outage. Default is `on`, meaning if the entity's state is `on` the card will assume there is a power outage.                                                                                                                                                                |
+| icon_alert          | `string`               | An icon path to be override the grid icon when there is a power outage. Default is `mdi:transmission-tower-off`.                                                                                                                                                                                                                      |
+| color_alert         | `string` or `number[]` | Color of the outage icon and label, as HEX or RGB (eg: `"#db4437"` or `[219, 68, 55]`). Unset keeps the usual grid icon color.                                                                                                                                                                                                        |
+| label_alert         | `string`               | A text that will be displayed below the icon when there is a power outage.                                                                                                                                                                                                                                                            |
+| calculate_flow_rate | `boolean` or `number`  | `true`                                                                                                                                                                                                                                                                                                                                |
+|                     |                        | When unset or `true`, the flow rate is calculated with the flow rate formula (see `flow_rate_model`). If `false`, dots flow at a fixed pace. If set to a number, the flow rate will be set to that number. For example, `10` makes a dot take 10 seconds per 175px of line, like the other lines (see [Flow Formula](#flow-formula)). |
 
 #### Display Zero Lines
 
 This object allows you to control the behavior of the flow lines that are inactive.
 
-| Name         | Type                          | Description                                                                                                                                                                                 |
-| ------------ | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| mode         | string                        | Valid Options are: `show`, `hide`, `transparency`, `grey_out`, `custom`                                                                                                                     |
-| transparency | number                        | A number between 0 and 100. 100 means the line doesn't show at all. 0 means the line shows in full opacity. Default is 50. Will be used when the mode is either `transparency` or `custom`. |
-| grey_color   | `string` or `list of numbers` | Either a HEX Code or a List of three numbers between 0 and 255 in RGB order. Will be used when the mode is either `grey_out` or `custom`.                                                   |
+| Name             | Type                          | Description                                                                                                                                                                                                                                  |
+| ---------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| mode             | string                        | Valid Options are: `show`, `hide`, `transparency`, `grey_out`, `custom`                                                                                                                                                                      |
+| transparency     | number                        | A number between 0 and 100. 100 means the line doesn't show at all. 0 means the line shows in full opacity. Default is 50. Will be used when the mode is either `transparency` or `custom`.                                                  |
+| grey_color       | `string` or `list of numbers` | Either a HEX Code or a List of three numbers between 0 and 255 in RGB order. Will be used when the mode is either `grey_out` or `custom`.                                                                                                    |
+| grey_out_circles | `boolean`                     | If `true`, grid, battery and individual circles also take `grey_color` while nothing flows through them. A node's own idle color (`color.idle`, `color_idle`) wins. Used when the mode is either `grey_out` or `custom`. Default is `false`. |
+
+#### Topology
+
+`topology` tells the card which wires exist between grid, solar, battery and home. The card only draws those wires and routes power along them.
+
+| Value              | Wires                                                                                          | For                                                                                                                                                                                                                                                          |
+| ------------------ | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `standard`         | Every wire (default).                                                                          | Most installations, AC or DC coupled.                                                                                                                                                                                                                        |
+| `battery_hub`      | Solar → battery, grid ↔ battery, battery → home. No solar → home, solar → grid or grid → home. | Portable power stations, UPS-style and off-grid inverters where every load runs through the battery. Power that would skip the battery passes through it instead, so home consumption stays the same. Needs a battery; without one the card uses `standard`. |
+| `isolated_battery` | Every wire except grid ↔ battery.                                                              | Batteries that never charge from or discharge into the grid. A battery reading that would need that wire is credited to solar or home instead, so small sensor noise no longer draws a battery ↔ grid flow.                                                  |
+
+Same readings with each topology (solar charging the battery, the grid topping up home):
+
+| `standard`                                                                                                                                         | `battery_hub`                                                                                                                                            | `isolated_battery`                                                                                                                                                 |
+| -------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| ![standard](https://raw.githubusercontent.com/flixlix/flixlix-cards/main/packages/flixlix-cards/power-flow-card-plus/assets/topology-standard.png) | ![battery_hub](https://raw.githubusercontent.com/flixlix/flixlix-cards/main/packages/flixlix-cards/power-flow-card-plus/assets/topology-battery-hub.png) | ![isolated_battery](https://raw.githubusercontent.com/flixlix/flixlix-cards/main/packages/flixlix-cards/power-flow-card-plus/assets/topology-isolated-battery.png) |
+
+#### Card height
+
+In a sections dashboard, make the card taller in the dashboard editor or with `grid_options.rows` to line it up with the cards beside it. The rows of circles spread apart to fill the extra height, up to the spacing the columns get at full width. Past that, the circles stay centred and the lines follow them.
+
+```yaml
+grid_options:
+  rows: 8
+```
+
+#### Custom CSS
+
+With [card-mod](https://github.com/thomasloven/lovelace-card-mod) you can style each part of a circle. Every node's value has its own element, so it can be moved or recoloured without touching the icon or the secondary info:
+
+| Node    | Value                                           | Icon            | Secondary info             |
+| ------- | ----------------------------------------------- | --------------- | -------------------------- |
+| Grid    | `.grid .consumption`, `.grid .return`           | `#grid-icon`    | `.grid .secondary-info`    |
+| Solar   | `.solar span.solar:not(.secondary-info)`        | `#solar-icon`   | `.solar .secondary-info`   |
+| Battery | `.battery .battery-in`, `.battery .battery-out` | `#battery-icon` | `.battery .secondary-info` |
+| Home    | `.home span.home:not(.secondary-info)`          | `#home-icon`    | `.home .secondary-info`    |
+
+```yaml
+card_mod:
+  style: |
+    .home span.home:not(.secondary-info) {
+      color: red;
+      transform: translateY(-17px);
+    }
+```
 
 ### Minimal Configuration
 
@@ -483,7 +607,7 @@ This should give you something like this:
 
 ### Flow Formula
 
-`flow_rate_model` picks how a line's value becomes the time one dot takes to travel it:
+`flow_rate_model` picks how a line's value becomes the time one dot takes to travel a 175px line (see [Line length](#line-length)):
 
 | `flow_rate_model`    | What moves linearly with power             | Depends on other lines |
 | -------------------- | ------------------------------------------ | ---------------------- |
@@ -491,7 +615,7 @@ This should give you something like this:
 | `speed`              | dot speed (1 / time per dot)               | no                     |
 | `relative`           | time per dot, by the line's share of total | yes                    |
 
-Seconds per dot with the default `min_flow_rate: 0.75`, `max_flow_rate: 6`, `min_expected_power: 0.01` and `max_expected_power: 2000` (for `relative`, the line's share of all lines):
+Seconds per dot on a 175px line with the default `min_flow_rate: 0.75`, `max_flow_rate: 6`, `min_expected_power: 0.01` and `max_expected_power: 2000` (for `relative`, the line's share of all lines):
 
 | Line value             | `duration` | `speed` | `relative` |
 | ---------------------- | ---------: | ------: | ---------: |
@@ -503,6 +627,10 @@ Seconds per dot with the default `min_flow_rate: 0.75`, `max_flow_rate: 6`, `min
 | 2000 W or more (100 %) |       0.75 |    0.75 |       0.75 |
 
 You may want to play around with `max_expected_power`, `min_expected_power`, `max_flow_rate` and `min_flow_rate` to get the speeds that you wish. `use_new_flow_rate_model` is the older way to choose: `false` means `relative`, `true` or unset means `duration`; `flow_rate_model` wins when both are set.
+
+#### Line length
+
+Lines have different lengths: the individual device lines are much shorter than the main lines, and the main lines differ from each other too. Every flow rate is the time a dot takes along a **175px reference line**, about the solar and battery lines of a card in a 500px column, and each line's time is scaled by the square root of its length. A line a quarter as long takes half the time, so dots on short lines no longer crawl, without looping so often that they look faster than the main lines. This also applies to `min_flow_rate`, `max_flow_rate` and a fixed `calculate_flow_rate: <number>`: they are seconds per 175px of line. On a typical card the solar and battery lines keep their pace, the grid line is about 25% slower and the individual device lines are about twice as fast as before.
 
 #### Duration model (default)
 

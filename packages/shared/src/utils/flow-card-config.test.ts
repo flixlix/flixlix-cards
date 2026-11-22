@@ -2,6 +2,7 @@ import { describe, expect, test } from "vite-plus/test";
 import { fakeConfig } from "../testing/fixtures";
 import {
   assertRenderableFlowCardConfig,
+  clickableEntitiesWithDefault,
   displayZeroLinesWithDefaults,
   dropEmptyEntity,
   isDeviceOnly,
@@ -66,6 +67,15 @@ describe("flow card config", () => {
       mode: "hide",
       transparency: 40,
     });
+    expect(
+      displayZeroLinesWithDefaults({ mode: "grey_out", grey_out_circles: true }).grey_out_circles
+    ).toBe(true);
+  });
+
+  test("entities are clickable unless clickable_entities is false", () => {
+    expect(clickableEntitiesWithDefault(undefined)).toBe(true);
+    expect(clickableEntitiesWithDefault(true)).toBe(true);
+    expect(clickableEntitiesWithDefault(false)).toBe(false);
   });
 });
 

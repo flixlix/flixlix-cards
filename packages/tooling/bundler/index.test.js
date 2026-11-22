@@ -1,13 +1,17 @@
 import { parse } from "acorn";
-import { rollup } from "rollup";
+import { build } from "vite-plus";
 import { expect, it } from "vite-plus/test";
 import { createCardConfig } from "./index.js";
 
-async function buildCard(input) {
-  const config = createCardConfig({ input, outDir: "dist", watch: false });
-  const bundle = await rollup(config);
-  const { output } = await bundle.generate(config.output);
-  await bundle.close();
+async function buildCard(entry) {
+  const config = createCardConfig({ entry, name: "card" });
+  const result = await build({
+    ...config,
+    configFile: false,
+    logLevel: "silent",
+    build: { ...config.build, write: false },
+  });
+  const [{ output }] = Array.isArray(result) ? result : [result];
   return output[0].code;
 }
 

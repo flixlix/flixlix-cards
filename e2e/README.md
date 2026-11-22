@@ -23,28 +23,30 @@ and committed on purpose; the instance only listens on localhost.
 The bootstrap (`e2e/scripts/bootstrap.ts`, safe to re-run) completes onboarding, writes a
 long-lived token to `.hass_dev/.e2e-token`, saves the energy preferences, imports hourly
 statistics for the energy meters (see `e2e/src/energy-history.ts` for the totals per day:
-today, yesterday and the 35 days before differ), creates the `card-editors` storage dashboard
-and runs the default scenario.
+today and yesterday have fixed totals, the three years before them vary by season), creates
+the `card-editors` storage dashboard and runs the default scenario. The history ends on the day
+it was imported: on a later day, re-run `pnpm hass:bootstrap` to bring "today" back.
 
 **HA version:** `stable` by default. `HA_VERSION=beta pnpm hass:up` runs the beta to catch
 frontend breakages early; run `pnpm hass:reset` when switching back, since a database written
 by a newer HA cannot be opened by an older one.
 
 **Live development:** compose mounts each card's `dist/` at `/local/<card>/`. Run `pnpm dev`
-(rollup watch) and reload the browser to pick up changes; no restart needed.
+(`vp build --watch`) and reload the browser to pick up changes; no restart needed.
 
 The instance runs in UTC so "today" is the same day for the imported statistics and the energy
 cards; a browser in another time zone sees day boundaries shifted.
 
 ## Dashboards
 
-| Dashboard           | What it holds                                                                                                    |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `/power-flow`       | Combined vs split entities, outage with generator, tolerance 10 W, six individuals, plus every knob and scenario |
-| `/energy-flow`      | `energy-date-selection`, energy-flow-card-plus, a breakdown, and HA's own energy distribution for comparison     |
-| `/energy-breakdown` | Energy donut and bar over the selected period, and a live power donut driven by the device sliders               |
-| `/sortable-list`    | A list saved to `input_text.device_priority`, and a plain-key list                                               |
-| `/card-editors`     | Storage dashboard the editor tests overwrite; free to play with                                                  |
+| Dashboard                 | What it holds                                                                                                                            |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `/power-flow`             | Combined vs split entities, outage with generator, tolerance 10 W, six individuals, plus every knob and scenario                         |
+| `/energy-flow`            | `energy-date-selection`, energy-flow-card-plus, a breakdown, and HA's own energy distribution for comparison                             |
+| `/energy-breakdown`       | Energy donut and bar over the selected period, and a live power donut driven by the device sliders                                       |
+| `/sortable-list`          | A list saved to `input_text.device_priority`, and a plain-key list                                                                       |
+| `/card-editors`           | Storage dashboard the editor tests overwrite; free to play with                                                                          |
+| `/period-selector-editor` | Storage dashboard seeded once with Energy Period Selector Plus configs: billing cycles, quarters, rolling windows; try its visual editor |
 
 Config lives in `.hass_dev/`: `configuration.yaml`, `lovelace.yaml` (resources and dashboards),
 `dashboards/*.yaml`, and `packages/` with the entities.

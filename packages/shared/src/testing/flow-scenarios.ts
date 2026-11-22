@@ -90,6 +90,102 @@ const individualStates = (count: number): StateFixtures =>
 
 export const flowScenarios: FlowScenario[] = [
   {
+    name: "dashboard link and buttons wrap on a narrow card",
+    visual: true,
+    width: 360,
+    options: {
+      dashboard_link: "/energy",
+      buttons: [
+        { name: "Solar", icon: "mdi:solar-power" },
+        { name: "Battery", icon: "mdi:home-battery", entity: "sensor.battery" },
+        { icon: "mdi:cog", entity: "sensor.grid" },
+      ],
+    },
+    entities: combinedEntities,
+    states: {
+      "sensor.grid": "800",
+      "sensor.solar": "1200",
+      "sensor.battery": "-300",
+      "sensor.battery_soc": "60",
+    },
+    expect: {
+      shown: [".card-actions"],
+    },
+  },
+  {
+    name: "auxiliary feeding the grid",
+    visual: true,
+    energy: true,
+    entities: {
+      ...combinedEntities,
+      auxiliary: {
+        entity: "sensor.wind_stake",
+        name: "Wind stake",
+        icon: "mdi:wind-turbine",
+        inverted_animation: true,
+      },
+    },
+    states: {
+      "sensor.grid": "800",
+      "sensor.solar": "1200",
+      "sensor.battery": "-300",
+      "sensor.battery_soc": "60",
+      "sensor.wind_stake": "350",
+    },
+    expect: {
+      text: { "span.auxiliary": "350 W", ".circle-container.auxiliary .label": "Wind stake" },
+      shown: [
+        ".circle-container.auxiliary",
+        "#auxiliary-flow",
+        '.flow-dot[data-path="auxiliary-line"] circle',
+      ],
+    },
+  },
+  {
+    name: "auxiliary connected to the battery",
+    visual: true,
+    entities: {
+      ...combinedEntities,
+      auxiliary: { entity: "sensor.dc_solar", name: "DC solar", connect_to: "battery" },
+    },
+    states: {
+      "sensor.grid": "200",
+      "sensor.solar": "900",
+      "sensor.battery": "-500",
+      "sensor.battery_soc": "45",
+      "sensor.dc_solar": "400",
+    },
+    expect: {
+      shown: [".circle-container.auxiliary", "#auxiliary-flow"],
+    },
+  },
+  {
+    name: "auxiliary without a line and without a battery",
+    visual: true,
+    entities: {
+      grid: { entity: "sensor.grid" },
+      solar: { entity: "sensor.solar" },
+      auxiliary: {
+        entity: "sensor.gas",
+        name: "Gas",
+        icon: "mdi:fire",
+        connect_to: "none",
+        unit_of_measurement: "m³",
+        decimals: 2,
+      },
+    },
+    states: {
+      "sensor.grid": "300",
+      "sensor.solar": "500",
+      "sensor.gas": sensor("1.25", { unit: "m³" }),
+    },
+    expect: {
+      text: { "span.auxiliary": "1.25 m³" },
+      shown: [".circle-container.auxiliary"],
+      hidden: ["#auxiliary-flow"],
+    },
+  },
+  {
     name: "all zero",
     visual: true,
     entities: combinedEntities,
@@ -101,9 +197,24 @@ export const flowScenarios: FlowScenario[] = [
     },
     energy: true,
     expect: {
-      text: { ".grid .consumption": "0 W", ".solar .solar": "0 W", "#home-circle": "0 W" },
+      text: { ".grid .consumption": "0 W", ".solar .solar": "0 W", ".home span.home": "0 W" },
       shown: [nodes.grid, nodes.solar, nodes.battery, nodes.home],
       hidden: allFlowDots,
+    },
+  },
+  {
+    name: "keep_trailing_zeros",
+    entities: combinedEntities,
+    options: { keep_trailing_zeros: true, kilo_threshold: 0, kilo_decimals: 3 },
+    states: {
+      "sensor.grid": "0",
+      "sensor.solar": "1560",
+      "sensor.battery": "0",
+      "sensor.battery_soc": "0",
+    },
+    energy: true,
+    expect: {
+      text: { ".grid .consumption": "0.000 kW", ".solar .solar": "1.560 kW" },
     },
   },
   {
@@ -117,10 +228,29 @@ export const flowScenarios: FlowScenario[] = [
       "sensor.battery_soc": "80",
     },
     expect: {
-      text: { ".grid .return": "300 W", ".solar .solar": "1 kW", "#home-circle": "700 W" },
+      text: { ".grid .return": "300 W", ".solar .solar": "1 kW", ".home span.home": "700 W" },
       shown: [dot(flows.solarToHome), dot(flows.solarToGrid)],
       hidden: [dot(flows.gridToHome), dot(flows.batteryToHome), dot(flows.solarToBattery)],
       fastestFirst: [dot(flows.solarToHome), dot(flows.solarToGrid)],
+    },
+  },
+  {
+    name: "solar charging the battery without a grid",
+    visual: true,
+    entities: { solar: combinedEntities.solar, battery: combinedEntities.battery },
+    states: {
+      "sensor.solar": "1000",
+      "sensor.battery": "-300",
+      "sensor.battery_soc": "60",
+    },
+    expect: {
+      text: {
+        ".solar .solar": "1 kW",
+        ".battery .battery-in": "300 W",
+        ".home span.home": "700 W",
+      },
+      shown: [dot(flows.solarToHome), dot(flows.solarToBattery)],
+      hidden: [nodes.grid, dot(flows.batteryToHome)],
     },
   },
   {
@@ -136,7 +266,7 @@ export const flowScenarios: FlowScenario[] = [
       text: {
         ".grid .consumption": "800 W",
         ".battery .battery-in": "500 W",
-        "#home-circle": "300 W",
+        ".home span.home": "300 W",
       },
       shown: [`${dot(flows.batteryGrid)}.battery-from-grid`, dot(flows.gridToHome)],
       hidden: [`${dot(flows.batteryGrid)}.battery-to-grid`, dot(flows.batteryToHome)],
@@ -153,7 +283,11 @@ export const flowScenarios: FlowScenario[] = [
       "sensor.battery_soc": "90",
     },
     expect: {
-      text: { ".grid .return": "400 W", ".battery .battery-out": "600 W", "#home-circle": "200 W" },
+      text: {
+        ".grid .return": "400 W",
+        ".battery .battery-out": "600 W",
+        ".home span.home": "200 W",
+      },
       shown: [`${dot(flows.batteryGrid)}.battery-to-grid`, dot(flows.batteryToHome)],
       hidden: [`${dot(flows.batteryGrid)}.battery-from-grid`, dot(flows.gridToHome)],
       fastestFirst: [`${dot(flows.batteryGrid)}.battery-to-grid`, dot(flows.batteryToHome)],
@@ -180,7 +314,7 @@ export const flowScenarios: FlowScenario[] = [
       "sensor.solar": "100",
     },
     expect: {
-      text: { ".grid .consumption": "400 W", "#home-circle": "500 W" },
+      text: { ".grid .consumption": "400 W", ".home span.home": "500 W" },
       shown: [dot(flows.gridToHome), dot(flows.solarToHome)],
       hidden: [".grid .return", ".grid.power-outage"],
     },
@@ -204,6 +338,30 @@ export const flowScenarios: FlowScenario[] = [
       "sensor.solar": "100",
     },
     expect: {
+      text: { ".grid.power-outage": "Outage", ".home span.home": "100 W" },
+      hidden: [".grid .consumption", dot(flows.gridToHome)],
+    },
+  },
+  {
+    name: "grid outage in a custom alert colour",
+    visual: true,
+    entities: {
+      grid: {
+        entity: "sensor.grid",
+        power_outage: {
+          entity: "binary_sensor.grid_outage",
+          label_alert: "Outage",
+          color_alert: "#db4437",
+        },
+      },
+      solar: { entity: "sensor.solar" },
+    },
+    states: {
+      "sensor.grid": "250",
+      "binary_sensor.grid_outage": sensor("on", { unit: undefined }),
+      "sensor.solar": "100",
+    },
+    expect: {
       text: { ".grid.power-outage": "Outage", "#home-circle": "100 W" },
       hidden: [".grid .consumption", dot(flows.gridToHome)],
     },
@@ -216,7 +374,7 @@ export const flowScenarios: FlowScenario[] = [
     },
     states: { "sensor.grid": "3", "sensor.solar": "15" },
     expect: {
-      text: { ".grid .consumption": "0 W", ".solar .solar": "0 W", "#home-circle": "0 W" },
+      text: { ".grid .consumption": "0 W", ".solar .solar": "0 W", ".home span.home": "0 W" },
       hidden: allFlowDots,
     },
   },
@@ -242,7 +400,7 @@ export const flowScenarios: FlowScenario[] = [
     },
     states: { "sensor.grid": "300", "sensor.solar": "0", "sensor.battery": "0" },
     expect: {
-      text: { ".grid .consumption": "300 W", "#home-circle": "300 W" },
+      text: { ".grid .consumption": "300 W", ".home span.home": "300 W" },
       shown: [nodes.grid, dot(flows.gridToHome)],
       hidden: [nodes.solar, nodes.battery, flows.solarToHome, flows.batteryToHome],
     },
@@ -270,7 +428,7 @@ export const flowScenarios: FlowScenario[] = [
       "sensor.device_1": sensor("unavailable"),
     },
     expect: {
-      text: { ".battery .battery-out": "200 W", "#home-circle": "200 W" },
+      text: { ".battery .battery-out": "200 W", ".home span.home": "200 W" },
       shown: [dot(flows.batteryToHome)],
       hidden: [dot(flows.gridToHome), dot(flows.solarToHome)],
     },
@@ -350,7 +508,7 @@ export const flowScenarios: FlowScenario[] = [
     },
     energy: true,
     expect: {
-      text: { ".grid .return": "250 W", "#home-circle": "150 W" },
+      text: { ".grid .return": "250 W", ".home span.home": "150 W" },
       shown: [dot(flows.solarToGrid), dot(flows.solarToHome)],
       hidden: [dot(flows.gridToHome)],
     },
@@ -363,7 +521,7 @@ export const flowScenarios: FlowScenario[] = [
     },
     states: { "sensor.grid": "-500", "sensor.solar": "0" },
     expect: {
-      text: { ".grid .consumption": "500 W", "#home-circle": "500 W" },
+      text: { ".grid .consumption": "500 W", ".home span.home": "500 W" },
       shown: [dot(flows.gridToHome)],
     },
   },
@@ -375,7 +533,11 @@ export const flowScenarios: FlowScenario[] = [
       "sensor.solar": sensor("0.002", { unit: "MW" }),
     },
     expect: {
-      text: { ".grid .consumption": "1.5 kW", ".solar .solar": "2 kW", "#home-circle": "3.5 kW" },
+      text: {
+        ".grid .consumption": "1.5 kW",
+        ".solar .solar": "2 kW",
+        ".home span.home": "3.5 kW",
+      },
     },
   },
   {
@@ -464,6 +626,25 @@ export const flowScenarios: FlowScenario[] = [
     expect: { text: { ".individual-top .secondary-info": "heating" } },
   },
   {
+    name: "an individual summing its secondary entity with sum_total",
+    entities: {
+      grid: { entity: "sensor.grid" },
+      individual: [
+        {
+          entity: "sensor.charger",
+          name: "Charger",
+          secondary_info: { entity: "sensor.charger_2", sum_total: true },
+        },
+      ],
+    },
+    states: { "sensor.grid": "7200", "sensor.charger": "0", "sensor.charger_2": "7200" },
+    energy: true,
+    expect: {
+      text: { "span.individual-left-top": "7.2 kW", ".individual-top .label": "Charger" },
+      shown: ['.flow-dot[data-path="individual-top"] circle'],
+    },
+  },
+  {
     name: "zero lines greyed out",
     visual: true,
     entities: combinedEntities,
@@ -531,7 +712,7 @@ export const flowScenarios: FlowScenario[] = [
         ".grid .return": "600 W",
         ".battery .battery-in": "200 W",
         ".battery .battery-out": "150 W",
-        "#home-circle": "50 W",
+        ".home span.home": "50 W",
       },
       // solar→grid 450, battery↔grid 150 each way, solar→battery 50 and grid→home 50, solar→home 0.
       shown: [
@@ -540,6 +721,58 @@ export const flowScenarios: FlowScenario[] = [
       ],
       hidden: [dot(flows.solarToHome), dot(flows.batteryToHome)],
       fastestFirst: [dot(flows.solarToGrid), dot(flows.batteryGrid), dot(flows.gridToHome)],
+    },
+  },
+  {
+    name: "battery hub: solar and grid charge the battery, only the battery feeds home",
+    visual: true,
+    entities: splitEntities,
+    options: { topology: "battery_hub" },
+    states: {
+      "sensor.grid_import": "500",
+      "sensor.grid_export": "0",
+      "sensor.solar": "3000",
+      "sensor.battery_charge": "1500",
+      "sensor.battery_discharge": "0",
+    },
+    energy: true,
+    expect: {
+      text: { ".home span.home": "2 kW" },
+      shown: [
+        dot(flows.solarToBattery),
+        `${dot(flows.batteryGrid)}.battery-from-grid`,
+        dot(flows.batteryToHome),
+      ],
+      hidden: [flows.solarToHome, flows.solarToGrid, flows.gridToHome],
+      fastestFirst: [dot(flows.batteryToHome), `${dot(flows.batteryGrid)}.battery-from-grid`],
+    },
+  },
+  {
+    name: "battery hub without a battery keeps the standard wires",
+    entities: { grid: combinedEntities.grid, solar: combinedEntities.solar },
+    options: { topology: "battery_hub" },
+    states: { "sensor.grid": "200", "sensor.solar": "1000" },
+    expect: {
+      text: { ".home span.home": "1.2 kW" },
+      shown: [dot(flows.solarToHome), dot(flows.gridToHome)],
+    },
+  },
+  {
+    name: "isolated battery: no wire between battery and grid",
+    entities: splitEntities,
+    options: { topology: "isolated_battery" },
+    states: {
+      "sensor.grid_import": "0",
+      "sensor.grid_export": "2000",
+      "sensor.solar": "2500",
+      "sensor.battery_charge": "0",
+      "sensor.battery_discharge": "30",
+    },
+    energy: true,
+    expect: {
+      text: { ".home span.home": "530 W" },
+      shown: [dot(flows.solarToGrid), dot(flows.solarToHome), dot(flows.batteryToHome)],
+      hidden: [flows.batteryGrid],
     },
   },
 ];

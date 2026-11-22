@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vite-plus/test";
+import { userEvent } from "vite-plus/test/browser/context";
 import {
   energyCollection,
   fakeHass,
@@ -6,8 +7,10 @@ import {
   type StateFixtures,
   withStates,
 } from "@flixlix-cards/shared/testing/fake-hass";
+import { dotLoop } from "@flixlix-cards/shared/testing/dot-loop";
 import { expectFlowCard } from "@flixlix-cards/shared/testing/expect-flow-card";
 import { asEnergyUnits, flowScenarios } from "@flixlix-cards/shared/testing/flow-scenarios";
+import { gpuLayersWithAndWithoutDots } from "@flixlix-cards/shared/testing/gpu-layers";
 import { mountCard } from "@flixlix-cards/shared/testing/mount-card";
 import { EnergyFlowCardPlus } from "./energy-flow-card-plus";
 
@@ -39,6 +42,34 @@ describe("energy flow card scenarios", () => {
     );
     expectFlowCard(card, scenario.expect, asEnergyUnits);
   });
+});
+
+describe("classic dots (dot_animation: classic)", () => {
+  test.for(flowScenarios.filter((scenario) => scenario.energy))(
+    "$name: they move with SVG animation and add no GPU layer",
+    async (scenario) => {
+      const { root } = await mountCard(
+        EnergyFlowCardPlus,
+        {
+          type: "custom:energy-flow-card-plus",
+          ...scenario.options,
+          dot_animation: "classic",
+          entities: scenario.entities,
+        },
+        fakeHass({
+          states: scenario.states,
+          statistics: growthOf(scenario.states),
+          energyCollection: energyCollection(day(1).start, day(1).end),
+        }),
+        { width: scenario.width }
+      );
+      const dots = [...root.querySelectorAll("svg.flow-dot")];
+      expect(root.getAnimations()).toEqual([]);
+      expect(dots.filter((dot) => !dot.querySelector("animateMotion"))).toEqual([]);
+      const layers = await gpuLayersWithAndWithoutDots(root);
+      expect(layers.with).toEqual(layers.without);
+    }
+  );
 });
 
 describe("energy period", () => {
@@ -93,9 +124,27 @@ describe("energy period", () => {
       expect.objectContaining({ start_time: day(2).start.toISOString() })
     );
   });
+
+  test("with collection_key, follows that dashboard's period instead of the default one", async () => {
+    const growthByDay: Record<number, Record<string, number>> = {
+      1: { "sensor.grid_import": 1000, "sensor.grid_export": 0, "sensor.solar": 0 },
+      2: { "sensor.grid_import": 2000, "sensor.grid_export": 0, "sensor.solar": 0 },
+    };
+    const livingRoom = energyCollection(day(2).start, day(2).end);
+    const card = await mountCard(
+      EnergyFlowCardPlus,
+      { type: "custom:energy-flow-card-plus", collection_key: "energy_living_room", entities },
+      fakeHass({
+        statistics: (window) => growthByDay[window.start.getDate()] ?? {},
+        energyCollection: energyCollection(day(1).start, day(1).end),
+        energyCollections: { energy_living_room: livingRoom },
+      })
+    );
+    expect(card.text(".grid .consumption")).toBe("2 kWh");
+  });
 });
 
-const mountLive = async () => {
+const mountLive = async (options: object = {}) => {
   const hass = fakeHass({
     states: {
       "sensor.grid": sensor("1000", { unit: "Wh" }),
@@ -108,6 +157,7 @@ const mountLive = async () => {
     type: "custom:energy-flow-card-plus",
     energy_date_selection: false,
     entities: { grid: { entity: "sensor.grid" }, solar: { entity: "sensor.solar" } },
+    ...options,
   };
   return { hass, ...(await mountCard(EnergyFlowCardPlus, config, hass)) };
 };
@@ -124,5 +174,78 @@ describe("updates", () => {
     await setHass(withStates(hass, { "sensor.solar": sensor("3000", { unit: "Wh" }) }));
     expect(updates()).toBe(1);
     expect(text(".solar .solar")).toBe("3 kWh");
+  });
+});
+
+describe("node actions", () => {
+  test("nodes are clickable when the config leaves clickable_entities out", async () => {
+    const { card, root } = await mountLive();
+    const opened: unknown[] = [];
+    for (const type of ["hass-more-info", "hass-action"]) {
+      card.addEventListener(type, (event) => opened.push(event));
+    }
+    const circle = root.querySelector<HTMLElement>(".solar .circle");
+    if (!circle) {
+      throw new Error("solar circle not rendered");
+    }
+    await userEvent.click(circle);
+    expect(opened).toHaveLength(1);
+  });
+});
+
+describe("buttons", () => {
+  test("the buttons follow the dashboard link and hand their tap action to Home Assistant", async () => {
+    const { card, root } = await mountLive({
+      dashboard_link: "/energy",
+      buttons: [{ name: "Solar", tap_action: { action: "navigate", navigation_path: "/solar" } }],
+    });
+    const actions: unknown[] = [];
+    card.addEventListener("hass-action", (event) => {
+      actions.push(event instanceof CustomEvent ? event.detail : undefined);
+    });
+    const buttons = [...root.querySelectorAll<HTMLElement>(".card-actions ha-button")];
+    expect(buttons.map((button) => button.getAttribute("href"))).toEqual(["/energy", null]);
+    const [, solar] = buttons;
+    if (!solar) {
+      throw new Error("button not rendered");
+    }
+    await userEvent.click(solar);
+    expect(actions).toEqual([
+      expect.objectContaining({
+        action: "tap",
+        config: expect.objectContaining({
+          tap_action: { action: "navigate", navigation_path: "/solar" },
+        }),
+      }),
+    ]);
+  });
+});
+
+describe("dot speed", () => {
+  test("at the same energy, loop time follows the square root of line length", async () => {
+    const { root } = await mountCard(
+      EnergyFlowCardPlus,
+      {
+        type: "custom:energy-flow-card-plus",
+        entities: {
+          grid: { entity: { consumption: "sensor.grid_import" } },
+          individual: [{ entity: "sensor.device" }],
+        },
+      },
+      fakeHass({
+        statistics: { "sensor.grid_import": 1000, "sensor.device": 1000 },
+        energyCollection: energyCollection(day(1).start, day(1).end),
+      }),
+      { width: 500 }
+    );
+    const grid = '.flow-dot[data-path="grid"]';
+    const device = '.flow-dot[data-path="individual-top"]';
+    expect(root.querySelector(grid)?.getAttribute("data-duration")).toBe(
+      root.querySelector(device)?.getAttribute("data-duration")
+    );
+    const short = dotLoop(root, device);
+    const long = dotLoop(root, grid);
+    expect(short.pixels).toBeLessThan(long.pixels / 2);
+    expect(short.seconds / long.seconds).toBeCloseTo(Math.sqrt(short.pixels / long.pixels), 1);
   });
 });

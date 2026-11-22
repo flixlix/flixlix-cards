@@ -1,7 +1,7 @@
 import localize from "@flixlix-cards/shared/i18n";
 import {
   actionSchema,
-  customColorsSchema,
+  directionalColorsSchema,
   getBaseMainConfigSchema,
   getEntityCombinedSelectionSchema,
   getEntitySeparatedSelectionSchema,
@@ -99,7 +99,7 @@ export const batterySchema = [
     schema: stateOfChargeSchema,
   },
   mainSchema,
-  customColorsSchema,
+  directionalColorsSchema,
   {
     title: localize("editor.action"),
     name: "",
