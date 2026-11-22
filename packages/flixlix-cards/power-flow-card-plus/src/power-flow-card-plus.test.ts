@@ -377,108 +377,11 @@ describe("device-only mode (no grid, solar or battery)", () => {
     expect(root.querySelector("#home-circle")).not.toBeNull();
   });
 
-  test("the home shows the home entity's reading", async () => {
-    const { text } = await renderCard(config, makeHass(states));
-
-    expect(text("#home-circle")).toContain(`1.5${thinSpace}kW`);
-  });
-
-  test("without a home entity the home shows the sum of the devices", async () => {
-    const { text } = await renderCard(
-      withEntities({ individual: sensors.map((entity) => ({ entity })) }),
-      makeHass(states)
-    );
-
-    expect(text("#home-circle")).toContain(`1.4${thinSpace}kW`);
-  });
-
-  test("an unavailable home entity says so instead of showing the sum", async () => {
-    const { text } = await renderCard(
-      config,
-      makeHass({ ...states, "sensor.total": "unavailable" })
-    );
-
-    expect(text("#home-circle")).toContain("state.default.unavailable");
-  });
-
-  test("devices at 0 W are shown unless display_zero is false", async () => {
-    const { root } = await renderCard(
-      withEntities({
-        home: { entity: "sensor.total" },
-        individual: [
-          { entity: "sensor.device_4" },
-          { entity: "sensor.device_3" },
-          { entity: "sensor.device_6", display_zero: false },
-        ],
-      }),
-      makeHass(states)
-    );
-
-    expect(root.querySelectorAll(".orbit-device")).toHaveLength(2);
-  });
-
   test("only devices that are drawing power get flow dots", async () => {
     const { root } = await renderCard(config, makeHass(states));
 
     // Seven of the eleven devices read above 0 W.
     expect(root.querySelectorAll("svg.flow-dot")).toHaveLength(7);
-  });
-
-  describe("direction arrows", () => {
-    test("point away from the home along the device's line", async () => {
-      const { root } = await renderCard(
-        withEntities({ individual: [{ entity: "sensor.up", show_direction: true }] }),
-        makeHass({ "sensor.up": "300" })
-      );
-
-      // The only device sits straight above the home.
-      expect(root.querySelector("ha-icon.small")?.getAttribute("style")).toContain("rotate(0deg)");
-    });
-
-    test("point towards the home for a device feeding it", async () => {
-      const { root } = await renderCard(
-        withEntities({
-          individual: [{ entity: "sensor.up", show_direction: true, accept_negative: true }],
-        }),
-        makeHass({ "sensor.up": "-200" })
-      );
-
-      expect(root.querySelector("ha-icon.small")?.getAttribute("style")).toContain(
-        "rotate(180deg)"
-      );
-    });
-
-    test("are left out unless show_direction is set", async () => {
-      const { root } = await renderCard(
-        withEntities({ individual: [{ entity: "sensor.up" }] }),
-        makeHass({ "sensor.up": "300" })
-      );
-
-      expect(root.querySelector("ha-icon.small")).toBeNull();
-    });
-  });
-
-  test("names sit above the circles in the upper half and below them elsewhere", async () => {
-    const { root } = await renderCard(
-      withEntities({ individual: [{ entity: "sensor.device_1" }, { entity: "sensor.device_2" }] }),
-      makeHass(states)
-    );
-
-    const [top, bottom] = [...root.querySelectorAll(".orbit-device")];
-    expect(top?.classList.contains("orbit-label-above")).toBe(true);
-    expect(bottom?.classList.contains("orbit-label-above")).toBe(false);
-  });
-
-  test("the orbit fits inside the padding Home Assistant puts around the card", async () => {
-    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (
-      this: HTMLElement
-    ) {
-      return new DOMRect(0, 0, this.id === "power-flow-card-plus" ? 420 : 0, 0);
-    });
-    const { root } = await renderCard(config, makeHass(states));
-
-    const frame = root.querySelector<HTMLElement>(".orbit-frame");
-    expect(parseFloat(frame?.style.width ?? "")).toBeLessThanOrEqual(420 - 32);
   });
 
   test("a config with a source keeps the fixed layout", async () => {

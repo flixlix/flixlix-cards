@@ -61,7 +61,8 @@ export const computeHomeRing = (
   format: Formatter
 ): HomeRing => {
   // Device-only mode draws a plain border, not the closed grid ring an idle home gets.
-  const segments = input.deviceOnly ? NO_SEGMENTS : ringSegments(balance.flows);
+  const plain = input.deviceOnly ?? false;
+  const segments = plain ? NO_SEGMENTS : ringSegments(balance.flows);
   const sources = [
     ["battery", segments.battery],
     ["solar", segments.solar],
@@ -73,6 +74,6 @@ export const computeHomeRing = (
     ...segments,
     largestSource,
     usageText: usageText(input, balance, individuals, format),
-    plain: input.deviceOnly ?? false,
+    plain,
   };
 };

@@ -1199,7 +1199,8 @@ function DeviceOnlyNotes({ v }: { v: Variant }) {
       <p>
         Devices at 0 W stay visible; set <code>display_zero: false</code> on a device to hide it
         while idle. In the visual editor, use the <strong>Disable</strong> button on the Grid,
-        Solar, Battery and Fossil fuel pages to switch them off.
+        Solar, Battery and Fossil fuel pages to switch them off. The <code>auxiliary</code> node is
+        not shown in this mode: it has no grid or battery to connect to.
       </p>
     </>
   );

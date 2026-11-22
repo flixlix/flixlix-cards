@@ -233,16 +233,16 @@ const crowdedRings = (count: number, width: number): Ring[] => {
 };
 
 const chooseLayout = (count: number, width: number): { scale: number; rings: Ring[] } => {
-  for (const scale of scalesFrom(1, SINGLE_RING_MIN_SCALE)) {
-    const rings = singleRing(count, width, scale);
-    if (rings) {
-      return { scale, rings };
-    }
-  }
-  for (const scale of scalesFrom(1, MIN_SCALE)) {
-    const rings = doubleRing(count, width, scale);
-    if (rings) {
-      return { scale, rings };
+  const attempts = [
+    [singleRing, SINGLE_RING_MIN_SCALE],
+    [doubleRing, MIN_SCALE],
+  ] as const;
+  for (const [layout, minScale] of attempts) {
+    for (const scale of scalesFrom(1, minScale)) {
+      const rings = layout(count, width, scale);
+      if (rings) {
+        return { scale, rings };
+      }
     }
   }
   return { scale: MIN_SCALE, rings: crowdedRings(count, width) };

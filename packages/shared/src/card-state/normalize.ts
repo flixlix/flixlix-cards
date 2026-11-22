@@ -151,11 +151,17 @@ const deviceTotal = (field: DeviceField, reading: number | null | undefined) =>
 const isFeeding = (field: DeviceField, reading: number | null | undefined) =>
   field?.accept_negative === true && (reading ?? 0) < 0;
 
+/** Whether a device stays shown at 0 W: its `display_zero`, else the mode's default. */
+export const displaysZero = (
+  field: { display_zero?: boolean } | undefined,
+  displayZeroByDefault = false
+): boolean => field?.display_zero ?? displayZeroByDefault;
+
 const deviceShown = (
   field: { entity?: string; display_zero?: boolean } | undefined,
   total: number,
   displayZeroByDefault = false
-): boolean => !!field?.entity && ((field.display_zero ?? displayZeroByDefault) || total > 0);
+): boolean => !!field?.entity && (displaysZero(field, displayZeroByDefault) || total > 0);
 
 const individualTotals = (input: NormalizeInput, readings: ReadyReadings) =>
   (input.config.entities.individual ?? []).map((field, index) =>

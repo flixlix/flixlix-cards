@@ -614,6 +614,29 @@ describe("device-only mode", () => {
     expect(secondLarger["sensor.second"]).toBe(firstLarger["sensor.second"]);
   });
 
+  const arrowTurn = (field: Record<string, unknown>, power: number) =>
+    ready(
+      compute({
+        ...deviceOnly({ individual: [{ entity: "sensor.up", ...field }] }),
+        readings: readings({ individuals: [power] }),
+      })
+    ).orbit?.devices[0]?.arrowTurn;
+
+  describe("direction arrows", () => {
+    test("point away from the home along the device's line", () => {
+      // The only device sits straight above the home.
+      expect(arrowTurn({ show_direction: true }, 300)).toBe(0);
+    });
+
+    test("point towards the home for a device feeding it", () => {
+      expect(arrowTurn({ show_direction: true, accept_negative: true }, -200)).toBe(180);
+    });
+
+    test("are left out unless show_direction is set", () => {
+      expect(arrowTurn({}, 300)).toBeUndefined();
+    });
+  });
+
   test("a card with a source keeps the segmented ring and the slots", () => {
     const { homeRing, orbit } = ready(compute({}));
     expect(homeRing.plain).toBe(false);

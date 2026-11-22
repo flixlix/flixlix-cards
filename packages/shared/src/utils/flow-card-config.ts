@@ -57,17 +57,17 @@ const hasSourceEntity = (entities: Entities | undefined): boolean =>
 export const isDeviceOnly = (entities: Entities | undefined): boolean =>
   ![entities?.battery, entities?.grid, entities?.solar].some(hasEntity);
 
-type AssertOptions = {
-  allowDeviceOnly?: boolean;
-};
+const hasDeviceOnlyContent = (entities: Entities | undefined): boolean =>
+  !!entities?.home?.entity || (entities?.individual ?? []).some((device) => !!device?.entity);
 
-const hasDeviceOnlyContent = (entities: Entities): boolean =>
-  !!entities.home?.entity || (entities.individual ?? []).some((device) => !!device?.entity);
+const NEEDS_SOURCE = "At least one entity for battery, grid or solar must be defined";
+const NEEDS_SOURCE_OR_DEVICE =
+  "At least one entity for battery, grid, solar, home or an individual device must be defined";
 
 /** Throws for a config a flow card cannot render: legacy individual1/2 keys or nothing to show. */
 export const assertRenderableFlowCardConfig = (
   config: FlowCardPlusConfig,
-  { allowDeviceOnly = false }: AssertOptions = {}
+  { allowDeviceOnly = false }: { allowDeviceOnly?: boolean } = {}
 ): void => {
   const { entities } = config;
   if (entities?.individual1 || entities?.individual2) {
@@ -75,20 +75,10 @@ export const assertRenderableFlowCardConfig = (
       "You are using an outdated configuration. Please update your configuration to the latest version. The individual1 and individual2 properties are now just a single individual array property. The easiest way to do this is to remove the individual1 and individual2 properties and replace them in the UI Editor."
     );
   }
-  if (!entities) {
-    throw new Error("At least one entity for battery, grid or solar must be defined");
-  }
-  if (hasSourceEntity(entities)) {
+  if (hasSourceEntity(entities) || (allowDeviceOnly && hasDeviceOnlyContent(entities))) {
     return;
   }
-  if (allowDeviceOnly && hasDeviceOnlyContent(entities)) {
-    return;
-  }
-  throw new Error(
-    allowDeviceOnly
-      ? "At least one entity for battery, grid, solar, home or an individual device must be defined"
-      : "At least one entity for battery, grid or solar must be defined"
-  );
+  throw new Error(allowDeviceOnly ? NEEDS_SOURCE_OR_DEVICE : NEEDS_SOURCE);
 };
 
 export const displayZeroLinesWithDefaults = (

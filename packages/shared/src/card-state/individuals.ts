@@ -8,7 +8,7 @@ import { convertColorListToHex } from "@flixlix-cards/shared/utils/convert-color
 import { isNumberValue, nonEmpty, sortedCopy } from "@flixlix-cards/shared/utils/utils";
 import { type HomeAssistant } from "custom-card-helpers";
 import { type Formatter } from "./format";
-import { type Normalized } from "./normalize";
+import { displaysZero, type Normalized } from "./normalize";
 import { type CardStateInput, type IndividualSlot, type ReadyCardState } from "./types";
 
 const unconfigured: IndividualObject = {
@@ -129,7 +129,7 @@ const deviceNode = (
   entity: field.entity,
   has,
   state,
-  displayZero: field.display_zero ?? displayZeroByDefault,
+  displayZero: displaysZero(field, displayZeroByDefault),
   displayZeroTolerance: field.display_zero_tolerance ?? 0,
   icon: computeFieldIcon(input.hass, field, "mdi:flash"),
   name: computeFieldName(input.hass, field, fallbackName),
@@ -205,6 +205,10 @@ const byStateThenEntity = (a: IndividualSlot, b: IndividualSlot) =>
 /** Cards narrower than this show two individual devices unless `allow_layout_break` is set. */
 const WIDTH_FOR_FOUR_INDIVIDUALS = 359;
 
+/**
+ * Sorts individual devices unless `sort_individual_devices` is false, then places the visible ones
+ * into the four slots; in device-only mode every visible device goes on the orbit instead.
+ */
 export const placeIndividuals = (input: CardStateInput, devices: IndividualSlot[]) => {
   const sorted =
     input.config.sort_individual_devices === false

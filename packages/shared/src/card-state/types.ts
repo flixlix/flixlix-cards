@@ -103,6 +103,11 @@ export type OrbitDevice = IndividualSlot & {
   x: number;
   y: number;
   labelAbove: boolean;
+  /**
+   * With `show_direction`, the arrow's rotation in degrees: along the line away from the home, or
+   * towards it for a feeding device.
+   */
+  arrowTurn?: number;
   /** CSS custom properties that colour the device, its line and its dot. */
   style: string;
 };

@@ -1,7 +1,6 @@
 import {
   ORBIT_NODE_SIZE,
   type OrbitDevice,
-  type OrbitPoint,
   type OrbitState,
   type ReadyCardState,
 } from "@flixlix-cards/shared/card-state";
@@ -17,15 +16,13 @@ const DOT_RADIUS = 1.75;
 const half = ORBIT_NODE_SIZE / 2;
 
 /** Points along the device's line: away from the home, or towards it for a feeding device. */
-const orbitArrow = (device: OrbitDevice, home: OrbitPoint): DeviceCircleOptions["arrow"] => {
-  if (!device.node.showDirection) {
+const orbitArrow = ({ arrowTurn }: OrbitDevice): DeviceCircleOptions["arrow"] => {
+  if (arrowTurn === undefined) {
     return nothing;
   }
-  const outwards = (Math.atan2(device.x - home.x, home.y - device.y) * 180) / Math.PI;
-  const turn = device.node.invertAnimation ? outwards + 180 : outwards;
   return html`<ha-icon
     class="small"
-    style="transform: rotate(${turn}deg)"
+    style="transform: rotate(${arrowTurn}deg)"
     .icon=${"mdi:arrow-up"}
   ></ha-icon>`;
 };
@@ -71,12 +68,12 @@ const deviceNode = (
   main: CardMainContext,
   config: FlowCardPlusConfig,
   device: OrbitDevice,
-  { home, scale }: { home: OrbitPoint; scale: number }
+  scale: number
 ) => {
   const parts: DeviceCircleOptions = {
     valueClass: "individual-orbit",
     secondaryClass: "orbit",
-    arrow: orbitArrow(device, home),
+    arrow: orbitArrow(device),
   };
   return html`<div
     class="orbit-node orbit-device ${device.labelAbove ? "orbit-label-above" : ""}"
@@ -122,7 +119,7 @@ export const orbitContent = (
               })}
             </div>`
       }
-      ${devices.map((device) => deviceNode(main, config, device, { home: geometry.home, scale }))}
+      ${devices.map((device) => deviceNode(main, config, device, scale))}
     </div>
   </div>`;
 };
