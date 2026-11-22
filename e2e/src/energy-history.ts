@@ -50,13 +50,32 @@ export const DAILY_KWH = {
   },
 } as const satisfies Record<string, DailyTotals>;
 
-/** Days before yesterday that get the "earlier" totals, enough to fill a week and a month. */
-export const EARLIER_DAYS = 35;
+/**
+ * Days before yesterday that get the "earlier" totals: three years, so stepping back by year or
+ * billing cycle still finds data.
+ */
+export const EARLIER_DAYS = 3 * 365;
 
 const HOUR_MS = 3_600_000;
 const DAY_MS = 24 * HOUR_MS;
 
 export type StatisticRow = { start: string; state: number; sum: number };
+
+/**
+ * Solar peaks around June 21 and the heat pump around December 21, so months and years differ
+ * when stepping back; the other meters keep their "earlier" totals.
+ */
+const SEASONAL: Partial<Record<EnergyMeter, number>> = {
+  "sensor.solar_energy": 1,
+  "sensor.heat_pump_energy": -1,
+};
+
+const seasonal = (meter: EnergyMeter, dayStart: number) => {
+  const direction = SEASONAL[meter] ?? 0;
+  const day = new Date(dayStart);
+  const dayOfYear = (dayStart - Date.UTC(day.getUTCFullYear(), 0, 1)) / DAY_MS;
+  return 1 + direction * 0.6 * Math.cos((2 * Math.PI * (dayOfYear - 172)) / 365);
+};
 
 const startOfUtcDay = (date: Date) =>
   Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
@@ -71,8 +90,11 @@ export function hourlyRows(meter: EnergyMeter, now: Date): StatisticRow[] {
   const rows: StatisticRow[] = [];
   let sum = 0;
   for (let daysAgo = EARLIER_DAYS + 1; daysAgo >= 1; daysAgo--) {
-    const dayTotal = daysAgo === 1 ? DAILY_KWH.yesterday[meter] : DAILY_KWH.earlier[meter];
     const dayStart = today - daysAgo * DAY_MS;
+    const dayTotal =
+      daysAgo === 1
+        ? DAILY_KWH.yesterday[meter]
+        : DAILY_KWH.earlier[meter] * seasonal(meter, dayStart);
     for (let hour = 0; hour < 24; hour++) {
       sum += dayTotal / 24;
       rows.push({ start: new Date(dayStart + hour * HOUR_MS).toISOString(), state: sum, sum });
