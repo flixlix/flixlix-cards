@@ -52,9 +52,10 @@ const hasSourceEntity = (entities: Entities | undefined): boolean =>
 
 /**
  * Whether the card has no grid, solar or battery entity and shows only individual devices around
- * the home. Meant for a config already passed through `withoutEmptyEntities`.
+ * the home. An empty entity, as YAML or the editor can leave behind, does not count.
  */
-export const isDeviceOnly = (entities: Entities | undefined): boolean => !hasSourceEntity(entities);
+export const isDeviceOnly = (entities: Entities | undefined): boolean =>
+  ![entities?.battery, entities?.grid, entities?.solar].some(hasEntity);
 
 type AssertOptions = {
   allowDeviceOnly?: boolean;

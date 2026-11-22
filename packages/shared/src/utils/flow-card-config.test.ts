@@ -143,6 +143,14 @@ describe("empty entities", () => {
     expect(() => assertRenderableFlowCardConfig(config, { allowDeviceOnly: true })).not.toThrow();
   });
 
+  test("empty source entities count as device-only before the config is cleaned", () => {
+    const empty = fakeConfig({
+      entities: { grid: { entity: { consumption: "", production: "" } }, solar: { entity: "" } },
+    });
+    expect(isDeviceOnly(empty.entities)).toBe(true);
+    expect(isDeviceOnly({ grid: { entity: "sensor.grid" } })).toBe(false);
+  });
+
   test("a config without entities is returned as it is", () => {
     const config = fakeConfig({ entities: undefined });
     expect(withoutEmptyEntities(config)).toBe(config);
