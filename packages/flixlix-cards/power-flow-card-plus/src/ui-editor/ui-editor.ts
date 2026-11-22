@@ -374,9 +374,11 @@ export class PowerFlowCardPlusEditor extends LitElement implements LovelaceCardE
     if (!this._config) {
       return;
     }
-    const node: Record<string, unknown> = { ...this._config.entities[page] };
-    delete node.entity;
-    const config = { ...this._config, entities: { ...this._config.entities, [page]: node } };
+    const { [page]: current, ...others } = this._config.entities;
+    const { entity: _entity, ...node } = current ?? {};
+    // With no other settings left, drop the node instead of saving an empty `grid: {}`.
+    const entities = Object.keys(node).length > 0 ? { ...others, [page]: node } : others;
+    const config = { ...this._config, entities };
     this._config = config;
     fireEvent(this, "config-changed", { config });
   };

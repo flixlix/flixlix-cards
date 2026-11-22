@@ -344,6 +344,18 @@ describe("power flow ui editor", () => {
       expect(editor.shadowRoot?.querySelector(".source-hint")).not.toBeNull();
     });
 
+    test("a node with no other settings is removed instead of left empty", async () => {
+      const { editor, lastConfig } = await openEntityPage("grid", {
+        grid: { entity: "sensor.grid" },
+        solar: { entity: "sensor.solar" },
+      });
+
+      query(editor, ".source-disable").click();
+      await editor.updateComplete;
+
+      expect(lastConfig()?.entities).toEqual({ solar: { entity: "sensor.solar" } });
+    });
+
     test("a node with no entity says it is disabled, with no button", async () => {
       const { editor } = await openEntityPage("solar", {
         grid: { entity: "sensor.grid" },
