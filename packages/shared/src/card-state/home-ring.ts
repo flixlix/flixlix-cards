@@ -60,7 +60,7 @@ export const computeHomeRing = (
   individuals: IndividualObject[],
   format: Formatter
 ): HomeRing => {
-  // Device-only mode draws a plain border: no source feeds the home, so no ring (not #449's).
+  // Device-only mode draws a plain border, not the closed grid ring an idle home gets.
   const segments = input.deviceOnly ? NO_SEGMENTS : ringSegments(balance.flows);
   const sources = [
     ["battery", segments.battery],
