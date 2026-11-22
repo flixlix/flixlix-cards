@@ -1,5 +1,13 @@
 # @flixlix-cards/web
 
+## 1.2.1-beta.4
+
+### Patch Changes
+
+- **Docs:** The Power Flow Card Plus vs Power Flow Card guide converts your config. Paste a `custom:power-flow-card` config, or a dashboard holding one, and copy the Power Flow Card Plus version. ([#541](https://github.com/flixlix/flixlix-cards/pull/541))
+
+- **New:** `default_view` picks the view Home Flow Card opens on, for example `today` with `views: [live, today]`. The editor asks for it under the views. ([#543](https://github.com/flixlix/flixlix-cards/pull/543))
+
 ## 1.2.1-beta.3
 
 ### Patch Changes
