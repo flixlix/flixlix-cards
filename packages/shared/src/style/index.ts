@@ -613,6 +613,10 @@ export const styles = css`
   .orbit-device ha-icon:not(.small) {
     color: var(--orbit-icon-color);
   }
+  /* The arrow is rotated along the device's line; a transform needs a box that is not inline. */
+  .orbit-device ha-icon.small {
+    display: inline-block;
+  }
   .orbit-device span.secondary-info {
     color: var(--orbit-secondary-color);
   }
