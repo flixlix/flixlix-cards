@@ -467,3 +467,59 @@ views:
             heat_pump:
               entity: sensor.heat_pump_power
               name: Wärmepumpe
+      - type: grid
+        cards:
+          - type: heading
+            heading: Gas
+            icon: mdi:fire
+          - type: entities
+            title: Run a gas scenario
+            show_header_toggle: false
+            entities:
+              - script.gas_burning
+              - script.gas_off
+          - type: entities
+            title: Gas knobs
+            show_header_toggle: false
+            entities:
+              - input_number.gas_flow
+          - type: custom:home-flow-card
+            title: "Gas: live, in from the street"
+            grid:
+              entity: sensor.grid_power
+            solar:
+              entity: sensor.solar_power
+            battery:
+              entity: sensor.battery_power
+              state_of_charge: sensor.battery_soc
+            gas:
+              entity: sensor.gas_flow
+          - type: custom:home-flow-card
+            title: "Gas: live or today"
+            views: [live, today]
+            grid:
+              entity: sensor.grid_power
+            solar:
+              entity: sensor.solar_power
+            gas:
+              entity: sensor.gas_flow
+              name: Boiler
+            energy_entities:
+              grid:
+                consumption: sensor.grid_import_energy
+                production: sensor.grid_export_energy
+              solar: sensor.solar_energy
+              gas: sensor.gas_meter
+          - type: custom:home-flow-card
+            title: "Gas over the period, beside a heat pump"
+            mode: energy
+            grid:
+              entity:
+                consumption: sensor.grid_import_energy
+                production: sensor.grid_export_energy
+            solar:
+              entity: sensor.solar_energy
+            heat_pump:
+              entity: sensor.heat_pump_energy
+            gas:
+              entity: sensor.gas_meter

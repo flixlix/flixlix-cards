@@ -146,6 +146,15 @@ export const styles = css`
     stroke-width: calc(var(--wire-scale, 1) * 1);
   }
 
+  /* a pipe, not a wire: drawn a little thicker */
+  .track.gas {
+    stroke-width: calc(var(--wire-scale, 1) * 1.8);
+  }
+
+  .power.gas .flow {
+    stroke-width: calc(var(--wire-scale, 1) * 2);
+  }
+
   /* a wire taking up power fades its colour in rather than popping */
   .power {
     animation: appear 0.4s ease-out;

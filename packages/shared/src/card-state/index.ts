@@ -11,6 +11,7 @@ export {
 export { auxiliaryConnection, flowRateModel, lineDuration, REFERENCE_LINE_LENGTH } from "./flows";
 export {
   type CarReading,
+  type GasReading,
   type HeatPumpReading,
   type HouseFixtures,
   type HouseNode,

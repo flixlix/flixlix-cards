@@ -151,6 +151,7 @@ export class HomeFlowCard extends LitElement {
             ...watchedEntities(this._config),
             ...carEntities(this._config.car),
             ...heatPumpEntities(this._config.heat_pump),
+            ...(this._config.gas ? [this._config.gas.entity] : []),
           ]
         : []
     );

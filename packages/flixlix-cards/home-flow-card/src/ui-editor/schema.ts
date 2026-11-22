@@ -171,6 +171,7 @@ export const nodeSchemas = (mode: HomeFlowMode | undefined) => ({
   generator: [entity, name],
   car: [entity, { name: "state_of_charge", selector: { entity: {} } }, name],
   heat_pump: heatPumpFields,
+  gas: [entity, name],
   home: homeFields,
 });
 

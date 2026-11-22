@@ -1,4 +1,4 @@
-/** The energy meters of `.hass_dev/packages/energy.yaml`, with their entity ids. */
+/** The meters of `.hass_dev/packages/energy.yaml`, with their entity ids, in kWh unless noted. */
 export const ENERGY_METERS = [
   { id: "sensor.grid_import_energy", name: "Grid Import Energy" },
   { id: "sensor.grid_export_energy", name: "Grid Export Energy" },
@@ -8,13 +8,14 @@ export const ENERGY_METERS = [
   { id: "sensor.ev_charger_energy", name: "EV Charger Energy" },
   { id: "sensor.heat_pump_energy", name: "Heat Pump Energy" },
   { id: "sensor.washing_machine_energy", name: "Washing Machine Energy" },
+  { id: "sensor.gas_meter", name: "Gas Meter", unit: "m³" },
 ] as const;
 
 export type EnergyMeter = (typeof ENERGY_METERS)[number]["id"];
 type DailyTotals = Record<EnergyMeter, number>;
 
 /**
- * kWh per meter for one day. Every period has its own totals so switching periods in
+ * Each meter's total for one day, in its unit: kWh, or m³ for the gas meter. Every period has its own totals so switching periods in
  * energy-date-selection visibly changes what the energy cards show.
  */
 export const DAILY_KWH = {
@@ -27,6 +28,7 @@ export const DAILY_KWH = {
     "sensor.ev_charger_energy": 6,
     "sensor.heat_pump_energy": 3,
     "sensor.washing_machine_energy": 1,
+    "sensor.gas_meter": 4.5,
   },
   yesterday: {
     "sensor.grid_import_energy": 9,
@@ -37,6 +39,7 @@ export const DAILY_KWH = {
     "sensor.ev_charger_energy": 2,
     "sensor.heat_pump_energy": 8,
     "sensor.washing_machine_energy": 2,
+    "sensor.gas_meter": 7,
   },
   earlier: {
     "sensor.grid_import_energy": 7,
@@ -47,6 +50,7 @@ export const DAILY_KWH = {
     "sensor.ev_charger_energy": 4,
     "sensor.heat_pump_energy": 5,
     "sensor.washing_machine_energy": 1,
+    "sensor.gas_meter": 5,
   },
 } as const satisfies Record<string, DailyTotals>;
 
@@ -62,12 +66,13 @@ const DAY_MS = 24 * HOUR_MS;
 export type StatisticRow = { start: string; state: number; sum: number };
 
 /**
- * Solar peaks around June 21 and the heat pump around December 21, so months and years differ
- * when stepping back; the other meters keep their "earlier" totals.
+ * Solar peaks around June 21, the heat pump and gas around December 21, so months and years
+ * differ when stepping back; the other meters keep their "earlier" totals.
  */
 const SEASONAL: Partial<Record<EnergyMeter, number>> = {
   "sensor.solar_energy": 1,
   "sensor.heat_pump_energy": -1,
+  "sensor.gas_meter": -1,
 };
 
 const seasonal = (meter: EnergyMeter, dayStart: number) => {

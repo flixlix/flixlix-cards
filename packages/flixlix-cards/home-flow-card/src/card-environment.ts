@@ -26,4 +26,5 @@ export const statisticIds = (config: FlowConfig) =>
     config.generator?.entity,
     config.car?.entity,
     config.heat_pump?.entity,
+    config.gas?.entity,
   ]);

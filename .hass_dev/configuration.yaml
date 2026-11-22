@@ -18,3 +18,4 @@ recorder:
   exclude:
     entity_globs:
       - sensor.*_energy
+      - sensor.gas_meter

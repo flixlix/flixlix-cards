@@ -1,6 +1,6 @@
 import { type HouseNode } from "@flixlix-cards/shared/card-state";
 import { type ChargeLevel } from "@flixlix-cards/shared/utils/severity";
-import { mdiFan, mdiFlash, mdiGeneratorStationary, mdiHome } from "@mdi/js";
+import { mdiFan, mdiFire, mdiFlash, mdiGeneratorStationary, mdiHome } from "@mdi/js";
 import { box, face, type Face, type Point, type Shape } from "./geometry";
 
 export {
@@ -21,7 +21,7 @@ export const roofHeight = (y: number): number => 8.6 - Math.abs(y - 4) * 0.85;
 
 /** The house is 11 long, 8 deep and 5.2 to the eaves; the front wall faces y = 8. */
 export const FRONT = 8;
-const LENGTH = 11;
+export const LENGTH = 11;
 const EAVES = 5.2;
 const EAVE_Y = 8.6;
 const BACK_EAVE_Y = -0.6;
@@ -70,7 +70,7 @@ const house = (): Shape[] => [
   ),
 ];
 
-const OUTLET = { x0: 7.6, x1: 8.6 } as const;
+export const OUTLET = { x0: 7.6, x1: 8.6 } as const;
 const OUTLET_X = (OUTLET.x0 + OUTLET.x1) / 2;
 
 /** The plate on the front wall where the home wire ends. */
@@ -153,7 +153,7 @@ const socFill = (top: number, level: ChargeLevel | undefined): Face =>
 /** Where every wire meets, on the gable wall. */
 export const INVERTER = { y0: 4.5, y1: 5.6, z0: 2.3, z1: 3.4 } as const;
 export const INVERTER_Y = (INVERTER.y0 + INVERTER.y1) / 2;
-const INVERTER_Z = (INVERTER.z0 + INVERTER.z1) / 2;
+export const INVERTER_Z = (INVERTER.z0 + INVERTER.z1) / 2;
 
 const inverter = (): Shape[] => [
   ...box(
@@ -166,6 +166,27 @@ const inverter = (): Shape[] => [
     at: [LENGTH + 0.31, INVERTER_Y, INVERTER_Z],
     size: 0.6,
     path: mdiFlash,
+  },
+];
+
+/**
+ * The gas meter hangs low on the gable wall near its front corner: below the home's wire, which
+ * runs round that corner, and in front of the inverter.
+ */
+export const GAS_METER = { y0: 6.35, y1: 7.35, z0: 0.6, z1: 1.6, depth: 0.3 } as const;
+export const GAS_METER_Y = (GAS_METER.y0 + GAS_METER.y1) / 2;
+
+const gasMeter = (): Shape[] => [
+  ...box(
+    [LENGTH, GAS_METER.y0, GAS_METER.z0],
+    [GAS_METER.depth, GAS_METER.y1 - GAS_METER.y0, GAS_METER.z1 - GAS_METER.z0]
+  ),
+  {
+    kind: "icon",
+    face: "gable",
+    at: [LENGTH + GAS_METER.depth + 0.01, GAS_METER_Y, (GAS_METER.z0 + GAS_METER.z1) / 2],
+    size: 0.6,
+    path: mdiFire,
   },
 ];
 
@@ -199,6 +220,8 @@ export type SceneLayout = {
    * show together and the grid's hangs under its cable instead.
    */
   generatorBesideGrid?: boolean;
+  /** The gas pipe runs in front of the grid cable, its label below it. */
+  gas?: boolean;
 };
 
 /**
@@ -209,7 +232,7 @@ export type SceneLayout = {
 export const HEAT_PUMP = { width: 2.2, depth: 0.65, height: 1.4 } as const;
 export const heatPumpLeft = ({ car }: SceneLayout) => (car ? 0.3 : 2.4);
 export const heatPumpBottom = ({ car }: SceneLayout) => (car ? 1.95 : 0.35);
-const heatPumpRight = (layout: SceneLayout) => heatPumpLeft(layout) + HEAT_PUMP.width;
+export const heatPumpRight = (layout: SceneLayout) => heatPumpLeft(layout) + HEAT_PUMP.width;
 export const HEAT_PUMP_FRONT = FRONT + HEAT_PUMP.depth;
 
 const heatPump = (layout: SceneLayout, running: boolean): Shape[] => {
@@ -234,6 +257,7 @@ export type ScenePresence = {
   battery?: BatteryLook;
   generator?: boolean;
   heatPump?: { layout: SceneLayout; running: boolean };
+  gas?: boolean;
 };
 
 /** Walls and roof: drawn before the wires, which run on them. */
@@ -248,117 +272,15 @@ export const fixtures = ({
   battery: look,
   generator: hasGenerator,
   heatPump: pump,
+  gas,
 }: ScenePresence): SceneGroup[] => [
   ...(solar ? [{ node: "solar" as const, shapes: panels() }] : []),
   ...(look ? [{ node: "battery" as const, shapes: battery(look) }] : []),
   ...(hasGenerator ? [{ node: "generator" as const, shapes: generator() }] : []),
   ...(pump ? [{ node: "heat_pump" as const, shapes: heatPump(pump.layout, pump.running) }] : []),
+  ...(gas ? [{ node: "gas" as const, shapes: gasMeter() }] : []),
   { node: "outlet", shapes: outlet() },
   { node: "inverter", shapes: inverter() },
-];
-
-/** Where the grid's label points at its cable: out past the generator, under its label's place. */
-export const GRID_LABEL_X = 19.5;
-
-/** The grid cable runs on past the card's edge, fading out from GRID_FADE_FROM onwards. */
-const GRID_CABLE_END = 40;
-export const GRID_FADE_FROM: Point = [GRID_LABEL_X + 1.5, 5.05, 0];
-export const GRID_CABLE_START: Point = [LENGTH + 0.07, INVERTER_Y, 0.02];
-const ON_FRONT = FRONT + 0.07;
-const ON_GABLE = LENGTH + 0.07;
-/**
- * Where the car's wire rises up the front wall, behind the car's nose and just left of the outlet,
- * so the wall left of it stays free for the heat pump.
- */
-const CAR_WIRE_X = 7.15;
-/** The car's wire meets the outlet's left side low, the heat pump's above it. */
-const CAR_WIRE_Z = 2.6;
-const HEAT_PUMP_WIRE_Z = 3.1;
-/** The generator's wire runs parallel to the grid cable, just behind it. */
-const GENERATOR_WIRE_Y = INVERTER.y0 + 0.1;
-
-/**
- * Each wire's route from its node to the inverter, along walls and ground. They meet the inverter
- * from four sides: solar from above, the battery from the back, home round the front corner and
- * the grid from below. A wire ends on the surface of a fixture it lies in front of and runs into
- * one it passes behind; `DRAW_ORDER` stacks them to match.
- */
-export const WIRE_ROUTES: Record<Exclude<HouseNode, "heat_pump">, Point[]> = {
-  // from the panels along the roof, parallel to its ridge, then down the gable: one bend
-  solar: [
-    onRoof(PANELS.x1 - 0.4, INVERTER_Y),
-    onRoof(ON_GABLE, INVERTER_Y),
-    [ON_GABLE, INVERTER_Y, INVERTER.z1],
-  ],
-  battery: [
-    [ON_GABLE, 2.6, INVERTER_Z],
-    [ON_GABLE, INVERTER_Y, INVERTER_Z],
-  ],
-  home: [
-    [OUTLET.x1, ON_FRONT, INVERTER_Z],
-    [LENGTH - 0.03, ON_FRONT, INVERTER_Z],
-    [ON_GABLE, FRONT - 0.03, INVERTER_Z],
-    [ON_GABLE, INVERTER.y1, INVERTER_Z],
-  ],
-  grid: [[GRID_CABLE_END, INVERTER_Y, 0.02], GRID_CABLE_START, [ON_GABLE, INVERTER_Y, INVERTER_Z]],
-  // from under the generator, along the ground beside the grid cable and up into the inverter:
-  // two separate wires, never joined outside the inverter
-  generator: [
-    [GENERATOR_X, GENERATOR_Y, 0.02],
-    [GENERATOR_X, GENERATOR_WIRE_Y, 0.02],
-    [ON_GABLE, GENERATOR_WIRE_Y, 0.02],
-    [ON_GABLE, GENERATOR_WIRE_Y, INVERTER_Z],
-  ],
-  // the car hangs off the home's outlet: up the front wall from behind the car's nose
-  car: [
-    [CAR_WIRE_X, ON_FRONT, 0.02],
-    [CAR_WIRE_X, ON_FRONT, CAR_WIRE_Z],
-    [OUTLET.x0, ON_FRONT, CAR_WIRE_Z],
-  ],
-};
-
-/**
- * The heat pump also hangs off the outlet: level along the wall above the car's wire, or without
- * a car low along the wall and up the car's route, which is free then.
- */
-const heatPumpRoute = (layout: SceneLayout): Point[] => {
-  if (layout.car) {
-    return [
-      [heatPumpRight(layout), ON_FRONT, HEAT_PUMP_WIRE_Z],
-      [OUTLET.x0, ON_FRONT, HEAT_PUMP_WIRE_Z],
-    ];
-  }
-  const middle = heatPumpBottom(layout) + HEAT_PUMP.height / 2;
-  return [
-    [heatPumpRight(layout), ON_FRONT, middle],
-    [CAR_WIRE_X, ON_FRONT, middle],
-    [CAR_WIRE_X, ON_FRONT, CAR_WIRE_Z],
-    [OUTLET.x0, ON_FRONT, CAR_WIRE_Z],
-  ];
-};
-
-/** A node's wire from the node to the inverter, or to the outlet for the car and the heat pump. */
-export const wireRoute = (node: HouseNode, layout: SceneLayout): Point[] =>
-  node === "heat_pump" ? heatPumpRoute(layout) : WIRE_ROUTES[node];
-
-/**
- * Wires and fixtures from back to front, over the walls and roof. Each wire sits over the fixtures
- * it lies in front of and under those it runs into, as in 3D.
- */
-export const DRAW_ORDER: readonly ({ wire: HouseNode } | { part: SceneGroup["node"] })[] = [
-  { wire: "grid" }, // up into the inverter from below
-  { wire: "generator" }, // beside the grid cable, out from under the generator
-  { part: "generator" },
-  { part: "battery" },
-  { wire: "battery" }, // from the battery's visible side into the inverter's back
-  { part: "inverter" },
-  { wire: "heat_pump" }, // out of the heat pump's side into the outlet's
-  { part: "heat_pump" },
-  { wire: "car" }, // into the outlet's side, from behind the car
-  { part: "outlet" },
-  { wire: "home" }, // onto the inverter's and the outlet's visible sides
-  { wire: "solar" }, // onto the inverter's top, from under the panels
-  { part: "solar" },
 ];
 
 /** The house's leftmost and rightmost points: its front eave and its gable's back corner. */

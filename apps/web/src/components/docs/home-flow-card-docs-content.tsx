@@ -1,5 +1,15 @@
 import { Link } from "@tanstack/react-router";
-import { BatteryCharging, Car, Fan, Fuel, House, Settings, Sun, UtilityPole } from "lucide-react";
+import {
+  BatteryCharging,
+  Car,
+  Fan,
+  Flame,
+  Fuel,
+  House,
+  Settings,
+  Sun,
+  UtilityPole,
+} from "lucide-react";
 
 import { trackEvent } from "#/lib/analytics";
 import { houseGallery, houseMoments } from "@/components/demos";
@@ -218,12 +228,13 @@ const CARD_OPTIONS: OptionRow[] = [
     description: (
       <>
         Each node&apos;s energy sensor, by node: <code>grid</code>, <code>solar</code>,{" "}
-        <code>battery</code>, <code>home</code>, <code>generator</code>, <code>car</code> and{" "}
-        <code>heat_pump</code>, each written like the node&apos;s <code>entity</code>. With them,
-        the card gets a selector in its top right corner between live power and today, and reads
-        today itself instead of following a date picker. The house keeps its live size and place. A
-        node without an energy sensor is left out of today; the home without one shows what flowed
-        into it. Only with <code>mode: power</code>, the default. See{" "}
+        <code>battery</code>, <code>home</code>, <code>generator</code>, <code>car</code>,{" "}
+        <code>heat_pump</code> and <code>gas</code>, each written like the node&apos;s{" "}
+        <code>entity</code>. With them, the card gets a selector in its top right corner between
+        live power and today, and reads today itself instead of following a date picker. The house
+        keeps its live size and place. A node without an energy sensor is left out of today; the
+        home without one shows what flowed into it. Only with <code>mode: power</code>, the default.
+        See{" "}
         <Link to={`${BASE_PATH}/examples`} hash="live-or-today">
           the example
         </Link>
@@ -290,6 +301,15 @@ const CARD_OPTIONS: OptionRow[] = [
     description: (
       <>
         A heat pump on the front wall; see <a href="#heat-pump">Heat pump</a>.
+      </>
+    ),
+  },
+  {
+    name: "gas",
+    type: "object",
+    description: (
+      <>
+        A gas pipe in from the street; see <a href="#gas">Gas</a>.
       </>
     ),
   },
@@ -781,6 +801,21 @@ const HEAT_PUMP_OPTIONS: OptionRow[] = [
   { name: "name", type: "string", default: "Heat pump", description: "Label name." },
 ];
 
+const GAS_OPTIONS: OptionRow[] = [
+  {
+    name: "entity",
+    type: "string",
+    required: true,
+    description: (
+      <>
+        Its flow rate, such as m³/h; in energy mode or under <code>energy_entities</code>, its meter
+        in m³, ft³ or kWh. A tap opens it.
+      </>
+    ),
+  },
+  { name: "name", type: "string", default: "Gas", description: "Label name." },
+];
+
 export function ConfigurationPage() {
   const tocItems: TocItem[] = [
     { id: "card-options", label: "Card options" },
@@ -792,6 +827,7 @@ export function ConfigurationPage() {
     { id: "generator", label: "Generator" },
     { id: "car", label: "Car" },
     { id: "heat-pump", label: "Heat pump" },
+    { id: "gas", label: "Gas" },
     { id: "conditions", label: "Conditions" },
     { id: "actions", label: "Actions" },
   ];
@@ -1015,6 +1051,33 @@ generator:
           <OptionList rows={HEAT_PUMP_OPTIONS} />
         </CategorySection>
 
+        <CategorySection
+          id="gas"
+          title="Gas"
+          icon={Flame}
+          accent="orange"
+          description={
+            <>
+              Under <code>gas</code>: a pipe from the street to a meter on the side wall, in front
+              of the grid cable. Gas is no electricity: it never runs through the inverter or counts
+              towards the home. Its label shows the gas in the entity&apos;s own unit, and the pipe
+              pulses at a steady pace while gas flows. A meter that only counts up gets a flow rate
+              from Home Assistant&apos;s{" "}
+              <a href="https://www.home-assistant.io/integrations/derivative/">Derivative</a>{" "}
+              helper.
+            </>
+          }
+          example={{
+            language: "yaml",
+            code: `gas:
+  entity: sensor.gas_flow
+energy_entities:
+  gas: sensor.gas_meter`,
+          }}
+        >
+          <OptionList rows={GAS_OPTIONS} />
+        </CategorySection>
+
         <Section title="Conditions" id="conditions">
           <Prose>
             <p>
@@ -1158,6 +1221,23 @@ heat_pump:
         unit: undefined,
         attributes: { hvac_action: "heating", current_temperature: 38, temperature: 45 },
       }),
+    },
+  },
+  {
+    id: "gas",
+    title: "Gas from the street",
+    text: "A gas pipe comes in from the street beside the grid cable, to a meter on the side wall. Its label shows the gas in the sensor's own unit, here m³/h, and it never counts towards the home's electricity.",
+    code: `type: ${CARD_TYPE}
+grid:
+  entity: sensor.grid_power
+solar:
+  entity: sensor.solar_power
+gas:
+  entity: sensor.gas_flow`,
+    states: {
+      "sensor.grid_power": "450",
+      "sensor.solar_power": "1600",
+      "sensor.gas_flow": sensor("0.42", { unit: "m³/h" }),
     },
   },
   {

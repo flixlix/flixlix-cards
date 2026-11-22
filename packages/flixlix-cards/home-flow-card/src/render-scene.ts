@@ -13,7 +13,6 @@ import { CAR_BOX, CAR_OUTLINES, CAR_SHADOW } from "./car-paths";
 import { type Extent } from "./extent";
 import { wiresSvg } from "./render-wires";
 import {
-  DRAW_ORDER,
   faceTransform,
   fixtures,
   houseShell,
@@ -25,6 +24,7 @@ import {
   SHADOW,
   type Shape,
 } from "./scene";
+import { DRAW_ORDER } from "./wire-routes";
 
 /**
  * The battery's icons, by the name the card state picks: dynamic by state of charge, as in Power
@@ -187,6 +187,7 @@ export const houseScene = ({
       layout,
       running: heatPumpWire.power > 0 && cardState.animate && cardState.family === "power",
     },
+    gas: wires.some((wire) => wire.node === "gas"),
   });
   const include = (extent: Extent) => {
     [houseShell(), ...parts].forEach((part) => includeFaces(extent, part));

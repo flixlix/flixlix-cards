@@ -45,3 +45,17 @@ export async function openDashboard(page: Page, path: string): Promise<void> {
     page.locator("hui-view, hui-sections-view, hui-masonry-view").first()
   ).toBeAttached();
 }
+
+/** A Home Flow Card label's value line as it reads: each number with its unit, in order. */
+export const houseValueLine = (card: Locator, node: string) =>
+  card.locator(`.label.${node} .value > .number`).evaluateAll((numbers) =>
+    numbers
+      .map((number) => {
+        const value = "value" in number ? String(number.value) : number.textContent?.trim();
+        const unit = number.nextElementSibling?.classList.contains("unit")
+          ? ` ${number.nextElementSibling.getAttribute("data-word")}`
+          : "";
+        return `${value}${unit}`;
+      })
+      .join(" · ")
+  );

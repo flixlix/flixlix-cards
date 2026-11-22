@@ -1,5 +1,6 @@
 import {
   type EntityReader,
+  type GasReading,
   type HouseWire,
   houseWires,
   type ReadyCardState,
@@ -9,11 +10,11 @@ import { type CarScene } from "./car-node";
 import { Extent } from "./extent";
 import { genericPosition } from "./generic-options";
 import { heatPumpScene } from "./heat-pump-node";
-import { type HeatPumpConfig, houseLabels } from "./labels";
+import { type GasConfig, type HeatPumpConfig, houseLabels } from "./labels";
 import { includeLabel, includeLabelOf, leaderSvg } from "./render-labels";
 import { houseScene, includeCar } from "./render-scene";
 import { HOUSE_SPAN, project, type SceneLayout } from "./scene";
-import { DEFAULT_STATE_OF_CHARGE_SEVERITY, type FlowConfig } from "./types";
+import { DEFAULT_STATE_OF_CHARGE_SEVERITY, type FlowConfig, type HouseGas } from "./types";
 
 /** The house's middle, which the viewBox leans towards so the scene reads as centred. */
 const HOUSE_MIDDLE = (project(HOUSE_SPAN[0])[0] + project(HOUSE_SPAN[1])[0]) / 2;
@@ -29,6 +30,19 @@ const hasGenerator = (config: FlowConfig) =>
       : config.entities.grid?.power_outage?.entity_generator
   );
 
+/** The gas pipe's reading in its meter's own unit, and its label's name and entity. */
+const gasScene = (
+  hass: HomeAssistant,
+  gas: HouseGas | undefined,
+  read: EntityReader
+): { reading: GasReading | undefined; label: GasConfig } => ({
+  reading: gas && {
+    value: read(gas.entity),
+    unit: hass.states[gas.entity]?.attributes.unit_of_measurement ?? "",
+  },
+  label: gas && { name: gas.name, entity: gas.entity },
+});
+
 /** Where the battery's charge bar changes colour, and where its label shows the charge. */
 const batteryOptions = ({ entities }: FlowConfig) => ({
   severity: entities.battery?.state_of_charge_severity ?? DEFAULT_STATE_OF_CHARGE_SEVERITY,
@@ -42,7 +56,8 @@ const labelsOf = (
   wires: HouseWire[],
   language: string,
   car: CarScene,
-  heatPump: HeatPumpConfig
+  heatPump: HeatPumpConfig,
+  gas: GasConfig
 ) => {
   const labels = houseLabels(
     cardState,
@@ -52,7 +67,8 @@ const labelsOf = (
     language,
     car.label,
     batteryOptions(config).position,
-    heatPump
+    heatPump,
+    gas
   );
   for (const label of labels) {
     if (label.lanes) {
@@ -79,14 +95,17 @@ export const drawHouse = (
   const layout: SceneLayout = frame ?? {
     car: Boolean(config.car),
     generatorBesideGrid: config.mode === "energy" && hasGenerator(config),
+    gas: Boolean(config.gas),
   };
   const heatPump = heatPumpScene(hass, config.heat_pump, read);
+  const gas = gasScene(hass, config.gas, read);
   const wires = houseWires(config, cardState, {
     car: car.reading,
     heatPump: heatPump.reading,
+    gas: gas.reading,
     generator: hasGenerator(config) ? read(config.generator?.entity) : undefined,
   });
-  const labels = labelsOf(config, cardState, wires, language, car, heatPump.label);
+  const labels = labelsOf(config, cardState, wires, language, car, heatPump.label, gas.label);
   const extent = new Extent();
   const reserveGenerator = hasGenerator(config);
   const scene = houseScene({

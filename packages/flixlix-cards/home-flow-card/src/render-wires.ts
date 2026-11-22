@@ -2,15 +2,14 @@ import { type HouseWire } from "@flixlix-cards/shared/card-state";
 import { nothing, svg } from "lit";
 import { type Box } from "./extent";
 import { offsetLine } from "./geometry";
+import { type Point, project, roundedPath, type SceneLayout } from "./scene";
 import {
+  GAS_FADE_FROM,
+  GAS_PIPE_START,
   GRID_CABLE_START,
   GRID_FADE_FROM,
-  type Point,
-  project,
-  roundedPath,
-  type SceneLayout,
   wireRoute,
-} from "./scene";
+} from "./wire-routes";
 
 /** How round a wire's bends are, in screen units. */
 const BEND_RADIUS = 4;
@@ -41,34 +40,36 @@ const route = (wire: HouseWire, layout: SceneLayout, wireScale: number) => {
   return roundedPath(wire.intoInverter ? laned : reversed(laned), BEND_RADIUS);
 };
 
-/** The grid cable fades out towards the card's edge. */
-const fadeOf = (wire: HouseWire) => (wire.node === "grid" ? "url(#house-grid-cable)" : nothing);
+/** The cables that run in from the street fade out towards the card's edge. */
+type Cable = { start: Point; from: Point };
+const FADES: Record<string, Cable> = {
+  grid: { start: GRID_CABLE_START, from: GRID_FADE_FROM },
+  gas: { start: GAS_PIPE_START, from: GAS_FADE_FROM },
+};
 
-/**
- * The mask that fades the grid cable out: opaque up to GRID_FADE_FROM, transparent where it
- * leaves the card.
- */
-export const gridFade = (box: Box) => {
-  const [startX, startY] = project(GRID_CABLE_START);
-  const [stepX, stepY] = project([
-    GRID_CABLE_START[0] + 1,
-    GRID_CABLE_START[1],
-    GRID_CABLE_START[2],
-  ]);
-  const [fromX, fromY] = project(GRID_FADE_FROM);
+const fadeOf = (wire: HouseWire) =>
+  wire.node in FADES ? `url(#house-${wire.node}-fade-mask)` : nothing;
+
+/** A mask opaque up to `from` on a cable from `start` along x, transparent where it leaves the card. */
+const fadeMask = (node: string, { start, from }: Cable, box: Box) => {
+  const [startX, startY] = project(start);
+  const [stepX, stepY] = project([start[0] + 1, start[1], start[2]]);
+  const [fromX, fromY] = project(from);
   const [dx, dy] = [stepX - startX, stepY - startY];
   const toEdge = Math.min((box.x + box.width - startX) / dx, (box.y + box.height - startY) / dy);
   const [toX, toY] = [startX + dx * toEdge, startY + dy * toEdge];
-  return svg`<defs>
-    <linearGradient id="house-grid-fade" gradientUnits="userSpaceOnUse" x1=${fromX} y1=${fromY} x2=${toX} y2=${toY}>
+  return svg`<linearGradient id="house-${node}-fade" gradientUnits="userSpaceOnUse" x1=${fromX} y1=${fromY} x2=${toX} y2=${toY}>
       <stop offset="0" stop-color="#fff"></stop>
       <stop offset="1" stop-color="#fff" stop-opacity="0"></stop>
     </linearGradient>
-    <mask id="house-grid-cable" maskUnits="userSpaceOnUse" x=${box.x} y=${box.y} width=${box.width} height=${box.height}>
-      <rect x=${box.x} y=${box.y} width=${box.width} height=${box.height} fill="url(#house-grid-fade)"></rect>
-    </mask>
-  </defs>`;
+    <mask id="house-${node}-fade-mask" maskUnits="userSpaceOnUse" x=${box.x} y=${box.y} width=${box.width} height=${box.height}>
+      <rect x=${box.x} y=${box.y} width=${box.width} height=${box.height} fill="url(#house-${node}-fade)"></rect>
+    </mask>`;
 };
+
+/** The masks that fade the grid cable and the gas pipe out at the card's edge. */
+export const cableFades = (box: Box) =>
+  svg`<defs>${Object.entries(FADES).map(([node, cable]) => fadeMask(node, cable, box))}</defs>`;
 
 const powerSvg = (wire: HouseWire, animate: boolean, layout: SceneLayout, wireScale: number) => {
   const d = route(wire, layout, wireScale);

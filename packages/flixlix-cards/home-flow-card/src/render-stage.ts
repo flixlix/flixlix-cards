@@ -3,7 +3,7 @@ import { type drawHouse } from "./draw-house";
 import { type Box } from "./extent";
 import { fitLabels, wireScale } from "./label-size";
 import { type LabelContext, labelsHtml } from "./render-labels";
-import { gridFade } from "./render-wires";
+import { cableFades } from "./render-wires";
 import { type FlowConfig } from "./types";
 
 export type StageInput = {
@@ -37,7 +37,7 @@ export const stageHtml = ({
           role="img"
           aria-label=${labels.map((label) => label.name).join(", ")}
         >
-          ${gridFade(box)} ${scene(scaleOfWires)} ${leaders}
+          ${cableFades(box)} ${scene(scaleOfWires)} ${leaders}
         </svg>
         ${labelsHtml(labels, box, { ...context, layout })} ${selector}
       </div>

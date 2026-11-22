@@ -105,6 +105,12 @@ const summary = (cardConfig: FlowCardPlusConfig, power: Power) =>
     color,
   }));
 
+/** The gas pipe's wire at a flow of `value` m³/h. */
+const gasAt = (value: number) =>
+  wiresFor(allNodes, { fromGrid: 100 }, { gas: { value, unit: "m³/h" } }).find(
+    (wire) => wire.node === "gas"
+  );
+
 describe("house wires", () => {
   test("live power runs one way at a time: the grid's wire carries what it nets", () => {
     expect(summary(allNodes, { fromGrid: 1200, toGrid: 800 }).filter(isGrid)).toEqual([
@@ -188,6 +194,46 @@ describe("house wires", () => {
         intoInverter: false,
       });
     }
+  });
+
+  test("gas comes in from the street in its meter's own unit", () => {
+    const gas = wiresFor(allNodes, { fromGrid: 100 }, { gas: { value: 0.42, unit: "m³/h" } }).find(
+      (wire) => wire.node === "gas"
+    );
+    expect(gas).toMatchObject({
+      power: 0.42,
+      intoInverter: true,
+      color: "var(--energy-gas-color, #8e021b)",
+      reading: { value: 0.42, unit: "m³/h" },
+    });
+  });
+
+  test("a gas meter counting kWh reads as the electric nodes do", () => {
+    const gas = wiresFor(
+      allNodes,
+      { fromGrid: 100, family: "energy" },
+      { gas: { value: 4200, unit: "kWh" } }
+    ).find((wire) => wire.node === "gas");
+    expect(gas?.reading).toEqual({ value: 4.2, unit: "kWh", decimals: 1 });
+  });
+
+  test("gas never reaches the electric wires: they run as they would without it", () => {
+    const energy = { solar: 3000, toGrid: 1000, family: "energy" } as const;
+    const relative = { ...allNodes, max_expected_power: 0, min_expected_power: 0 };
+    const withGas = wiresFor(relative, energy, { gas: { value: 9000, unit: "Wh" } });
+    expect(withGas.filter((wire) => wire.node !== "gas")).toEqual(wiresFor(relative, energy));
+  });
+
+  test("gas pulses at a steady pace: its unit has no place in the expected range", () => {
+    expect(gasAt(0.1)).toMatchObject({ durationSeconds: 3.375, intensity: 0.5 });
+    expect(gasAt(40)).toMatchObject({ durationSeconds: 3.375, intensity: 0.5 });
+  });
+
+  test("an unavailable gas meter is an idle pipe", () => {
+    const gas = wiresFor(allNodes, { fromGrid: 100 }, { gas: { value: null, unit: "m³" } }).find(
+      (wire) => wire.node === "gas"
+    );
+    expect(gas).toMatchObject({ power: 0, reading: { value: 0, unit: "m³" } });
   });
 
   test("an evening on the battery: production and discharge run into the inverter, home out of it", () => {

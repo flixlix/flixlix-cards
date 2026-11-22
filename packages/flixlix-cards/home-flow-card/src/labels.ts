@@ -58,6 +58,9 @@ export type HeatPumpConfig =
   | { name?: string; entity: string; status: LabelStatus | undefined }
   | undefined;
 
+/** The configured gas meter's name and entity, which the card state does not carry. */
+export type GasConfig = { name?: string; entity: string } | undefined;
+
 /** The configured generator's name and entity, which the card state does not carry. */
 export type GeneratorConfig = { name?: string; entity: string } | undefined;
 
@@ -228,6 +231,20 @@ const heatPumpLabel = (
     entity: heatPump.entity,
   };
 
+const gasLabel = (
+  wire: HouseWire | undefined,
+  gas: GasConfig,
+  language: string
+): Label | undefined =>
+  wire &&
+  gas && {
+    node: "gas",
+    reading: wire.reading,
+    name: gas.name ?? translate("card.label.gas", language),
+    actions: { tap_action: undefined },
+    entity: gas.entity,
+  };
+
 const generatorLabel = (wire: HouseWire, generator: GeneratorConfig, language: string): Label => ({
   node: "generator",
   reading: wire.reading,
@@ -239,7 +256,7 @@ const generatorLabel = (wire: HouseWire, generator: GeneratorConfig, language: s
 
 /**
  * One label per drawn wire, in reading order: solar, home, battery, then the grid or the
- * generator. Live they take turns, the generator standing in for the grid during an outage;
+ * generator, the car, the heat pump and gas. Live they take turns, the generator standing in for the grid during an outage;
  * over a period the generator runs beside the grid, so both show.
  */
 export const houseLabels = (
@@ -250,7 +267,8 @@ export const houseLabels = (
   language: string,
   car: CarConfig,
   batteryPosition: StateOfChargePosition | undefined,
-  heatPump?: HeatPumpConfig
+  heatPump?: HeatPumpConfig,
+  gas?: GasConfig
 ): Label[] => {
   const { nodes } = state;
   const wiresOf = (node: HouseNode) => wires.filter((wire) => wire.node === node);
@@ -283,6 +301,7 @@ export const houseLabels = (
     generatorWire && generatorLabel(generatorWire, generator, language),
     carLabel(carWire, car, language),
     heatPumpLabel(wireOf("heat_pump"), heatPump, language),
+    gasLabel(wireOf("gas"), gas, language),
   ];
   return labels.filter((label): label is Label => label !== undefined);
 };

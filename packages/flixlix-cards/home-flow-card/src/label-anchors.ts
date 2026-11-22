@@ -3,10 +3,10 @@ import { CAR_LABEL_AT } from "./car-paths";
 import { type Point, project } from "./geometry";
 import {
   FRONT,
+  GAS_METER_Y,
   GENERATOR,
   GENERATOR_X,
   GENERATOR_Y,
-  GRID_LABEL_X,
   HEAT_PUMP,
   HEAT_PUMP_FRONT,
   heatPumpBottom,
@@ -17,6 +17,7 @@ import {
   PANELS,
   type SceneLayout,
 } from "./scene";
+import { GAS_LABEL_X, GRID_LABEL_X } from "./wire-routes";
 
 /**
  * Where each node's label hangs: the leader line starts at `at` and runs `leader` screen units up
@@ -38,6 +39,8 @@ export const LABEL_ANCHORS: Record<Exclude<LabelledNode, "heat_pump">, LabelAnch
   generator: { at: [GENERATOR_X, GENERATOR_Y, GENERATOR.height], leader: -22 },
   // down from the car's tail, left of the home's label
   car: { at: CAR_LABEL_AT, leader: 24 },
+  // down from the gas pipe, in front of the grid cable and its label
+  gas: { at: [GAS_LABEL_X, GAS_METER_Y, 0], leader: 26 },
 };
 
 /**
@@ -57,12 +60,20 @@ const heatPumpAnchor = (layout: SceneLayout): LabelAnchor => {
   return { at, leader: -58 - project(at)[1], side: "left" };
 };
 
-/** Under the grid cable, clear of the generator's label above it. */
-const GRID_UNDER_CABLE: LabelAnchor = { at: LABEL_ANCHORS.grid.at, leader: 24, side: "left" };
+/**
+ * Under the grid cable, clear of the generator's label above it: hanging left, or right of the
+ * gas label where that takes the room on the left.
+ */
+const gridUnderCable = (layout: SceneLayout): LabelAnchor =>
+  layout.gas
+    ? { at: LABEL_ANCHORS.grid.at, leader: 24 }
+    : { at: LABEL_ANCHORS.grid.at, leader: 24, side: "left" };
 
 export const labelAnchor = (node: LabelledNode, layout: SceneLayout): LabelAnchor => {
   if (node === "heat_pump") {
     return heatPumpAnchor(layout);
   }
-  return node === "grid" && layout.generatorBesideGrid ? GRID_UNDER_CABLE : LABEL_ANCHORS[node];
+  return node === "grid" && layout.generatorBesideGrid
+    ? gridUnderCable(layout)
+    : LABEL_ANCHORS[node];
 };

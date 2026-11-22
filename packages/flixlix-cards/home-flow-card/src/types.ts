@@ -84,6 +84,16 @@ export type HouseHeatPump = {
 };
 
 /**
+ * Gas piped in from the street to a meter on the gable wall. It is shown in the entity's own unit
+ * and never counts towards the home's electricity.
+ */
+export type HouseGas = {
+  /** Live, a flow rate such as m³/h; in energy mode, a meter counting m³, ft³ or kWh. */
+  entity: string;
+  name?: string;
+};
+
+/**
  * What the card's sensors measure: live power in W (`power`), or energy in Wh over the period
  * picked on the dashboard's energy date picker (`energy`).
  */
@@ -107,6 +117,7 @@ export type HomeFlowEnergyEntities = {
   generator?: string;
   car?: string;
   heat_pump?: string;
+  gas?: string;
 };
 
 /** The card's nodes, configured as in Power Flow Card Plus' `entities`. */
@@ -172,6 +183,8 @@ type CardOptions = CardKeys<PowerFlowCardPlusConfig> & {
   car?: HouseCar;
   /** Draws a heat pump on the front wall, wired to the home's outlet. */
   heat_pump?: HouseHeatPump;
+  /** Draws a gas pipe from the street to a meter on the gable wall. */
+  gas?: HouseGas;
 };
 
 /** The card's config: Power Flow Card Plus' options, with the nodes at the top level. */
@@ -204,17 +217,18 @@ const flowGrid = ({ grid, generator, mode }: HomeFlowCardConfig): HomeFlowNodes[
  * expected range as `min_expected_power` and `max_expected_power`.
  */
 export const toFlowConfig = (config: HomeFlowCardConfig): FlowConfig => {
-  const { grid: _grid, solar, battery, home, car, heat_pump: heatPump, ...options } = config;
+  const { grid: _grid, solar, battery, home, car, heat_pump: heatPump, gas, ...options } = config;
   const nodes: HomeFlowNodes = { grid: flowGrid(config), solar, battery, home };
   const entities = Object.fromEntries(
     NODES.flatMap((node) => (nodes[node] === undefined ? [] : [[node, nodes[node]]]))
   );
-  // a car or heat pump without its entity, e.g. one cleared in the editor, is not drawn at all
+  // a fixture without its entity, e.g. one cleared in the editor, is not drawn at all
   return {
     ...options,
     ...expectedRange(config),
     ...(car?.entity ? { car } : {}),
     ...(heatPump?.entity ? { heat_pump: heatPump } : {}),
+    ...(gas?.entity ? { gas } : {}),
     entities,
   };
 };
@@ -226,7 +240,7 @@ const overPeriod = (config: HomeFlowCardConfig, energy: HomeFlowEnergyEntities) 
     default_view: _defaultView,
     ...options
   } = config;
-  const { grid, solar, battery, home, generator, car, heat_pump: heatPump } = energy;
+  const { grid, solar, battery, home, generator, car, heat_pump: heatPump, gas } = energy;
   return toFlowConfig({
     ...options,
     mode: "energy",
@@ -240,6 +254,7 @@ const overPeriod = (config: HomeFlowCardConfig, energy: HomeFlowEnergyEntities) 
     generator: generator === undefined ? undefined : { ...config.generator, entity: generator },
     car: car === undefined ? undefined : { ...config.car, entity: car },
     heat_pump: heatPump === undefined ? undefined : { ...config.heat_pump, entity: heatPump },
+    gas: gas === undefined ? undefined : { ...config.gas, entity: gas },
   });
 };
 

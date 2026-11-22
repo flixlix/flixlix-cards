@@ -7,6 +7,7 @@
     "label": {
       "car": "Auto",
       "heat_pump": "Tepelné čerpadlo",
+      "gas": "Plyn",
       "motorbike": "Motorka"
     },
     "view": {
@@ -80,6 +81,7 @@
     "generator": "Generátor",
     "car": "Auto",
     "heat_pump": "Tepelné čerpadlo",
+    "gas": "Plyn",
     "climate": "Entita klimatu",
     "heat_pump_status": "Stav",
     "heat_pump_status_state": "Stav",

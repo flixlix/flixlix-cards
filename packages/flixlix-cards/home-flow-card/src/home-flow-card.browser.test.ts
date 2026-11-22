@@ -497,6 +497,92 @@ describe("a heat pump", () => {
   });
 });
 
+/** An evening with the boiler burning gas. */
+const gasBurning: StateFixtures = {
+  ...evening,
+  "sensor.gas_flow": sensor("0.42", { unit: "m³/h" }),
+};
+
+const gas = { gas: { entity: "sensor.gas_flow" } };
+
+const labelsClearOfEachOther = (root: ShadowRoot) => {
+  const labels = [...root.querySelectorAll(".label")].map((label) => ({
+    node: label.className,
+    box: label.getBoundingClientRect(),
+  }));
+  return labels.flatMap((a, i) =>
+    labels.slice(i + 1).flatMap((b) => (intersects(a.box, b.box) ? [[a.node, b.node]] : []))
+  );
+};
+
+describe("gas", () => {
+  test("comes in from the street to its meter, its label in the meter's own unit", async () => {
+    const { root } = await mountHouse(gas, gasBurning);
+
+    expect(reading(root, "gas")).toBe("0.42 m³/h");
+    expect(labelOf(root, "gas").querySelector(".name")?.textContent).toBe("Gas");
+    expect(root.querySelector(".node.gas")).not.toBeNull();
+    expect(root.querySelector(".power.gas .pulse")).not.toBeNull();
+  });
+
+  test("takes its name from the config", async () => {
+    const { root } = await mountHouse({ gas: { ...gas.gas, name: "Boiler" } }, gasBurning);
+
+    expect(labelOf(root, "gas").querySelector(".name")?.textContent).toBe("Boiler");
+  });
+
+  test("never counts towards the home's electricity", async () => {
+    const without = await mountHouse({}, gasBurning);
+    const withGas = await mountHouse(gas, gasBurning);
+
+    expect(reading(withGas.root, "home")).toBe(reading(without.root, "home"));
+    expect(pulseStyle(withGas.root, "solar")).toBe(pulseStyle(without.root, "solar"));
+  });
+
+  test("an idle pipe is a grey track, its meter still on the wall", async () => {
+    const { root } = await mountHouse(gas, {
+      ...evening,
+      "sensor.gas_flow": sensor("0", { unit: "m³/h" }),
+    });
+
+    expect(reading(root, "gas")).toBe("0 m³/h");
+    expect(root.querySelector(".track.gas")).not.toBeNull();
+    expect(root.querySelector(".power.gas")).toBeNull();
+    expect(root.querySelector(".node.gas")).not.toBeNull();
+  });
+
+  test("tapping its label opens the gas entity", async () => {
+    const { root, card } = await mountHouse(gas, gasBurning);
+    const opened: unknown[] = [];
+    card.addEventListener("hass-more-info", (event) => {
+      opened.push(event instanceof CustomEvent ? event.detail : undefined);
+    });
+    await userEvent.click(labelOf(root, "gas"));
+
+    expect(opened).toEqual([{ entityId: "sensor.gas_flow" }]);
+  });
+
+  test("without its entity, e.g. cleared in the editor, nothing is drawn", async () => {
+    const { root } = await mountHouse({ gas: { entity: "" } }, gasBurning);
+
+    expect(root.querySelector(".label.gas")).toBeNull();
+    expect(root.querySelector(".node.gas")).toBeNull();
+  });
+
+  test.each([250, 360, 600, 1300])(
+    "at %ipx its label stays clear of every other, beside a car and a heat pump",
+    async (width) => {
+      const { root } = await mountHouse(
+        { ...gas, ...car, ...heatPump() },
+        { ...gasBurning, ...carCharging, ...heatPumpStates },
+        width
+      );
+
+      expect(labelsClearOfEachOther(root)).toEqual([]);
+    }
+  );
+});
+
 describe("home flow card", () => {
   test("labels every configured node with its value", async () => {
     const { root } = await mountHouse();
@@ -1100,6 +1186,33 @@ describe("energy mode", () => {
 
     expect(reading(root, "car")).toBe("7.4 kWh");
     expect(reading(root, "heat_pump")).toBe("1.4 kWh");
+  });
+
+  test("gas shows what its meter counted over the period, in its own unit", async () => {
+    const { root } = await mountEnergy(
+      { gas: { entity: "sensor.gas_meter" } },
+      fakeHass({
+        states: { "sensor.gas_meter": sensor("1834.2", { unit: "m³" }) },
+        statistics: { ...aDay, "sensor.gas_meter": 4.37 },
+        energyCollection: energyCollection(day(1).start, day(1).end),
+      })
+    );
+
+    expect(reading(root, "gas")).toBe("4.37 m³");
+    expect(reading(root, "home")).toBe("2.7 kWh");
+  });
+
+  test("gas stays clear of the grid's and the generator's labels when both ran", async () => {
+    const { root } = await mountEnergy(
+      { gas: { entity: "sensor.gas_meter" }, generator: { entity: "sensor.generator_energy" } },
+      fakeHass({
+        states: { "sensor.gas_meter": sensor("1834.2", { unit: "m³" }) },
+        statistics: { ...aDay, "sensor.gas_meter": 4.37, "sensor.generator_energy": 800 },
+        energyCollection: energyCollection(day(1).start, day(1).end),
+      })
+    );
+
+    expect(labelsClearOfEachOther(root)).toEqual([]);
   });
 
   test("a live outage leaves the period's grid energy alone", async () => {

@@ -33,6 +33,9 @@ meeting at the inverter. One look tells you where your power comes from and wher
 - **And your heat pump.** An optional heat pump hangs on the front wall, wired to the home's
   outlet, its fan turning while it runs. Its label shows its power and what it is doing, or its
   temperature, and a tap opens its thermostat.
+- **And gas.** An optional gas pipe comes in from the street beside the grid cable, to a meter
+  on the side wall. Its label shows the gas in your meter's own unit, such as m³/h now or m³ over
+  a day, and it never counts towards the home's electricity.
 
 Only what you configure is drawn: solar alone, a battery and the grid, or the whole house.
 Individual devices are not drawn yet; use [Power Flow Card Plus](https://github.com/flixlix/power-flow-card-plus)
@@ -93,6 +96,7 @@ or `battery` are required.
 | `generator`          | object  | -                | A generator for grid outages, see [Generator](#generator)                                                                                                                                                                                                                                |
 | `car`                | object  | -                | An electric car in front of the house, see [Car](#car)                                                                                                                                                                                                                                   |
 | `heat_pump`          | object  | -                | A heat pump on the front wall, see [Heat pump](#heat-pump)                                                                                                                                                                                                                               |
+| `gas`                | object  | -                | A gas pipe in from the street, see [Gas](#gas)                                                                                                                                                                                                                                           |
 | `animate_numbers`    | boolean | `true`           | Roll each number to its new value when a reading changes. Always still when your system asks for reduced motion                                                                                                                                                                          |
 | `disable_dots`       | boolean | `false`          | Keep the wires still: no pulses, only the colour of the power they carry                                                                                                                                                                                                                 |
 | `wire_width`         | number  | `1`              | How many times thicker the wires are drawn, for example `2` for twice as thick. Like the labels, they keep a similar size whatever the card's width                                                                                                                                      |
@@ -234,6 +238,21 @@ the car is away.
 | `status`  | string | `state`     | What its label shows under its power, read from `climate`: `state` (what it is doing, e.g. Heating), `temperature`, or `temperature_and_target` (38 °C → 45 °C) |
 | `name`    | string | `Heat pump` | Label name                                                                                                                                                      |
 
+### Gas
+
+A gas pipe from the street to a meter on the side wall, in front of the grid cable. Gas is no
+electricity: the pipe runs straight to its meter, never through the inverter, and never counts
+towards the home's consumption. Its label shows the gas in `entity`'s own unit, so set it to a
+flow rate such as m³/h for live power, or to your gas meter (m³, ft³ or kWh) in energy mode or
+under `energy_entities`. A meter that only counts up, without a flow rate, gets one from Home
+Assistant's [Derivative](https://www.home-assistant.io/integrations/derivative/) helper. The pipe
+pulses at a steady pace while gas flows; the expected range is in W, which says nothing about m³.
+
+| Name     | Type   | Default | Description                                                              |
+| -------- | ------ | ------- | ------------------------------------------------------------------------ |
+| `entity` | string | -       | **Required.** Its flow rate, or in energy mode its meter. A tap opens it |
+| `name`   | string | `Gas`   | Label name                                                               |
+
 #### Conditions
 
 `car.visibility` and `car.idle` take the conditions of a card's visibility tab, and the editor sets
@@ -345,11 +364,29 @@ heat_pump:
   status: temperature_and_target
 ```
 
+### Gas from the street
+
+```yaml
+type: custom:home-flow-card
+grid:
+  entity: sensor.grid_power
+solar:
+  entity: sensor.solar_power
+gas:
+  entity: sensor.gas_flow
+energy_entities:
+  grid:
+    consumption: sensor.grid_import_energy
+    production: sensor.grid_export_energy
+  solar: sensor.solar_energy
+  gas: sensor.gas_meter
+```
+
 ### Energy over the day
 
 With `mode: energy`, the same house shows what each node made, stored, bought or used over the
 period picked on the dashboard's energy date picker. Point every node, the car and the heat pump at
-energy sensors (kWh), the ones Home Assistant's energy dashboard uses. Each wire carries its energy
+energy sensors (kWh), the ones Home Assistant's energy dashboard uses, and gas at its meter. Each wire carries its energy
 over the period, and its pulses share out what was supplied, unless `min_expected_value` or
 `max_expected_value` set a range in Wh. When the grid or the battery ran both
 ways, it gets two parallel lines, one each way, and its label shows both values in their colours.

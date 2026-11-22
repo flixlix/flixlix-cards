@@ -1,0 +1,36 @@
+# Gas for the Home Flow Card's pipe: a live flow rate in m³/h, set from a knob. What the meter
+# counted over a period is energy.yaml's sensor.gas_meter, whose history the bootstrap imports.
+input_number:
+  gas_flow:
+    name: Gas Flow
+    icon: mdi:fire
+    min: 0
+    max: 5
+    step: 0.01
+    initial: 0.42
+    unit_of_measurement: m³/h
+
+template:
+  - sensor:
+      - name: Gas Flow
+        unique_id: e2e_gas_flow
+        device_class: volume_flow_rate
+        unit_of_measurement: m³/h
+        state_class: measurement
+        state: "{{ states('input_number.gas_flow') }}"
+
+script:
+  gas_burning:
+    alias: "Gas: the boiler burning 0.42 m³/h"
+    icon: mdi:fire
+    sequence:
+      - action: input_number.set_value
+        target: { entity_id: input_number.gas_flow }
+        data: { value: 0.42 }
+  gas_off:
+    alias: "Gas: the boiler off"
+    icon: mdi:fire-off
+    sequence:
+      - action: input_number.set_value
+        target: { entity_id: input_number.gas_flow }
+        data: { value: 0 }
