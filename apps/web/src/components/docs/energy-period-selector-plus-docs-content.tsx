@@ -220,6 +220,18 @@ const BUTTON_OPTIONS: OptionRow[] = [
     ),
   },
   {
+    name: "period_style",
+    type: "menu | tabs",
+    default: "menu",
+    description: (
+      <>
+        <code>menu</code>: the period in a pill that opens a menu with the periods, today and
+        compare. <code>tabs</code>: the periods side by side, with today and compare as buttons next
+        to the dates.
+      </>
+    ),
+  },
+  {
     name: "custom_period_label",
     type: "string",
     default: "Custom",
@@ -241,8 +253,8 @@ const BUTTON_OPTIONS: OptionRow[] = [
     default: "text",
     description: (
       <>
-        Today, in the period menu; <code>false</code> hides it. <code>text</code> and{" "}
-        <code>icon</code> look the same.
+        Today, in the period menu; <code>false</code> hides it. With <code>period_style: tabs</code>
+        , a text or icon button; in the menu both look the same.
       </>
     ),
   },
@@ -263,13 +275,18 @@ const COMPARE_OPTIONS: OptionRow[] = [
   {
     name: "compare_button_type",
     type: "text | icon",
-    description: "Show a compare checkbox in the period menu, to compare with the previous period.",
+    description: (
+      <>
+        Show a compare checkbox in the period menu, to compare with the previous period. With{" "}
+        <code>period_style: tabs</code>, a text or icon toggle button.
+      </>
+    ),
   },
   {
     name: "compare_button_label",
     type: "string",
     default: 'HA\'s "Compare data"',
-    description: "Label of the compare checkbox.",
+    description: "Label of the compare checkbox or button.",
   },
 ];
 
