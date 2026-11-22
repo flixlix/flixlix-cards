@@ -1,5 +1,11 @@
 # home-flow-card
 
+## 0.3.3-beta.4
+
+### Patch Changes
+
+- **New:** `default_view` picks the view Home Flow Card opens on, for example `today` with `views: [live, today]`. The editor asks for it under the views. ([#543](https://github.com/flixlix/flixlix-cards/pull/543))
+
 ## 0.3.3-beta.3
 
 ### Patch Changes
