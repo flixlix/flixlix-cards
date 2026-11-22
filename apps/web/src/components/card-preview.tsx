@@ -14,15 +14,17 @@ const loadPreview = () =>
     import("@flixlix-cards/shared/preview/ha-elements"),
     import("@flixlix-cards/shared/preview/fake-hass"),
     import("@flixlix-cards/shared/preview/date-range-picker"),
+    import("@flixlix-cards/shared/preview/dropdown"),
     import("power-flow-card-plus/source"),
     import("home-flow-card/source"),
     import("energy-flow-card-plus/source"),
     import("energy-breakdown-card/source"),
     import("energy-period-selector-plus/source"),
     import("sortable-list-card/source"),
-  ]).then(([elements, hass, picker]) => {
+  ]).then(([elements, hass, picker, dropdown]) => {
     elements.defineHaElements();
     picker.defineDateRangePicker();
+    dropdown.defineDropdown();
     return { haDashboardStyle: elements.haDashboardStyle, ...hass };
   });
 
