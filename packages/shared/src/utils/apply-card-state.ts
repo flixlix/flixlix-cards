@@ -49,9 +49,8 @@ const stopDot = (dot: SVGSVGElement): number => {
 /**
  * A dot's line, sampled in the line's SVG units, or nothing while it has no layout.
  *
- * Nothing on screen is measured. Through 0.6.x the route came from `getScreenCTM` of the dot and
- * the line, and from 0.6.0 of a dot while it moved, which put dots off their lines on some devices
- * whatever the animation method (#510).
+ * Nothing on screen is measured: `getScreenCTM` of the dot and the line, the route's source through
+ * 0.6.x, is the suspected cause of dots off their lines on some devices (#510).
  */
 const dotLine = (root: ShadowRoot, dot: SVGSVGElement) => {
   const path = root.getElementById(dot.dataset.path ?? "");
@@ -129,7 +128,7 @@ const stopClassicDot = (dot: SVGSVGElement): number => {
 };
 
 /**
- * Moves a dot as before 0.4.0: a `<circle>` with `<animateMotion>` inside its line's own SVG, in
+ * Moves a dot much as before 0.4.0: a `<circle>` with `<animateMotion>` inside its line's own SVG, in
  * that SVG's units and clipped by it, on the main thread with no GPU layers. The dot's own `<svg>`
  * stays empty.
  */
