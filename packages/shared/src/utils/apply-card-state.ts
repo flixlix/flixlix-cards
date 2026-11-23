@@ -1,6 +1,6 @@
 import { lineDuration, type ReadyCardState } from "@flixlix-cards/shared/card-state";
 import {
-  classicDotAnimations,
+  classicDotMotion,
   type DotRoute,
   loopProgress,
 } from "@flixlix-cards/shared/utils/classic-dot";
@@ -17,7 +17,7 @@ type Route = DotRoute;
  */
 const motions = new WeakMap<SVGSVGElement, { animation: Animation; route: Route }>();
 
-/** Measuring a moving dot is off by float noise; any real layout change moves it further. */
+/** Routes are rebuilt from float geometry on every update; any real layout change moves further. */
 const SAME_PLACE_PIXELS = 0.5;
 
 const sameRoute = (a: Route, b: Route) =>
@@ -47,109 +47,132 @@ const stopDot = (dot: SVGSVGElement): number => {
 };
 
 /**
- * The dot's screen matrix without the translation its own motion adds, so a moving dot measures
- * the same as a still one.
+ * A dot's line, sampled in the line's SVG units, or nothing while it has no layout.
+ *
+ * Nothing on screen is measured: `getScreenCTM` of the dot and the line, the route's source through
+ * 0.6.x, is the suspected cause of dots off their lines on some devices (#510).
  */
-const restingScreenCTM = (dot: SVGSVGElement) => {
-  const placed = dot.getScreenCTM();
-  const transform = getComputedStyle(dot).transform;
-  if (!placed || transform === "none") {
-    return placed;
-  }
-  return DOMMatrix.fromMatrix(placed).multiply(new DOMMatrix(transform).inverse());
-};
-
-/** The dot's route along its path, or nothing while it has no layout. */
-const dotMotion = (root: ShadowRoot, dot: SVGSVGElement) => {
+const dotLine = (root: ShadowRoot, dot: SVGSVGElement) => {
   const path = root.getElementById(dot.dataset.path ?? "");
   if (!(path instanceof SVGPathElement)) {
     return undefined;
   }
-  const toDot = restingScreenCTM(dot)?.inverse();
-  const fromPath = path.getScreenCTM();
-  const line = path.ownerSVGElement;
+  const svg = path.ownerSVGElement;
+  const toPixels = path.getCTM();
   const length = path.getTotalLength();
-  if (!toDot || !fromPath || !line || !(length > 0)) {
+  if (!svg || !toPixels || !(length > 0) || svg.clientWidth === 0) {
     return undefined;
   }
-  // A line's SVG that clips hides the part of the path outside its box; the dot fades out there.
-  const box =
-    getComputedStyle(line).overflow === "visible" ? undefined : line.getBoundingClientRect();
-  const toPixels = toDot.multiply(fromPath);
-  const points = Array.from({ length: SAMPLES + 1 }, (_, index) => {
-    const point = path.getPointAtLength((length * index) / SAMPLES);
-    const onScreen = point.matrixTransform(fromPath);
-    const { x, y } = DOMPoint.fromPoint(point).matrixTransform(toPixels);
-    const shown =
-      !box ||
-      (onScreen.x >= box.left &&
-        onScreen.x <= box.right &&
-        onScreen.y >= box.top &&
-        onScreen.y <= box.bottom);
-    return { x, y, shown };
-  });
   const pixelsPerUnit = Math.hypot(toPixels.a, toPixels.b);
-  const route: Route = {
-    points,
-    radius: Number(dot.dataset.radius) * pixelsPerUnit,
+  return {
+    path,
+    svg,
+    toPixels,
+    pixelsPerUnit,
+    lengthPixels: length * pixelsPerUnit,
+    points: Array.from({ length: SAMPLES + 1 }, (_, index) =>
+      DOMPoint.fromPoint(path.getPointAtLength((length * index) / SAMPLES))
+    ),
+  };
+};
+
+type DotLine = NonNullable<ReturnType<typeof dotLine>>;
+
+/**
+ * A GPU dot's route in its own pixels. Its `<svg>` starts where its line's SVG does (`flowDot`),
+ * so the path's matrix into that SVG (`getCTM`) is all it takes.
+ */
+const gpuRoute = (dot: SVGSVGElement, line: DotLine): Route => {
+  // A line's SVG that clips hides the part of the path outside its box; the dot fades out there.
+  const clips = getComputedStyle(line.svg).overflow !== "visible";
+  const { clientWidth, clientHeight } = line.svg;
+  return {
+    points: line.points.map((point) => {
+      const { x, y } = point.matrixTransform(line.toPixels);
+      const shown = !clips || (x >= 0 && x <= clientWidth && y >= 0 && y <= clientHeight);
+      return { x, y, shown };
+    }),
+    radius: Number(dot.dataset.radius) * line.pixelsPerUnit,
     reverse: dot.hasAttribute("data-reverse"),
   };
-  return { route, lengthPixels: length * pixelsPerUnit };
 };
+
+/** A classic dot's route in its line's SVG units, which it is drawn in. */
+const classicRoute = (dot: SVGSVGElement, line: DotLine): Route => ({
+  points: line.points.map(({ x, y }) => ({ x, y, shown: true })),
+  radius: Number(dot.dataset.radius),
+  reverse: dot.hasAttribute("data-reverse"),
+});
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
-/** Each classic dot's route and timing, in seconds of its own `<svg>`'s timeline. */
+/**
+ * Each classic dot's `<circle>` in its line's SVG, with the route and timing it was built from, in
+ * seconds of that SVG's timeline.
+ */
 const classicMotions = new WeakMap<
   SVGSVGElement,
-  { route: Route; duration: number; begin: number }
+  { circle: SVGCircleElement; route: Route; duration: number; begin: number }
 >();
 
-/** How far through its loop a classic dot is, from 0 to 1, stopping its current motion. */
+/** How far through its loop a classic dot is, from 0 to 1, removing its circle. */
 const stopClassicDot = (dot: SVGSVGElement): number => {
   const running = classicMotions.get(dot);
-  for (const animation of dot.querySelectorAll("animateMotion, animate")) {
-    animation.remove();
-  }
-  classicMotions.delete(dot);
   if (!running) {
     return 0;
   }
-  return loopProgress(dot.getCurrentTime(), running.begin, running.duration);
+  classicMotions.delete(dot);
+  const timeline = running.circle.ownerSVGElement;
+  running.circle.remove();
+  return timeline ? loopProgress(timeline.getCurrentTime(), running.begin, running.duration) : 0;
 };
 
-const smil = (tag: "animateMotion" | "animate", attributes: Record<string, string>) => {
-  const element = document.createElementNS(SVG_NS, tag);
-  for (const [name, value] of Object.entries(attributes)) {
-    element.setAttribute(name, value);
+/**
+ * Moves a dot much as before 0.4.0: a `<circle>` with `<animateMotion>` inside its line's own SVG, in
+ * that SVG's units and clipped by it, on the main thread with no GPU layers. The dot's own `<svg>`
+ * stays empty.
+ */
+const moveClassicDot = (
+  dot: SVGSVGElement,
+  line: DotLine,
+  route: Route,
+  duration: number,
+  progress: number
+) => {
+  const begin = line.svg.getCurrentTime() - progress * duration;
+  const circle = document.createElementNS(SVG_NS, "circle");
+  circle.setAttribute("class", `classic-dot ${dot.firstElementChild?.getAttribute("class") ?? ""}`);
+  circle.setAttribute("r", String(route.radius));
+  circle.setAttribute("vector-effect", "non-scaling-stroke");
+  circle.dataset.path = line.path.id;
+  const motion = document.createElementNS(SVG_NS, "animateMotion");
+  for (const [name, value] of Object.entries(classicDotMotion(route, duration, begin))) {
+    motion.setAttribute(name, value);
   }
-  return element;
-};
-
-/** Moves a dot with SVG animation, as before 0.4.0: on the main thread, with no GPU layers. */
-const moveClassicDot = (dot: SVGSVGElement, route: Route, duration: number, progress: number) => {
-  const begin = dot.getCurrentTime() - progress * duration;
-  const { motion, opacity } = classicDotAnimations(route, duration, begin);
-  const circle = dot.firstElementChild;
-  circle?.setAttribute("r", String(route.radius));
-  circle?.append(smil("animateMotion", motion));
-  if (opacity) {
-    circle?.append(smil("animate", opacity));
-  }
-  classicMotions.set(dot, { route, duration, begin });
+  circle.append(motion);
+  line.svg.append(circle);
+  classicMotions.set(dot, { circle, route, duration, begin });
 };
 
 /** Like a GPU dot, a classic dot carries on from the same place when its speed or route changes. */
-const animateClassicDot = (dot: SVGSVGElement, route: Route, duration: number) => {
+const animateClassicDot = (dot: SVGSVGElement, line: DotLine, duration: number) => {
+  const route = classicRoute(dot, line);
   const running = classicMotions.get(dot);
-  if (running && sameRoute(running.route, route) && Math.abs(running.duration - duration) < 1e-6) {
+  if (
+    running &&
+    running.circle.parentNode === line.svg &&
+    sameRoute(running.route, route) &&
+    Math.abs(running.duration - duration) < 1e-6
+  ) {
     return;
   }
-  moveClassicDot(dot, route, duration, stopClassicDot(dot));
+  dot.firstElementChild?.removeAttribute("r");
+  moveClassicDot(dot, line, route, duration, stopClassicDot(dot));
 };
 
 /** Moves a dot with Web Animations, which Chromium and WebKit run off the main thread. */
-const animateGpuDot = (dot: SVGSVGElement, route: Route, duration: number) => {
+const animateGpuDot = (dot: SVGSVGElement, line: DotLine, duration: number) => {
+  const route = gpuRoute(dot, line);
   const running = motions.get(dot);
   if (running && running.animation.playState !== "idle" && sameRoute(running.route, route)) {
     const built = Number(running.animation.effect?.getTiming().duration);
@@ -191,20 +214,28 @@ const animateFlowDots = (root: ShadowRoot, animation: DotAnimation): void => {
     return;
   }
   const mode = typeof Element.prototype.animate === "function" ? animation : "classic";
-  for (const dot of root.querySelectorAll<SVGSVGElement>("svg.flow-dot")) {
-    const motion = dotMotion(root, dot);
-    const seconds = motion ? lineDuration(Number(dot.dataset.duration), motion.lengthPixels) : 0;
-    if (!motion || !(seconds > 0)) {
+  const dots = [...root.querySelectorAll<SVGSVGElement>("svg.flow-dot")];
+  for (const dot of dots) {
+    const line = dotLine(root, dot);
+    const seconds = line ? lineDuration(Number(dot.dataset.duration), line.lengthPixels) : 0;
+    if (!line || !(seconds > 0)) {
       stopDot(dot);
       stopClassicDot(dot);
       continue;
     }
     if (mode === "classic") {
       stopDot(dot);
-      animateClassicDot(dot, motion.route, seconds);
+      animateClassicDot(dot, line, seconds);
     } else {
       stopClassicDot(dot);
-      animateGpuDot(dot, motion.route, seconds * 1000);
+      animateGpuDot(dot, line, seconds * 1000);
+    }
+  }
+  // A classic circle lives in its line's SVG, which can outlast the dot it was drawn for.
+  const drawn = new Set(dots.map((dot) => classicMotions.get(dot)?.circle));
+  for (const circle of root.querySelectorAll<SVGCircleElement>("circle.classic-dot")) {
+    if (!drawn.has(circle)) {
+      circle.remove();
     }
   }
 };

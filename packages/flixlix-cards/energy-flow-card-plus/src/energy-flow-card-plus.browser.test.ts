@@ -8,6 +8,7 @@ import {
   withStates,
 } from "@flixlix-cards/shared/testing/fake-hass";
 import { dotLoop } from "@flixlix-cards/shared/testing/dot-loop";
+import { dotCircle, expectDotsOnLines } from "@flixlix-cards/shared/testing/dot-offset";
 import { expectFlowCard } from "@flixlix-cards/shared/testing/expect-flow-card";
 import { asEnergyUnits, flowScenarios } from "@flixlix-cards/shared/testing/flow-scenarios";
 import { gpuLayersWithAndWithoutDots } from "@flixlix-cards/shared/testing/gpu-layers";
@@ -63,9 +64,14 @@ describe("classic dots (dot_animation: classic)", () => {
         }),
         { width: scenario.width }
       );
-      const dots = [...root.querySelectorAll("svg.flow-dot")];
+      const dots = [...root.querySelectorAll<SVGSVGElement>("svg.flow-dot")];
       expect(root.getAnimations()).toEqual([]);
-      expect(dots.filter((dot) => !dot.querySelector("animateMotion"))).toEqual([]);
+      expect(dots.filter((dot) => !dotCircle(root, dot).querySelector("animateMotion"))).toEqual(
+        []
+      );
+      if (dots.length > 0) {
+        expectDotsOnLines(root);
+      }
       const layers = await gpuLayersWithAndWithoutDots(root);
       expect(layers.with).toEqual(layers.without);
     }

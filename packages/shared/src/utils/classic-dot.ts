@@ -1,4 +1,4 @@
-/** A dot's way along its line, in the dot's own pixels, sampled at even steps of length. */
+/** A dot's way along its line, sampled at even steps of length. */
 export type DotRoute = {
   points: { x: number; y: number; shown: boolean }[];
   radius: number;
@@ -12,37 +12,25 @@ export const loopProgress = (now: number, begin: number, duration: number): numb
 };
 
 /**
- * The SVG `<animateMotion>`, and the `<animate>` of its opacity where the line's box clips it,
- * that move a dot along its route in `duration` seconds from `begin` on its `<svg>`'s timeline.
- * The path runs in the direction of travel because older Chromium ignores `keyPoints` with
- * `calcMode="paced"` (the `no-paced-key-points` lint rule).
+ * The SVG `<animateMotion>` that moves a dot along its route, in its line's SVG units, in
+ * `duration` seconds from `begin` on that SVG's timeline. The path runs in the direction of travel
+ * because older Chromium ignores `keyPoints` with `calcMode="paced"` (the `no-paced-key-points`
+ * lint rule).
  */
-export const classicDotAnimations = (
+export const classicDotMotion = (
   route: DotRoute,
   duration: number,
   begin: number
-): { motion: Record<string, string>; opacity?: Record<string, string> } => {
+): Record<string, string> => {
+  // Not `toReversed`: classic dots are for the older browsers that lack it.
   const points = route.reverse
     ? route.points.map((point, index, all) => all[all.length - 1 - index] ?? point)
     : route.points;
-  const timing = { dur: `${duration}s`, begin: `${begin}s`, repeatCount: "indefinite" };
-  const motion = {
+  return {
     path: points.map(({ x, y }, index) => `${index === 0 ? "M" : "L"}${x} ${y}`).join(" "),
     calcMode: "paced",
-    ...timing,
-  };
-  if (points.every(({ shown }) => shown)) {
-    return { motion };
-  }
-  return {
-    motion,
-    // The points are evenly spaced along the line, so they are evenly spaced in time too.
-    opacity: {
-      attributeName: "opacity",
-      values: points.map(({ shown }) => (shown ? "1" : "0")).join(";"),
-      keyTimes: points.map((_, index) => String(index / (points.length - 1))).join(";"),
-      calcMode: "linear",
-      ...timing,
-    },
+    dur: `${duration}s`,
+    begin: `${begin}s`,
+    repeatCount: "indefinite",
   };
 };
