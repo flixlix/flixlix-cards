@@ -8,6 +8,7 @@ import {
   withStates,
 } from "@flixlix-cards/shared/testing/fake-hass";
 import { dotLoop } from "@flixlix-cards/shared/testing/dot-loop";
+import { dotCircle, expectDotsOnLines } from "@flixlix-cards/shared/testing/dot-offset";
 import { expectFlowCard } from "@flixlix-cards/shared/testing/expect-flow-card";
 import { flowScenarios } from "@flixlix-cards/shared/testing/flow-scenarios";
 import { gpuLayersWithAndWithoutDots } from "@flixlix-cards/shared/testing/gpu-layers";
@@ -1043,11 +1044,16 @@ const pointsOf = (text: string): Point[] =>
 
 type Ends = [Point | undefined, Point | undefined];
 
-/** Where a dot starts and ends its loop, in its own pixels. */
-const endsOf = (dot: SVGSVGElement): Ends => {
-  const motion = dot.querySelector("animateMotion");
+/** Where a dot starts and ends its loop, in its own pixels: a classic one is drawn in its line's. */
+const endsOf = (root: ShadowRoot, dot: SVGSVGElement): Ends => {
+  const circle = dotCircle(root, dot);
+  const motion = circle.querySelector("animateMotion");
   if (motion) {
-    const points = pointsOf(motion.getAttribute("path") ?? "");
+    const path = root.getElementById(dot.dataset.path ?? "");
+    const toPixels = path instanceof SVGPathElement ? path.getCTM() : null;
+    const points = pointsOf(motion.getAttribute("path") ?? "").map((point) =>
+      toPixels ? new DOMPoint(point.x, point.y).matrixTransform(toPixels) : point
+    );
     return [points.at(0), points.at(-1)];
   }
   const effect = dot.getAnimations()[0]?.effect;
@@ -1062,7 +1068,7 @@ const dotEnds = (root: ShadowRoot): Map<string, Ends> =>
   new Map(
     [...root.querySelectorAll<SVGSVGElement>("svg.flow-dot")].map((dot) => [
       dot.dataset.path ?? "",
-      endsOf(dot),
+      endsOf(root, dot),
     ])
   );
 
@@ -1119,19 +1125,124 @@ describe("classic dots (dot_animation: classic)", () => {
       hass
     );
     const dot = root.querySelector<SVGSVGElement>(gridDot);
+    const line = root.getElementById("grid-home-flow");
+    if (!dot || !(line instanceof SVGSVGElement)) {
+      throw new Error("no grid dot");
+    }
     // A still clock gives one moment to compare the old and the new motion at.
-    dot?.pauseAnimations();
-    const before = dot?.querySelector("animateMotion")?.cloneNode();
+    line.pauseAnimations();
+    const before = dotCircle(root, dot).querySelector("animateMotion")?.cloneNode();
     await setHass(withStates(hass, { "sensor.grid": "3000" }));
-    const after = dot?.querySelector("animateMotion");
-    if (!dot || !(before instanceof Element) || !after) {
+    const after = dotCircle(root, dot).querySelector("animateMotion");
+    if (!(before instanceof Element) || !after) {
       throw new Error("grid dot has no classic motion");
     }
-    const now = dot.getCurrentTime();
+    const now = line.getCurrentTime();
     expect(Number.parseFloat(after.getAttribute("dur") ?? "")).toBeLessThan(
       Number.parseFloat(before.getAttribute("dur") ?? "")
     );
     expect(classicProgress(after, now)).toBeCloseTo(classicProgress(before, now), 2);
+  });
+});
+
+const lowCarbonConfig = {
+  type: "custom:power-flow-card-plus",
+  entities: {
+    grid: { entity: "sensor.grid" },
+    solar: { entity: "sensor.solar" },
+    battery: { entity: "sensor.battery", state_of_charge: "sensor.soc" },
+    fossil_fuel_percentage: { entity: "sensor.fossil" },
+    individual: [{ entity: "sensor.ev", name: "EV" }],
+  },
+};
+
+const lowCarbonHass = () =>
+  fakeHass({
+    states: {
+      "sensor.grid": "2100",
+      "sensor.solar": "800",
+      "sensor.battery": "-400",
+      "sensor.soc": "50",
+      "sensor.fossil": "30",
+      "sensor.ev": "1200",
+    },
+  });
+
+describe("dots on their lines (#510)", () => {
+  test.for(
+    flowScenarios.flatMap((scenario) => [
+      { ...scenario, mode: "gpu" },
+      { ...scenario, mode: "classic" },
+    ])
+  )("$name: $mode dots run on their lines", async (scenario) => {
+    const { root } = await mountScenario(scenario, { dot_animation: scenario.mode });
+    if (root.querySelector("svg.flow-dot")) {
+      expectDotsOnLines(root);
+    }
+  });
+
+  test.for(["gpu", "classic"])("%s: every kind of line, the low-carbon one too", async (mode) => {
+    const { root } = await mountCard(
+      PowerFlowCardPlus,
+      { ...lowCarbonConfig, dot_animation: mode },
+      lowCarbonHass()
+    );
+    expect(root.querySelector('.flow-dot[data-path="low-carbon"]')).not.toBeNull();
+    expectDotsOnLines(root);
+  });
+
+  test.for(["gpu", "classic"])(
+    "%s: dots stay on their lines after updates and a resize mid-loop",
+    async (mode) => {
+      const hass = lowCarbonHass();
+      const card = await mountCard(
+        PowerFlowCardPlus,
+        { ...lowCarbonConfig, dot_animation: mode },
+        hass
+      );
+      // Mid-loop, so every update measures dots away from where their routes start.
+      for (const animation of card.root.getAnimations()) {
+        animation.currentTime = 777;
+      }
+      await card.setHass(withStates(hass, { "sensor.grid": "3000", "sensor.ev": "300" }));
+      await card.resize(420);
+      await card.setHass(withStates(hass, { "sensor.grid": "1500" }));
+      expectDotsOnLines(card.root);
+    }
+  );
+
+  test("classic: a dot is drawn in its line's SVG and leaves with its flow", async () => {
+    const hass = lowCarbonHass();
+    const card = await mountCard(
+      PowerFlowCardPlus,
+      { ...lowCarbonConfig, dot_animation: "classic" },
+      hass
+    );
+    const circle = card.root.querySelector<SVGCircleElement>(
+      'circle.classic-dot[data-path="grid"]'
+    );
+    expect(circle?.ownerSVGElement?.id).toBe("grid-home-flow");
+    await card.setHass(withStates(hass, { "sensor.grid": "0" }));
+    expect(card.root.querySelector('circle.classic-dot[data-path="grid"]')).toBeNull();
+    expect(card.root.querySelectorAll("circle.classic-dot")).toHaveLength(
+      card.root.querySelectorAll("svg.flow-dot").length
+    );
+  });
+
+  test.for(["gpu", "classic"])("%s: dots stay on their lines in a scaled card", async (mode) => {
+    const card = await mountCard(
+      PowerFlowCardPlus,
+      { ...lowCarbonConfig, dot_animation: mode },
+      lowCarbonHass()
+    );
+    const wrapper = card.card.parentElement;
+    if (!wrapper) {
+      throw new Error("the card has no container");
+    }
+    wrapper.style.transform = "scale(0.75)";
+    wrapper.style.transformOrigin = "0 0";
+    await card.settle();
+    expectDotsOnLines(card.root);
   });
 });
 

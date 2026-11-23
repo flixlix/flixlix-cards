@@ -80,7 +80,7 @@ export const nonFossilElement = (
     </div>
     ${
       flow.visible
-        ? html`
+        ? html`<div class="flow-line-box">
             <svg width="80" height="30">
               <path d="M40 -10 v40" class="low-carbon ${flow.lineClass}" id="low-carbon" />
             </svg>
@@ -94,7 +94,7 @@ export const nonFossilElement = (
                   })
                 : nothing
             }
-          `
+          </div>`
         : nothing
     }
   </div>`;

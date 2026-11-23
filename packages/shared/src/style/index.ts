@@ -338,6 +338,16 @@ export const styles = css`
   .circle-container.low-carbon {
     height: 130px;
   }
+  /* A short line next to a circle; its dot is placed from the corner the line's SVG starts at. */
+  .flow-line-box {
+    position: relative;
+    width: 80px;
+    height: 30px;
+    flex-shrink: 0;
+  }
+  .flow-line-box > svg:not(.flow-dot) {
+    display: block;
+  }
   .low-carbon path {
     stroke: var(--non-fossil-color);
   }

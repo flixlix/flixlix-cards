@@ -97,7 +97,10 @@ export default defineConfig({
           "vitest/no-focused-tests": "error",
           // Vitest's expect takes a failure message; scenario tables assert through expectFlowCard.
           "vitest/valid-expect": ["error", { maxArgs: 2 }],
-          "vitest/expect-expect": ["error", { assertFunctionNames: ["expect", "expectFlowCard"] }],
+          "vitest/expect-expect": [
+            "error",
+            { assertFunctionNames: ["expect", "expectFlowCard", "expectDotsOnLines"] },
+          ],
         },
       },
       {

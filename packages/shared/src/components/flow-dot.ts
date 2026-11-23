@@ -25,6 +25,9 @@ export type FlowDotOptions = {
 /**
  * A dot moving along a flow line. It is its own `<svg>` beside the line's SVG, not inside it:
  * browsers only run the motion of a top-level element on the compositor, off the main thread.
+ *
+ * The dot's containing block must start where its line's SVG does: `animateFlowDots` moves it in
+ * that SVG's own pixels, without measuring either on screen.
  */
 export const flowDot = ({
   path,

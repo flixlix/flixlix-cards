@@ -154,10 +154,12 @@ const layouts: Record<IndividualKey, (parts: Parts) => TemplateResult> = {
       ${label} ${circle}
       ${
         slot.flow.visible
-          ? html`<svg width="80" height="30">
+          ? html`<div class="flow-line-box">
+              <svg width="80" height="30">
                 <path d="${line}" id="individual-top" class="${slot.flow.lineClass}" />
               </svg>
-              ${dot}`
+              ${dot}
+            </div>`
           : nothing
       }
     </div>`,
@@ -165,10 +167,12 @@ const layouts: Record<IndividualKey, (parts: Parts) => TemplateResult> = {
     html`<div class="circle-container individual-bottom bottom">
       ${
         slot.flow.visible
-          ? html`<svg width="80" height="30">
+          ? html`<div class="flow-line-box">
+              <svg width="80" height="30">
                 <path d="${line}" id="individual-bottom" class="${slot.flow.lineClass}" />
               </svg>
-              ${dot}`
+              ${dot}
+            </div>`
           : html` <svg width="80" height="30"></svg> `
       }
       ${circle} ${label}
