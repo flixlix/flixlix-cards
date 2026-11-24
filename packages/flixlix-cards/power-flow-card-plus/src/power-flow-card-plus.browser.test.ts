@@ -1034,6 +1034,59 @@ describe("dot motion across updates", () => {
   });
 });
 
+/** The animations still running, held from before their dots left the document. */
+const running = (animations: Animation[]) =>
+  animations.filter((animation) => animation.playState !== "idle");
+
+describe("dots that leave the page (#550)", () => {
+  test("a dot removed with its flow stops, the others keep moving", async () => {
+    const { root, hass, setHass } = await mountWatched();
+    const solar = motionOf(root, '.flow-dot[data-path="solar"]');
+    const grid = motionOf(root, gridDot);
+    await setHass(withStates(hass, { "sensor.grid": "0" }));
+    expect(root.querySelector(gridDot)).toBeNull();
+    expect(grid.playState).toBe("idle");
+    expect(solar.playState).not.toBe("idle");
+  });
+
+  test("every dot stops with its card and moves again once the card is back", async () => {
+    const { card, root, settle } = await mountWatched();
+    const before = root.getAnimations();
+    expect(before.length).toBeGreaterThan(0);
+    const parent = card.parentElement;
+    card.remove();
+    expect(running(before)).toEqual([]);
+    parent?.append(card);
+    expect(running(root.getAnimations())).toHaveLength(before.length);
+    await settle();
+    expectDotsOnLines(root);
+  });
+
+  test("an update while the card is out of the page starts nothing", async () => {
+    const { card, root, hass, setHass } = await mountWatched();
+    const dot = root.querySelector(gridDot);
+    const parent = card.parentElement;
+    card.remove();
+    await setHass(withStates(hass, { "sensor.grid": "3000" }));
+    expect(dot?.getAnimations()).toEqual([]);
+    parent?.append(card);
+    expect(motionOf(root, gridDot).playState).not.toBe("idle");
+  });
+
+  test("a classic dot's circle goes with its flow", async () => {
+    const hass = fakeHass({ states: { "sensor.grid": "300", "sensor.solar": "100" } });
+    const { root, setHass } = await mountCard(
+      PowerFlowCardPlus,
+      { ...watchedConfig, dot_animation: "classic" },
+      hass
+    );
+    const circle = 'circle.classic-dot[data-path="grid"]';
+    expect(root.querySelector(circle)).not.toBeNull();
+    await setHass(withStates(hass, { "sensor.grid": "0" }));
+    expect(root.querySelector(circle)).toBeNull();
+  });
+});
+
 type Point = { x: number; y: number };
 
 const pointsOf = (text: string): Point[] =>

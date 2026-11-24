@@ -78,6 +78,25 @@ describe("classic dots (dot_animation: classic)", () => {
   );
 });
 
+test("every dot stops with its card and moves again once the card is back (#550)", async () => {
+  const { card, root } = await mountCard(
+    EnergyFlowCardPlus,
+    { type: "custom:energy-flow-card-plus", entities: { grid: { entity: "sensor.grid" } } },
+    fakeHass({
+      states: { "sensor.grid": "300" },
+      statistics: { "sensor.grid": 300 },
+      energyCollection: energyCollection(day(1).start, day(1).end),
+    })
+  );
+  const before = root.getAnimations();
+  expect(before.length).toBeGreaterThan(0);
+  const parent = card.parentElement;
+  card.remove();
+  expect(before.filter((animation) => animation.playState !== "idle")).toEqual([]);
+  parent?.append(card);
+  expect(root.getAnimations()).toHaveLength(before.length);
+});
+
 describe("energy period", () => {
   const entities = {
     grid: { entity: { consumption: "sensor.grid_import", production: "sensor.grid_export" } },

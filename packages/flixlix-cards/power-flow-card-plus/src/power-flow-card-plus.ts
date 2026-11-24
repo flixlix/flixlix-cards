@@ -12,7 +12,7 @@ import {
   type LovelaceGridOptions,
   type PowerFlowCardPlusConfig,
 } from "@flixlix-cards/shared/types";
-import { applyCardState } from "@flixlix-cards/shared/utils/apply-card-state";
+import { applyCardState, stopFlowDots } from "@flixlix-cards/shared/utils/apply-card-state";
 import {
   assertRenderableFlowCardConfig,
   clickableEntitiesWithDefault,
@@ -88,11 +88,17 @@ export class PowerFlowCardPlus extends LitElement {
     if (typeof document !== "undefined") {
       document.addEventListener("visibilitychange", this._handleVisibilityChange);
     }
+    if (this._appliedCardState?.status === "ready") {
+      applyCardState(this, this._appliedCardState);
+    }
   }
 
   public disconnectedCallback() {
     if (typeof document !== "undefined") {
       document.removeEventListener("visibilitychange", this._handleVisibilityChange);
+    }
+    if (this.shadowRoot) {
+      stopFlowDots(this.shadowRoot);
     }
     super.disconnectedCallback();
   }
