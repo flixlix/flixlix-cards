@@ -10,7 +10,7 @@ import {
   wattsReader,
 } from "@flixlix-cards/shared/card-state";
 import { EntityActions } from "@flixlix-cards/shared/utils/entity-actions";
-import { applyCardState } from "@flixlix-cards/shared/utils/apply-card-state";
+import { applyCardState, stopFlowDots } from "@flixlix-cards/shared/utils/apply-card-state";
 import { EnergyPeriodController } from "@flixlix-cards/shared/utils/energy-period-controller";
 import { getDefaultConfig } from "@flixlix-cards/shared/utils/get-default-config";
 import { registerCustomCard } from "@flixlix-cards/shared/utils/register-custom-card";
@@ -120,11 +120,17 @@ export class HomeFlowCard extends LitElement {
     if (typeof document !== "undefined") {
       document.addEventListener("visibilitychange", this._handleVisibilityChange);
     }
+    if (this._appliedCardState?.status === "ready") {
+      applyCardState(this, this._appliedCardState);
+    }
   }
 
   public disconnectedCallback() {
     if (typeof document !== "undefined") {
       document.removeEventListener("visibilitychange", this._handleVisibilityChange);
+    }
+    if (this.shadowRoot) {
+      stopFlowDots(this.shadowRoot);
     }
     super.disconnectedCallback();
   }

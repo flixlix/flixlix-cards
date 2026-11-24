@@ -198,6 +198,18 @@ const animateGpuDot = (dot: SVGSVGElement, line: DotLine, duration: number) => {
 };
 
 /**
+ * The dots each card last moved. The document keeps an endless animation running on a dot that left
+ * it, so a dot Lit removed has to be stopped by hand, and no query finds it any more (#550).
+ */
+const movedDots = new WeakMap<ShadowRoot, SVGSVGElement[]>();
+
+/** Classic dots need no stopping: their SMIL motion leaves the document with their line's SVG. */
+export const stopFlowDots = (root: ShadowRoot): void => {
+  movedDots.get(root)?.forEach(stopDot);
+  movedDots.delete(root);
+};
+
+/**
  * Moves every flow dot along its line at an even pace. `data-duration` is seconds per reference
  * line, stretched to the line's length (`lineDuration`).
  *
@@ -215,6 +227,11 @@ const animateFlowDots = (root: ShadowRoot, animation: DotAnimation): void => {
   }
   const mode = typeof Element.prototype.animate === "function" ? animation : "classic";
   const dots = [...root.querySelectorAll<SVGSVGElement>("svg.flow-dot")];
+  movedDots
+    .get(root)
+    ?.filter((dot) => !dot.isConnected)
+    .forEach(stopDot);
+  movedDots.set(root, dots);
   for (const dot of dots) {
     const line = dotLine(root, dot);
     const seconds = line ? lineDuration(Number(dot.dataset.duration), line.lengthPixels) : 0;
