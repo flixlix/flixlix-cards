@@ -66,6 +66,7 @@ export const energyEntities = (views: unknown = DEFAULT_VIEWS) => {
           { name: "generator", selector: { entity: {} } },
           { name: "car", selector: { entity: {} } },
           { name: "heat_pump", selector: { entity: {} } },
+          { name: "gas", selector: { entity: {} } },
         ],
       },
     ],

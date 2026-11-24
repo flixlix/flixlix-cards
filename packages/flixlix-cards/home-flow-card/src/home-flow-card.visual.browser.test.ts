@@ -121,6 +121,27 @@ test("a heat pump above a charging car, with its temperature and target", async 
   await expect.element(card).toMatchScreenshot("heat-pump-car");
 });
 
+test("gas piped in from the street, beside a heat pump and a car", async () => {
+  const card = await mountHouse(
+    {
+      "sensor.solar": "800",
+      "sensor.battery": "1800",
+      "sensor.grid": "300",
+      "sensor.battery_soc": sensor("22", { unit: "%" }),
+      "sensor.car_power": sensor("7.4", { unit: "kW" }),
+      "sensor.car_soc": sensor("64", { unit: "%" }),
+      "sensor.gas_flow": sensor("0.42", { unit: "m³/h" }),
+      ...heatPumpHeating,
+    },
+    {
+      car: { entity: "sensor.car_power", state_of_charge: "sensor.car_soc" },
+      heat_pump: heatPump,
+      gas: { entity: "sensor.gas_flow" },
+    }
+  );
+  await expect.element(card).toMatchScreenshot("gas");
+});
+
 const charging: StateFixtures = {
   "sensor.solar": "9000",
   "sensor.battery": "0",

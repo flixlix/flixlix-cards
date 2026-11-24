@@ -1,25 +1,18 @@
 import { type Locator } from "@playwright/test";
 import { CARD_DASHBOARDS } from "../src/dashboards.ts";
 import { DAILY_KWH } from "../src/energy-history.ts";
-import { cardByTitle, expect, openDashboard, runScript, test } from "../src/fixtures.ts";
+import {
+  cardByTitle,
+  expect,
+  houseValueLine as valueLine,
+  openDashboard,
+  runScript,
+  test,
+} from "../src/fixtures.ts";
 
 const TAG = "home-flow-card";
 
 const kWh = (value: number) => `${value} kWh`;
-
-/** A label's value line as it reads: each number with its unit, in order. */
-const valueLine = (card: Locator, node: string) =>
-  card.locator(`.label.${node} .value > .number`).evaluateAll((numbers) =>
-    numbers
-      .map((number) => {
-        const value = "value" in number ? String(number.value) : number.textContent?.trim();
-        const unit = number.nextElementSibling?.classList.contains("unit")
-          ? ` ${number.nextElementSibling.getAttribute("data-word")}`
-          : "";
-        return `${value}${unit}`;
-      })
-      .join(" · ")
-  );
 
 /** The animation and dash of a node's pulse, which follow its wire's flow rate and intensity. */
 const pulseStyle = (card: Locator, node: string) =>

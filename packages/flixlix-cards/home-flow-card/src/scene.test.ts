@@ -4,15 +4,15 @@ import { describe, expect, test } from "vite-plus/test";
 import {
   type Face,
   fixtures,
+  GAS_METER,
   INVERTER,
   type Point,
   project,
   type SceneGroup,
   type Shape,
   roundedPath,
-  WIRE_ROUTES,
-  wireRoute,
 } from "./scene";
+import { WIRE_ROUTES, wireRoute } from "./wire-routes";
 import { labelAnchor } from "./label-anchors";
 
 const nodesOf = (groups: SceneGroup[]) => groups.map((group) => group.node);
@@ -109,8 +109,8 @@ describe("house scene", () => {
     ).toBe("M0 0L0 1Q0 2 1 2L20 2");
   });
 
-  test("every wire but the car's ends at the inverter", () => {
-    const { car: _car, ...toInverter } = WIRE_ROUTES;
+  test("every wire but the car's and the gas pipe's ends at the inverter", () => {
+    const { car: _car, gas: _gas, ...toInverter } = WIRE_ROUTES;
     const ends = Object.values(toInverter).flatMap((route): Point[] => route.slice(-1));
 
     expect(ends).toHaveLength(5);
@@ -143,6 +143,29 @@ describe("house scene", () => {
     const heatPumpLow = Math.min(...wireRoute("heat_pump", { car: true }).map(([, , z]) => z));
 
     expect(heatPumpLow).toBeGreaterThan(carTop);
+  });
+
+  test("the gas pipe comes in from the street in front of the grid cable, into its meter", () => {
+    const [street, ...rest] = WIRE_ROUTES.gas;
+    const [gridStreet] = WIRE_ROUTES.grid;
+    const end = rest.at(-1);
+
+    expect(street?.[0]).toBe(gridStreet?.[0]);
+    expect(street?.[1]).toBeGreaterThan(gridStreet?.[1] ?? Infinity);
+    expect(end?.[1]).toBeGreaterThanOrEqual(GAS_METER.y0);
+    expect(end?.[1]).toBeLessThanOrEqual(GAS_METER.y1);
+    expect(end?.[2]).toBe(GAS_METER.z0);
+  });
+
+  test("the gas meter sits below the home's wire as it rounds the gable's corner", () => {
+    const homeLow = Math.min(...WIRE_ROUTES.home.map(([, , z]) => z));
+
+    expect(GAS_METER.z1).toBeLessThan(homeLow);
+  });
+
+  test("the gas meter shows only with gas", () => {
+    expect(nodesOf(fixtures({ solar: false, gas: true }))).toContain("gas");
+    expect(nodesOf(fixtures({ solar: false }))).not.toContain("gas");
   });
 
   test("the heat pump hangs lower without a car", () => {

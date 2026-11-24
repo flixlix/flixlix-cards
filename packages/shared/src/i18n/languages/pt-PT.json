@@ -7,6 +7,7 @@
     "label": {
       "car": "Carro",
       "heat_pump": "Bomba de calor",
+      "gas": "Gás",
       "motorbike": "Mota"
     },
     "view": {
@@ -80,6 +81,7 @@
     "generator": "Gerador",
     "car": "Carro",
     "heat_pump": "Bomba de calor",
+    "gas": "Gás",
     "climate": "Entidade de clima",
     "heat_pump_status": "Estado",
     "heat_pump_status_state": "Estado",

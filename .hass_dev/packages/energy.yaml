@@ -59,3 +59,10 @@ template:
         unit_of_measurement: kWh
         state_class: total_increasing
         state: "0"
+      - name: Gas Meter
+        unique_id: e2e_gas_meter
+        icon: mdi:meter-gas
+        device_class: gas
+        unit_of_measurement: m³
+        state_class: total_increasing
+        state: "0"

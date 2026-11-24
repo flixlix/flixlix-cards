@@ -141,19 +141,20 @@ const saveEnergyPrefs = (socket: HassSocket) =>
 async function importEnergyHistory(socket: HassSocket): Promise<void> {
   const now = new Date();
   await Promise.all(
-    ENERGY_METERS.map(({ id, name }) =>
+    ENERGY_METERS.map((meter) =>
       socket.call({
         type: "recorder/import_statistics",
         metadata: {
-          statistic_id: id,
+          statistic_id: meter.id,
           source: "recorder",
-          name,
-          unit_of_measurement: "kWh",
-          unit_class: "energy",
+          name: meter.name,
+          ...("unit" in meter
+            ? { unit_of_measurement: meter.unit, unit_class: "volume" }
+            : { unit_of_measurement: "kWh", unit_class: "energy" }),
           has_sum: true,
           mean_type: 0,
         },
-        stats: hourlyRows(id, now),
+        stats: hourlyRows(meter.id, now),
       })
     )
   );

@@ -45,6 +45,7 @@ const selectorFields = [
   "generator",
   "car",
   "heat_pump",
+  "gas",
 ];
 
 const mountEditor = async (config: Record<string, unknown> = {}, states: StateFixtures = {}) => {
@@ -176,6 +177,7 @@ describe("editor", () => {
       "home",
       "car",
       "heat_pump",
+      "gas",
       "advanced",
     ]);
     editor.remove();
@@ -201,6 +203,7 @@ describe("editor", () => {
       "sensor.import / sensor.export · 250 W · 0 W",
       "sensor.pv · 1,200 W",
       "sensor.battery · -800 W · 55 %",
+      "Not configured",
       "Not configured",
       "Not configured",
       "Not configured",
@@ -411,6 +414,19 @@ describe("editor", () => {
           status: "temperature",
         },
       },
+    ]);
+    editor.remove();
+  });
+
+  test("the gas page: its meter and its name", async () => {
+    const { editor, open, fields, change, changes } = await mountEditor();
+    await open("gas");
+
+    expect(editor.shadowRoot?.querySelector("flixlix-subpage-header")?.header).toBe("Gas");
+    expect(fields()).toEqual(["entity", "name"]);
+    change({ entity: "sensor.gas_flow" });
+    expect(changes).toEqual([
+      { type: "custom:home-flow-card", gas: { entity: "sensor.gas_flow" } },
     ]);
     editor.remove();
   });

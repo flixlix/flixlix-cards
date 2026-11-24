@@ -113,6 +113,24 @@ test("home-flow-card: in energy mode the expected range is in Wh and saves as ge
   await expect.poll(savedCard).toMatchObject({ mode: "energy", max_expected_value: 20000 });
 });
 
+test("home-flow-card: the gas page names the pipe and saves it", async ({ page }) => {
+  await saveDashboard({
+    type: "custom:home-flow-card",
+    grid: { entity: "sensor.grid_power" },
+    gas: { entity: "sensor.gas_flow" },
+  });
+  const editor = await openEditor(page, "home-flow-card");
+  await editor.locator('link-subpage[path="gas"]').click();
+  await editor.getByRole("textbox", { name: "Name" }).fill("Boiler");
+  await saveCard(page);
+
+  await expect.poll(savedCard).toEqual({
+    type: "custom:home-flow-card",
+    grid: { entity: "sensor.grid_power" },
+    gas: { entity: "sensor.gas_flow", name: "Boiler" },
+  });
+});
+
 test("power-flow-card-plus: the buttons editor adds, edits and reorders buttons", async ({
   page,
 }) => {

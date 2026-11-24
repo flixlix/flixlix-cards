@@ -1,10 +1,20 @@
+import { powerUnitFactor } from "@flixlix-cards/shared/states/utils/unit-prefix";
 import { type BaseConfigEntity, type FlowCardPlusConfig } from "@flixlix-cards/shared/types";
+import { round } from "@flixlix-cards/shared/utils/utils";
 import { flowRate, flowRateModel } from "./flows";
 import { type ScaledReading, scaledReading } from "./format";
 import { HOME_SOURCE_COLORS } from "./styles";
 import { type ReadyCardState, type UnitFamily } from "./types";
 
-export type HouseNode = "solar" | "battery" | "grid" | "generator" | "home" | "car" | "heat_pump";
+export type HouseNode =
+  | "solar"
+  | "battery"
+  | "grid"
+  | "generator"
+  | "home"
+  | "car"
+  | "heat_pump"
+  | "gas";
 
 /**
  * An electric car charging from the home, in W, or in Wh over the period on an energy card:
@@ -23,10 +33,18 @@ export type HeatPumpReading = {
   decimals?: number;
 };
 
+/**
+ * Gas piped in from the street, in its meter's own unit: live a flow rate such as m³/h, over an
+ * energy period what the meter counted, such as m³ or kWh. A unit in W or Wh arrives scaled to
+ * W or Wh, as the electric nodes' do.
+ */
+export type GasReading = { value: number | null; unit: string };
+
 /** What the card draws beyond the shared nodes, each read as the nodes are. */
 export type HouseFixtures = {
   car?: CarReading;
   heatPump?: HeatPumpReading;
+  gas?: GasReading;
   /**
    * The generator's energy over the period, on an energy card: it feeds the inverter beside the
    * grid whenever it ran. Live, the generator stands in for the grid during an outage instead.
@@ -70,6 +88,7 @@ const GRID_OUT = "var(--energy-grid-return-color)";
 const BATTERY_OUT = "var(--energy-battery-out-color)";
 const BATTERY_IN = "var(--energy-battery-in-color)";
 const GENERATOR = "var(--energy-generator-color, #b07d4f)";
+const GAS = "var(--energy-gas-color, #8e021b)";
 
 type Wire = Pick<HouseWire, "node" | "power" | "intoInverter" | "color" | "lane">;
 
@@ -200,6 +219,36 @@ const heatPumpWire = (
     color: HOME_SOURCE_COLORS[state.homeRing.largestSource],
   };
 
+const GAS_DECIMALS = 2;
+
+/** A meter in W or Wh reads as the electric nodes do; any other unit is shown as it is. */
+const gasReading = (
+  config: FlowCardPlusConfig,
+  family: UnitFamily,
+  value: number,
+  { unit }: GasReading
+): ScaledReading =>
+  powerUnitFactor(unit) === undefined
+    ? { value: round(value, GAS_DECIMALS), unit, decimals: GAS_DECIMALS }
+    : scaledReading(config, family, value, { reading: true });
+
+/**
+ * The gas pipe, from the street into its meter, at a steady pace halfway between the card's flow
+ * rates: the expected range is in W or Wh, which says nothing about m³.
+ */
+const gasPipe = (config: FlowCardPlusConfig, family: UnitFamily, gas: GasReading): HouseWire => {
+  const power = Math.max(gas.value ?? 0, 0);
+  return {
+    node: "gas",
+    power,
+    intoInverter: true,
+    color: GAS,
+    durationSeconds: (config.min_flow_rate + config.max_flow_rate) / 2,
+    intensity: 0.5,
+    reading: gasReading(config, family, power, gas),
+  };
+};
+
 const isWire = (wire: Wire | undefined): wire is Wire => wire !== undefined;
 
 const clampedShare = (share: number) =>
@@ -224,12 +273,13 @@ const intensity = (
 
 /**
  * The wires of the nodes the card shows, in drawing order: solar, battery, grid, generator, home,
- * then the car and the heat pump when there are.
+ * then the car, the heat pump and the gas pipe when there are. Gas is no electricity: it never
+ * counts as supplied, so the electric wires run as they would without it.
  */
 export const houseWires = (
   config: FlowCardPlusConfig,
   state: ReadyCardState,
-  { car, heatPump, generator }: HouseFixtures = {}
+  { car, heatPump, gas, generator }: HouseFixtures = {}
 ): HouseWire[] => {
   const { entities } = config;
   const entityOf: Record<
@@ -243,6 +293,7 @@ export const houseWires = (
     home: entities.home,
     car,
     heat_pump: heatPump,
+    gas: undefined,
   };
   const wires = [
     solarWire(state),
@@ -256,7 +307,7 @@ export const houseWires = (
   const supplied = wires
     .filter((wire) => wire.intoInverter)
     .reduce((sum, wire) => sum + wire.power, 0);
-  return wires.map(({ node, power, intoInverter, color, lane }) => ({
+  const electric = wires.map(({ node, power, intoInverter, color, lane }) => ({
     node,
     power,
     intoInverter,
@@ -270,4 +321,5 @@ export const houseWires = (
       reading: true,
     }),
   }));
+  return gas ? [...electric, gasPipe(config, state.family, gas)] : electric;
 };

@@ -7,6 +7,7 @@
     "label": {
       "car": "Car",
       "heat_pump": "Heat pump",
+      "gas": "Gas",
       "motorbike": "Motorbike"
     },
     "view": {
@@ -80,6 +81,7 @@
     "generator": "Generator",
     "car": "Car",
     "heat_pump": "Heat pump",
+    "gas": "Gas",
     "climate": "Climate entity",
     "heat_pump_status": "Status",
     "heat_pump_status_state": "State",

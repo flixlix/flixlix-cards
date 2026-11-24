@@ -7,6 +7,7 @@
     "label": {
       "car": "Автомобіль",
       "heat_pump": "Тепловий насос",
+      "gas": "Газ",
       "motorbike": "Мотоцикл"
     },
     "view": {
@@ -80,6 +81,7 @@
     "generator": "Генератор сутностей",
     "car": "Автомобіль",
     "heat_pump": "Тепловий насос",
+    "gas": "Газ",
     "climate": "Об'єкт клімату",
     "heat_pump_status": "Статус",
     "heat_pump_status_state": "Стан",

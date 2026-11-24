@@ -7,6 +7,7 @@
     "label": {
       "car": "Bil",
       "heat_pump": "Varmepumpe",
+      "gas": "Gas",
       "motorbike": "Motorcykel"
     },
     "view": {
@@ -80,6 +81,7 @@
     "generator": "Generator",
     "car": "Bil",
     "heat_pump": "Varmepumpe",
+    "gas": "Gas",
     "climate": "Klimaenhed",
     "heat_pump_status": "Status",
     "heat_pump_status_state": "Tilstand",
