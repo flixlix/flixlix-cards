@@ -1,5 +1,7 @@
 # @flixlix-cards/web
 
+## 1.2.1-beta.6
+
 ## 1.2.1-beta.5
 
 ## 1.2.1-beta.4
