@@ -50,7 +50,8 @@ const distance = (point: Point, { cx, cy }: Ring) => Math.hypot(point.x - cx, po
 const ROUNDING = 0.01;
 
 const ends = (layout: FlowLayout, connection: AuxiliaryConnection = "grid") => {
-  const { home, grid, solar, battery, rightTop, rightBottom, auxiliary } = layout;
+  const { home, grid, solar, battery, rightTop, rightBottom, farRightTop, farRightBottom } = layout;
+  const { auxiliary } = layout;
   return {
     solarToHome: [solar, home],
     solarToGrid: [solar, grid],
@@ -60,6 +61,8 @@ const ends = (layout: FlowLayout, connection: AuxiliaryConnection = "grid") => {
     batteryToGrid: [battery, grid],
     rightTopToHome: [rightTop, home],
     rightBottomToHome: [rightBottom, home],
+    farRightTopToHome: [farRightTop, home],
+    farRightBottomToHome: [farRightBottom, home],
     auxiliary: [auxiliary, connection === "battery" ? battery : grid],
   } as const;
 };
@@ -69,6 +72,16 @@ const nodeSets = fc.record({
   solar: fc.boolean(),
   battery: fc.boolean(),
   right: fc.boolean(),
+  auxiliary: fc.boolean(),
+});
+
+/** Five columns, as on a card wide enough for the far right one. */
+const fiveColumnSets = fc.record({
+  grid: fc.boolean(),
+  solar: fc.boolean(),
+  battery: fc.boolean(),
+  right: fc.constant(true),
+  farRight: fc.constant(true),
   auxiliary: fc.boolean(),
 });
 
@@ -82,6 +95,26 @@ const axisOf = (nodes: { solar: boolean; battery: boolean }) => {
 };
 
 const startX = (line: { d: string } | undefined) => sample(line?.d ?? "")[0]?.x ?? Number.NaN;
+
+const endY = (points: Point[]) => points[points.length - 1]?.y ?? Number.NaN;
+
+const turn = (a: Point, b: Point, c: Point) =>
+  Math.sign((b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x));
+
+/** Whether two sampled lines intersect anywhere. */
+const crosses = (first: Point[], second: Point[]) =>
+  first.slice(1).some((b, i) => {
+    const a = first[i];
+    return second.slice(1).some((d, j) => {
+      const c = second[j];
+      return (
+        a !== undefined &&
+        c !== undefined &&
+        turn(a, b, c) !== turn(a, b, d) &&
+        turn(c, d, a) !== turn(c, d, b)
+      );
+    });
+  });
 
 describe("flow paths", () => {
   test("every line starts and ends on the border of its rings, at every width", () => {
@@ -191,6 +224,68 @@ describe("flow paths", () => {
         expect(mirrored?.y).toBeCloseTo(point.y, 1);
       }
     }
+  });
+
+  test("far right lines start and end on their rings and run into no circle", () => {
+    fc.assert(
+      fc.property(fc.integer({ min: 460, max: 800 }), fiveColumnSets, (width, nodes) => {
+        const layout = nominalLayout(width, nodes);
+        const paths = flowPaths(layout, { hasBottomRow: true });
+        const rings = Object.values(ends(layout))
+          .flat()
+          .filter((candidate) => candidate !== undefined);
+        for (const [line, from] of [
+          [paths.farRightTopToHome, layout.farRightTop],
+          [paths.farRightBottomToHome, layout.farRightBottom],
+        ] as const) {
+          const points = sample(line?.d ?? "");
+          const first = points[0];
+          const last = points[points.length - 1];
+          if (!first || !last || !from) {
+            throw new Error("a far right line is missing");
+          }
+          expect(Math.abs(distance(first, from) - (from.r - ringInset(from)))).toBeLessThan(
+            ROUNDING
+          );
+          expect(
+            Math.abs(distance(last, layout.home) - (layout.home.r - ringInset(layout.home)))
+          ).toBeLessThan(ROUNDING);
+          const deepest = Math.max(
+            ...points.flatMap((point) =>
+              rings.map(
+                (circle) => circle.r - ringInset(circle) - ROUNDING - distance(point, circle)
+              )
+            )
+          );
+          expect(deepest).toBeLessThan(0);
+        }
+      })
+    );
+  });
+
+  test("far right lines enter the home between the right column's lines and cross neither", () => {
+    const layout = nominalLayout(520, {
+      grid: true,
+      solar: true,
+      battery: true,
+      right: true,
+      farRight: true,
+    });
+    const paths = flowPaths(layout, { hasBottomRow: true });
+    const line = (
+      flow: "rightTopToHome" | "rightBottomToHome" | "farRightTopToHome" | "farRightBottomToHome"
+    ) => sample(paths[flow]?.d ?? "");
+
+    expect(endY(line("farRightTopToHome"))).toBeGreaterThan(endY(line("rightTopToHome")));
+    expect(endY(line("farRightTopToHome"))).toBeLessThan(layout.home.cy);
+    expect(endY(line("farRightBottomToHome"))).toBeLessThan(endY(line("rightBottomToHome")));
+    expect(endY(line("farRightBottomToHome"))).toBeGreaterThan(layout.home.cy);
+    for (const far of [line("farRightTopToHome"), line("farRightBottomToHome")]) {
+      for (const near of [line("rightTopToHome"), line("rightBottomToHome")]) {
+        expect(crosses(far, near)).toBe(false);
+      }
+    }
+    expect(crosses(line("farRightTopToHome"), line("farRightBottomToHome"))).toBe(false);
   });
 
   test("the auxiliary line runs straight up into the grid or across into the battery", () => {

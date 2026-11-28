@@ -434,7 +434,7 @@ export const flowScenarios: FlowScenario[] = [
     },
   },
   {
-    name: "five sorted individuals on a wide card fill four slots",
+    name: "five sorted individuals on a card with room for four columns fill four slots",
     visual: true,
     entities: {
       grid: { entity: "sensor.grid" },
@@ -443,8 +443,9 @@ export const flowScenarios: FlowScenario[] = [
     },
     options: { sort_individual_devices: true },
     states: { "sensor.grid": "200", "sensor.battery": "0", ...individualStates(5) },
-    width: 500,
+    width: 460,
     expect: {
+      hidden: [".individual-far-right-top", "#individual-top-far-right-home-flow"],
       text: {
         "span.individual-left-top": "50 W",
         "span.individual-left-bottom": "40 W",
@@ -455,6 +456,38 @@ export const flowScenarios: FlowScenario[] = [
         ".individual-right-top",
         ".individual-right-bottom",
         "#individual-top-right-home-flow",
+      ],
+    },
+  },
+  {
+    name: "six individuals on a card with room for five columns fill six slots",
+    visual: true,
+    entities: {
+      grid: { entity: "sensor.grid" },
+      solar: { entity: "sensor.solar" },
+      battery: { entity: "sensor.battery" },
+      individual: individuals(6),
+    },
+    options: { sort_individual_devices: false },
+    states: {
+      "sensor.grid": "0",
+      "sensor.solar": "400",
+      "sensor.battery": "0",
+      ...individualStates(6),
+    },
+    width: 500,
+    expect: {
+      text: {
+        "span.individual-right-top": "30 W",
+        "span.individual-right-bottom": "40 W",
+        "span.individual-far-right-top": "50 W",
+        "span.individual-far-right-bottom": "60 W",
+      },
+      shown: [
+        ".individual-far-right-top",
+        ".individual-far-right-bottom",
+        "#individual-top-far-right-home-flow",
+        "#individual-bottom-far-right-home-flow",
       ],
     },
   },

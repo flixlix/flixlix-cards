@@ -265,6 +265,8 @@ At least one of _grid_, _battery_, or _solar_ is required. All entites (except _
 
 The Individual fields must be an array of objects. Each object must follow the following structure:
 
+The card shows as many devices as it has room for: two above and below the home, four with a column to the right of the home (from 359px of content width) and six with a second column (from 460px). With more devices than slots, the ones with the highest reading are shown, or the first ones when `sort_individual_devices` is `false`.
+
 | Name                   | Type              | Default                                        | Description                                                                                                                                                                                                                        |
 | ---------------------- | ----------------- | ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | entity                 | `string`          | `undefined` required                           | Entity ID providing a state with the value of an individual consumption.                                                                                                                                                           |

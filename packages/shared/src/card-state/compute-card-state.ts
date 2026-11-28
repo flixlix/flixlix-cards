@@ -67,10 +67,12 @@ export function computeCardState(input: CardStateInput): CardState {
   const visible = placement.visible.map((device) => device.node);
   const homeRing = computeHomeRing(input, balance, individuals, format);
   const animate = !config.disable_dots && !input.pageHidden;
-  const { leftTop, leftBottom, rightTop, rightBottom } = placement.slots;
+  const { leftTop, leftBottom, rightTop, rightBottom, farRightTop, farRightBottom } =
+    placement.slots;
   const showBottomRow = nodes.battery.has || auxiliary.has || !!leftBottom || !!rightBottom;
   const hasGridColumn = hasEntity(config.entities.grid) || hasEntity(config.entities.auxiliary);
   const hasRightIndividual = !!rightTop || !!rightBottom;
+  const hasFarRightIndividual = !!farRightTop || !!farRightBottom;
   const twoColumns = !hasGridColumn && !hasRightIndividual;
   const hubCircles = Number(nodes.solar.has) + Number(nodes.battery.has);
   const homeCircles =
@@ -104,6 +106,7 @@ export function computeCardState(input: CardStateInput): CardState {
       showTopRow: nodes.solar.has || visible.length > 0 || nodes.nonFossil.hasPercentage,
       showBottomRow,
       hasRightIndividual,
+      hasFarRightIndividual,
       showHomeLabel: visible.length <= 1,
       showGridLabel: !(flows.auxiliary.visible && auxiliaryConnection(config) === "grid"),
     },

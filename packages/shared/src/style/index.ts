@@ -12,6 +12,8 @@ export const styles = css`
     --individual-left-top-color: #964cb5;
     --individual-right-top-color: #b54c9d;
     --individual-right-bottom-color: #5bd0cc;
+    --individual-far-right-top-color: #d08c5b;
+    --individual-far-right-bottom-color: #5b8fd0;
     --non-fossil-color: var(--energy-non-fossil-color, #0f9d58);
     --icon-non-fossil-color: var(--non-fossil-color, #0f9d58);
     --icon-solar-color: var(--energy-solar-color, #ff9800);
@@ -259,6 +261,12 @@ export const styles = css`
   #individual-right-top-icon {
     color: var(--icon-individual-right-top-color);
   }
+  #individual-far-right-bottom-icon {
+    color: var(--icon-individual-far-right-bottom-color);
+  }
+  #individual-far-right-top-icon {
+    color: var(--icon-individual-far-right-top-color);
+  }
 
   #solar-icon {
     color: var(--icon-solar-color);
@@ -307,6 +315,26 @@ export const styles = css`
   .individual-right-bottom path,
   .individual-right-bottom circle {
     stroke: var(--individual-right-bottom-color);
+  }
+  .individual-far-right-top .circle {
+    border-color: var(
+      --circle-individual-far-right-top-color,
+      var(--individual-far-right-top-color)
+    );
+  }
+  .individual-far-right-top path,
+  .individual-far-right-top circle {
+    stroke: var(--individual-far-right-top-color);
+  }
+  .individual-far-right-bottom .circle {
+    border-color: var(
+      --circle-individual-far-right-bottom-color,
+      var(--individual-far-right-bottom-color)
+    );
+  }
+  .individual-far-right-bottom path,
+  .individual-far-right-bottom circle {
+    stroke: var(--individual-far-right-bottom-color);
   }
 
   .circle-container.auxiliary {
@@ -539,6 +567,18 @@ export const styles = css`
   }
   span.individual-right-bottom {
     color: var(--text-individual-right-bottom-color);
+  }
+  span.secondary-info.far-right-top {
+    color: var(--secondary-text-individual-far-right-top-color);
+  }
+  span.individual-far-right-top {
+    color: var(--text-individual-far-right-top-color);
+  }
+  span.secondary-info.far-right-bottom {
+    color: var(--secondary-text-individual-far-right-bottom-color);
+  }
+  span.individual-far-right-bottom {
+    color: var(--text-individual-far-right-bottom-color);
   }
 
   .solar span.secondary-info {

@@ -2,7 +2,13 @@ import { type CardMainContext, type IndividualObject } from "@flixlix-cards/shar
 import { nothing, type TemplateResult } from "lit";
 import { baseSecondarySpan } from "./base-secondary-span";
 
-export type IndividualKey = `left-top` | `left-bottom` | `right-top` | `right-bottom`;
+export type IndividualKey =
+  | `left-top`
+  | `left-bottom`
+  | `right-top`
+  | `right-bottom`
+  | `far-right-top`
+  | `far-right-bottom`;
 
 export const individualSecondarySpan = (
   main: CardMainContext,

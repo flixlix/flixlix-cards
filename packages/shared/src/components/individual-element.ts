@@ -104,7 +104,7 @@ const individualCircle = (
 };
 
 type LeftKey = "left-top" | "left-bottom";
-type RightKey = "right-top" | "right-bottom";
+type RightKey = Exclude<IndividualKey, LeftKey>;
 
 /** The left slots' lines, drawn from the device to the home inside their 80×30 boxes. */
 const leftLines: Record<LeftKey, string> = {
@@ -117,6 +117,8 @@ const dotPaths: Record<IndividualKey, string> = {
   "left-bottom": "individual-bottom",
   "right-top": "individual-top-right-home",
   "right-bottom": "individual-bottom-right-home",
+  "far-right-top": "individual-top-far-right-home",
+  "far-right-bottom": "individual-bottom-far-right-home",
 };
 
 /** Lines are drawn from the device to the home, so a dot flowing to the device runs in reverse. */
@@ -132,7 +134,7 @@ const individualDot = (
   return flowDot({
     path: dotPaths[key],
     className: `individual-${key.endsWith("top") ? "top" : "bottom"}`,
-    hostClass: key.startsWith("right") ? `individual-${key}` : "",
+    hostClass: key in leftLines ? "" : `individual-${key}`,
     durationSeconds: slot.flow.durationSeconds,
     radius,
     reverse: !slot.node.invertAnimation,
@@ -185,6 +187,16 @@ const layouts: Record<IndividualKey, (parts: Parts) => TemplateResult> = {
     html`<div class="circle-container individual-bottom individual-right individual-right-bottom">
       ${circle} ${label}
     </div>`,
+  "far-right-top": ({ label, circle }) =>
+    html`<div class="circle-container individual-top individual-right individual-far-right-top">
+      ${label} ${circle}
+    </div>`,
+  "far-right-bottom": ({ label, circle }) =>
+    html`<div
+      class="circle-container individual-bottom individual-right individual-far-right-bottom"
+    >
+      ${circle} ${label}
+    </div>`,
 };
 
 /** The line from a right-column individual into the home; drawn in the card's flow overlay. */
@@ -197,7 +209,7 @@ export const rightIndividualFlow = (
   if (!slot?.flow.visible || !line) {
     return nothing;
   }
-  const id = key === "right-top" ? "individual-top-right-home" : "individual-bottom-right-home";
+  const id = dotPaths[key];
   return html`<svg class="flow individual-${key}" id="${id}-flow" viewBox=${viewBox}>
       <path
         id=${id}
@@ -209,7 +221,7 @@ export const rightIndividualFlow = (
     ${individualDot(slot, key, animate, scale)}`;
 };
 
-/** An individual device in one of the four slots around the home, with its line to the home. */
+/** An individual device in one of the slots around the home, with its line to the home. */
 export const individualElement = (
   main: CardMainContext,
   config: FlowCardPlusConfig,

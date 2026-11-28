@@ -237,8 +237,22 @@ const lineVars = ({ grid }: StyledNodes, config: FlowCardPlusConfig) => {
   };
 };
 
-const INDIVIDUAL_SLOTS = ["left-top", "left-bottom", "right-top", "right-bottom"] as const;
-const INDIVIDUAL_COLORS = ["#d0cc5b", "#964cb5", "#b54c9d", "#5bd0cc"] as const;
+const INDIVIDUAL_SLOTS = [
+  "left-top",
+  "left-bottom",
+  "right-top",
+  "right-bottom",
+  "far-right-top",
+  "far-right-bottom",
+] as const;
+const INDIVIDUAL_COLORS = [
+  "#d0cc5b",
+  "#964cb5",
+  "#b54c9d",
+  "#5bd0cc",
+  "#d08c5b",
+  "#5b8fd0",
+] as const;
 
 const idleIndividualCircleVars = (shown: IndividualObject[], greyIdle: boolean): CssVars =>
   Object.fromEntries(
@@ -252,7 +266,9 @@ const idleIndividualCircleVars = (shown: IndividualObject[], greyIdle: boolean):
   );
 
 const individualVars = (individuals: IndividualObject[], greyIdle: boolean): CssVars => {
-  const shown = individuals.filter((individual) => individual.has).slice(0, 4);
+  const shown = individuals
+    .filter((individual) => individual.has)
+    .slice(0, INDIVIDUAL_SLOTS.length);
   const colorVars: CssVars = Object.fromEntries(
     shown.flatMap((individual, index) => {
       const field: Partial<IndividualDeviceType> = individual.field ?? {};

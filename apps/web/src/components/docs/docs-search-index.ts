@@ -200,7 +200,7 @@ function configSections(
     ),
     make("solar", "Solar configuration", "Solar entity, name, icon, color options."),
     make("battery", "Battery configuration", "Battery entity, state_of_charge, color options."),
-    make("individual", "Individual devices", "Up to 4 extra circles (car, EV, etc)."),
+    make("individual", "Individual devices", "Up to 6 extra circles (car, EV, etc)."),
     make(
       "auxiliary",
       "Auxiliary",

@@ -23,6 +23,9 @@ export type FlowLayout = {
   battery?: Ring;
   rightTop?: Ring;
   rightBottom?: Ring;
+  /** The second column of individuals, right of the first. */
+  farRightTop?: Ring;
+  farRightBottom?: Ring;
   /** Under the grid, left of the battery. */
   auxiliary?: Ring;
 };
@@ -33,6 +36,8 @@ export type LayoutNodes = {
   battery: boolean;
   /** Individuals in the right column, beside the home. */
   right: boolean;
+  /** Individuals in a second column, right of the first. */
+  farRight?: boolean;
   auxiliary?: boolean;
 };
 
@@ -43,7 +48,7 @@ export type LayoutNodes = {
 const nominalRing = (cx: number, cy: number): Ring => ({ cx, cy, r: 40 });
 
 export const nominalLayout = (width: number, nodes: LayoutNodes): FlowLayout => {
-  const slots = nodes.right ? 4 : 3;
+  const slots = 3 + Number(nodes.right) + Number(!!nodes.farRight);
   const slotX = (index: number) => 56 + (index * (width - 112)) / (slots - 1);
   const hasTopRow = nodes.solar || nodes.right;
   const middle = hasTopRow ? 186 : 56;
@@ -59,6 +64,8 @@ export const nominalLayout = (width: number, nodes: LayoutNodes): FlowLayout => 
     battery: nodes.battery ? nominalRing(slotX(1), bottom) : undefined,
     rightTop: nodes.right ? nominalRing(slotX(3), top) : undefined,
     rightBottom: nodes.right ? nominalRing(slotX(3), bottom) : undefined,
+    farRightTop: nodes.farRight ? nominalRing(slotX(4), top) : undefined,
+    farRightBottom: nodes.farRight ? nominalRing(slotX(4), bottom) : undefined,
     auxiliary: nodes.auxiliary ? nominalRing(slotX(0), bottom) : undefined,
   };
 };
@@ -218,6 +225,8 @@ export type FlowPaths = {
   batteryToGrid?: FlowLine;
   rightTopToHome?: FlowLine;
   rightBottomToHome?: FlowLine;
+  farRightTopToHome?: FlowLine;
+  farRightBottomToHome?: FlowLine;
   /** From the auxiliary node to the node it connects to. */
   auxiliary?: FlowLine;
 };
@@ -327,6 +336,39 @@ const rightLines = (
   };
 };
 
+/** How far inside the right column's lines the far right column's lines enter the home, in units. */
+const FAR_RIGHT_INSET = 2.5;
+
+/**
+ * Lines from the far right column run down (or up) its axis, then across the empty middle slot
+ * of the right column and into the home between that column's two lines, crossing neither.
+ */
+const farRightLines = (
+  { home, farRightTop, farRightBottom }: FlowLayout,
+  scale: number,
+  hasBottomRow: boolean
+): Lines => {
+  const curve = hasBottomRow ? 30 : 35;
+  return {
+    farRightTopToHome: farRightTop
+      ? elbowLine(farRightTop, home, {
+          x: farRightTop.cx,
+          y: home.cy + (curve - 35 + FAR_RIGHT_INSET) * scale,
+          curve,
+          scale,
+        })
+      : undefined,
+    farRightBottomToHome: farRightBottom
+      ? elbowLine(farRightBottom, home, {
+          x: farRightBottom.cx,
+          y: home.cy + (5 - FAR_RIGHT_INSET) * scale,
+          curve: 30,
+          scale,
+        })
+      : undefined,
+  };
+};
+
 /** Circles closer than this, as on a card squeezed below its 80px columns, get no line. */
 const MIN_GAP = 2 * MIN_STRAIGHT;
 
@@ -360,6 +402,7 @@ export const flowPaths = (
     ...gridLines(layout, scale),
     ...batteryLines(layout, scale),
     ...rightLines(layout, scale, hasBottomRow),
+    ...farRightLines(layout, scale, hasBottomRow),
     ...auxiliaryLines(layout, auxiliaryConnection),
   };
 };

@@ -116,6 +116,8 @@ export type CardLayout = {
   showTopRow: boolean;
   showBottomRow: boolean;
   hasRightIndividual: boolean;
+  /** A second column of individual devices, right of the first. */
+  hasFarRightIndividual: boolean;
   showHomeLabel: boolean;
   /** Off while the auxiliary line runs up into the grid, through where its label sits. */
   showGridLabel: boolean;
@@ -139,6 +141,8 @@ export type ReadyCardState = {
     leftBottom?: IndividualSlot;
     rightTop?: IndividualSlot;
     rightBottom?: IndividualSlot;
+    farRightTop?: IndividualSlot;
+    farRightBottom?: IndividualSlot;
   };
   homeRing: HomeRing;
   /**
