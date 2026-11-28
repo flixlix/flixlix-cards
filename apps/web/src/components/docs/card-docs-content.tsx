@@ -159,7 +159,7 @@ export function OverviewPage({ cardKey }: { cardKey: CardKey }) {
 
       <Highlights>
         <Highlight>Full UI editor with subpages for each entity</Highlight>
-        <Highlight>Up to 4 individual devices with custom icons & colors</Highlight>
+        <Highlight>Up to 6 individual devices with custom icons & colors</Highlight>
         <Highlight>Bidirectional grid & battery (split or single entity)</Highlight>
         <Highlight>Secondary info, templates, and clickable entities</Highlight>
         <Highlight>Configurable flow rate model (legacy & new)</Highlight>
@@ -1399,7 +1399,8 @@ entities:
               {
                 name: "individual",
                 type: "array",
-                description: "Up to 4 individual device objects.",
+                description:
+                  "Individual device objects; up to 6 are shown, as many as the card has room for.",
               },
               {
                 name: "auxiliary",
@@ -1487,7 +1488,8 @@ entities:
           accent="cyan"
           description={
             <>
-              As many as you want, up to four individual devices are shown. <br />
+              As many as you want; up to six individual devices are shown, as many as the card has
+              room for. <br />
               EVs, heat pumps, ovens, anything you'd like to call out.
             </>
           }

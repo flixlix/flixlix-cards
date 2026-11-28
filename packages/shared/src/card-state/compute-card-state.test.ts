@@ -494,6 +494,8 @@ describe("zero tolerance and display_zero", () => {
         undefined,
         undefined,
         undefined,
+        undefined,
+        undefined,
       ]);
       expect(state.flows.individual.map((flow) => flow.value)).toEqual([0, 200]);
       expect(state.homeRing.usageText).toBe(`800${thinSpace}W`);
@@ -736,6 +738,33 @@ describe("individual device slots", () => {
     expect(
       slots({ width: 0, config: { ...four, allow_layout_break: true } }).layout.hasRightIndividual
     ).toBe(true);
+  });
+
+  test("cards at least 460px wide show six, the last two in a second column on the right", () => {
+    const six = {
+      ...config({
+        entities: {
+          individual: ["a", "b", "c", "d", "e", "f"].map((name) => ({ entity: `sensor.${name}` })),
+        },
+      }),
+      sort_individual_devices: false,
+    };
+    const at = (width: number, overrides: Partial<FlowCardPlusConfig> = {}) =>
+      ready(
+        compute({
+          config: { ...six, ...overrides },
+          readings: readings({ individuals: [10, 20, 30, 40, 50, 60] }),
+          width,
+        })
+      );
+
+    expect(order(at(459))).toEqual(["sensor.a", "sensor.b", "sensor.c", "sensor.d"]);
+    expect(at(459).layout.hasFarRightIndividual).toBe(false);
+    expect(at(459, { allow_layout_break: true }).layout.hasFarRightIndividual).toBe(false);
+
+    expect(at(460).individualSlots.farRightTop?.node.entity).toBe("sensor.e");
+    expect(at(460).individualSlots.farRightBottom?.node.entity).toBe("sensor.f");
+    expect(at(460).layout.hasFarRightIndividual).toBe(true);
   });
 
   test("devices are sorted by reading, largest first, when sort_individual_devices is unset", () => {

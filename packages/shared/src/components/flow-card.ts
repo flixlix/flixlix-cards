@@ -53,6 +53,14 @@ const topRow = ({ main, config, cardState }: RowContext) => {
         ? individualElement(main, config, "right-top", { slot: individualSlots.rightTop, animate })
         : nothing
     }
+    ${
+      layout.hasFarRightIndividual
+        ? individualElement(main, config, "far-right-top", {
+            slot: individualSlots.farRightTop,
+            animate,
+          })
+        : nothing
+    }
   </div>`;
 };
 
@@ -72,6 +80,7 @@ const middleRow = ({ main, config, cardState }: RowContext) => {
         : spacer
     }
     ${layout.hasRightIndividual ? spacer : nothing}
+    ${layout.hasFarRightIndividual ? spacer : nothing}
   </div>`;
 };
 
@@ -89,6 +98,14 @@ const bottomRow = ({ main, config, cardState }: RowContext) => {
       layout.hasRightIndividual
         ? individualElement(main, config, "right-bottom", {
             slot: individualSlots.rightBottom,
+            animate,
+          })
+        : nothing
+    }
+    ${
+      layout.hasFarRightIndividual
+        ? individualElement(main, config, "far-right-bottom", {
+            slot: individualSlots.farRightBottom,
             animate,
           })
         : nothing

@@ -62,6 +62,8 @@ export const measureFlowLayout = (content: HTMLElement): FlowLayout | undefined 
     battery,
     rightTop: circle("individual-right-top"),
     rightBottom: circle("individual-right-bottom"),
+    farRightTop: circle("individual-far-right-top"),
+    farRightBottom: circle("individual-far-right-bottom"),
     auxiliary: circle("auxiliary"),
   };
 };

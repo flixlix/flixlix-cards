@@ -40,7 +40,7 @@ export const flowElement = (
   layout: FlowLayout | undefined
 ) => {
   const { battery, grid, solar, auxiliary } = state.nodes;
-  const { rightTop, rightBottom } = state.individualSlots;
+  const { rightTop, rightBottom, farRightTop, farRightBottom } = state.individualSlots;
   const shown =
     layout ??
     nominalLayout(NOMINAL_WIDTH, {
@@ -48,6 +48,7 @@ export const flowElement = (
       solar: solar.has,
       battery: battery.has,
       right: state.layout.hasRightIndividual,
+      farRight: state.layout.hasFarRightIndividual,
       auxiliary: auxiliary.has,
     });
   const paths = flowPaths(shown, {
@@ -70,6 +71,8 @@ export const flowElement = (
     ${flowGridToHome(flows)} ${flowBatteryToHome(flows)} ${flowBatteryToGrid(flows)}
     ${rightIndividualFlow(rightTop, "right-top", paths.rightTopToHome, right)}
     ${rightIndividualFlow(rightBottom, "right-bottom", paths.rightBottomToHome, right)}
+    ${rightIndividualFlow(farRightTop, "far-right-top", paths.farRightTopToHome, right)}
+    ${rightIndividualFlow(farRightBottom, "far-right-bottom", paths.farRightBottomToHome, right)}
     ${auxiliaryFlow(auxiliary, state.flows.auxiliary, paths.auxiliary, right)}
   </div>`;
 };

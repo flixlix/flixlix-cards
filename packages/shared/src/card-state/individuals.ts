@@ -203,16 +203,31 @@ const byStateThenEntity = (a: IndividualSlot, b: IndividualSlot) =>
 /** Cards narrower than this show two individual devices unless `allow_layout_break` is set. */
 const WIDTH_FOR_FOUR_INDIVIDUALS = 359;
 
-/** Sorts individual devices unless `sort_individual_devices` is false, then places the visible ones into the four slots. */
+/** Cards at least this wide have room for a second column of individual devices, six in all. */
+const WIDTH_FOR_SIX_INDIVIDUALS = 460;
+
+const slotCount = ({ config, width }: CardStateInput) => {
+  if (width >= WIDTH_FOR_SIX_INDIVIDUALS) {
+    return 6;
+  }
+  return config.allow_layout_break || width >= WIDTH_FOR_FOUR_INDIVIDUALS ? 4 : 2;
+};
+
+/** Sorts individual devices unless `sort_individual_devices` is false, then places the visible ones into the slots the card has room for. */
 export const placeIndividuals = (input: CardStateInput, devices: IndividualSlot[]) => {
   const sorted =
     input.config.sort_individual_devices === false
       ? devices
       : sortedCopy(devices, byStateThenEntity);
-  const maxVisible =
-    input.config.allow_layout_break || input.width >= WIDTH_FOR_FOUR_INDIVIDUALS ? 4 : 2;
-  const visible = sorted.filter((device) => device.node.has).slice(0, maxVisible);
-  const [leftTop, leftBottom, rightTop, rightBottom] = visible;
-  const slots: ReadyCardState["individualSlots"] = { leftTop, leftBottom, rightTop, rightBottom };
+  const visible = sorted.filter((device) => device.node.has).slice(0, slotCount(input));
+  const [leftTop, leftBottom, rightTop, rightBottom, farRightTop, farRightBottom] = visible;
+  const slots: ReadyCardState["individualSlots"] = {
+    leftTop,
+    leftBottom,
+    rightTop,
+    rightBottom,
+    farRightTop,
+    farRightBottom,
+  };
   return { sorted: sorted.map((device) => device.node), visible, slots };
 };
